@@ -83,3 +83,9 @@ milestones. Keep large artifacts (weights, builds, raw traces) out of the repo.
 Motto (user): "make it work, make it right, make it fast" -- in that order.
 Getting something to run end to end is a win that unlocks the next two;
 do not block a first working path on optimization.
+
+Run discipline (orchestrator, 2026-10-20): your run ENDS when you stop calling
+tools, so never stop to "wait" or "queue" -- call bin/gpu-run in the FOREGROUND
+(it blocks until the lease is free; use a long tool timeout or loop on it) and
+continue once it returns. Only finish when your deliverable is measured and
+reported, or a real wall is documented.

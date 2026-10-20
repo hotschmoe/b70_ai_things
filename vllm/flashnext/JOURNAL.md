@@ -1095,3 +1095,134 @@ int4 overlay stays off. Next: eager per-region profile of the real
 Ornith step, then the Shisa MTP overlay. A faster int4 GEMV (above
 about 400 GB/s at N=12288 K=2048 and at lm_head) is the kernel request;
 no fork change.
+
+## 2026-10-20 06:38 C5 -- toolchain leaves both kernels where they were
+
+CONFIG: card 0, ZE_AFFINITY_MASK=0. Real JIT recompile of
+sycl/src/kernels/cuda/iq_kernels.dp.cpp (spir64) inside strata-sycl-dev:020,
+icpx 2026.1.0.20260617. Strata flags: -O3 -fp-model=precise
+-fsycl-default-sub-group-size=32 -fsycl-device-code-split=per_kernel.
+Plugin flags: -O3 -fsycl -per_kernel, no precise, no subgroup default.
+Run on host IGC 2.36.3, and one row on the 020 runtime (IGC 2.41.5).
+Shape EPB_PAIRS=21:42 EPB_SCEN=3 (IQ3_S/Q2_0, C1 card0, T=4, 10 groups /
+20 entries). Timer is the bench graph replay (48 layers, median of 5).
+ours_bench is the plugin moe_layer with no torch: host icpx
+2026.1.1.20260724 flag matrix, plus the same TU built by 020 icpx as JIT
+and as AOT (spir64_gen -device bmg-g31). c1 is T=1 topk=10 plus shared,
+IQ2_XS/IQ2_XXS/IQ4_NL. s20 is T=2, 20 ungrouped entries, IQ3_S/IQ3_S/Q2_0.
+Graph column is 8 launches per graph, median of 5. Shared expert is
+night_shexp_bench nc=1 mmvq level 2, historical binary, image
+sha256:e41d59c0. xpu-health --card 0 HEALTHY before and after
+(pre-health-ab.log, post-health-ab.log). The spir64 relink that dropped
+device code (ep_night_bench_jit, 10 MB, no SPIR-V) was not timed.
+plugins/b70_gguf_xpu/_C.so and harness/xpu-run.sh were not edited.
+COMMAND: B70_AGENT=C5 bin/gpu-run --card 0 bin/cpu-run --quiet
+/mnt/vm_8tb/b70/build/vllm-flashnext/c5/run_measure.sh
+Exit 0. Logs: c5/meas_jit_strata_oldrt.log, meas_jit_strata_020.log,
+meas_jit_strata_grf256.log, meas_jit_strata_imm1.log,
+meas_jit_plugin_oldrt.log, meas_ours_*.log, meas_shexp_nc1.log.
+RESULT: IQ3_S/Q2_0 bitwise yes (153600, 0). R2 all / IQR2 all, us:
+- JIT strata flags, IGC 2.36.3: 93.47 / 69.26 (IQR2 gu/dn 50.93/18.33)
+- same binary, IGC 2.41.5: 93.25 / 69.10
+- JIT IGC_OverrideGRFSize=256: 93.84 / 69.40
+- JIT immediate command lists = 1: 93.95 / 69.35
+- JIT plugin flags, IGC 2.36.3: 93.84 / 69.44 (IQR2 gu/dn 51.39/18.05)
+Historical AOT R2 was 96.87. Published R2 is 93.2. JIT matches it.
+Plugin moe_layer graph us, c1 / s20:
+- host plugin JIT -O3: 198.39 / 313.24 (eager min 486.52)
+- plus -fp-model=precise: 200.81 / 312.69
+- plus subgroup default 32: 198.44 / 312.86
+- plus -ffast-math: 198.33 / 313.15
+- -O2: 213.82 / 333.72
+- 020 JIT: 198.47 / 313.46 (eager min 206.75)
+- 020 AOT precise plus sg32: 209.70 / 366.96 (profile FAIL, graph used)
+- 020 AOT only: 212.55 / 366.61
+C1 torch a2 at this T=1 shape was 216 us. Shared expert
+IQ4_XS/IQ3_S/IQ4_NL nc1: orig 24.88 us, night 18.69 us, 0 bit diffs.
+Published 24.9 -> 18.7.
+VERDICT: IGC 2.36.3 vs 2.41.5, AOT vs JIT, GRF 256, immediate command
+lists, -O3 vs -ffast-math, -fp-model=precise, and the subgroup default
+leave Strata's routed kernel at 93-97 us and the plugin fused layer at
+about 198 us graph (AOT 210-213 us). -O2 is the only plugin flag that
+moved the graph number, and it was slower. Do not mount IGC 2.41.5 in
+harness/xpu-run.sh. Do not rebuild _C.so. The remaining difference is
+the kernel schedule. A paste of the Strata bodies behind
+b70_moe_layer_launch is blocked: plugin B70Q8 is 48 bytes and Strata
+q8_1 is 36, Strata packs one ggml type for gate and up, and at T=1 each
+expert is used once so rows_dot_multi_iq has no second entry to reuse.
+That schedule cannot turn the 198 us fused layer into the 93 us routed
+number. Report: vllm/flashnext/reports/1C5_strata_transplant.md (one
+table cell corrected: 020 AOT-only s20 graph is 366.61 us). Next, when
+card 0 is free: a grouped multi-entry dot with Strata's lane map
+(subgroup 32, STRATA_EXPERT_LANES 8) and an attribution comment, in a
+side library, measured at the C1 card0 plan against today's JIT R2 of
+93.5 us. Keep the T=1 fused path until that plan is faster and
+tests/gpu_check.py (5e-2) and tests/moe_layer_bench.py (8e-2) pass.
+Dequant bit-exact stays on tests/compare_cpu.py. Card 0 is held by F1
+(vllm-fn-f1-2627-triton) and C6 (c6_run.sh) at this write, so that
+kernel was not started.
+
+## 2026-10-20 06:50 E1 -- grouped moe_prefill matches the per-expert loop
+
+CONFIG: card 1, libb70_lowbit_xpu_e1.so built 06:35 (1696504 bytes).
+That binary forces cumsum offsets to int32. The 04:05 libb70_lowbit_xpu.so
+(1442856 bytes) was not overwritten. Probe waits behind d2-profile, then
+runs tests/grouped_probe.py. Gate is rel_l2 < 0.02 and cos > 0.999 against
+the Python per-expert prefill_wna16 loop. One expert id is -1 and expert 0
+is unused. K=2048 asks for 64 KiB SLM.
+COMMAND: B70_AGENT=E1 B70_GPU_LOCK_TIMEOUT=3600 harness/xpu-run.sh --card 1
+--memory 24g --name b70-lowbit-grouped-probe
+--env B70_LOWBIT_SO=.../libb70_lowbit_xpu_e1.so -- python3 -u tests/grouped_probe.py
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/e1-grouped-probe.log
+RESULT: probe_rc=0, gpu-run done in 28s. PASS b3 T=13 H=256 rel_l2=0
+max_abs=0. PASS b2/b3/b4 T=17 topk=8 E=4 H=2048 I=512. b2 rel_l2=6.7e-9
+cos=1 max_abs=0.125 (one bf16 ulp). b3 and b4 rel_l2=0 max_abs=0.
+Microbench, not a serve number: b3 T=128 E=32 H=2048 grouped 11.94 ms/call
+vs per-expert loop 29.19 ms/call.
+VERDICT: GROUPED_PROBE_OK. Runtime accepted the 64 KiB SLM tile, and the
+int32 offset fix is the one that runs. Next GPU job is the int4 control
+FULL_DECODE_ONLY serve on the old .so. The 11.94 ms figure is not 8k tok/s.
+
+## 2026-10-20 06:51 E1 -- mixed expert bits resolve on the vLLM prefix
+
+CONFIG: CPU only, no GPU. Checkpoint
+qwen36-mixed-int3-int2-experts-w4a16-trunk extra_config (22735 entries,
+22719 explicit int2 keys, catch-all regex bits 3) against
+expert_bits.json (40 x 256, hist 2:7573 3:2667). vLLM module prefix is
+model.language_model.model.layers.N.mlp.experts. Checkpoint keys omit the
+inner .model. Lookup indexes the layers-relative tail. Synthetic repack
+puts int2 qweight in the leading rows of an int3-sized buffer and fills
+the tail with 0x7EADBEEF.
+COMMAND: docker run --cpus 1 --memory 8g --network none (no /dev/dri)
+python3 tests/test_mixed_cpu.py
+RESULT: MIXED_BITS_OK. hist {2: 7573, 3: 2667}. All 40 layers are mixed.
+L0 E0 gate is 2 on both the vLLM prefix and the checkpoint prefix. L0 E1
+down is 3. Trunk q_proj stays bits 4. Router mlp.gate is skipped. Repack
+plane2 and scales match a per-expert pack; int2 hi plane is zero; int3
+hi matches. The garbage tail is not unpacked.
+VERDICT: The bit table is safe to load. moe_gemv_mixed is source only and
+is not in libb70_lowbit_xpu_e1.so. A uniform int4 vs int3 graph A/B still
+uses the templated kernel on the 04:05 .so. The mixed kernel is a
+different binary, so that arm is not "only expert bits."
+
+## 2026-10-20 07:00 G2 -- audit pass 1
+
+CONFIG: CPU only, no GPU lease. Read-only. Cursor is JOURNAL through
+the 06:51 E1 mixed-bits entry, bench JSON under
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs, C2/C5/D2/E1/F1 logs, git
+status, fork b70/flashnext, and the plugin/harness sources.
+COMMAND: parse bench JSON; match journal figures; check identity,
+coherence texts, health logs, and git staging. No gpu-run.
+RESULT: Serve numbers for A3, C3, C4, D1, and E1 match the JSON.
+Every completed bench has first id hotschmoe-dev and stored
+temperature-0 texts. C2, C5, and F1 health logs that were claimed
+say HEALTHY. Nothing is staged; plugin .so files are gitignored.
+f1-bench-2627-triton.json is coherence.ok by the harness gate but
+the greedy text is "A. True / B. False", unlike the host Triton,
+host FA, 26.27 FA, and 26.35 FA arms on the same Ornith prompt.
+E1 mixed-bits MIXED_BITS_OK has no stdout log on disk. C3 card-0
+post-health is still the owed check they already wrote down.
+Report: vllm/flashnext/reports/1G2_audit.md.
+VERDICT: Pass 1 recorded. One wrong-if-claimed coherence result
+(UMD 26.27 Triton). No other numeric contradiction in the completed
+serve JSON.

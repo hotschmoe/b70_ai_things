@@ -20,6 +20,9 @@ from b70_lowbit_xpu.moe import B70LowbitMoEMethod
 # Checkpoint methods this config can repack when the user selects b70_lowbit.
 _GPTQ_METHODS = {"gptq", "auto-round", "auto_gptq", "awq"}
 _SKIP_BITS = 16
+# A literal checkpoint key, possibly with escaped dots. Real regexes
+# (\d, groups, alternation) stay on the ordered rule list.
+_REGEX_META = re.compile(r"(?<!\\)[\[\]()|+*?{}]|\\[dDwWsS]")
 
 
 def _component_hit(prefix: str, name: str) -> bool:
@@ -85,10 +88,17 @@ class _B70MoE(B70LowbitMoEMethod, FusedMoEMethodBase):
     """FusedMoEMethodBase subclass. The runner requires this type."""
 
     def __init__(
-        self, moe, bits: int, group_size: int = 128, pack: str = "b70lb1"
+        self,
+        moe,
+        bits: int,
+        group_size: int = 128,
+        pack: str = "b70lb1",
+        bit_lookup=None,
     ) -> None:
         FusedMoEMethodBase.__init__(self, moe)
-        B70LowbitMoEMethod.__init__(self, moe, bits, group_size, pack)
+        B70LowbitMoEMethod.__init__(
+            self, moe, bits, group_size, pack, bit_lookup
+        )
 
 
 def ensure_registered() -> None:
@@ -127,6 +137,22 @@ class B70LowbitConfig(QuantizationConfig):
             if value not in (2, 3, 4):
                 raise ValueError(value)
         self._rules = list(rules or [])
+        self._exact_bits: dict[str, int] = {}
+        self._regex_rules: list[tuple[re.Pattern[str], int]] = []
+        for pattern, rule_bits in self._rules:
+            src = pattern.pattern
+            if _REGEX_META.search(src):
+                self._regex_rules.append((pattern, rule_bits))
+                continue
+            key = src.replace("\\.", ".")
+            # First match wins, same as _first_rule.
+            self._exact_bits.setdefault(key, rule_bits)
+            # Checkpoint keys are model.language_model.layers.N...
+            # The vLLM module prefix inserts another .model. before layers.
+            # Index the layers-relative tail so both strings hit.
+            rel = key.find(".layers.")
+            if rel >= 0:
+                self._exact_bits.setdefault(key[rel + 1 :], rule_bits)
 
     def get_name(self) -> str:
         return "b70_lowbit"
@@ -220,6 +246,33 @@ class B70LowbitConfig(QuantizationConfig):
             return _SKIP_BITS
         return self.bits
 
+    def expert_proj_bits(self, prefix: str, expert: int, proj: str) -> int:
+        """Bits for one routed projection.
+
+        Explicit checkpoint keys beat a later catch-all regex. Qwen3.5-MoE
+        registers experts at ``model.language_model.model.layers.N.mlp.experts``
+        while AutoRound keys omit the inner ``model``. The layers-relative
+        tail matches both, and a text-only prefix is tried as well.
+        """
+        tail = f"{prefix}.{expert}.{proj}"
+        candidates = [tail]
+        marker = "model.language_model."
+        if tail.startswith(marker):
+            candidates.append("model." + tail[len(marker) :])
+        elif tail.startswith("model."):
+            candidates.append(marker + tail[len("model.") :])
+        rel = tail.find(".layers.")
+        if rel >= 0:
+            candidates.append(tail[rel + 1 :])
+        for cand in candidates:
+            hit = self._exact_bits.get(cand)
+            if hit is not None:
+                return hit
+        for pattern, bits in self._regex_rules:
+            if pattern.search(tail):
+                return bits
+        return self.bits
+
     def _expert_bits(self, prefix: str) -> int:
         """One bits value for the fused RoutedExperts module.
 
@@ -273,5 +326,10 @@ class B70LowbitConfig(QuantizationConfig):
         if isinstance(layer, (LinearBase, ParallelLMHead)):
             return _B70Linear(bits, self.group_size, self.pack)
         if isinstance(layer, RoutedExperts):
-            return _B70MoE(layer.moe_config, bits, self.group_size, self.pack)
+            lookup = lambda expert, proj, prefix=prefix: self.expert_proj_bits(
+                prefix, expert, proj
+            )
+            return _B70MoE(
+                layer.moe_config, bits, self.group_size, self.pack, lookup
+            )
         return None

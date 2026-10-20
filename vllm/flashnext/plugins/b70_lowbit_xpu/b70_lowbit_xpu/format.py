@@ -284,3 +284,61 @@ def gptq_experts_to_b70lb1(
             scales[start:end].transpose(1, 2).contiguous().to(torch.bfloat16)
         )
     return plane2, plane_hi, scale_out
+
+
+def gptq_experts_mixed_to_b70lb1(
+    qweight: torch.Tensor,
+    scales: torch.Tensor,
+    expert_bits: list[int],
+    k: int,
+    storage_bits: int,
+) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor]:
+    """Repack experts that do not share a bit width.
+
+    qweight is int32 [E, K * storage_bits / 32, N]. Shorter experts occupy
+    the leading rows; the tail is ignored. plane_hi is allocated at
+    storage_bits and left zero for int2 experts. plane2 stride does not
+    depend on bits.
+    """
+    if qweight.ndim != 3:
+        raise ValueError(f"expert qweight rank {qweight.ndim} != 3")
+    e, rows, n = qweight.shape
+    if len(expert_bits) != e:
+        raise ValueError(f"expert_bits {len(expert_bits)} != E {e}")
+    expect = k * storage_bits // 32
+    if rows != expect:
+        raise ValueError(f"qweight rows {rows} != storage {expect}")
+    if scales.shape != (e, k // GROUP, n):
+        raise ValueError(
+            f"expert scales {tuple(scales.shape)} != {(e, k // GROUP, n)}"
+        )
+    s2 = plane2_stride(k)
+    plane2 = torch.zeros(e, n, s2, dtype=torch.uint8, device=qweight.device)
+    plane_hi = None
+    if storage_bits != 2:
+        shi = plane_hi_stride(k, storage_bits)
+        plane_hi = torch.zeros(e, n, shi, dtype=torch.uint8, device=qweight.device)
+    scale_out = torch.empty(
+        e, n, k // GROUP, dtype=torch.bfloat16, device=qweight.device
+    )
+    groups: dict[int, list[int]] = {}
+    for index, bits in enumerate(expert_bits):
+        if bits not in (2, 3, 4) or bits > storage_bits:
+            raise ValueError(f"expert {index} bits {bits} storage {storage_bits}")
+        groups.setdefault(int(bits), []).append(index)
+    for bits, indexes in groups.items():
+        need = k * bits // 32
+        ix = torch.tensor(indexes, dtype=torch.long)
+        packed2, packed_hi, packed_scale = gptq_experts_to_b70lb1(
+            qweight.index_select(0, ix)[:, :need].contiguous(),
+            scales.index_select(0, ix).contiguous(),
+            bits,
+            k,
+        )
+        plane2.index_copy_(0, ix, packed2)
+        if packed_hi is not None:
+            if plane_hi is None:
+                raise RuntimeError("int2 storage cannot hold a hi plane")
+            plane_hi.index_copy_(0, ix, packed_hi)
+        scale_out.index_copy_(0, ix, packed_scale)
+    return plane2, plane_hi, scale_out

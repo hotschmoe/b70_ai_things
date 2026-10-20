@@ -407,6 +407,22 @@ SYCL_ESIMD_FUNCTION float gemv_row_slm(
   return acc_box[0];
 }
 
+SYCL_ESIMD_FUNCTION float gemv_row_slm_dyn(
+    int bits,
+    const uint8_t* row2,
+    const uint8_t* rowhi,
+    const uint16_t* scale_row,
+    int K,
+    int groups) {
+  if (bits == 2) {
+    return gemv_row_slm<2>(row2, rowhi, scale_row, K, groups);
+  }
+  if (bits == 4) {
+    return gemv_row_slm<4>(row2, rowhi, scale_row, K, groups);
+  }
+  return gemv_row_slm<3>(row2, rowhi, scale_row, K, groups);
+}
+
 // Launch 1 of 2: gate and up for hidden index i, then SiLU, one submit.
 // A work-group owns 16 consecutive i values of one expert slot and shares x.
 template <int BITS>
@@ -425,6 +441,7 @@ struct GateUpSiluKernel {
   int stride_hi;
   int E;
   int topk;
+  const int32_t* ebits;
 
   void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
     esimd::slm_init<kSlmRowBytes>();
@@ -457,10 +474,18 @@ struct GateUpSiluKernel {
     const uint8_t* urow2 = plane2 + up_row * (size_t)stride2;
     const uint8_t* urowhi =
         plane_hi ? plane_hi + up_row * (size_t)stride_hi : urow2;
-    float gacc = gemv_row_slm<BITS>(
-        grow2, growhi, scale + gate_row * (size_t)groups, H, groups);
-    float uacc = gemv_row_slm<BITS>(
-        urow2, urowhi, scale + up_row * (size_t)groups, H, groups);
+    const uint16_t* gsc = scale + gate_row * (size_t)groups;
+    const uint16_t* usc_row = scale + up_row * (size_t)groups;
+    float gacc;
+    float uacc;
+    if (ebits) {
+      const int use_bits = ebits[e];
+      gacc = gemv_row_slm_dyn(use_bits, grow2, growhi, gsc, H, groups);
+      uacc = gemv_row_slm_dyn(use_bits, urow2, urowhi, usc_row, H, groups);
+    } else {
+      gacc = gemv_row_slm<BITS>(grow2, growhi, gsc, H, groups);
+      uacc = gemv_row_slm<BITS>(urow2, urowhi, usc_row, H, groups);
+    }
     gacc = bf16_roundtrip(gacc);
     uacc = bf16_roundtrip(uacc);
     float h = gacc / (1.f + sycl::exp(-gacc)) * uacc;
@@ -487,6 +512,7 @@ struct DownReduceKernel {
   int stride_hi;
   int E;
   int topk;
+  const int32_t* ebits;
 
   void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
     esimd::slm_init<kSlmRowBytes>();
@@ -511,8 +537,10 @@ struct DownReduceKernel {
           const uint8_t* row2 = plane2 + row * (size_t)stride2;
           const uint8_t* rowhi =
               plane_hi ? plane_hi + row * (size_t)stride_hi : row2;
-          float d = gemv_row_slm<BITS>(
-              row2, rowhi, scale + row * (size_t)groups, I, groups);
+          const uint16_t* srow = scale + row * (size_t)groups;
+          float d = ebits
+              ? gemv_row_slm_dyn(ebits[e], row2, rowhi, srow, I, groups)
+              : gemv_row_slm<BITS>(row2, rowhi, srow, I, groups);
           d = bf16_roundtrip(d);
           acc += router[slot] * d;
         }
@@ -1000,7 +1028,8 @@ static torch::Tensor launch_reduced_moe(
     const torch::Tensor& w2_plane_hi,
     const torch::Tensor& w2_scale,
     int64_t bits,
-    int which) {
+    int which,
+    const int32_t* ebits = nullptr) {
   const int T = (int)x.size(0);
   const int H = (int)x.size(1);
   const int topk = (int)ids.size(1);
@@ -1027,6 +1056,7 @@ static torch::Tensor launch_reduced_moe(
   auto run = [&](auto tag) {
     constexpr int BITS = decltype(tag)::value;
     if (which == 1) {
+      TORCH_CHECK(ebits == nullptr, "mixed bits requires MOE_LAUNCHES=2");
       auto hid = torch::empty({T, I}, x.options());
       auto acc = torch::empty({T, H}, x.options().dtype(at::kFloat));
       for (const torch::Tensor& t :
@@ -1061,14 +1091,14 @@ static torch::Tensor launch_reduced_moe(
             sycl::range<2>(1, (size_t)kGemvWg)),
         GateUpSiluKernel<BITS>{
             xp, idp, up2, uph, usc, hp, slots, I, H, H / 128, up_stride2,
-            up_stride_hi, E, topk});
+            up_stride_hi, E, topk, ebits});
     q.parallel_for(
         sycl::nd_range<2>(
             sycl::range<2>((size_t)T, gH),
             sycl::range<2>(1, (size_t)kGemvWg)),
         DownReduceKernel<BITS>{
             hp, idp, rp, dp2, dph, dsc, yp, T, H, I, I / 128, dn_stride2,
-            dn_stride_hi, E, topk});
+            dn_stride_hi, E, topk, ebits});
   };
   if (bits == 2) {
     run(std::integral_constant<int, 2>{});
@@ -1603,6 +1633,64 @@ static torch::Tensor moe_prefill(
   return y;
 }
 
+// Same two-submit decode as moe_gemv, but each expert reads its own bit
+// width. `bits` is the storage width (hi-plane stride), not the traffic.
+// Uniform checkpoints keep the templated moe_gemv.
+static torch::Tensor moe_gemv_mixed(
+    const torch::Tensor& x,
+    const torch::Tensor& ids,
+    const torch::Tensor& router_w,
+    const torch::Tensor& w13_plane2,
+    const torch::Tensor& w13_plane_hi,
+    const torch::Tensor& w13_scale,
+    const torch::Tensor& w2_plane2,
+    const torch::Tensor& w2_plane_hi,
+    const torch::Tensor& w2_scale,
+    const torch::Tensor& expert_bits,
+    int64_t bits) {
+  TORCH_CHECK(x.is_xpu() && x.is_contiguous(), "x");
+  TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2, "x [T,H]");
+  TORCH_CHECK(ids.is_xpu() && ids.is_contiguous(), "ids");
+  TORCH_CHECK(ids.scalar_type() == at::kInt && ids.dim() == 2, "ids [T,topk]");
+  TORCH_CHECK(router_w.is_xpu() && router_w.is_contiguous(), "router");
+  TORCH_CHECK(router_w.scalar_type() == at::kFloat, "router fp32");
+  TORCH_CHECK(ids.sizes() == router_w.sizes(), "router shape");
+  TORCH_CHECK(bits == 2 || bits == 3 || bits == 4, "bits");
+  const int T = (int)x.size(0);
+  const int H = (int)x.size(1);
+  const int topk = (int)ids.size(1);
+  TORCH_CHECK(ids.size(0) == T && T >= 1 && T <= 8, "T");
+  TORCH_CHECK(w13_plane2.dim() == 3 && w2_plane2.dim() == 3, "expert rank");
+  const int E = (int)w13_plane2.size(0);
+  const int N13 = (int)w13_plane2.size(1);
+  TORCH_CHECK(N13 % 2 == 0 && w2_plane2.size(0) == E, "shape");
+  TORCH_CHECK(w2_plane2.size(1) == H, "down N");
+  TORCH_CHECK(
+      expert_bits.is_xpu() && expert_bits.is_contiguous() &&
+          expert_bits.scalar_type() == at::kInt && expert_bits.numel() == E,
+      "expert_bits [E] int32");
+  check_planes(
+      w13_plane2.reshape({(int64_t)E * N13, w13_plane2.size(2)}),
+      bits == 2 ? w13_plane_hi
+                : w13_plane_hi.reshape({(int64_t)E * N13, w13_plane_hi.size(2)}),
+      w13_scale.reshape({(int64_t)E * N13, w13_scale.size(2)}),
+      (int64_t)E * N13,
+      H,
+      (int)bits);
+  check_planes(
+      w2_plane2.reshape({(int64_t)E * H, w2_plane2.size(2)}),
+      bits == 2 ? w2_plane_hi
+                : w2_plane_hi.reshape({(int64_t)E * H, w2_plane_hi.size(2)}),
+      w2_scale.reshape({(int64_t)E * H, w2_scale.size(2)}),
+      (int64_t)E * H,
+      N13 / 2,
+      (int)bits);
+  record_use(expert_bits);
+  return launch_reduced_moe(
+      x, ids, router_w, w13_plane2, w13_plane_hi, w13_scale, w2_plane2,
+      w2_plane_hi, w2_scale, bits, /*which=*/2, expert_bits.data_ptr<int32_t>());
+}
+
 TORCH_LIBRARY(b70_lowbit, m) {
   m.def(
       "gemv(Tensor x, Tensor plane2, Tensor plane_hi, Tensor scale, int bits) "
@@ -1621,6 +1709,11 @@ TORCH_LIBRARY(b70_lowbit, m) {
       "moe_prefill(Tensor x, Tensor ids, Tensor router_w, Tensor w13_plane2, "
       "Tensor w13_plane_hi, Tensor w13_scale, Tensor w2_plane2, "
       "Tensor w2_plane_hi, Tensor w2_scale, int bits) -> Tensor");
+  m.def(
+      "moe_gemv_mixed(Tensor x, Tensor ids, Tensor router_w, Tensor w13_plane2, "
+      "Tensor w13_plane_hi, Tensor w13_scale, Tensor w2_plane2, "
+      "Tensor w2_plane_hi, Tensor w2_scale, Tensor expert_bits, int bits) "
+      "-> Tensor");
 }
 
 TORCH_LIBRARY_IMPL(b70_lowbit, XPU, m) {
@@ -1629,4 +1722,5 @@ TORCH_LIBRARY_IMPL(b70_lowbit, XPU, m) {
   m.impl("prefill_wna16", &prefill_wna16);
   m.impl("prefill_wxa8", &prefill_wxa8);
   m.impl("moe_prefill", &moe_prefill);
+  m.impl("moe_gemv_mixed", &moe_gemv_mixed);
 }

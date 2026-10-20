@@ -9,6 +9,7 @@ import torch.nn.functional as F
 
 from b70_lowbit_xpu import ops
 from b70_lowbit_xpu.format import (
+    gptq_experts_mixed_to_b70lb1,
     gptq_experts_to_b70lb1,
     plane2_stride,
     plane_hi_stride,
@@ -44,7 +45,12 @@ class B70LowbitMoEMethod:
     """
 
     def __init__(
-        self, moe, bits: int, group_size: int = 128, pack: str = "b70lb1"
+        self,
+        moe,
+        bits: int,
+        group_size: int = 128,
+        pack: str = "b70lb1",
+        bit_lookup=None,
     ) -> None:
         if bits not in (2, 3, 4):
             raise ValueError(bits)
@@ -56,8 +62,33 @@ class B70LowbitMoEMethod:
         self.bits = bits
         self.group_size = group_size
         self.pack = pack
+        self.bit_lookup = bit_lookup
+        # None means every expert uses self.bits. A list is per-expert bits
+        # and self.bits is the storage width (the max), not the traffic.
+        self.per_expert: list[int] | None = None
         self.moe_quant_config = None
         self.moe_kernel = None
+
+    def _resolve_expert_bits(self, num_experts: int) -> None:
+        if self.bit_lookup is None:
+            return
+        found: list[int] = []
+        for expert in range(num_experts):
+            vals = [
+                int(self.bit_lookup(expert, name))
+                for name in ("gate_proj", "up_proj", "down_proj")
+            ]
+            if any(v not in (2, 3, 4) for v in vals):
+                raise ValueError(f"expert {expert} bits {vals}")
+            if len(set(vals)) != 1:
+                raise ValueError(f"expert {expert} proj bits differ: {vals}")
+            found.append(vals[0])
+        if len(set(found)) == 1:
+            self.bits = found[0]
+            self.per_expert = None
+            return
+        self.per_expert = found
+        self.bits = max(found)
 
     def create_weights(
         self,
@@ -87,7 +118,9 @@ class B70LowbitMoEMethod:
             )
         gated = bool(getattr(self.moe, "is_act_and_mul", True))
         n13 = (2 if gated else 1) * intermediate_size_per_partition
+        self._resolve_expert_bits(num_experts)
         layer.b70_bits = self.bits
+        layer.b70_per_expert = self.per_expert
         layer.b70_k13 = hidden_size
         layer.b70_k2 = intermediate_size_per_partition
         if self.pack == "gptq":
@@ -255,9 +288,14 @@ class B70LowbitMoEMethod:
     ) -> None:
         qweight = getattr(layer, stem + "_qweight").detach().to("cpu")
         scales = getattr(layer, stem + "_scales").detach().to("cpu")
-        plane2, plane_hi, scale = gptq_experts_to_b70lb1(
-            qweight, scales, self.bits, k
-        )
+        if self.per_expert is None:
+            plane2, plane_hi, scale = gptq_experts_to_b70lb1(
+                qweight, scales, self.bits, k
+            )
+        else:
+            plane2, plane_hi, scale = gptq_experts_mixed_to_b70lb1(
+                qweight, scales, self.per_expert, k, self.bits
+            )
         print(
             f"b70_lowbit repack {stem} bits={self.bits} "
             f"qweight={tuple(qweight.shape)} plane2={tuple(plane2.shape)}",
@@ -275,6 +313,10 @@ class B70LowbitMoEMethod:
         device = layer.w13_qweight.device
         self._repack_one(layer, "w13", int(layer.b70_k13), device)
         self._repack_one(layer, "w2", int(layer.b70_k2), device)
+        if self.per_expert is not None:
+            layer.b70_expert_bits = torch.tensor(
+                self.per_expert, dtype=torch.int32, device=device
+            )
         if device.type == "xpu":
             torch.xpu.empty_cache()
 
@@ -297,7 +339,21 @@ class B70LowbitMoEMethod:
         x2 = x.reshape(-1, in_shape[-1])
         if x2.dtype != torch.bfloat16:
             x2 = x2.to(torch.bfloat16)
-        if x2.shape[0] <= 8:
+        if x2.shape[0] <= 8 and self.per_expert is not None:
+            y = ops.moe_gemv_mixed(
+                x2,
+                topk_ids,
+                topk_weights,
+                layer.w13_weight,
+                getattr(layer, "w13_weight_plane_hi", None),
+                layer.w13_weight_scale,
+                layer.w2_weight,
+                getattr(layer, "w2_weight_plane_hi", None),
+                layer.w2_weight_scale,
+                layer.b70_expert_bits,
+                self.bits,
+            )
+        elif x2.shape[0] <= 8:
             y = ops.moe_gemv(
                 x2,
                 topk_ids,
@@ -323,7 +379,10 @@ class B70LowbitMoEMethod:
     ) -> torch.Tensor:
         # B70_LOWBIT_PREFILL=grouped is the one-submit-per-projection path.
         # Unset stays the per-expert loop (the measured 116 tok/s path).
-        if os.environ.get("B70_LOWBIT_PREFILL", "") == "grouped":
+        if (
+            os.environ.get("B70_LOWBIT_PREFILL", "") == "grouped"
+            and self.per_expert is None
+        ):
             y = ops.moe_prefill(
                 x,
                 topk_ids,
@@ -366,12 +425,13 @@ class B70LowbitMoEMethod:
             cursor += n_hit
             tok = torch.div(sel, topk, rounding_mode="floor")
             xe = x.index_select(0, tok)
+            bits = self.bits if self.per_expert is None else int(self.per_expert[expert])
             gu = ops.prefill_wna16(
                 xe,
                 layer.w13_weight[expert],
-                None if hi13 is None else hi13[expert],
+                None if bits == 2 or hi13 is None else hi13[expert],
                 layer.w13_weight_scale[expert],
-                self.bits,
+                bits,
             )
             gate = gu[:, :intermediate]
             up = gu[:, intermediate:]
@@ -379,9 +439,9 @@ class B70LowbitMoEMethod:
             down = ops.prefill_wna16(
                 hid,
                 layer.w2_weight[expert],
-                None if hi2 is None else hi2[expert],
+                None if bits == 2 or hi2 is None else hi2[expert],
                 layer.w2_weight_scale[expert],
-                self.bits,
+                bits,
             )
             weight = router.reshape(-1)[sel].unsqueeze(-1)
             contrib = down.float() * weight

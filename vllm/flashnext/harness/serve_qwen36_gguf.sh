@@ -11,7 +11,14 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 CARD="${CARD:-0}"
 PORT="${PORT:-18104}"
 MAX_LEN="${MAX_LEN:-2048}"
+MAX_SEQS="${MAX_SEQS:-1}"
 GPU_MEM="${GPU_MEM:-0.90}"
+# GRAPH=1 drops --enforce-eager. GRAPH_MODE FULL_DECODE_ONLY matches the
+# D1 recipe (compilation mode NONE, capture sizes 1,2,3,4,8).
+GRAPH="${GRAPH:-0}"
+GRAPH_MODE="${GRAPH_MODE:-FULL_DECODE_ONLY}"
+CAPTURE_SIZES="${CAPTURE_SIZES:-1,2,3,4,8}"
+ATTN="${ATTN:-}"
 NAME="${NAME:-vllm-fn-qwen36-gguf-c${CARD}}"
 
 FORK=/mnt/vm_8tb/b70/build/vllm-flashnext/vllm
@@ -39,19 +46,42 @@ ARGS=(
   --dtype bfloat16
   --max-model-len "$MAX_LEN"
   --gpu-memory-utilization "$GPU_MEM"
-  --max-num-seqs 1
+  --max-num-seqs "$MAX_SEQS"
   --language-model-only
-  --enforce-eager
   --load-format b70_gguf
   --quantization b70_gguf
   --trust-remote-code
 )
+if [[ "$GRAPH" == "0" ]]; then
+  ARGS+=(--enforce-eager)
+else
+  SIZES_JSON="[${CAPTURE_SIZES}]"
+  case "$GRAPH_MODE" in
+    FULL|FULL_DECODE_ONLY)
+      CFG="{\"mode\":0,\"cudagraph_mode\":\"${GRAPH_MODE}\",\"cudagraph_capture_sizes\":${SIZES_JSON}}"
+      ;;
+    *)
+      CFG="{\"cudagraph_mode\":\"${GRAPH_MODE}\",\"cudagraph_capture_sizes\":${SIZES_JSON}}"
+      ;;
+  esac
+  ARGS+=(--compilation-config "$CFG")
+fi
+if [[ -n "$ATTN" ]]; then
+  ARGS+=(--attention-backend "$ATTN")
+fi
 if [[ -n "${GDN_BACKEND:-}" ]]; then
   ARGS+=(--gdn-prefill-backend "$GDN_BACKEND")
 fi
 
-echo "serve_qwen36_gguf: card=$CARD port=$PORT max_len=$MAX_LEN name=$NAME"
+echo "serve_qwen36_gguf: card=$CARD port=$PORT max_len=$MAX_LEN seqs=$MAX_SEQS graph=$GRAPH mode=$GRAPH_MODE attn=${ATTN:-default} name=$NAME"
 echo "serve_qwen36_gguf: ${ARGS[*]}"
+
+ENV_ARGS=()
+for key in B70_XPU_CG_RECLAIM B70_GGUF_SO B70_REPLAY_LOG B70_STEP_LOG; do
+  if [[ -n "${!key:-}" ]]; then
+    ENV_ARGS+=(--env "${key}=${!key}")
+  fi
+done
 
 exec "$HERE/xpu-run.sh" --card "$CARD" --name "$NAME" --port "$PORT" \
   --env B70_GGUF=1 \
@@ -63,4 +93,5 @@ exec "$HERE/xpu-run.sh" --card "$CARD" --name "$NAME" --port "$PORT" \
   --env VLLM_NO_USAGE_STATS=1 \
   --env "B70_GGUF_REF=${B70_GGUF_REF:-0}" \
   --env "B70_EAGER_QK=${B70_EAGER_QK:-0}" \
+  "${ENV_ARGS[@]}" \
   -- "${ARGS[@]}"

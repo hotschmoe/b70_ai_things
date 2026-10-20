@@ -65,11 +65,33 @@ def _register_fakes() -> None:
     try:
         getattr(torch.ops.b70_lowbit, "moe_prefill")
     except AttributeError:
+        pass
+    else:
+        @register_fake("b70_lowbit::moe_prefill")
+        def _moe_prefill_fake(
+            x,
+            ids,
+            router_w,
+            w13_plane2,
+            w13_plane_hi,
+            w13_scale,
+            w2_plane2,
+            w2_plane_hi,
+            w2_scale,
+            bits,
+        ):
+            del ids, router_w, w13_plane2, w13_plane_hi, w13_scale
+            del w2_plane2, w2_plane_hi, w2_scale, bits
+            return x.new_empty((x.shape[0], x.shape[1]))
+
+    try:
+        getattr(torch.ops.b70_lowbit, "moe_gemv_mixed")
+    except AttributeError:
         _FAKES = True
         return
 
-    @register_fake("b70_lowbit::moe_prefill")
-    def _moe_prefill_fake(
+    @register_fake("b70_lowbit::moe_gemv_mixed")
+    def _moe_mixed_fake(
         x,
         ids,
         router_w,
@@ -79,10 +101,11 @@ def _register_fakes() -> None:
         w2_plane2,
         w2_plane_hi,
         w2_scale,
+        expert_bits,
         bits,
     ):
         del ids, router_w, w13_plane2, w13_plane_hi, w13_scale
-        del w2_plane2, w2_plane_hi, w2_scale, bits
+        del w2_plane2, w2_plane_hi, w2_scale, expert_bits, bits
         return x.new_empty((x.shape[0], x.shape[1]))
 
     _FAKES = True
@@ -173,6 +196,52 @@ def moe_gemv(
         _ready(w2_plane2),
         _ready(_hi(w2_plane_hi, x)),
         _ready(w2_scale),
+        int(bits),
+    )
+
+
+def moe_gemv_mixed(
+    x: torch.Tensor,
+    ids: torch.Tensor,
+    router_w: torch.Tensor,
+    w13_plane2: torch.Tensor,
+    w13_plane_hi: torch.Tensor | None,
+    w13_scale: torch.Tensor,
+    w2_plane2: torch.Tensor,
+    w2_plane_hi: torch.Tensor | None,
+    w2_scale: torch.Tensor,
+    expert_bits: torch.Tensor,
+    bits: int,
+) -> torch.Tensor:
+    """Routed GEMV where each expert has its own bit width.
+
+    expert_bits is int32 [E] and stays on device. `bits` is the storage
+    width (the max), which sizes the hi plane. This is a different kernel
+    from moe_gemv: uniform checkpoints keep the templated op.
+    """
+    _load()
+    if not hasattr(torch.ops.b70_lowbit, "moe_gemv_mixed"):
+        raise RuntimeError(
+            "this b70_lowbit library has no moe_gemv_mixed; "
+            "rebuild with SO_NAME and set B70_LOWBIT_SO"
+        )
+    if ids.dtype != torch.int32:
+        ids = ids.to(torch.int32)
+    if router_w.dtype != torch.float32:
+        router_w = router_w.to(torch.float32)
+    if expert_bits.dtype != torch.int32:
+        expert_bits = expert_bits.to(torch.int32)
+    return torch.ops.b70_lowbit.moe_gemv_mixed(
+        _ready(x),
+        _ready(ids),
+        _ready(router_w),
+        _ready(w13_plane2),
+        _ready(_hi(w13_plane_hi, x)),
+        _ready(w13_scale),
+        _ready(w2_plane2),
+        _ready(_hi(w2_plane_hi, x)),
+        _ready(w2_scale),
+        _ready(expert_bits),
         int(bits),
     )
 

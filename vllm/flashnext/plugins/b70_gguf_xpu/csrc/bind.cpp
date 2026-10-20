@@ -119,6 +119,12 @@ at::Tensor moe_layer(at::Tensor x, at::Tensor gate_q, int64_t gate_type, at::Ten
     return y;
 }
 
+at::Tensor reserve_decode() {
+    sycl::queue& queue = c10::xpu::getCurrentXPUStream().queue();
+    b70_reserve_decode_queue(&queue);
+    return at::empty({0}, at::TensorOptions().dtype(at::kFloat).device(at::kCPU));
+}
+
 at::Tensor grouped_gemm(at::Tensor x, at::Tensor q, at::Tensor entries, int64_t ggml_type, int64_t N, int64_t K) {
     check_xpu(x, "x");
     check_xpu(q, "q");
@@ -183,6 +189,11 @@ TORCH_LIBRARY_IMPL(b70_gguf, XPU, m) {
 
 // No tensor args, so this cannot dispatch on XPU. CompositeExplicitAutograd
 // runs for a direct call from Python.
+TORCH_LIBRARY_FRAGMENT(b70_gguf, m) {
+    m.def("reserve_decode() -> Tensor");
+}
+
 TORCH_LIBRARY_IMPL(b70_gguf, CompositeExplicitAutograd, m) {
     m.impl("prefill_split_us", b70_prefill_split_us_op);
+    m.impl("reserve_decode", reserve_decode);
 }

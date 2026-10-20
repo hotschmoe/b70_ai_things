@@ -57,7 +57,7 @@ def main() -> None:
         payload = {
             "model": args.model,
             "messages": [{"role": "user", "content": prompt + f" stream {i}."}],
-            "max_tokens": 48,
+            "max_tokens": 256,
             "temperature": 0,
             "stream": True,
         }
@@ -66,17 +66,18 @@ def main() -> None:
         ).start()
         print(f"launched stream {i}", flush=True)
 
-    # Launch the next stream only after the previous T has been recorded.
-    # A prefill step has many tokens, so it does not consume the T slot.
+    # Launch the next stream when the previous T is armed, while that step
+    # is still inside its region bench. The new request then joins the next
+    # decode step instead of arriving after the earlier streams have finished.
     marks = (
-        "d2_waiting missing=[2, 3, 4]",
-        "d2_waiting missing=[3, 4]",
-        "d2_waiting missing=[4]",
+        "d2_step_armed T=1",
+        "d2_step_armed T=2",
+        "d2_step_armed T=3",
         "d2_profile_done",
     )
     for i, mark in enumerate(marks):
         launch(i)
-        deadline_i = time.time() + 600
+        deadline_i = time.time() + 240
         while time.time() < deadline_i:
             try:
                 text = open(args.log, encoding="utf-8", errors="replace").read()

@@ -309,20 +309,40 @@ inline void b70_kreg_tsum(float (&v)[P], const sycl::sub_group& sg, int lane) {
     }
 }
 
-// One device buffer, grown only after a queue wait. Steady-state gemv calls
-// do not wait and do not reallocate. Single stream: the bench and the
-// decode path submit on the current XPU stream.
+// Decode graphs capture T<=8. This floor covers T=8, slots=16, K=8192,
+// I=8192 and a gemv of M=8, K=8192 (~1.5 MiB). A captured graph bakes the
+// address, so a later grow leaks the old block instead of freeing it.
+// queue.wait() during recording aborts the capture, so this path never waits.
+constexpr size_t kB70Q8Floor = 8ull * 16ull * (8192 / 32);
+
+inline bool b70_queue_recording(sycl::queue& q) {
+    using qs = sycl::ext::oneapi::experimental::queue_state;
+    return q.ext_oneapi_get_state() == qs::recording;
+}
+
+// need is in elements. elem is the element size. floor is the decode ceiling.
+// Returns the existing pointer when it already fits. Otherwise allocates a
+// new block and leaks the old one. Throws if the queue is recording.
+inline void* b70_device_grow(sycl::queue& q, void* ptr, size_t& cap, size_t need, size_t elem, size_t floor) {
+    size_t n = need < floor ? floor : need;
+    // 16-byte alignment of the byte count.
+    size_t bytes = n * elem;
+    bytes = (bytes + 15ull) & ~15ull;
+    n = bytes / elem;
+    if (n <= cap) return ptr;
+    if (b70_queue_recording(q)) {
+        throw std::runtime_error("b70_gguf: scratch grew during graph capture");
+    }
+    void* raw = sycl::aligned_alloc_device(16, bytes, q);
+    if (!raw) throw std::runtime_error("b70_gguf: scratch alloc failed");
+    cap = n;
+    return raw;
+}
+
 inline B70Q8* b70_q8_scratch(sycl::queue& q, size_t nblk) {
     static B70Q8* ptr = nullptr;
     static size_t cap = 0;
-    if (nblk <= cap) return ptr;
-    q.wait();
-    if (ptr) sycl::free(ptr, q);
-    cap = nblk < 8192 ? 8192 : nblk;
-    // size must be a multiple of the alignment. 48-byte blocks are already a
-    // multiple of 16, which is what the int4 qs load needs.
-    void* raw = sycl::aligned_alloc_device(16, cap * sizeof(B70Q8), q);
-    if (!raw) throw std::runtime_error("b70_gguf: q8 scratch alloc failed");
+    void* raw = b70_device_grow(q, ptr, cap, nblk, sizeof(B70Q8), kB70Q8Floor);
     ptr = static_cast<B70Q8*>(raw);
     return ptr;
 }

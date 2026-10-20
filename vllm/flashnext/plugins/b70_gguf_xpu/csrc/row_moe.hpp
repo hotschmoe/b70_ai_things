@@ -275,15 +275,32 @@ struct B70Ws {
     size_t cap = 0;
 };
 
+// Same ceiling as the Q8 floor: T=8, slots=16, K or I = 8192.
+constexpr size_t kB70WsFloor = 8ull * 16ull * 8192ull;
+
 inline float* b70_ws(sycl::queue& q, B70Ws& ws, size_t nfloat) {
-    if (nfloat <= ws.cap) return ws.p;
-    q.wait();
-    if (ws.p) sycl::free(ws.p, q);
-    ws.cap = nfloat < 1024 ? 1024 : nfloat;
-    void* raw = sycl::aligned_alloc_device(16, ws.cap * sizeof(float), q);
-    if (!raw) throw std::runtime_error("b70_gguf: moe workspace alloc failed");
+    void* raw = b70_device_grow(q, ws.p, ws.cap, nfloat, sizeof(float), kB70WsFloor);
     ws.p = static_cast<float*>(raw);
     return ws.p;
+}
+
+inline B70Ws& b70_act_ws() {
+    static B70Ws w;
+    return w;
+}
+
+inline B70Ws& b70_down_ws() {
+    static B70Ws w;
+    return w;
+}
+
+// Allocate the decode ceiling on the current stream. Call this from
+// process_weights, before any graph capture. The first moe_layer inside
+// a capture must not be the call that grows the workspace.
+inline void b70_reserve_decode(sycl::queue& q) {
+    b70_q8_scratch(q, 1);
+    b70_ws(q, b70_act_ws(), 1);
+    b70_ws(q, b70_down_ws(), 1);
 }
 
 inline sycl::event b70_launch_gu(sycl::queue& q, const B70Q8* xq, const uint8_t* gate, int gate_type, int gate_rb,
@@ -477,10 +494,8 @@ inline void b70_moe_layer_launch(sycl::queue& q, const uint16_t* x, const uint8_
     const size_t q8_h = (size_t)T * (size_t)slots * (size_t)nb_h;
     const size_t q8_n = q8_x > q8_h ? q8_x : q8_h;
     B70Q8* xq = b70_q8_scratch(q, q8_n);
-    static B70Ws act_ws;
-    static B70Ws down_ws;
-    float* act = b70_ws(q, act_ws, (size_t)T * (size_t)slots * (size_t)I);
-    float* partial = b70_ws(q, down_ws, (size_t)T * (size_t)slots * (size_t)K);
+    float* act = b70_ws(q, b70_act_ws(), (size_t)T * (size_t)slots * (size_t)I);
+    float* partial = b70_ws(q, b70_down_ws(), (size_t)T * (size_t)slots * (size_t)K);
     const sycl::event eq = b70_q8_quant(q, x, xq, T, K);
     const sycl::event egu = b70_launch_gu(q, xq, gate, gate_type, gate_rb, up, up_type, up_rb, sgate, sg_type, sg_rb, sup,
                                           su_type, su_rb, ids, act, T, topk, slots, E, I, K, eq);

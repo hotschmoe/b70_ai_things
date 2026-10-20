@@ -227,10 +227,12 @@ def install() -> None:
         return
     _installed = True
 
-    def _patch() -> None:
-        from vllm.v1.worker import gpu_model_runner as gmr
+    _MODULES = (
+        "vllm.v1.worker.gpu_model_runner",
+        "vllm.v1.worker.gpu.model_runner",
+    )
 
-        cls = gmr.GPUModelRunner
+    def _wrap(cls) -> None:
         current = cls.load_model
         if getattr(current, "_d2_int4_wrapped", False):
             return
@@ -246,29 +248,27 @@ def install() -> None:
 
         load_model._d2_int4_wrapped = True  # type: ignore[attr-defined]
         cls.load_model = load_model
-        _log("d2_int4_installed")
+        _log(f"d2_int4_installed cls={cls.__module__}.{cls.__name__}")
+
+    def _patch() -> None:
+        for name in _MODULES:
+            mod = sys.modules.get(name)
+            cls = getattr(mod, "GPUModelRunner", None) if mod is not None else None
+            if cls is not None:
+                _wrap(cls)
 
     try:
         _patch()
     except Exception:
         _log("d2_int4_patch_now_fail\n" + traceback.format_exc())
 
-    import importlib
     import importlib.abc
     import importlib.machinery
 
-    if "vllm.v1.worker.gpu_model_runner" in sys.modules:
-        try:
-            _patch()
-        except Exception:
-            _log("d2_int4_patch_imported_fail\n" + traceback.format_exc())
-        return
-
     class _ExecHook(importlib.abc.MetaPathFinder):
         def find_spec(self, fullname, path, target=None):
-            if fullname != "vllm.v1.worker.gpu_model_runner":
+            if fullname not in _MODULES:
                 return None
-            sys.meta_path.remove(self)
             spec = importlib.machinery.PathFinder.find_spec(fullname, path)
             if spec is None or spec.loader is None:
                 return spec
@@ -277,7 +277,9 @@ def install() -> None:
             def exec_module(module, _orig=orig_exec):
                 _orig(module)
                 try:
-                    _patch()
+                    cls = getattr(module, "GPUModelRunner", None)
+                    if cls is not None:
+                        _wrap(cls)
                 except Exception:
                     _log("d2_int4_patch_exec_fail\n" + traceback.format_exc())
 

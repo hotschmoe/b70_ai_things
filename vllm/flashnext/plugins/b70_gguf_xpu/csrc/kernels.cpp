@@ -290,6 +290,8 @@ void b70_moe_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, co
     });
 }
 
+void b70_reserve_decode_queue(void* queue) { b70_reserve_decode(q_of(queue)); }
+
 void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate_type, const uint8_t* up, int up_type,
                    const uint8_t* down, int down_type, const int32_t* expert_ids, const float* router,
                    const uint8_t* sgate, int sg_type, const uint8_t* sup, int su_type, const uint8_t* sdown, int sd_type,

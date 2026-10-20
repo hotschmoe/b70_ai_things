@@ -27,6 +27,16 @@ from prefill_check import close_enough, cpu_dequant, elapsed_us, load_cpu, repor
 Q4, IQ3, Q2 = 12, 18, 42
 
 
+def legalize(raw: np.ndarray, tid: int) -> np.ndarray:
+    # synth_pack writes fp16 1.0 into the first two bytes. Q4_K stores dmin in
+    # the next two bytes; random fp16 there is often NaN and both sides go NaN.
+    if tid == Q4:
+        blk = raw.reshape(raw.shape[0], -1, 144)
+        blk[:, :, 2] = 0
+        blk[:, :, 3] = 0
+    return raw
+
+
 def ref_w(lib, tid: int, raw: np.ndarray, k: int) -> np.ndarray:
     if tid == Q2:
         return cpu_dequant(lib, tid, raw, k)
@@ -34,7 +44,7 @@ def ref_w(lib, tid: int, raw: np.ndarray, k: int) -> np.ndarray:
 
 
 def check_dense_one(lib, tid, n, k, m, failures):
-    raw = synth_pack(tid, n, k, 100 + tid + m + k)
+    raw = legalize(synth_pack(tid, n, k, 100 + tid + m + k), tid)
     w = ref_w(lib, tid, raw, k)
     q = torch.from_numpy(raw).to(device="xpu")
     x = torch.randn(m, k, device="xpu", dtype=torch.float16)
@@ -46,7 +56,7 @@ def check_dense_one(lib, tid, n, k, m, failures):
 
 
 def check_grouped_one(lib, tid, n, k, failures):
-    raw = synth_pack(tid, n, k, 200 + tid + k)
+    raw = legalize(synth_pack(tid, n, k, 200 + tid + k), tid)
     parts = [raw, raw, np.ascontiguousarray(raw[::-1])]
     blob = np.ascontiguousarray(np.concatenate(parts, axis=0))
     weights = [ref_w(lib, tid, p, k) for p in parts]
@@ -79,7 +89,7 @@ def check_layer_small(lib, failures):
     rng = np.random.default_rng(3)
     ids_np = rng.integers(0, e, size=(t, topk), dtype=np.int32)
     ids_np[0, 1] = -1
-    x_np = rng.standard_normal((t, h)).astype(np.float16).astype(np.float32)
+    x_np = (rng.standard_normal((t, h)).astype(np.float32) * 0.02).astype(np.float16).astype(np.float32)
     rw = rng.random((t, topk)).astype(np.float32)
     ref = np.zeros((t, h), np.float32)
     for ti in range(t):
@@ -203,7 +213,7 @@ def main() -> int:
         shapes = [(512, 12288, 2560)] if quick else [(512, 12288, 2560), (4096, 12288, 2560), (12288, 12288, 2560)]
         for m, n, k in shapes:
             print(f"PACK dense M={m}", flush=True)
-            raw = synth_pack(Q4, n, k, 7)
+            raw = legalize(synth_pack(Q4, n, k, 7), Q4)
             q = torch.from_numpy(raw).to(device="xpu")
             x = torch.randn(m, k, device="xpu", dtype=torch.float16)
             flops = 2.0 * m * n * k

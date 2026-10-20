@@ -19,3 +19,5 @@ void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate
 // Returns 0 when the XMX kernel is launched. Nonzero when the shape is refused.
 int b70_grouped_gemm(void* queue, int type, const uint16_t* x, const uint8_t* w, const int32_t* entries,
                      float* y, int n_ent, int E, int M, int N, int K);
+// Allocate decode scratch on this stream. No kernel launch. No wait.
+void b70_reserve_decode_queue(void* queue);

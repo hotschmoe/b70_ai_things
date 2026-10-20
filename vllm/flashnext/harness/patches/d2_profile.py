@@ -5,8 +5,11 @@
 # re-captures each region (GDN proj, GDN core, attention, MoE, shared
 # expert, norms, lm_head) as its own XPU graph and times the replay.
 # That is the same device-time method as D1's 11.4 ms full-graph sample.
-# Eager per-leaf events are not used: D1's dispatch timer reported 539 ms
-# because host gaps sit inside the event pair.
+# Replay runs under the forward context saved during the real step.
+# Replaying after execute_model returns fails for MoE, GDN, and attention
+# because those ops call get_forward_context().
+# Op event brackets are logged separately. They include host gaps inside
+# one op, so a linear bracket is the calibration against its graph time.
 
 from __future__ import annotations
 
@@ -152,6 +155,57 @@ def _replay(fn, nreplay: int) -> tuple[float, str]:
     return ms, "graph"
 
 
+def _event_once(fn) -> tuple[float, str]:
+    """Device bracket around one eager call. Host time before the launch
+    sits inside the pair, so this is a fallback, not the graph number."""
+    import torch
+
+    torch.xpu.synchronize()
+    start = torch.xpu.Event(enable_timing=True)
+    end = torch.xpu.Event(enable_timing=True)
+    start.record()
+    fn()
+    end.record()
+    end.synchronize()
+    return start.elapsed_time(end), "event"
+
+
+def _time_logits(t: int) -> None:
+    hs = _state.get("logits_hs")
+    orig = _state.get("logits_orig")
+    model = _state.get("logits_model")
+    _state["logits_hs"] = None
+    _state["logits_orig"] = None
+    _state["logits_model"] = None
+    if hs is None or orig is None:
+        _log(f"d2_region T={t} name=compute_logits SKIP no_call")
+        return
+    head = getattr(model, "lm_head", None) if model is not None else None
+    if head is not None:
+        stored, dtypes = _param_bytes(head)
+    else:
+        stored, dtypes = 0, ""
+    _state["benching"] = True
+    try:
+        try:
+            ms, how = _replay(lambda: orig(hs), 4)
+        except Exception as exc:
+            _log(f"d2_region T={t} name=compute_logits graph_fail {exc!r}")
+            try:
+                ms, how = _event_once(lambda: orig(hs))
+            except Exception as exc2:
+                _log(f"d2_region T={t} name=compute_logits FAIL {exc2!r}")
+                return
+        gbps = (stored / (ms * 1e-3)) / 1e9 if ms > 0 and stored else 0.0
+        _log(
+            f"d2_region T={t} name=compute_logits ms={ms:.4f} via={how} "
+            f"stored={stored} active={stored} dtype={dtypes} "
+            f"GB/s={gbps:.1f} roof%={100.0 * gbps / 608.0:.1f}"
+        )
+    finally:
+        _state["benching"] = False
+
+
 def _call(mod, args, kwargs):
     if kwargs:
         return mod(*args, **kwargs)
@@ -159,31 +213,59 @@ def _call(mod, args, kwargs):
 
 
 def _bench_saved(t: int) -> None:
+    import contextlib
+
     import torch
+
+    from vllm.forward_context import override_forward_context
 
     _state["benching"] = True
     try:
         regions = _state["regions"].get(t, {})
-        _log(f"d2_bench_begin T={t} regions={sorted(regions)}")
-        for name, payload in regions.items():
-            mod = payload["mod"]
-            args = payload["args"]
-            kwargs = payload["kwargs"]
-            stored, dtypes = _param_bytes(mod)
-            active = _active_bytes(name, stored)
+        ctx = _state.get("ctx")
+        _log(
+            f"d2_bench_begin T={t} regions={sorted(regions)} "
+            f"ctx={type(ctx).__name__ if ctx is not None else None}"
+        )
+        if ctx is not None:
             try:
-                ms, how = _replay(lambda: _call(mod, args, kwargs), 6)
-            except Exception as exc:
-                _log(f"d2_region T={t} name={name} FAIL {exc!r}")
-                continue
-            gbps = 0.0
-            if ms > 0 and active > 0:
-                gbps = (active / (ms * 1e-3)) / 1e9
-            _log(
-                f"d2_region T={t} name={name} ms={ms:.4f} via={how} "
-                f"stored={stored} active={active} dtype={dtypes} "
-                f"GB/s={gbps:.1f} roof%={100.0 * gbps / 608.0:.1f}"
-            )
+                ctx.moe_layer_index = 0
+            except Exception:
+                pass
+            cm = override_forward_context(ctx)
+        else:
+            cm = contextlib.nullcontext()
+        with cm:
+            for name, payload in regions.items():
+                mod = payload["mod"]
+                args = payload["args"]
+                kwargs = payload["kwargs"]
+                stored, dtypes = _param_bytes(mod)
+                active = _active_bytes(name, stored)
+
+                def _run(mod=mod, args=args, kwargs=kwargs):
+                    return _call(mod, args, kwargs)
+
+                how = "graph"
+                try:
+                    ms, how = _replay(_run, 4)
+                except Exception as exc:
+                    _log(f"d2_region T={t} name={name} graph_fail {exc!r}")
+                    try:
+                        if ctx is not None:
+                            ctx.moe_layer_index = 0
+                        ms, how = _event_once(_run)
+                    except Exception as exc2:
+                        _log(f"d2_region T={t} name={name} FAIL {exc2!r}")
+                        continue
+                gbps = 0.0
+                if ms > 0 and active > 0:
+                    gbps = (active / (ms * 1e-3)) / 1e9
+                _log(
+                    f"d2_region T={t} name={name} ms={ms:.4f} via={how} "
+                    f"stored={stored} active={active} dtype={dtypes} "
+                    f"GB/s={gbps:.1f} roof%={100.0 * gbps / 608.0:.1f}"
+                )
         torch.xpu.synchronize()
     finally:
         _state["benching"] = False
@@ -274,6 +356,14 @@ def _install_hooks(runner) -> None:
         def _pre(mod, args, kwargs=None, name=name):
             if _state["benching"]:
                 return
+            if _state.get("ctx") is None:
+                try:
+                    from vllm.forward_context import get_forward_context
+
+                    _state["ctx"] = get_forward_context()
+                    _log("d2_ctx_saved")
+                except Exception as exc:
+                    _log(f"d2_ctx_missing {exc!r}")
             t = _state.get("cur_t")
             if t not in _WANTED:
                 return
@@ -345,51 +435,121 @@ def install() -> None:
         def find_spec(self, fullname, path, target=None):
             return None
 
-    def _patch() -> None:
-        try:
-            from vllm.v1.worker import gpu_model_runner as gmr
-        except Exception:
-            return
-        cls = gmr.GPUModelRunner
+    # V1 runner and the V2 runner selected by XPUWorker ("Using V2 Model Runner").
+    _MODULES = (
+        "vllm.v1.worker.gpu_model_runner",
+        "vllm.v1.worker.gpu.model_runner",
+    )
+
+    def _wrap(cls) -> None:
         if getattr(cls.execute_model, "_d2_wrapped", False):
             return
         orig = cls.execute_model
 
         def execute_model(self, scheduler_output, *args, **kwargs):
-            if kwargs.get("dummy_run", False) or _state["benching"]:
+            dummy = kwargs.get("dummy_run", False)
+            if not dummy and len(args) >= 2 and args[1] is True:
+                dummy = True
+            if dummy or _state["benching"]:
                 return orig(self, scheduler_output, *args, **kwargs)
             n_tok = getattr(scheduler_output, "total_num_scheduled_tokens", -1)
             _state["cur_t"] = n_tok
+            _state["steps"] = _state.get("steps", 0) + 1
+            if _state["steps"] <= 12:
+                _log(f"d2_step n={_state['steps']} T={n_tok}")
             try:
                 _install_hooks(self)
             except Exception:
                 _log("d2_hook_fail\n" + traceback.format_exc())
             want = n_tok in _WANTED and n_tok not in _state["seen"]
             counts = None
+            logits_restore = None
             if want:
+                # Drop the previous step's context so the pre-hook saves this T.
+                _state["ctx"] = None
+                _state["logits_hs"] = None
                 from torch.utils._python_dispatch import TorchDispatchMode
+
+                _event_ops = (
+                    "moe_forward_shared",
+                    "gdn_attention_core_xpu",
+                    "unified_attention_with_output",
+                    "unified_kv_cache_update",
+                )
 
                 class _Count(TorchDispatchMode):
                     def __init__(self):
                         super().__init__()
                         self.counts = {}
+                        self.events = {}
+                        self.linear_ms = None
 
                     def __torch_dispatch__(self, func, types, args=(), kwargs=None):
+                        import torch
+
                         key = str(func)
                         self.counts[key] = self.counts.get(key, 0) + 1
-                        return func(*args, **(kwargs or {}))
+                        kw = kwargs or {}
+                        want_event = any(s in key for s in _event_ops)
+                        want_linear = self.linear_ms is None and "aten.linear" in key
+                        if not want_event and not want_linear:
+                            return func(*args, **kw)
+                        torch.xpu.synchronize()
+                        start = torch.xpu.Event(enable_timing=True)
+                        end = torch.xpu.Event(enable_timing=True)
+                        start.record()
+                        out_op = func(*args, **kw)
+                        end.record()
+                        end.synchronize()
+                        ms = start.elapsed_time(end)
+                        if want_linear and self.linear_ms is None:
+                            self.linear_ms = ms
+                        if want_event:
+                            self.events.setdefault(key, []).append(ms)
+                        return out_op
 
                 counts = _Count()
                 counts.__enter__()
+                model = getattr(self, "model", None)
+                orig_cl = getattr(model, "compute_logits", None) if model is not None else None
+                if orig_cl is not None:
+                    def wrapped_cl(hidden_states, *a, _orig=orig_cl, **k):
+                        result = _orig(hidden_states, *a, **k)
+                        if (
+                            hidden_states is not None
+                            and _state.get("logits_hs") is None
+                        ):
+                            _state["logits_hs"] = hidden_states.detach().clone()
+                            _state["logits_orig"] = _orig
+                            _state["logits_model"] = model
+                        return result
+
+                    model.compute_logits = wrapped_cl
+                    logits_restore = (model, orig_cl)
                 _log(f"d2_step_armed T={n_tok}")
             try:
                 out = orig(self, scheduler_output, *args, **kwargs)
             finally:
                 if counts is not None:
                     counts.__exit__(None, None, None)
+                if logits_restore is not None:
+                    logits_restore[0].compute_logits = logits_restore[1]
             if want and counts is not None:
                 try:
                     _dump_counts(n_tok, counts.counts)
+                    if counts.linear_ms is not None:
+                        _log(
+                            f"d2_op_event T={n_tok} op=aten.linear.first "
+                            f"ms={counts.linear_ms:.4f}"
+                        )
+                    for key, arr in counts.events.items():
+                        total = float(sum(arr))
+                        _log(
+                            f"d2_op_event T={n_tok} op={key} n={len(arr)} "
+                            f"sum_ms={total:.3f} mean_ms={total / len(arr):.4f} "
+                            f"min_ms={min(arr):.4f} max_ms={max(arr):.4f}"
+                        )
+                    _time_logits(n_tok)
                     _bench_saved(n_tok)
                     _state["seen"].add(n_tok)
                     _maybe_finish()
@@ -399,57 +559,45 @@ def install() -> None:
 
         execute_model._d2_wrapped = True  # type: ignore[attr-defined]
         cls.execute_model = execute_model
-        _log("d2_profile_installed")
+        _log(f"d2_profile_installed cls={cls.__module__}.{cls.__name__}")
 
-    # Patch now if vLLM is already imported, and on every later import.
+    def _patch() -> None:
+        for name in _MODULES:
+            mod = sys.modules.get(name)
+            if mod is None:
+                continue
+            cls = getattr(mod, "GPUModelRunner", None)
+            if cls is not None:
+                _wrap(cls)
+
     try:
         _patch()
     except Exception:
         _log("d2_patch_now_fail\n" + traceback.format_exc())
 
-    real_import = importlib.import_module
+    import importlib.abc
+    import importlib.machinery
 
-    def _import(name, package=None):
-        mod = real_import(name, package)
-        if name == "vllm.v1.worker.gpu_model_runner" or name.startswith(
-            "vllm.v1.worker"
-        ):
-            try:
-                _patch()
-            except Exception:
-                _log("d2_patch_import_fail\n" + traceback.format_exc())
-        return mod
-
-    # sitecustomize cannot wrap importlib for the worker that is already
-    # inside vLLM. The engine worker imports sitecustomize first, then
-    # vLLM, so a meta hook on the module is the reliable path.
-    class _Loader:
-        pass
-
-    if "vllm.v1.worker.gpu_model_runner" in sys.modules:
-        _patch()
-    else:
-        import importlib.abc
-
-        class _ExecHook(importlib.abc.MetaPathFinder):
-            def find_spec(self, fullname, path, target=None):
-                if fullname != "vllm.v1.worker.gpu_model_runner":
-                    return None
-                sys.meta_path.remove(self)
-                spec = importlib.machinery.PathFinder.find_spec(fullname, path)
-                if spec is None or spec.loader is None:
-                    return spec
-                orig_exec = spec.loader.exec_module
-
-                def exec_module(module, _orig=orig_exec):
-                    _orig(module)
-                    try:
-                        _patch()
-                    except Exception:
-                        _log("d2_exec_patch_fail\n" + traceback.format_exc())
-
-                spec.loader.exec_module = exec_module  # type: ignore[method-assign]
+    class _ExecHook(importlib.abc.MetaPathFinder):
+        def find_spec(self, fullname, path, target=None):
+            if fullname not in _MODULES:
+                return None
+            spec = importlib.machinery.PathFinder.find_spec(fullname, path)
+            if spec is None or spec.loader is None:
                 return spec
+            orig_exec = spec.loader.exec_module
 
-        sys.meta_path.insert(0, _ExecHook())
-        _log("d2_finder_installed")
+            def exec_module(module, _orig=orig_exec):
+                _orig(module)
+                try:
+                    cls = getattr(module, "GPUModelRunner", None)
+                    if cls is not None:
+                        _wrap(cls)
+                except Exception:
+                    _log("d2_exec_patch_fail\n" + traceback.format_exc())
+
+            spec.loader.exec_module = exec_module  # type: ignore[method-assign]
+            return spec
+
+    sys.meta_path.insert(0, _ExecHook())
+    _log("d2_finder_installed")
