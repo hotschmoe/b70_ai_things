@@ -5,6 +5,9 @@
 void b70_dequant_bf16(void* queue, int type, const uint8_t* q, int64_t rows, int64_t cols, uint16_t* out);
 void b70_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, float* y,
               int M, int N, int K);
+// O4: y row stride ldy (-1 = N); ybf = 1 writes bf16 (RNE) instead of fp32.
+void b70_gemv2(void* queue, int type, const uint16_t* x, const uint8_t* w, void* y, int M, int N, int K, int ldy,
+               int ybf);
 // expert_ids: int32 [T, topk]. y: float [T, topk, N]. x: bf16 [T, K]. w packed [E, N, row].
 void b70_moe_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, const int32_t* expert_ids,
                   float* y, int T, int topk, int E, int N, int K);

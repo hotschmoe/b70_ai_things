@@ -275,6 +275,9 @@ void ep_init(int max_t, int max_k, int max_topk, int nlayers) {
     ep_transport_warmup();
 }
 
+// F1: prefill_ep.cpp allocates its own regions with the path ep_init probed.
+int ep_transport_path() { return S().up ? S().path : 0; }
+
 void ep_reserve() {
     State& s = S();
     if (!s.up) throw std::runtime_error("ep_reserve before init");

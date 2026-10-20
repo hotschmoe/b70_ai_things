@@ -58,11 +58,12 @@ def bench(name, fn, count=1, warm=3, iters=5, tokens=None):
         b.synchronize()
         event.append(a.elapsed_time(b))
         wall.append((time.perf_counter() - t) * 1000)
+    operation_peak = torch.xpu.max_memory_allocated()
     if isinstance(out, torch.Tensor):
         assert torch.isfinite(out).all().item(), name
     row = dict(name=name, T=T if tokens is None else tokens, count=count, event_ms=statistics.median(event),
                wall_ms=statistics.median(wall), event_samples=event, wall_samples=wall,
-               base_allocated=base_bytes, peak_allocated=torch.xpu.max_memory_allocated())
+               base_allocated=base_bytes, peak_operation_allocated=operation_peak, peak_allocated=torch.xpu.max_memory_allocated())
     ROWS.append(row)
     print(json.dumps(row), flush=True)
     (ROOT / A.out).write_text(json.dumps(ROWS, indent=2))
@@ -301,8 +302,9 @@ if 'tile' in PARTS:
     del x,ids,weights,packs
     cleanup()
 
-if 'census' in PARTS:
+if 'census' in PARTS or 'bounded' in PARTS:
     import re
+    native_dtype = 'bounded' in PARTS
     groups = {}
     kinds = ('attn_qkv', 'attn_gate', 'ssm_out', 'ssm_alpha', 'ssm_beta',
              'attn_q', 'attn_k', 'attn_v', 'attn_output', 'ffn_gate_shexp',
@@ -324,8 +326,9 @@ if 'census' in PARTS:
             fn = lambda: torch.nn.functional.linear(x, w)
         else:
             w = raw(names[0])
-            fn = lambda: prefill.prefill_dense(x, w, typ, n, k)
-        bench(f'census.{kind}.type{typ}.{n}x{k}', fn, len(names))
+            fn = lambda: prefill.prefill_dense(x, w, typ, n, k, output_dtype=torch.bfloat16 if native_dtype else None)
+        prefix = "census_native" if native_dtype else "census"
+        bench(f'{prefix}.{kind}.type{typ}.{n}x{k}', fn, len(names))
         del x, w
         cleanup()
     from vllm.model_executor.layers.fused_moe.router.fused_topk_router import fused_topk
@@ -471,6 +474,126 @@ if 'skew' in PARTS:
         (ROOT / A.out).write_text(json.dumps(ROWS, indent=2))
         del x, packs, w, logits, weights, ids
         cleanup()
+
+if 'complete' in PARTS:
+    from transformers import AutoConfig
+    from vllm.model_executor.models.qwen3_next import Qwen3NextAttention
+    from vllm.model_executor.layers.layernorm import GemmaRMSNorm
+    from vllm.model_executor.layers.rotary_embedding import get_rope
+    from vllm.model_executor.layers.activation import SiluAndMul
+    from vllm.v1.attention.backends.fa_utils import reshape_and_cache_flash
+    import triton
+    cfg=AutoConfig.from_pretrained('/mnt/vm_8tb/b70/build/backend-decision/hf-flashnext').text_config
+    rope=get_rope(256,262144,rope_parameters=cfg.rope_parameters,dtype=torch.bfloat16).to(D)
+    qnorm=GemmaRMSNorm(256,eps=cfg.rms_norm_eps).to(D,torch.bfloat16)
+    knorm=GemmaRMSNorm(256,eps=cfg.rms_norm_eps).to(D,torch.bfloat16)
+    qnorm.weight.data.copy_((dense('blk.3.attn_q_norm.weight',dtype=torch.float32)-1).to(torch.bfloat16))
+    knorm.weight.data.copy_((dense('blk.3.attn_k_norm.weight',dtype=torch.float32)-1).to(torch.bfloat16))
+    attn=SimpleNamespace(use_fused_qk_norm_rope_gate=True,q_size=6144,kv_size=512,
+        num_heads=24,num_kv_heads=2,head_dim=256,rotary_emb=rope,q_norm=qnorm,k_norm=knorm,attn_output_gate=True)
+    qkv=torch.randn(T,13312,device=D,dtype=torch.bfloat16)*.1
+    positions=torch.arange(T,device=D).expand(3,-1).contiguous()
+    fused=bench('complete.fused_qk_norm_mrope_gate',lambda:Qwen3NextAttention._project_qkv_gate(attn,qkv,positions),12)
+    attn.use_fused_qk_norm_rope_gate=False
+    eager=Qwen3NextAttention._project_qkv_gate(attn,qkv,positions)
+    for i in (0,1):
+        assert torch.isfinite(fused[i]).all().item()
+        print('FUSED_QK_EAGER_DIFFERENCE',i,float((fused[i].reshape(T,-1)-eager[i].reshape(T,-1)).abs().max()),flush=True)
+    for i in (2,3):torch.testing.assert_close(fused[i].reshape(T,-1),eager[i].reshape(T,-1),atol=0,rtol=0)
+    print('FUSED_QK_GATE_VALUE_LAYOUT_EXACT',flush=True)
+    del rope,qnorm,knorm,attn,qkv,positions,fused,eager
+    cleanup()
+    q=torch.randn(T,12288,device=D,dtype=torch.bfloat16)
+    k=torch.randn(T,512,device=D,dtype=torch.bfloat16)
+    v=torch.randn_like(k)
+    bench('complete.attention_qkv_cat',lambda:torch.cat((q,k,v),dim=-1),12)
+    del q,k,v
+    cleanup()
+    gate=torch.randn(T,640,device=D,dtype=torch.bfloat16)
+    up=torch.randn_like(gate)
+    gu=bench('complete.shared_gu_cat',lambda:torch.cat((gate,up),dim=-1),48)
+    silu=SiluAndMul()
+    print('SILU_DISPATCH',silu._forward_method.__name__,flush=True)
+    got=bench('complete.shared_silu_native',lambda:silu(gu),48)
+    reference=torch.nn.functional.silu(gate)*up
+    torch.testing.assert_close(got,reference,atol=2e-2,rtol=2e-2)
+    print('SHARED_SILU_REFERENCE_OK',float((got-reference).abs().max()),flush=True)
+    del gate,up,gu,got,reference,silu
+    cleanup()
+    key=torch.randn(T,2,256,device=D,dtype=torch.bfloat16)
+    value=torch.randn_like(key)
+    pages=torch.empty((triton.cdiv(T,1600),2,1600,512),device=D,dtype=torch.bfloat16)
+    kc,vc=pages.transpose(1,2).split(256,dim=-1)
+    slot=torch.arange(T,device=D,dtype=torch.int64)
+    scale=torch.ones((),device=D)
+    bench('complete.kv_write_block1600',lambda:reshape_and_cache_flash(key,value,kc,vc,slot,'auto',scale,scale),12)
+    torch.testing.assert_close(kc.reshape(-1,2,256)[:T],key,atol=0,rtol=0)
+    torch.testing.assert_close(vc.reshape(-1,2,256)[:T],value,atol=0,rtol=0)
+    del key,value,pages,kc,vc,slot,scale
+    cleanup()
+    hidden=torch.randn(T,2560,device=D,dtype=torch.bfloat16)
+    pick=torch.tensor([T-1],device=D,dtype=torch.long)
+    bench('complete.sample_position_gather',lambda:hidden[pick])
+    logits=torch.randn(1,248320,device=D,dtype=torch.bfloat16)
+    float_logits=bench('complete.logits_float',lambda:logits.float())
+    bench('complete.greedy_argmax',lambda:float_logits.argmax(dim=-1))
+    del hidden,pick,logits,float_logits
+    cleanup()
+
+if 'bounded' in PARTS:
+    from b70_gguf_xpu import serve_prefill
+    os.environ.update(B70_PREFILL_REDUCE='grouped',B70_PREFILL_DQ_T='0',B70_PREFILL_BUCKET='1',B70_PREFILL_EXPERT_TILE='64')
+    name='blk.0.attn_qkv.weight'
+    tt=TS[name]
+    n,k=map(int,reversed(tt.shape))
+    packed=raw(name)
+    x=torch.randn(T,k,device=D,dtype=torch.bfloat16)*.1
+    baseline=bench('bounded.dense_old_roundtrip',lambda:prefill.prefill_dense(x,packed,int(tt.tensor_type),n,k).to(x.dtype),warm=1,iters=3)
+    candidate=bench('bounded.dense_native_dtype',lambda:prefill.prefill_dense(x,packed,int(tt.tensor_type),n,k,output_dtype=x.dtype),warm=1,iters=3)
+    torch.testing.assert_close(candidate,baseline,atol=0,rtol=0)
+    print('DENSE_OUTPUT_DTYPE_EXACT',n,k,flush=True)
+    del x,packed,baseline,candidate
+    cleanup()
+    for layer in (0,3,36):
+        packs=[];types=[]
+        for part in ('gate','up','down'):
+            tt=TS[f'blk.{layer}.ffn_{part}_exps.weight']
+            packs.append(torch.from_numpy(np.array(tt.data[:8],copy=True)).to(D))
+            types.append(int(tt.tensor_type))
+        x=torch.randn(24576,2560,device=D,dtype=torch.bfloat16)*.1
+        ids=torch.full((24576,10),-1,device=D,dtype=torch.int32)
+        ids[:,:8]=torch.arange(8,device=D,dtype=torch.int32)[None,:]
+        weights=torch.full((24576,10),.1,device=D)
+        os.environ['B70_PREFILL_MAX_PAD_ROWS']='0'
+        old=bench(f'bounded.layer{layer}.unbounded',lambda:serve_prefill.moe_prefill(x,ids,*packs,weights,*types,2560,640),warm=1,iters=3,tokens=24576)
+        reference=old.clone();del old
+        cleanup()
+        os.environ['B70_PREFILL_MAX_PAD_ROWS']='65536'
+        got=bench(f'bounded.layer{layer}.rows65536',lambda:serve_prefill.moe_prefill(x,ids,*packs,weights,*types,2560,640),warm=1,iters=3,tokens=24576)
+        torch.testing.assert_close(got,reference,atol=5e-2,rtol=5e-2)
+        cosine=torch.nn.functional.cosine_similarity(got.flatten().float(),reference.flatten().float(),dim=0)
+        assert float(cosine)>.999
+        assert serve_prefill.LAST['max_padded_rows']<=65536
+        ROWS[-1]['buckets']=dict(serve_prefill.LAST)
+        print('PAD_ROW_BOUND_OK',layer,'max_abs',float((got-reference).abs().max()),'cos',float(cosine),json.dumps(serve_prefill.LAST),flush=True)
+        del got,reference
+        cleanup()
+        if layer==3:
+            # Reproduce the model's VRAM residency while the allocator cap is
+            # active. The unbounded failure is already recorded by R6.
+            previous=torch.xpu.get_per_process_memory_fraction()
+            torch.xpu.set_per_process_memory_fraction(.90)
+            ballast=[torch.full((1024*1024*1024,),1,device=D,dtype=torch.uint8) for _ in range(24)]
+            got=bench('bounded.layer3.loaded24GiB',lambda:serve_prefill.moe_prefill(x,ids,*packs,weights,*types,2560,640),warm=1,iters=3,tokens=24576)
+            assert serve_prefill.LAST['max_padded_rows']<=65536
+            print('BOUNDED_LOADED_OK','allocated',torch.xpu.memory_allocated(),'reserved',torch.xpu.memory_reserved(),'free',torch.xpu.mem_get_info()[0],flush=True)
+            del ballast,got
+            cleanup()
+            torch.xpu.set_per_process_memory_fraction(previous)
+        del x,ids,weights,packs
+        cleanup()
+    (ROOT/A.out).write_text(json.dumps(ROWS,indent=2))
+    os.environ.pop('B70_PREFILL_DQ_T')
 
 if 'pagedfa' in PARTS:
     import triton

@@ -1,5 +1,6 @@
 """Exact 12288-token real-model prefill, identity and concurrent coherence."""
 from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 import json
 from pathlib import Path
 
@@ -48,11 +49,29 @@ for i in range(5):
     report['prefill'].append(summary)
     print('FLASHNEXT_PREFILL',i,json.dumps(summary),flush=True)
     (ROOT/'flashnext-serve.json').write_text(json.dumps(report,indent=2))
-report['long_coherence']=checked_math(17,19,prompt)
-if 'error' not in report['long_coherence']:
-    assert report['long_coherence']['usage']['prompt_tokens']>=12288
-report['coherence_ok']=all('error' not in r for r in report['coherence_c1']+report['coherence_c2']+[report['long_coherence']])
+report['prefill_c2']=[]
+for profiled in (True,False):
+    (ROOT/'flashnext-profile-mode').write_text(('1' if profiled else '0')+' pad')
+    start=Barrier(2)
+    def one_prefill(_):
+        start.wait()
+        result=stream_completion(BASE,MODEL,ids,1,300)
+        assert result['prompt_tokens']==12288,result
+        summary=summarize_itl(result)
+        summary.update(profiled=profiled,first_token=result['text'])
+        return summary
+    with ThreadPoolExecutor(2) as pool:
+        pair=list(pool.map(one_prefill,range(2)))
+    report['prefill_c2'].append(pair)
+    (ROOT/'flashnext-serve.json').write_text(json.dumps(report,indent=2))
+    print('FLASHNEXT_PREFILL_C2',json.dumps(pair),flush=True)
+with ThreadPoolExecutor(2) as pool:
+    report['long_coherence_c2']=list(pool.map(lambda pair:checked_math(*pair,prompt),[(17,19),(23,29)]))
+for row in report['long_coherence_c2']:
+    if 'error' not in row:
+        assert row['usage']['prompt_tokens']>=12288
+report['coherence_ok']=all('error' not in r for r in report['coherence_c1']+report['coherence_c2']+report['long_coherence_c2'])
 (ROOT/'flashnext-serve.json').write_text(json.dumps(report,indent=2))
-print('LONG_COHERENCE',json.dumps(report['long_coherence']),flush=True)
+print('LONG_COHERENCE',json.dumps(report['long_coherence_c2']),flush=True)
 assert report['coherence_ok'],report
 print('DONE_FLASHNEXT',flush=True)

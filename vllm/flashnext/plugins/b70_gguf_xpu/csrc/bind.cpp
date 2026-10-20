@@ -46,6 +46,22 @@ at::Tensor gemv(at::Tensor x, at::Tensor q, int64_t ggml_type, int64_t N, int64_
     return y;
 }
 
+// O4: gemv into columns [col, col + N) of a bf16 [M, Ntot] output.
+void gemv_out(at::Tensor x, at::Tensor q, int64_t ggml_type, int64_t N, int64_t K, at::Tensor out, int64_t col) {
+    check_xpu(x, "x");
+    check_xpu(q, "q");
+    check_xpu(out, "out");
+    TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2 && x.size(1) == K, "x must be bf16 [M, K]");
+    TORCH_CHECK(out.scalar_type() == at::kBFloat16 && out.dim() == 2 && out.size(0) == x.size(0), "out bf16 [M, Ntot]");
+    TORCH_CHECK(col >= 0 && col + N <= out.size(1), "column range");
+    const int rb = b70_row_bytes((int)ggml_type, (int)K);
+    TORCH_CHECK(rb > 0 && q.numel() >= N * rb, "q shape");
+    sycl::queue& queue = c10::xpu::getCurrentXPUStream().queue();
+    auto* y = static_cast<uint16_t*>(out.data_ptr()) + col;
+    b70_gemv2(&queue, (int)ggml_type, static_cast<const uint16_t*>(x.data_ptr()), q.data_ptr<uint8_t>(), y,
+              (int)x.size(0), (int)N, (int)K, (int)out.size(1), 1);
+}
+
 at::Tensor moe_gemv(at::Tensor x, at::Tensor q, at::Tensor expert_ids, int64_t ggml_type, int64_t N, int64_t K) {
     check_xpu(x, "x");
     check_xpu(q, "q");
@@ -153,6 +169,7 @@ at::Tensor grouped_gemm(at::Tensor x, at::Tensor q, at::Tensor entries, int64_t 
 TORCH_LIBRARY(b70_gguf, m) {
     m.def("dequant_bf16(Tensor q, int ggml_type, int rows, int cols) -> Tensor");
     m.def("gemv(Tensor x, Tensor q, int ggml_type, int N, int K) -> Tensor");
+    m.def("gemv_out(Tensor x, Tensor q, int ggml_type, int N, int K, Tensor(a!) out, int col) -> ()");
     m.def("moe_gemv(Tensor x, Tensor q, Tensor expert_ids, int ggml_type, int N, int K) -> Tensor");
     m.def("grouped_gemm(Tensor x, Tensor q, Tensor entries, int ggml_type, int N, int K) -> Tensor");
     m.def(
@@ -164,6 +181,7 @@ TORCH_LIBRARY(b70_gguf, m) {
 TORCH_LIBRARY_IMPL(b70_gguf, XPU, m) {
     m.impl("dequant_bf16", dequant_bf16);
     m.impl("gemv", gemv);
+    m.impl("gemv_out", gemv_out);
     m.impl("moe_gemv", moe_gemv);
     m.impl("grouped_gemm", grouped_gemm);
     m.impl("moe_layer", moe_layer);

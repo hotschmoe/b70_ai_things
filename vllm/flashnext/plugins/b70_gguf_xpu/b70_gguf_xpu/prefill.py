@@ -66,7 +66,7 @@ def prefill_grouped(x, q, expert_ids, ggml_type: int, n: int, k: int, mode: int 
     return torch.ops.b70_gguf.prefill_grouped(x, q, expert_ids, int(ggml_type), int(n), int(k), int(mode))
 
 
-def prefill_dense(x, q, ggml_type: int, n: int, k: int, mode: int = 0):
+def prefill_dense(x, q, ggml_type: int, n: int, k: int, mode: int = 0, output_dtype=None):
     """x fp16/bf16 [M, K], q one matrix -> fp32 [M, N].
 
     mode 0 uses dequant + torch.mm under dense_wants_dq (measured M and K).
@@ -79,8 +79,9 @@ def prefill_dense(x, q, ggml_type: int, n: int, k: int, mode: int = 0):
 
     m = int(x.shape[0])
     if mode == 0 and (int(ggml_type) in (8, 10, 11) or prefill_dq.dense_wants_dq(m, int(k))) and _dq_ready():
-        return prefill_dq.dense_dq(x, q, int(ggml_type), int(n), int(k))
-    return torch.ops.b70_gguf.prefill_dense(x, q, int(ggml_type), int(n), int(k), int(mode))
+        return prefill_dq.dense_dq(x, q, int(ggml_type), int(n), int(k), output_dtype=output_dtype)
+    result = torch.ops.b70_gguf.prefill_dense(x, q, int(ggml_type), int(n), int(k), int(mode))
+    return result if output_dtype is None else result.to(output_dtype)
 
 
 def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, mode: int = 0, group=None):

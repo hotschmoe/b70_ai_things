@@ -113,6 +113,14 @@ def _install_full_replay() -> None:
     orig = CudaGraphManager.run_fullgraph
 
     def wrapped(self, desc):
+        # O5: speculator (MTP drafter) graphs hold no card-1 work; the
+        # drafter MoE stays local on card 0 (method.py skips "mtp" prefixes).
+        # Their token-count keys would collide with the target's card-1
+        # graphs, so only the target manager pairs a card-1 submit.
+        if getattr(self, "_b70_ep_local", None) is None:
+            self._b70_ep_local = type(self).__name__ == "SpeculatorCudaGraphManager"
+        if self._b70_ep_local:
+            return orig(self, desc)
         nt = int(desc.num_tokens)
         from . import ops
 

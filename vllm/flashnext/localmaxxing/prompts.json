@@ -1,0 +1,12 @@
+{
+  "reasoning-v1": {
+    "file": "reasoning-v1.txt",
+    "sha256": "9000edaadb16fc77ab78b39917245a03d4d7585c3ba770cb045a47a0e0683445",
+    "min_output_tokens": 256
+  },
+  "code-v1": {
+    "file": "code-v1.txt",
+    "sha256": "a737db738bd4e37881d1737f8dc51cae0295eff9ece6551d39826ce8ed43a690",
+    "min_output_tokens": 256
+  }
+}

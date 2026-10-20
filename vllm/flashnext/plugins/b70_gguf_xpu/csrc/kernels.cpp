@@ -270,7 +270,18 @@ void b70_dequant_bf16(void* queue, int type, const uint8_t* q, int64_t rows, int
     dispatch(type, [&]<int TYPE>() { launch_dequant<TYPE>(sy, q, rows, cols, rb, out); });
 }
 
+void b70_gemv2(void* queue, int type, const uint16_t* x, const uint8_t* w, void* yv, int M, int N, int K, int ldy,
+               int ybf);
+
 void b70_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, float* y, int M, int N, int K) {
+    b70_gemv2(queue, type, x, w, y, M, N, K, -1, 0);
+}
+
+// O4: gemv with an output row stride and an optional bf16 epilogue.
+void b70_gemv2(void* queue, int type, const uint16_t* x, const uint8_t* w, void* yv, int M, int N, int K, int ldy,
+               int ybf) {
+    float* y = static_cast<float*>(yv);
+    const int LD = ldy < 0 ? N : ldy;
     const int rb = b70_row_bytes(type, K);
     if (rb <= 0 || M <= 0 || N <= 0 || (K % 32) != 0) throw std::runtime_error("b70_gguf: bad gemv shape");
     b70_check_a2(w, "gemv");
@@ -280,7 +291,9 @@ void b70_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, float*
         for (int m0 = 0; m0 < M; m0 += 8) {
             const int mm = (M - m0) < 8 ? (M - m0) : 8;
             dispatch(type, [&]<int TYPE>() {
-                b70_kreg_m<TYPE>(sy, x + (size_t)m0 * K, w, y + (size_t)m0 * N, mm, N, K);
+                float* ym = ybf ? reinterpret_cast<float*>(reinterpret_cast<uint16_t*>(y) + (size_t)m0 * LD)
+                                : y + (size_t)m0 * LD;
+                b70_kreg_m<TYPE>(sy, x + (size_t)m0 * K, w, ym, mm, N, K, LD, ybf);
             });
         }
         return;
@@ -288,7 +301,7 @@ void b70_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, float*
     const int nb = K / 32;
     B70Q8* xq = b70_q8_scratch(sy, (size_t)M * (size_t)nb);
     const sycl::event ev = b70_q8_quant(sy, x, xq, M, K);
-    dispatch(type, [&]<int TYPE>() { b70_launch_dense<TYPE>(sy, xq, w, y, M, N, K, rb, ev); });
+    dispatch(type, [&]<int TYPE>() { b70_launch_dense<TYPE>(sy, xq, w, y, M, N, K, rb, ev, LD, ybf); });
 }
 
 void b70_moe_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, const int32_t* expert_ids, float* y,

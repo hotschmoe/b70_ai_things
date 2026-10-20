@@ -5,7 +5,9 @@ FULL_DECODE_ONLY graphs. It is NOT qualified: full Flash-Next greedy
 parity fails, and the no-MTP control itself fails exact repeatability.
 The latest eventless, fixed-slot, uniform-Q8 control completes all
 requests and its same-load repeat, then tears down with both cards
-HEALTHY. The matched MTP arm is pending below. No promotion or commit;
+HEALTHY. The matched eventless MTP retry failed during startup; its corrected
+retry was cancelled for the wave3 handoff before weight load. No
+promotion or commit;
 no daily-driver start or GPU reset.
 
 ## Weights and Strata behavior
@@ -208,3 +210,24 @@ HEALTHY, no reset. The helper now primes hashed target/draft model-info
 with the ordinary runtime before exporting the preload. Corrected retry
 uses eventless-primed/ with the completed control JSON copied unchanged;
 startup-* evidence and failed arm remain in eventless-canonical/.
+
+Wave3 handoff: the20:28 ORCHESTRATOR directive replaces DP2 work
+with O4 sidecar work; the later ownership note assigns sidecar MTP
+to O5 and exact-repeat work to X4. X1 cancelled its corrected retry to
+release the cards. Cancellation raced acquisition: compiled pre-health
+started, then the owned container stopped exit143 in18s. No weights
+loaded; model-info priming remains UNVALIDATED. No new acceptance or
+latency result exists. eventless-primed/ and its window log retain this
+abort. Final native post-health passes on BOTH cards (window exit1 because
+ready0, not health failure). No X1 jobs or containers remain. X1
+schedules no further GPU windows.
+
+O5's current plugin already excludes mtp prefixes from sidecar expert
+registration (`b70_ep_xpu/method.py:35`) and separates speculator graph
+handling (`hooks.py:116`), keeping the drafter local on card0. X1 has
+not exercised or qualified that new route. The X1 native-EP loader/PLE
+results alone are not sidecar MTP evidence.
+
+Final closeout20:44 UTC: both native card probes HEALTHY after the final
+abort. Focused Ruff F/I, Python syntax/ASCII, shell syntax and diff
+whitespace checks pass. No commit, DD start or reset was performed.

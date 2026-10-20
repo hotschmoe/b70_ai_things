@@ -33,5 +33,7 @@ void ep_replay_submit(int key);
 void ep_replay(int key);
 std::vector<int64_t> ep_read_errors();
 void ep_reserve();
+// F1: 0 before ep_init, else the peer-pointer path (1 IPC, 2 same-context, 3 USM).
+int ep_transport_path();
 
 }  // namespace b70ep

@@ -4,6 +4,10 @@
 def is_long_prefill(rows):
     if rows <= 8:
         return False
+    import torch
+
+    if torch.xpu.is_initialized() and torch.xpu.is_current_stream_capturing():
+        return False
     from vllm.config import CUDAGraphMode
     from vllm.forward_context import (
         get_forward_context,

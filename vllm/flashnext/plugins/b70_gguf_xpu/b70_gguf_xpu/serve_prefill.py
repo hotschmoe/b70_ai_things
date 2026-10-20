@@ -52,8 +52,12 @@ def _bucketed(x,ids,gate,up,down,weights,gt,ut,dt,h,f,e,tile):
     valid=(ids>=0)&(ids<e)
     calls=0
     stages={}
+    row_limit=int(os.environ.get("B70_PREFILL_MAX_PAD_ROWS", "0"))
+    max_padded_rows=0
     for width,experts in sorted(buckets.items()):
         step=tile if tile>0 else len(experts)
+        if row_limit > 0:
+            step=min(step,max(1,row_limit//width))
         for start in range(0,len(experts),step):
             chosen = experts[start:start+step]
             selected=torch.tensor(chosen,device=x.device,dtype=torch.long)
@@ -63,6 +67,7 @@ def _bucketed(x,ids,gate,up,down,weights,gt,ut,dt,h,f,e,tile):
             from .prefill_gather import gather_packed
             g,u,d=[gather_packed(q,selected) for q in packs]
             subset = group.subset(chosen)
+            max_padded_rows=max(max_padded_rows,subset.E*subset.mmax)
             out.add_(_moe_once(x,local,g,u,d,weights,gt,ut,dt,h,f,group=subset))
             if os.environ.get("B70_PREFILL_DQ_PROFILE") == "1" and gt == ut:
                 from .prefill_fast import LAST as inner
@@ -70,7 +75,8 @@ def _bucketed(x,ids,gate,up,down,weights,gt,ut,dt,h,f,e,tile):
                     stages[name]=stages.get(name,0)+ms
             calls+=1
     LAST.update(E=e,T=int(x.shape[0]),slots=group.mv,max_rows=max(counts,default=0),
-                buckets=len(buckets),calls=calls,tile=tile)
+                buckets=len(buckets),calls=calls,tile=tile,
+                row_limit=row_limit,max_padded_rows=max_padded_rows)
     if stages:
         LAST["profile_ms"]=stages
     return out

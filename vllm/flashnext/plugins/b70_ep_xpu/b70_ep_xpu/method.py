@@ -17,6 +17,8 @@ _SHARED_OVERLAP = os.environ.get("B70_EP_SHARED_OVERLAP") == "1"
 # O4: B70_EP_FUSE_SHARED=1 fuses the shared expert into card 0's expert call
 # (T <= 8; needs B70_EP_SO with moe_ep_sh); larger T takes the overlap path.
 _FUSE_SHARED = os.environ.get("B70_EP_FUSE_SHARED") == "1"
+# F1: B70_EP_PREFILL=1 routes T > 8 through prefill_ep (two-card prefill).
+_PF_ON = os.environ.get("B70_EP_PREFILL") == "1"
 _ZERO: dict = {}
 
 
@@ -147,6 +149,20 @@ def _make_class():
                     f"types={gt},{ut},{dt}",
                     flush=True,
                 )
+            if _PF_ON:
+                # F1: global expert id -> local slot per card, for ep_prefill_dispatch.
+                from . import prefill_ep
+
+                if plan is not None:
+                    pm0, pm1 = self._map0, self._map1
+                else:
+                    pm0 = torch.full((e,), -1, dtype=torch.int32, device="xpu:0")
+                    pm1 = torch.full((e,), -1, dtype=torch.int32, device="xpu:0")
+                    pm0[:n0] = torch.arange(n0, dtype=torch.int32, device="xpu:0")
+                    pm1[n0:] = torch.arange(n1, dtype=torch.int32, device="xpu:0")
+                    self._map0, self._map1 = pm0, pm1
+                self._pf_maps = (pm0, pm1, n0, n1)
+                prefill_ep.init_if_on(hidden, 16, int(os.environ.get("B70_EP_NLAYERS", "48")))
             self._split = True
             object.__setattr__(layer, "_ep_split", True)
 
@@ -167,6 +183,13 @@ def _make_class():
             shared_experts_input: torch.Tensor | None = None,
         ):
             global _SHARED_LOGGED
+            # F1: long inputs (prefill) take the two-card prefill path.
+            if _PF_ON and x.shape[0] > 8:
+                from . import prefill_ep
+
+                return prefill_ep.apply(
+                    self, layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input
+                )
             if _FUSE_SHARED and shared_experts is not None and 0 < x.shape[0] <= 8:
                 y = self._apply_fused_shared(layer, x, topk_weights, topk_ids, shared_experts)
                 if y is not None:

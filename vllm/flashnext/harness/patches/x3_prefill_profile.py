@@ -71,12 +71,12 @@ def install():
                             'in_proj_qkvz', 'in_proj_ba', 'out_proj', 'qkv_proj',
                             'o_proj', 'norm', 'gate_up_proj', 'down_proj', 'ple', 'embed_tokens'}
                 for name, sub in self.model.named_modules():
-                    if name.endswith('layers.3.self_attn') and hasattr(sub,'_project_qkv_gate'):
+                    if name.endswith('self_attn') and hasattr(sub,'_project_qkv_gate'):
                         project=sub._project_qkv_gate
-                        def capture(*a,_fn=project,**kw):
-                            result=_fn(*a,**kw)
+                        def capture(*a,_fn=project,_name=name,**kw):
+                            result=measured(_name+'.qk_norm_rope_gate',_fn,*a,**kw)
                             path=os.environ.get('B70_PREFILL_CAPTURE')
-                            if (path and state.get('capture_enabled') and not state.get('captured')
+                            if (path and _name.endswith('layers.3.self_attn') and state.get('capture_enabled') and not state.get('captured')
                                     and result[0].shape[0]>=12288):
                                 from pathlib import Path
                                 state['captured']=True

@@ -8,7 +8,7 @@ TORCH="$VENV/lib/python3.12/site-packages/torch"
 PY=/home/hotschmoe/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu
 TC=/mnt/vm_8tb/b70/build/gguf-xpu-toolchain
 OUT=${1:-$ROOT/b70_o4_xpu/_C.so}
-"$ONEAPI/bin/icpx" -fsycl -std=c++20 -O3 -fPIC -fexceptions -shared -fsycl-device-code-split=per_kernel \
+"$ONEAPI/bin/icpx" -fsycl -std=c++20 -O3 -fPIC -fexceptions -shared -fsycl-device-code-split=per_kernel -fsycl-targets=spir64_gen -Xs "-device bmg" \
     --gcc-toolchain="$TC" -isystem "$TC/include/c++/15" -isystem "$TC/include/x86_64-linux-gnu/c++/15" \
     -I"$TORCH/include" -I"$TORCH/include/torch/csrc/api/include" -I"$PY/include/python3.12" \
     -DTORCH_EXTENSION_NAME=_C -DTORCH_API_INCLUDE_EXTENSION_H -D_GLIBCXX_USE_CXX11_ABI=1 \

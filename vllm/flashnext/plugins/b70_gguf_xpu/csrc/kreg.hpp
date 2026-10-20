@@ -410,7 +410,10 @@ inline sycl::event b70_q8_quant(sycl::queue& q, const uint16_t* x, B70Q8* y, int
 }
 
 template <int TYPE, int NCOLS, int R, int GRF>
-void b70_kreg_launch(sycl::queue& q, const B70Q8* xq, const uint8_t* w, float* y, int N, int K, sycl::event dep) {
+void b70_kreg_launch(sycl::queue& q, const B70Q8* xq, const uint8_t* w, float* y, int N, int K, sycl::event dep,
+                     int ldy = -1, int ybf = 0) {
+    // O4: ldy = output row stride (default N); ybf = write bf16 (RNE) instead of fp32.
+    const int LD = ldy < 0 ? N : ldy;
     constexpr int P0 = R * NCOLS;
     constexpr int P = (P0 + 15) / 16 * 16;
     constexpr int PL = P / 16;
@@ -513,14 +516,19 @@ void b70_kreg_launch(sycl::queue& q, const B70Q8* xq, const uint8_t* w, float* y
                     for (int qq = 0; qq < nsg; ++qq) s += sm[qq * P + k];
                     const int r = k / NCOLS;
                     const int j = k - r * NCOLS;
-                    if (row0 + r < N) y[(size_t)j * (size_t)N + (size_t)(row0 + r)] = s;
+                    if (row0 + r < N) {
+                        const size_t o = (size_t)j * (size_t)LD + (size_t)(row0 + r);
+                        if (ybf) reinterpret_cast<uint16_t*>(y)[o] = sycl::bit_cast<uint16_t>(sycl::ext::oneapi::bfloat16(s));
+                        else y[o] = s;
+                    }
                 }
             });
     });
 }
 
 template <int TYPE>
-void b70_kreg_m(sycl::queue& q, const uint16_t* x, const uint8_t* w, float* y, int M, int N, int K) {
+void b70_kreg_m(sycl::queue& q, const uint16_t* x, const uint8_t* w, float* y, int M, int N, int K, int ldy = -1,
+                int ybf = 0) {
     // Quantize x once. The GEMV is queued behind it on the same in-order
     // stream. No wait between the two submits: the caller times gemv() as
     // one interval.
@@ -531,36 +539,36 @@ void b70_kreg_m(sycl::queue& q, const uint16_t* x, const uint8_t* w, float* y, i
     // (M=1, R=4) stays at GRF 128, matching Strata's night_dispatch.
     if constexpr (TYPE == B70_Q6_K) {
         switch (M) {
-            case 1: b70_kreg_launch<TYPE, 1, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 2: b70_kreg_launch<TYPE, 2, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 3: b70_kreg_launch<TYPE, 3, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 4: b70_kreg_launch<TYPE, 4, 2, 128>(q, xq, w, y, N, K, ev); break;
-            case 5: b70_kreg_launch<TYPE, 5, 2, 128>(q, xq, w, y, N, K, ev); break;
-            case 6: b70_kreg_launch<TYPE, 6, 2, 128>(q, xq, w, y, N, K, ev); break;
-            case 7: b70_kreg_launch<TYPE, 7, 2, 128>(q, xq, w, y, N, K, ev); break;
-            default: b70_kreg_launch<TYPE, 8, 2, 128>(q, xq, w, y, N, K, ev); break;
+            case 1: b70_kreg_launch<TYPE, 1, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 2: b70_kreg_launch<TYPE, 2, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 3: b70_kreg_launch<TYPE, 3, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 4: b70_kreg_launch<TYPE, 4, 2, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 5: b70_kreg_launch<TYPE, 5, 2, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 6: b70_kreg_launch<TYPE, 6, 2, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 7: b70_kreg_launch<TYPE, 7, 2, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            default: b70_kreg_launch<TYPE, 8, 2, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
         }
     } else if constexpr (TYPE == B70_IQ4_XS) {
         switch (M) {
-            case 1: b70_kreg_launch<TYPE, 1, 8, 128>(q, xq, w, y, N, K, ev); break;
-            case 2: b70_kreg_launch<TYPE, 2, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 3: b70_kreg_launch<TYPE, 3, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 4: b70_kreg_launch<TYPE, 4, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 5: b70_kreg_launch<TYPE, 5, 4, 256>(q, xq, w, y, N, K, ev); break;
-            case 6: b70_kreg_launch<TYPE, 6, 4, 256>(q, xq, w, y, N, K, ev); break;
-            case 7: b70_kreg_launch<TYPE, 7, 4, 256>(q, xq, w, y, N, K, ev); break;
-            default: b70_kreg_launch<TYPE, 8, 4, 256>(q, xq, w, y, N, K, ev); break;
+            case 1: b70_kreg_launch<TYPE, 1, 8, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 2: b70_kreg_launch<TYPE, 2, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 3: b70_kreg_launch<TYPE, 3, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 4: b70_kreg_launch<TYPE, 4, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 5: b70_kreg_launch<TYPE, 5, 4, 256>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 6: b70_kreg_launch<TYPE, 6, 4, 256>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 7: b70_kreg_launch<TYPE, 7, 4, 256>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            default: b70_kreg_launch<TYPE, 8, 4, 256>(q, xq, w, y, N, K, ev, ldy, ybf); break;
         }
     } else {
         switch (M) {
-            case 1: b70_kreg_launch<TYPE, 1, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 2: b70_kreg_launch<TYPE, 2, 8, 128>(q, xq, w, y, N, K, ev); break;
-            case 3: b70_kreg_launch<TYPE, 3, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 4: b70_kreg_launch<TYPE, 4, 4, 128>(q, xq, w, y, N, K, ev); break;
-            case 5: b70_kreg_launch<TYPE, 5, 8, 256>(q, xq, w, y, N, K, ev); break;
-            case 6: b70_kreg_launch<TYPE, 6, 8, 256>(q, xq, w, y, N, K, ev); break;
-            case 7: b70_kreg_launch<TYPE, 7, 8, 256>(q, xq, w, y, N, K, ev); break;
-            default: b70_kreg_launch<TYPE, 8, 8, 256>(q, xq, w, y, N, K, ev); break;
+            case 1: b70_kreg_launch<TYPE, 1, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 2: b70_kreg_launch<TYPE, 2, 8, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 3: b70_kreg_launch<TYPE, 3, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 4: b70_kreg_launch<TYPE, 4, 4, 128>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 5: b70_kreg_launch<TYPE, 5, 8, 256>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 6: b70_kreg_launch<TYPE, 6, 8, 256>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            case 7: b70_kreg_launch<TYPE, 7, 8, 256>(q, xq, w, y, N, K, ev, ldy, ybf); break;
+            default: b70_kreg_launch<TYPE, 8, 8, 256>(q, xq, w, y, N, K, ev, ldy, ybf); break;
         }
     }
 }

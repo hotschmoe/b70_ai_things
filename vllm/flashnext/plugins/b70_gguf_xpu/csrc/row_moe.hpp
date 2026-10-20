@@ -144,7 +144,8 @@ inline sycl::event b70_launch_row(sycl::queue& q, const B70Q8* xq, const uint8_t
 // reads coalesced bytes (the M=1 IQ3_S path got slower without that copy).
 template <int TYPE>
 inline sycl::event b70_launch_dense(sycl::queue& q, const B70Q8* xq, const uint8_t* w, float* y, int M, int N, int K,
-                                    int row_bytes, sycl::event dep) {
+                                    int row_bytes, sycl::event dep, int ldy = -1, int ybf = 0) {
+    const int LD = ldy < 0 ? N : ldy;
     constexpr int R = 2;
     constexpr int MC = 4;
     int nsg = 4;
@@ -233,8 +234,15 @@ inline sycl::event b70_launch_dense(sycl::queue& q, const B70Q8* xq, const uint8
                         const float r0 = sycl::reduce_over_group(sg, m < mc ? a0[m] : 0.f, sycl::plus<float>());
                         const float r1 = sycl::reduce_over_group(sg, m < mc ? a1[m] : 0.f, sycl::plus<float>());
                         if (lane == 0 && m < mc) {
-                            if (l0) y[(size_t)(m0 + m) * (size_t)N + n0] = r0;
-                            if (l1) y[(size_t)(m0 + m) * (size_t)N + n1] = r1;
+                            const size_t o = (size_t)(m0 + m) * (size_t)LD;
+                            if (ybf) {
+                                auto* yb = reinterpret_cast<uint16_t*>(y);
+                                if (l0) yb[o + n0] = sycl::bit_cast<uint16_t>(sycl::ext::oneapi::bfloat16(r0));
+                                if (l1) yb[o + n1] = sycl::bit_cast<uint16_t>(sycl::ext::oneapi::bfloat16(r1));
+                            } else {
+                                if (l0) y[o + n0] = r0;
+                                if (l1) y[o + n1] = r1;
+                            }
                         }
                     }
                 }

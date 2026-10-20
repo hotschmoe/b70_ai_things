@@ -128,13 +128,14 @@ def _as_bf16(x):
     return x if x.dtype == torch.bfloat16 else x.to(torch.bfloat16)
 
 
-def dense_dq(x, q, ggml_type: int, n: int, k: int):
-    """x [M, K] -> fp32 [M, N] via bf16 dequant + torch.mm."""
+def dense_dq(x, q, ggml_type: int, n: int, k: int, output_dtype=None):
+    """BF16 dequant + mm; default FP32, optional native serving dtype."""
     import torch
 
     xb = _as_bf16(x)
     w = dequant(q, ggml_type, n, k)
-    return torch.mm(xb, w.t()).float()
+    result = torch.mm(xb, w.t())
+    return result.float() if output_dtype is None else result.to(output_dtype)
 
 
 def _sanitize(ids, e: int):

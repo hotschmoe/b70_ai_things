@@ -45,8 +45,10 @@ for key in ${!B70_MEMORY@}; do OPT+=(--env "$key=${!key}"); done
   while kill -0 "$$" 2>/dev/null; do
     if (( $(awk '/MemAvailable:/ {print $2}' /proc/meminfo) < 8388608 )); then
       echo 'ABORT_LOW_RAM' >&2
-      docker stop -t 5 "$NAME" >/dev/null 2>&1 || true
-      break
+      if docker inspect "$NAME" >/dev/null 2>&1; then
+        docker stop -t 5 "$NAME" >/dev/null 2>&1 || true
+        break
+      fi
     fi
     sleep 2
   done
@@ -59,7 +61,10 @@ trap 'kill "$watchdog" 2>/dev/null || true; wait "$watchdog" 2>/dev/null || true
   --env "B70_QSA=${B70_QSA:-0}" --env B70_EP=0 --env B70_FUSE_SHARED=0 --env MAX_JOBS=4 \
   --env B70_PREFILL=1 --env "B70_PREFILL_WIDE_SO=$WIDE" \
   --env B70_PREFILL_DQ_OVERLAP=0 --env B70_PREFILL_REDUCE=grouped \
-  --env B70_PREFILL_EXPERT_TILE=64 --env SYCL_CACHE_PERSISTENT=0 \
+  --env B70_PREFILL_EXPERT_TILE=64 --env B70_PREFILL_BUCKET=1 \
+  --env B70_PREFILL_MAX_PAD_ROWS=65536 --env B70_PREFILL_HC=triton \
+  --env B70_PREFILL_EP_DRAIN=1 --env B70_PREFILL_EP_SYNC=1 \
+  --env SYCL_CACHE_PERSISTENT=0 \
   --env B70_PREFILL_PLE_HASH=numpy --env B70_XPU_CG_RECLAIM=500 \
   --env HF_HUB_OFFLINE=1 --env TRANSFORMERS_OFFLINE=1 --env VLLM_NO_USAGE_STATS=1 \
   "${OPT[@]}" -- "${PRE[@]}" vllm serve "$HF" --host 0.0.0.0 --port "$PORT" \
@@ -69,7 +74,7 @@ trap 'kill "$watchdog" 2>/dev/null || true; wait "$watchdog" 2>/dev/null || true
   --language-model-only --trust-remote-code \
   --max-model-len "${MAX_LEN:-16384}" --max-num-seqs "${MAX_SEQS:-2}" \
   --max-num-batched-tokens "${MAX_BATCHED:-12288}" \
-  --gpu-memory-utilization "${GPU_MEM:-0.98}" --no-enable-prefix-caching \
+  --gpu-memory-utilization "${GPU_MEM:-0.95}" --no-enable-prefix-caching \
   --mamba-cache-mode align \
   --gdn-prefill-backend sycl --attention-backend FLASH_ATTN \
   --compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,3,4,8]}'

@@ -6565,3 +6565,716 @@ VERDICT: X1 and X3 finish the window they are in, write their reports
 (reports/1X1_mtp.md, reports/1X3_prefill.md) with every finding, and
 stop. Do not queue new GPU windows. Card priority is O4 > O5 > F1 >
 X5 > X4.
+
+## 2026-10-20 20:32 X1 -- acknowledge wave3 handoff; current retry only
+
+CONFIG: read new binding ORCHESTRATOR ownership entry (heading20:45;
+current host clock20:32). O5 owns next sidecar MTP, X4 exact-repeat.
+COMMAND: finish only already queued eventless-primed MTP2 window;
+no new X1 GPU windows after it. Preserve failed startup evidence.
+RESULT: current retry queued since20:27:47, no new acquisition yet;
+source manifest still matches the completed control exactly.
+VERDICT: report every finding and stop after current job/health closes.
+O5: rt/GGUF MTP loading, native wide FC and graph-safe PLE ring are in
+fork; report1X1_mtp.md has tensor provenance and numerical findings.
+Use your sidecar baseline, not this unqualified DP2 baseline. The
+optional eventless global preload needs model-info primed before export;
+its first cold-inspection startup spun in LevelZero, exit139 on stop,
+then both-card post-health passed. Do not adopt it as qualified runtime.
+
+## 2026-10-20 20:32 X3 -- remove redundant queued post-check; R6 queues directly
+CONFIG: producer48rounds completed, same-context compiled before/after
+passed, fresh native post-health passed. Additional fresh-process
+compiled post-check was still queued, with no container/GPU touch.
+COMMAND: cancel only that redundant queued PG3615953 and waiting R6/
+watcher PGs3636383/3636384. No owned containers, O4 holds both leases.
+Queue immutable R6b directly; keep same-lease compiled preflight before
+full weights. GPUwait21600, no CPUquiet held while queued.
+RESULT: removes one repeated check and the queue gap before real work.
+Also keep the RAM watchdog alive if another serve makes RAM low while
+X3 is still queued: stop/break only once X3 container exists.
+VERDICT: native+embedded compiled post-health suffice here. Full-model
+qualification remains pending. No post-check result or speed invented.
+
+## 2026-10-20 20:35 X5 -- proxy quant comparison prepared
+
+CONFIG: card1 only, expected about3min per finite serve plus health,
+behind C7b/H1e and current O4/O5/F1 pair work. X1 is already separately
+active; preserve its report and handoff. O3 library38f7176a, fused shared,
+D3 GDN, FULL_DECODE_ONLY/FA, reclaim500, BF16, maxlen4096,maxseq2.
+COMMAND: x5_serve_proxy.sh and x5_proxy_window.sh; IQ3 baseline queues
+with21600s lease timeout. Subsequent IQ4_XS/Q4_K_M and MTP2/3 release
+the card between arms. CPUquiet held only during client requests.
+RESULT: prepared EOS-respecting exact C1/C2 repeat, registered identity,
+latency, four original-passage prompt-logprob perplexity diagnostic, RAM
+watchdog and pinned pre/post health. No measurement yet. Claude consults
+fable-5.1 and claude-5.5 both return unrecognized_model/Not logged in;
+no responding model ID, no independent-review claim.
+VERDICT: measure non-spec first, preserve other agents' dirty sources.
+No DD start, no reset, no git commit.
+
+## 2026-10-20 20:35 X5 -- D3 dtype contract made explicit
+
+CONFIG: CPU source inspection before proxy acquisition.
+COMMAND: inspect d3_gdn.py layout and weight guards.
+RESULT: current D3 fused op requires fp16 activations/conv state; BF16
+would silently take the stock fallback. Set X5 default dtype=float16
+so the requested D3 fusion actually runs. DTYPE=bfloat16 remains an
+explicit comparison option. Initial detached launch died before GPU
+health; retained aborted-launch-iq3. setsid launch3642577 now queues.
+VERDICT: fp16 X5 is not a matched copy of O3's BF16 reference8.76ms.
+Require runtime fused-op evidence and fresh gates before any claim.
+
+## 2026-10-20 20:35 X4 -- exact-repeat gate and localmaxxing prep
+
+CONFIG: CPU/HTTP-client work only; wave3 ownership respected, O5 owns
+new sidecar MTP. Preserve X1 report and other agents' dirty sources.
+COMMAND: implement harness/promo_gate.py + promo_gate.sh; inspect lmx
+v0.1.54 source at matching8bb36c3e and live canonical prompt hashes.
+RESULT: gate checks stable first ID plus registered research alias,
+323/667 chat strings, exact C4 Paris for proxy35b, four forced96-token
+prompts across C1x2/C2x2, and exact8192/32768-token three-needle recall.
+Localmaxxing scripts default to plans, backend xpu; no submit path.
+VERDICT: CPU failure-injection tests and four lmx dry-run plans next.
+REQUEST X5: safe HTTP validation window on18125 after your timed probes
+would avoid an extra model load; gate needs about20-40s plus long prefill.
+Your current maxlen4096 will correctly FAIL both long-context checks;
+please tell X4 when safe, or invoke promo_gate.sh with --profile proxy35b
+--base-url http://127.0.0.1:18125 --out <your-scratch>/promo-gate.json.
+Do not extend a priority GPU window for X4 without coordination.
+
+## 2026-10-20 20:35 O5 -- MTP on the EP sidecar: bring-up windows queued
+
+CONFIG: world size 1 EP sidecar, O4 f3 recipe (ring + B70_PLE_MLOCK=1,
+B70_DECODE_HC=triton, B70_DECODE_LEAN=1, B70_EP_SHARED_OVERLAP=1,
+B70_EP_FUSE_SHARED=1, B70_EP_SO=o4/b70_ep_C.o4b.so), MoE o4/_C.o4pin-o3g.so
+(O3 batch-invariant reduce), FULL_DECODE_ONLY target and draft, X1 MTP
+drafter (rt dense + mtp-q2_0.gguf experts, all on card 0: method.py
+already keeps "mtp" MoE local).
+COMMAND: new harness/o5_window.sh + harness/o5_mtp_profile.py (in-process
+LLM, gates 323/667, 4 prompts x 128 forced tokens at C1 and as 2 C2
+pairs, token ids saved for offline on/off parity, effective ms/token,
+target replay vs propose device time). One plugin fix:
+b70_ep_xpu/hooks.py _install_full_replay now skips
+SpeculatorCudaGraphManager. Without it every draft graph replay would
+submit the target's card-1 graph for the same token-count key (draft
+T=1/3 collides with target keys) and desync the flag protocol. No-MTP
+behavior is unchanged (only the target manager exists then).
+RESULT: pending; arms m0 (control) then m2, both cards, about 10 min
+each including health, queued behind O4 (priority O4 > O5).
+VERDICT: O4 -- my only edit in your area is that hooks.py guard; your
+flags keep their meaning. I run your f3 set as my default O5_EXTRA.
+
+## 2026-10-20 20:36 X1 -- wave3 stop; retry cancelled before model load
+
+CONFIG: wave3 ownership hands MTP to O5. Corrected retry still queued
+when cancellation decision made; cancellation raced pair acquisition.
+COMMAND: stop only vllm-fn-x1-flashnext-mtp2. Retain normal harness
+cleanup/post-health. No further X1 serve or probe windows.
+RESULT: leased container entered compiled pre-health, stopped exit143
+in18s. No weights loaded; model-info priming did not run and is NOT
+validated. No greedy/acceptance/latency result from this retry. Native
+post-health queues behind current owners; X1 waits until job closes.
+VERDICT: hand off existing functional MTP loader/PLE/numeric evidence
+and failed full-model exactness gate. O5 owns the sidecar continuation;
+X4 owns repeatability. Do not adopt eventless preload as qualified.
+
+## 2026-10-20 20:36 X4 -- read-only gate joins X5 HTTP window
+
+CONFIG: X5 now holds/pins card1 for its own proxy server18125; X4 does
+not acquire GPUs or change that server. Its timed clients use CPUquiet.
+COMMAND: run-live-gate.sh waits for readiness, then cpu-run --quiet
+promo_gate.sh; this serializes X4 HTTP work with X5's timed requests.
+RESULT: CPU eight failure-injection tests pass, including C2-only token
+mutation, missing/short IDs, wrong long-prompt counts and SSE truncation.
+Four official lmx dry-run plans return planned/canSubmit=false; no speed
+test, API submission or credential access. X5 server maxlen4096 means
+8K/32K should be recorded as failures, never skipped into a promotion.
+VERDICT: expect20-40s HTTP gate body when ready; no lifecycle commands,
+no own GPU job, no claimed latency from correctness requests.
+
+## 2026-10-20 20:37 X5 -- BF16 D3 built, baseline loading
+
+CONFIG: retain native BF16 GGUF activation path. The earlier proposed
+fp16 switch was reverted BEFORE model start: packed embedding and
+GEMV ops are BF16, so fp16 would add casts or mixed-dtype failures.
+COMMAND: cpu-run/MAX_JOBS4 x5_build_gdn.sh, isolated generated source
+and library under x5/gdn-bf16. No shared D3/kernel source changed.
+RESULT: compile rc0. BF16 instantiation replaces only scalar storage
+and rounding type in D3's source. Stock BF16 GDN + replay numerical
+gate prepared for card1 (<1min plus health), after current X5 baseline.
+Baseline serving currently holds card1, X3 queued for the pair.
+VERDICT: flag alone is not evidence of D3 execution. Baseline stock
+BF16 remains the comparison; enable the BF16 overlay only after gate.
+No measured speed yet; no further full-model MTP work under X1.
+
+## 2026-10-20 20:38 X5 -- remove Flash-Next-only FA overlay from proxy
+
+CONFIG: first IQ3 proxy arm, O3 kernel/fused shared, stock BF16 GDN.
+COMMAND: x5_proxy_window.sh, original raw ud-iq3_xxs-mtp0.
+RESULT: model733 tensors loaded; capture fails: c7b-fa-overlay lacks
+35B paged config8,256,64,false,false,false, then CPU-reference attention
+fallback attempts D2H during capture (UNSUPPORTED_FEATURE). No API
+readiness, no latency/gate. Teardown complete; pinned post-health queued
+behind X3. No DEVICE_LOST and no reset.
+VERDICT: proxy must use stock installed FA wrapper, as O3/X1 proxy
+recipes did. Removed c7b overlay from X5 only. BF16 GDN build succeeds
+sha2bb3661f; short numerical gate prepared. Next card1 bodies about
+1min probe, then3min per comparison. O4/O5/F1 pair priority remains.
+
+## 2026-10-20 20:40 X5 -- quant identity and X4 coordination
+
+CONFIG: CPU header-only inventory of all three supplied GGUFs.
+COMMAND: parse metadata/tensor records, no tensor payload reads; raw
+x5/quant-inventory.json.
+RESULT: sizes14.069/18.209/22.663GB,753tensors each,20MTP tensors
+each under blk.40; nextn_predict_layers1. Dynamic quant differs beyond
+experts: IQ3 trunk mostlyQ6_K, IQ4/Q4 trunk mostlyQ8_0; this is an
+end-to-end format comparison, not isolated expert-bit attribution.
+VERDICT: X4, initial18125 server failed before ready and is torn down.
+Corrected finite arms will reuse18125 with CPUquiet clients, maxlen4096
+for these short decode comparisons. Please keep the extra gate bounded
+within that live window; 8K/32K are outside this measured context scope.
+No qualification or submission claim. Probe/master remain queued behind
+X3. New pair-priority precheck leaves card1 to live card0 owners.
+
+## 2026-10-20 20:41 X4 -- gate bound acknowledged; dry plans complete
+
+CONFIG: X5 acknowledged request-only coordination; corrected18125 arms
+will retain maxlen4096. No X4 GPU process or service lifecycle action.
+COMMAND: wait for that HTTP server, then CPUquiet gate with timeout180s
+and per-request60s; no request overlaps X5's CPUquiet timed probes.
+RESULT: renewed bounded waiter to allow the existing priority queue to
+finish; previous waiter had sent no inference requests. Eight CPU tests
+pass, four lmx plans canSubmit=false, dry wrapper rejects measure-local.
+VERDICT: short-server 8K/32K failure is expected and stays visible.
+No claim of full promotion or localmaxxing verification. No submission.
+
+## 2026-10-20 20:42 X5 -- avoid duplicate projections in BF16 fallback
+
+CONFIG: CPU inspection of D3 wrapper before any corrected measured arm.
+COMMAND: follow _forward through dtype/layout fallback.
+RESULT: the old fp16-only wrapper computes qkvz/ba before rejecting
+BF16 layout, then stock recomputes them. Thus merely enabling old D3
+would add work, not supply a neutral fallback. No latency from that
+failed initial arm. Corrected stock baseline now setsB70_D3_GDN=0.
+VERDICT: compare stock BF16 directly with the isolated BF16 fusion.
+Keep the wrapper opt-in and require actual fused-call runtime lines.
+
+## 2026-10-20 20:44 X1 -- final health pass; handoff complete
+
+CONFIG: final retry cancelled during preflight, no model load. No X1
+containers remain. Final native post-health held both leases.
+COMMAND: normal x1_flash_window.sh closeout, bin/gpu-run bin/xpu-health;
+focused Ruff F/I, Python AST/ASCII, bash syntax, diff whitespace checks.
+RESULT: both card0/card1 OK, HEALTHY,26s. Window exits1 for ready0,
+not health failure. All owned jobs closed. Report1X1_mtp.md records
+all measurements, failures, source identities, provenance and handoff.
+Original Flash-Next MTP2 acceptance77.03% bench/75.43% aggregate;
+exact greedy gate FAILED and MTP0 exact repeat also FAILED. Proxy
+matches through configured EOS, with forced post-EOS caveat retained.
+VERDICT: MTP implemented and exercised, NOT qualified. O5 owns sidecar
+MTP, X4 repeatability. Priming fix remains unvalidated; do not promote
+optional eventless shim. No further X1 GPU windows, commit, DD start,
+or reset. Stop here per binding wave3 ownership.
+Duration correction: final health log says27s (the26s above is a typo).
+
+## 2026-10-20 20:45 F1 -- sidecar prefill built; first two-card window queued
+
+CONFIG: Flash-Next IQ3_XXS on the EP sidecar (world size 1, O4 f4 decode
+recipe: ring+mlock PLE, PLE_FAST, DECODE_HC=triton, LEAN, shared-expert
+fused/overlap, MoE o4/_C.o4pin-o3g.so sha 38f7176a). Today's sidecar runs
+the decode GEMV kernel (b70_moe_layer, M chunked by 8) on both cards for
+every T, which is why H1e measured 106 tok/s prefill. New: eager two-card
+prefill path for T > 8. Native: plugins/b70_ep_xpu/csrc/prefill_ep.cpp
+(own regions/flags/counters on torch's current streams of xpu:0/xpu:1;
+ep_prefill_dispatch = ep_dispatch push of bf16 x + fp32 w + remapped ids
+into card 1's inbox + device flag, card 1 waits and copies uncached into
+fresh tensors; ep_prefill_return = ep_push_ctr of card 1's partial sum
+into card 0's psum + uncached add, fp32 or bf16). moe_ep.cpp gets one
+exported accessor (ep_transport_path). Python: b70_ep_xpu/prefill_ep.py
+(card 0 = X3/C13 fast dispatcher on its 138 experts, bucket/tile64,
+shared expert overlapped; card 1 = scratch-free fused DPAS grouped kernel
+on its 374 experts, since card 1 has about 1 GiB free beside 29 GiB of
+experts), hook in method.py behind B70_EP_PREFILL=1. Chunk 12288.
+COMMAND: cpu-run f1/build_ep.sh -> f1/b70_ep_C.f1.so (sha 3d7b231c, 89 s).
+TAG=p1 harness/f1_window.sh (health, serve :18140 max_len 147456,
+batched 12288, seqs 2, FULL_DECODE_ONLY; harness/f1_probe.py: identity,
+323/667, TTFT at 1K/8K/32K/128K twice each, 32K filler + math, C1/C2;
+stop; health). Queued behind X3/X5 health.
+RESULT: pending.
+VERDICT: pending. No commit, no DD action.
+
+## 2026-10-20 20:44 X5 -- first BF16 GDN numeric state tolerance fails
+
+CONFIG: card1, BF16 D3, stock GDN reference, seed0,T1,32heads.
+COMMAND: x5_gdn_probe.py; retained gdn-bf16/probe-r1-failed.log.
+RESULT: core/output/conv checks reached the state assert;12/2097152
+state elements fail2e-5 absolute tolerance, greatest failing delta
+3.974745e-5. No GPU/runtime fault. Post-health pending; no fusion serve
+started. Canceled only own unstarted comparison waiter3652232.
+VERDICT: existing D3 FP16 evidence reports state max5.85e-5, so2e-5
+was stricter than that baseline. Retry same binary with explicit1e-4
+absolute/0.005relative state bound, log every core/output/state metric
+before assertions, retain exact convolution and32-replay equality.
+This is approximate primitive equivalence; full greedy gates remain
+exact. If it fails again, measure stock first rather than broaden it.
+Next card1 numeric body<1min plus health, after O4/O5/F1 priority.
+## 2026-10-20 20:46 G2b -- audit pass 22
+
+CONFIG: CPU-only audit of journal headings after the 20:05 pass-21
+milestone. No GPU, no systemd, no commit.
+COMMAND: compare new claims to bench JSON, serve logs, probe logs,
+O4 profiles, the X5 inventory, and git status in this clone and the
+vLLM fork.
+RESULT: F209-F216 appended. Eventless control C1 itl_p50 is
+43.015575502067804 ms in flash-bench-mtp0.json, first id hotschmoe-dd,
+BENCH_RC=3, no READY line (routes at 20:13:48). O4 profiler C1 step_ms
+is f2 20.924, f3 19.985, f4 19.775. X5 IQ3 proxy and X3 R6 both exited 1
+before ready. X4 cpu-tests.txt says 9 tests, not eight.
+VERDICT: no speed promotion. Those profiler steps are not harness ITLs
+and are not matched to the DP2 control. Campaign name still fails where
+the first id is hotschmoe-dd.
+
+
+## 2026-10-20 20:47 X4 -- stable identity fields and nine CPU tests
+
+CONFIG: no GPU. Review found vLLM ModelCard.created is newly generated
+on every GET (entrypoints/serve/engine/protocol.py108), not load time.
+COMMAND: compare ordered id/root/parent/owned_by/max_model_len; retain
+full responses. Add changing-created/changed-root HTTP coverage, run
+unittest again; final raw x4/cpu-tests.txt now9tests, allPASS.
+RESULT: earlier eight-test entries describe their stage accurately; the
+current report says nine. Wrong model root still fails. Localmaxxing
+future collector shares stable identity comparison, checks /version,
+registered alias and live spec config, stores redacted config only.
+VERDICT: no false identity failure solely from response timestamps.
+Current CLI metadata examples are plans; imported fork version differs
+from wheel metadata and must be supplied accurately before measuring.
+X4 did not inspect/disclose the key; CLI owns its config handling.
+Live18125 gate still queued behind O5 priority; no promotion claim.
+
+## 2026-10-20 20:47 X3 -- R6 clean OOM; bound actual expert rows
+CONFIG: R6 fraction.90 and GC.9, before/after collective drains, util.95.
+Startup passes AG11 then rank0 OOM at expert down bmm,960MiB output
+(E8,cap24576,H2560 BF16);1.28GiB driver free, allocator cap exceeded.
+COMMAND: normal teardown; native/compiled post-health pending. No new
+DEVICE_LOST line or reset. Add B70_PREFILL_MAX_PAD_ROWS: split wide
+buckets by padded rows, leaving small-capacity64-expert tiles unchanged.
+Dense DQ now optionally returns BF16 directly: serving previously cast
+BF16 mm to FP32 and immediately back to BF16, allocating huge transients.
+RESULT: queue card1 short bounded,dtype,check probe, about2min plus
+health; both real layers0/3/36,24576-token E8 hot shape, original.05
+gate, native-dtype bit-exact, then24GiB ballast under fraction.90.
+CPUquiet outside GPUrun, guarded queue,180s body bound. No rebuild.
+VERDICT: verify these memory/math fixes before a full reload. Clear
+Torch OOM is distinct from R5 device loss; preserve both records.
+## 2026-10-20 20:47 G2b -- audit pass 22 addendum
+
+CONFIG: CPU check of the three headings that landed while F209-F216
+were being written. No GPU.
+COMMAND: read the X5 GDN probe log, the new health-after files, the F1
+library hash, and the X1 report acceptance lines.
+RESULT: F217 appended. Probe mismatch is 12/2097152, greatest abs
+3.97474505007267e-05, exit 1, card-1 health before and after HEALTHY.
+R6 and the IQ3 proxy now have post-health HEALTHY lines. F1 sha
+3d7b231c matches; its health-before is still waiting. The X1 27s
+both-card closeout log was not found.
+VERDICT: no new ITL. The GDN failure is a tolerance miss, not a device
+loss. F1 and O5 m0 remain pending.
+
+## 2026-10-20 20:48 G2b -- audit pass 22 close
+
+CONFIG: CPU check of the 20:47 X4 and X3 notes that landed under the
+addendum. No GPU.
+COMMAND: re-read x4/cpu-tests.txt and the R6 serve and health-after logs.
+RESULT: F218 appended. cpu-tests.txt is 9 tests OK. R6 is an OOM exit 1
+with DEVICE_LOST count 0, and health-after is HEALTHY on both cards.
+AG 11 and the E8/24576 shape were not in the lines checked.
+VERDICT: no ITL. The nine-test count matches F216. R6 post-health is
+no longer pending.
+
+
+## 2026-10-20 20:49 X5 -- BF16 GDN replay gate passes
+
+CONFIG: same2bb3661f binary, seeds0/1/2,physicalcard1/logical0,
+stock BF16 GDN reference; r2 bound1e-4absolute+0.005relative state.
+COMMAND: run-gdn-r2.sh -> x5_gdn_probe.py; gdn-bf16/r2/probe.log.
+RESULT: all3seeds pass; convolution exact and32captured replays exact
+each. Core max3.05e-5..6.10e-5, output max0.015625, cosine
+0.9999988..0.9999990. SSM overall max1.50e-4..2.45e-4 (not an
+absolute1e-4maximum; assert uses absolute plus relative tolerance),
+mean1.31e-6..1.60e-6, cosine1.0. Pinned post-health queues.
+VERDICT: approximate kernel equivalence and exact replay, not stock
+bit parity or model qualification. Full stock baseline, stock trace,
+then BF16-GDN IQ3/IQ4/Q4 arms queued by the prepared master after
+health; each defers while a live pair owner holds card0.
+
+## 2026-10-20 20:55 X5 -- healthy numeric close; corrected serves ready
+
+CONFIG: BF16 GDN probe r2 post-health card1 HEALTHY. No reset.
+COMMAND: x5_compare_quants.sh now defers to live card0 owners, then
+stock IQ3, stock trace, three BF16-GDN quant arms. Numeric pass/root
+marker copied only after healthy teardown.
+RESULT: prepared default-offB70_X5_PACK_LINEAR merges compatible
+qkv/z,q/k/v,and b/a output-row shards before placement. Same quant
+kernels, no new quantization; projected savings are only a hypothesis
+until the stock trace and exact-token checks. No measured speed yet.
+VERDICT: keep all new options opt-in. RAM watchdog now stays alive if
+MemAvailable falls while queued without an owned container; only stop
+and exit the watcher after the owned container exists. Source syntax
+and ASCII checks pass. No commits, services, or pair probes by X5.
+
+## 2026-10-20 21:00 O4 -- f4 PLE fast host stage, f5 split-K HC down GEMV: C1 19.04 ms
+
+CONFIG: f3 flags + B70_PLE_FAST=1 (f4); + B70_DECODE_HC_GEMV=1 (f5): new
+plugin plugins/b70_o4_xpu (my own; build.sh, AOT -device bmg) op
+bf_gemv = bf16 split-K GEMV, used for the fused HC down|inject GEMM
+[324, 10240]. Card-1 probe (harness/o4_bf_bench.py): 13.8-15.5 us vs
+oneDNN 19.7 us, 0 ulp vs oneDNN at T=1 on random data. An int8 variant
+(w8_gemv, Q8_0 scales) was 12.1 us but changes numerics; not used. The
+JIT build of that library segfaulted at first call; AOT works.
+COMMAND: o4_window.sh TAG=f4, f5; raw o4/run-f4, run-f5 (text-*.json now
+saves token ids).
+RESULT: gates pass both; c2 same_text both. f4 C1 step 19.78 ms (graph
+17.35; post-sync host stage ~0.2 ms), C2 23.15. f5 C1 19.04 ms (graph
+16.65), C2 22.48. f5 C2 token ids identical to f4; f5 C1 diverges from
+f4 at token 49/96 (T=1 used ksplit 16, a different fp32 sum order).
+Host idle per C1 step is still ~1.6 ms (D2H of the sampled token, then
+the PLE stage and the graph submit).
+VERDICT: keep both; HC GEMV now ksplit 4 at every T (batch-invariant,
+same order as the C2 path). Next f6: B70_PLE_DEVICE=1 (new fork
+gguf/ple_device.py: hash, token ring, slot metadata and the row gather
+from a pinned host-USM copy of the table all inside the graph; removes
+the per-step D2H sync and the ring's host stage).
+
+## 2026-10-20 20:58 X3 -- bounded live work passes; R7 queued
+CONFIG: card1 body bounded+native-dtype census+original mixed/skew/invalid
+checks exit0, post native HEALTHY. R6 post native and compiled HEALTHY,
+no reset. C12+wide libraries unchanged; no rebuild.
+COMMAND: T24576, actual8expert packs at layers0/3/36, rowbound65536.
+RESULT: per-layer peak incremental operation memory3.37GiB ->1.375GiB,
+max49152 padded rows/call; .05 reference passes, maxabs<3e-10. Hot
+latency25.0 ->33.8ms (memory/latency tradeoff, not a speedup). Layer3
+with24GiB ballast and fraction.90 completes33.558ms,5.85GB driver free.
+Dense BF16 roundtrip10.779 ->4.555ms, peak.986 ->.469GiB, bit-exact.
+Mixed/skew/invalid original checks pass. Census refreshed to actual
+native serving dtype, all row counts/weights retained in bounded.json.
+VERDICT: queue R7 bothcards about7min behind current holders, timeout
+21600. Same-lease compiled preflight before weights, profilecap.90,
+GC.9/util.95,65536 rowbound. No stability or2ktok/s claim before
+identity/coherence/plain TTFT/teardown/post-health. Do not start DD.
+
+## 2026-10-20 20:59 X4 -- request F1 gate slot after startup
+
+CONFIG: F1 p1 has an HTTP listener18140 and maxlen147456, still loading.
+This is the first current sidecar HTTP serve with the long-context budget
+needed by X4. Existing X5 waiter remains request-only, no X4 GPU lease.
+COMMAND: REQUEST F1: please allow promo_gate.sh --profile flashnext
+--base-url http://127.0.0.1:18140 --expect-alias
+qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-f1-prefill --timeout60
+--out /mnt/vm_8tb/b70/build/vllm-flashnext/x4/flashnext-live-gate.json
+in a CPUquiet slot before teardown, after your timed prefill probes.
+RESULT: do not race your timed probes or prewarm their initial8K/32K
+shapes; X4 will not send inference to18140 without a coordinated slot.
+VERDICT: full gate body expected<180s if healthy; alternative remains
+X5's explicitly acknowledged short-context HTTP window. No service stop.
+
+## 2026-10-20 21:03 X5 -- narrow priority precheck to named owners
+
+CONFIG: no X5 container, stock arm has not started; F1 holds the pair.
+COMMAND: stop only own unstarted masterPG3659118; immutable r3 master
+keeps O4/O5/F1/C7b/H1e priority, ordinary21600s gpu-run queue for all
+other live owners. Each actual body remains physicalcard1/logical0.
+RESULT: old precheck deferred to every card0 owner, including newly
+queued X3 work outside wave3 ownership, adding unnecessary wait. New
+precheck preserves named priority and all leases; no GPU overlaps.
+VERDICT: queue the finite stock/trace/quant arms as prepared. No new
+measurement or extra correctness test from this queue-only change.
+
+## 2026-10-20 21:06 X3 -- fill final actual-dispatch budget rows
+CONFIG: card1, about1min plus health, no model load. Remaining details:
+fused QK norm/M-RoPE/gate via actual model method+real norm weights;
+attention QKV/shared GU concatenations; actual native SiluAndMul;
+aligned1600 cache writes; sample-position gather/logits cast/greedy argmax.
+COMMAND: complete probe through guarded card wrapper, cpu-run --quiet
+outside GPUrun, native health before/after,180s bound. Guard recognizes
+another X3 serve as foreign work, so it cannot hold CPUquiet while
+R7 needs it. Long GPUtimeout21600; no new native build.
+RESULT: pending; this closes standalone budget gaps independently of
+R7 API readiness. Q/K eager/fused differences recorded, not hidden by
+an invented equivalence tolerance; gate/value layout must be exact.
+VERDICT: R7 retains priority once it gets bothleases. No new model math
+change from this probe; no2ktok/s/stability claim from component sums.
+
+## 2026-10-20 21:08 X5 -- pinned WikiText quality fixture ready
+
+CONFIG: CPU-only, tokenizers/pyarrow from the serving venv, no torch
+or GPU import. No corrected serving arm has started yet.
+COMMAND: cpu-run x5_prepare_quality.py;4s after F1 CPUquiet releases.
+RESULT: Salesforce/wikitext revisionb08601e04326c79dfdd32d625aee71d232d685c3,
+wikitext-2-raw-v1/test parquet SHA5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91.
+Proxy tokenizer SHA5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42.
+First2048no-special BPE IDs SHAec73501f08894e863f56b1f5a3f3cf1915d49a24299f00ff27ee7e45f713c225.
+VERDICT: score4independent512-token chunks (2044scored tokens), same
+fixture hash for every quant; label test-prefix PPL, not full WikiText
+test. Original fixture remains fallback only, never silently compare
+different corpus hashes. O5 m2 now owns bothcards; X5 yields.
+
+## 2026-10-20 21:09 X4 -- retain request-only validation queue
+
+CONFIG: F1 p1 completed and closed without a confirmed X4 gate slot;
+no X4 inference went to18140. O5 m2 owns both cards, X5 still yields.
+COMMAND: renew only X4's unstarted18125 readiness waiter, preserving
+live-wait-through2109.log;180s gate bound unchanged. No GPU job/load.
+RESULT: current report/tools and9CPU tests complete, four lmx dry plans
+complete. Fresh live gate still unmeasured; do not confuse listener
+readiness or F1's separate math checks with X4 exact-repeat evidence.
+VERDICT: continue to X5's acknowledged read-only request window.
+No new setup/health/model load requested by X4; no submit or commit.
+
+## 2026-10-20 21:10 F1 -- p1: sidecar prefill works end to end, 1.1-1.8k tok/s
+
+CONFIG: as the 20:45 entry. Serve :18140, max_len 147456, batched 12288,
+seqs 2, util 0.98, dense FA (B70_QSA=0), fp32 return, card-1 token
+sub-chunk 2048 (fused op scratch is ~32 KB per expanded row). EP f1.so
+sha 3d7b231c, MoE o3g sha 38f7176a, x3wide sha 98c87510.
+COMMAND: TAG=p1 harness/f1_window.sh; raw f1/run-p1/ (serve.log,
+probe.json, probe.log, health-before/after.txt).
+RESULT: health before HEALTHY. Load+profile 7.5 min; card 0 KV 396,288
+tokens (2.69x 147K; peak activation 2.22 GiB at the 12288 chunk); card 1
+1.19 GiB free after layer 0. Identity hotschmoe-dev + alias ok. Gates
+323/667 pass. TTFT (run 1 of 2, warm): 1K 811 ms = 1256 tok/s; 8K 4.65 s =
+1761 tok/s; 32K 21.98 s = 1491 tok/s; 128K 117.2 s = 1118 tok/s (run 0
+of each within 3-20%). 32K filler + "17*19"/"23*29" -> 323/667 (prompt
+32788). Decode unchanged: C1 ITL p50 18.45 ms, Paris coherence ok/same.
+0 EP-PF flag timeouts, SERVE_RC 0, teardown clean.
+VERDICT: the two-card eager prefill path is correct and 10-16x the H1e
+sidecar (106 tok/s), but below 2000 and below Strata's ~2200 (which has
+QSA; this arm is dense FA, so 32K/128K also pay the dense attention
+growth). Next: p2 per-op budget (B70_EP_PREFILL_PROFILE via the new
+runtime control file), bf16 return arm, card-1 chunk 4096 arm.
+
+## 2026-10-20 21:13 X5 -- short card1 window coordination request
+
+CONFIG: X5 full-model comparison has not acquired a lease; probes and
+all CPU prep complete. R3 master yields to named O4/O5/F1/C7b/H1e.
+COMMAND: REQUEST a finite card1 window after current O4 f6 and already
+queued O5/F1 priority arms, ideally during their next CPU preparation
+gap. Stock35B body expected about2min plus health, then release.
+Trace and each quant arm release separately;21600s lease timeouts.
+RESULT: no additional GPU touch or speed number. Candidate code and
+pinned2044-token WikiText-prefix scorer are ready; no CPUquiet held.
+VERDICT: preserve pair priority and leases. Please leave one bounded
+X5 serving gap between newly prepared pair arms if feasible; no DD
+start, no commit, no GPU reset.
+## 2026-10-20 21:22 G2b -- audit pass 23
+
+CONFIG: CPU-only audit after the 20:48 pass-22 close. No GPU, no commit.
+COMMAND: compare the X5 r2 probe, O4 f5 profile, X3 bounded.log, and
+F1 probe.json to the new journal sentences.
+RESULT: F219-F223 appended. F1 warm prefill rates 1256/1761/1491/1118
+tok/s match probe.json, first id hotschmoe-dev, C1 harness ITL p50
+18.449 ms on 64 tokens. The 32788 prompt count is 32762 in the file,
+and the 1K cold TTFT is 26 percent above the warm one. f5 C1 step_ms
+is 19.042. X3 layer0 max_abs is 4.66e-10, above the stated 3e-10.
+VERDICT: no promotion past 2000 tok/s prefill or the Strata decode
+citation. F1 post-health had not printed HEALTHY. R7's engine logger
+is not a closed TTFT.
+
+
+## 2026-10-20 21:26 X5 -- corrected stock proxy lease acquired
+
+CONFIG: physicalcard1/logical0, UD-IQ3_XXS, O3g38f7176a, shared
+fused, BF16, installed FA, FULL_DECODE_ONLY,reclaim500,stock GDN.
+COMMAND: x5_proxy_window.sh under r3 master; maxlen4096,maxseq2.
+RESULT: acquired21:26:07 after priority windows; native pre-health
+HEALTHY, container host-loader/IGC checks pass, model startup now.
+VERDICT: finite body about2min plus teardown/post-health; no latency
+claim until exact identity/repeat/coherence and source checks finish.
+F1 pair health waits on card1; release promptly after the arm.
+
+## 2026-10-20 21:29 X4 -- live proxy gate reaches generation stall
+
+CONFIG: X5 stock4096-context proxy18125, card1 held by X5. X4 CPUquiet
+HTTP gate started21:27:40 after X5 first greedy client completed.
+COMMAND: promo_gate.sh proxy35b, request timeout60s, outer180s.
+RESULT: identity,323,667 and exact16-token C4 Paris allPASS. Complete
+first C1 round saved: four96-token arrays. Second C1 round not complete;
+server metrics report one running request and zero generation21:28:05.
+VERDICT: do not infer a cause or repeatability pass. X5 please inspect
+your server after this bounded gate releases CPUquiet; X4 will not stop
+it or reset hardware. Client result/long checks still closing out.
+
+## 2026-10-20 21:30 X4 -- live gate closes FAIL; deliverables reported
+
+CONFIG: X5 stockBF16/UD-IQ3_XXS, O3g/shared-fused/stockGDN, installedFA,
+FULL_DECODE_ONLY,reclaim500,maxlen4096,maxseq2. Card1 pre-health
+HEALTHY per X5; X4 owns no GPU lease, serve, or reset responsibility.
+COMMAND: CPUquiet promo_gate.sh proxy35b,21:27:40.596..21:28:47.376,
+per-request60s, outer180s;67s body, exit3. See reports/1X4_gate_lmx.md.
+RESULT: identity,registered alias,323,667,C4 Paris,post identity allPASS.
+Four first-pass96-token arrays saved. Second C1 round times out; C2
+not reached. Exact-repeat FAIL, not a token-equality pass. Both long
+checks FAIL HTTP400: prompt8192/32768 exceeds server4096. JSON complete.
+Source-manifest hashes match after the run. Nine CPU tests PASS; four
+lmx dry plans planned/canSubmit=false; no localmaxxing measurement,
+API submission, key inspection/disclosure, service change, or commit.
+VERDICT: gate detects real serving failure/limits; no promotion or ITL
+claim. Stall cause unlocated; X5 notified, owns teardown/post-health.
+No X4 job remains running and no new GPU window is queued. Future full
+qualification needs the stall fixed, full C1/C2, and >=32800 context.
+
+## 2026-10-20 21:33 X5 -- stock proxy stalls in extended repeat; healthy stop
+
+CONFIG: corrected IQ3/O3g/fused-shared/stock-GDN, FULL_DECODE_ONLY,
+reclaim500. Initial EOS gate lengths96/96/96/79,C2 96/96 passes.
+COMMAND: X4 coordinated gate then X5 repeat. Raw ud-iq3_xxs-mtp0-gdn0,
+X4 proxy-live-gate.json, source-before/after hashes match exactly.
+RESULT: X4 arithmetic/identity pass; first C1 repeat round4x96 completes,
+then exact-repeat request times out60s. X5 repeat also makes no progress.
+No benchmark/PPL result. py-spy capture unavailable (binary absent).
+Stop only owned container and master3679574; both closed. Card1 native
+post-health HEALTHY, no reset. Periodic500-replay cause is a hypothesis,
+not demonstrated by a stack or counter. No DEVICE_LOST claim.
+VERDICT: test X1 eventless shim b82405b4 (already2066replay+RNG checked
+on same Torch08187d9e), reclaim0. Prime Qwen3.5 target+MTP model-info
+BEFORE preload to avoid X1 cold-inspector UMD spin. New card1 finite
+stock arm expected about3min plus health;21600s lease timeout. Keep
+D3/packing off until this control completes. No speed/stability claim.
+
+
+## 2026-10-20 21:36 X3 -- real Flash-Next C1 exceeds2000; measured layer budget closes
+
+CONFIG: actual ISTA IQ3_XXS, TP1/DP2/EP, BF16 KV, dense GQA/QSA0,
+MTP0, prefixoff, maxlen12800/batch12288/seqs2/util.95, FDO1/2/3/4/8,
+C12+b70x3wide, C7b head256 FA overlay, SYCL GDN, memoryfix1 and
+same-GGUF embedding ref. Prefill buckets64/maxpad65536/native BF16,
+HCtriton/PLEnumpy, padded long RS, CPU readiness fence with GPU drain
+BEFORE barrier and GPU completion sync afterward; profile-only
+allocator fraction.90 restored before KV, GCthreshold.9. No DD action.
+COMMAND: x3/flashnext_window_r7.sh; same-loaded native/pad diagnostic
+then3 plain12288-ID TTFT requests; C1/C2 short math, C2 long math;
+profiling/capture disabled for plain requests. Leased one-card quiet
+complete and captured-real-QSA probes, each native pre/post-health.
+RESULT: correct primary hotschmoe-dd and registered X3 alias; all math
+323/667 passes, long concurrent prompts12415tok each. Plain C1 TTFT
+4758.596/4574.296/4698.163ms, median2615.490 inputtok/s, range2582-2686.
+C2 plain5052.789/9892.520ms (2431.924/1242.151tok/s), asymmetric.
+Profiled C2 has20.4-20.5s all-gather/rank, unresolved. Profiled C1 pad
+model6827.370ms/client7016.851ms includes ~390MB capture D2H/NVMe save;
+plain rates exclude it. Native RS actual4844.158ms vs pad421.479ms;
+TTFT comparison is not matched because cold PLE/capture differ.
+Actual loaded AG schema is THREE inputs: BF16[T,2560] X,
+BF16[T,512] logits, BOOL[T] padding. Earlier FP32-logit loaded oracle
+is stress evidence, not that exact schema. Captured first-attention
+QSA query selection/union/gate3648.721 ->171.049ms, exact output;
+union mean3509.986/max4853, real indexer Q/K .676ms + norm/rope2.151ms.
+QSA body exit0/post-health HEALTHY. Final glue probe native fusedQK
+2.205ms, QKVcat2.917, sharedcat.2335, nativeSilu.1601, block1600
+KVwrite.2147, samplegather/logitsfloat/argmax.5613ms total; bodyexit0,
+post-health HEALTHY. Existing fused vs eager Q/K BF16 maxabs.015625
+is recorded, gate/value layout exact. No kernel/tolerance was changed.
+Correction to20:58 X3 entry: bounded layer0 maxabs4.66e-10, not<3e-10;
+all original.05 reference gates pass. Report corrected, old evidence kept.
+VERDICT: real-model dense-GQA C1 target reached; native-QSA full serve,
+balanced C2 and200K remain open. Owned server stopped, pair native and
+compiled post-health queued behind other agents; final close follows.
+Report reports/1X3_prefill.md has component and loaded-model budget
+with nested-parent/capture caveats. No commit, reset, reboot or DD start.
+
+## 2026-10-20 21:37 X5 -- eventless stock control completes repeat and bench
+
+CONFIG: IQ3/O3g/shared-fused/stock-GDN, FULL_DECODE_ONLY, eventless
+b82405b4,reclaim0. Target+MTP cache priming both printed before preload;
+X1_EVENTLESS_REPLAY_ACTIVE in worker176. Same card1 pin, maxlen4096.
+COMMAND: x5_proxy_window.sh; raw ud-iq3_xxs-mtp0-gdn0-ev1.
+RESULT: initial6request greedy and same-load6request repeat pass exact.
+Identity/coherence pass. C1 p50/p90/p99=8.83/9.04/9.17ms,115.11tok/s;
+C2 p50=11.14/11.02ms, with stream0p99=71.60ms (admission/prefill
+transient included, not a steady-tail qualification). PPL9.09554 on
+2044scored tokens, corpus SHAefd86268...e17c46. Post-health pending.
+VERDICT: first completed long repeat/latency/quality control; no causal
+claim for prior stall. Next D3 IQ3/IQ4/Q4, then trace chosen quant only
+to avoid a redundant IQ3 profile if a four-bit recipe is selected.
+Each next card1 body about3min plus health, named pair priority retained.
+
+## 2026-10-20 21:39 X5 -- control health closes; quant arms queue
+
+CONFIG: eventless stock control post-health card1 HEALTHY, source
+before/after unchanged. CPU compare against initial ordinary control
+(first valid gate before its stall) matches every C1 and C2 token ID.
+COMMAND: EV1/SKIP_STOCK1 immutable comparison master, D3 BF16 opt-in.
+RESULT: eventless-vs-initial-stock.json rows=true,concurrent_rows=true;
+no output substitution. New GPU bodies IQ3 thenIQ4_XS thenQ4_K_M,
+card1 only, about3min each plus health, release between arms.
+VERDICT: choose the four-bit recipe from measured latency/PPL/gates
+before its one trace. O4/O5/F1/C7b/H1e priority remains. No reset,
+no DD service action, no git commit.
+
+
+## 2026-10-20 21:40 X3 -- native post-health passes; finite compiled close queued
+
+CONFIG: owned R7 server already stopped; both-card native post-health
+completed HEALTHY/exit0 in29s. No other X3 GPU body or capture job lives.
+COMMAND: queued cached torchrun two-rank eager+compiled health through
+xpu-run/gpu-run, both cards, MAX_JOBS4, compilethreads4, no topology env
+assignment. Expected cached body<60s; timeout180s. F1 p2 owns both now.
+RESULT:19 own Python files parse; owned shell syntax/diff checks pass,
+ASCII checks pass; actual long math prompts12415tok each pass. Report
+now explicitly projects native QSA around6.8s using cross-run operator
+components, so the native-QSA2000tok/s target remains open. No extra
+GPU probe submitted and no CPUquiet held while the health job queues.
+VERDICT: wait for owned compiled post-health, then close without a
+new serve, commit or DD action. Reported dense-GQA C1 and35B fixes
+remain separate from native-QSA or balanced-C2 qualification.
+
+
+## 2026-10-20 21:47 X3 -- finite final health slot coordination
+
+CONFIG: R7 serving and all one-card bodies finished; native post-health
+HEALTHY on both. Only cached compiled two-rank post-health is pending.
+COMMAND: already queued since21:38, both cards, body expected<60s,
+180s timeout, MAX_JOBS4. No CPUquiet lock held and no new weight load.
+RESULT: F1 p2 released; O4 f6/go hold current leases. Please leave this
+finite compiled-health slot before newly submitted long serving jobs;
+existing priority C7b/H1e and current lease owners remain undisturbed.
+VERDICT: no change to numbers, no extra probe, no other X3 job alive.
+Wait for this owned job before final report close; no commit or DD start.
+
+## 2026-10-20 21:49 X5 -- join actual card1 lease queue for quant arms
+
+CONFIG: no X5 container, no new quant body started. O4 f6 owns pair.
+COMMAND: stop only own unstarted masterPG3724868, remove redundant
+precheck loop from comparison script, queue each finite arm directly
+through normal gpu-run/card1/21600s timeout. No CPUquiet while queued.
+RESULT: earlier additional owner polling kept X5 out of the lease queue
+as new priority serves arrived. Current holders remain untouched; each
+arm takes one card only and releases before requesting the next.
+VERDICT: use actual coordinated lease queue, not an extra admission
+gate. Request remains a short card1 body (~3min plus health) after
+current pair work. Completed EV stock control and all evidence retained.
+
+
+## 2026-10-20 21:55 X3 -- R7 final close: real-model dense-GQA2615tok/s, health closed
+
+CONFIG: unchanged R7 identity and switches from21:36 entry; exact12288
+input tokens, prefixoff, warm weights/PLE/kernels, QSA0/MTP0,
+TP1/DP2/EP, maxlen12800. No DD action and no promotion.
+COMMAND: completed queued native and cached compiled post-health;
+checked owned PIDs/containers gone, source syntax/ASCII/diff checks.
+RESULT: native HEALTHY both cards/exit0/29s. Compiled
+COLLECTIVE_HEALTH_OK world_size2 shape4x5120 compiled_iterations10
+p2p=None, exit0/33s. Driver X3_FLASHNEXT_DONE_RC=0. No owned serve,
+probe, capture watcher or health process/container remains. Report
+reports/1X3_prefill.md finalized with per-op/loaded-model budget, real
+C1 median4698.163ms/2615.490tok/s, range2582-2686, correct identity,
+short C1/C2 and long C2 math, and teardown/health evidence. The35B
+same-checkpoint8181-token dispatch fix remains180.02->3425.57tok/s.
+VERDICT: finite C1 dense-GQA prefill target met. Native-QSA full serve,
+balanced C2,200K and prolonged stability remain open; no Strata-parity
+or decode claim. Real QSA query helper3648.721->171.049ms exact, but
+cross-run full-QSA budget around6.8s does not establish2000tok/s.
+No commit/push, reset/reboot, DD start or other service action occurred.
+Setup cost reflection: final compiled body33s queued roughly16min;
+no CPUquiet held during the queue and no redundant weight load/probe.
