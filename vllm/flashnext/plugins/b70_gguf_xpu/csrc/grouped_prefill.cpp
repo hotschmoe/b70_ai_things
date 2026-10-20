@@ -89,17 +89,24 @@ Layout choose_layout(sycl::queue& q, int N, int mt, int mode) {
     // 16KB for compiler spill. 128B so the kernel can align the base.
     const size_t reserve = 16384 + 128;
     const size_t budget = local > reserve ? local - reserve : local / 2;
-    const int cands[] = {1024, 640, 512, 384, 256, 128, 64};
-    Layout best = make_layout(64, mt, mode);
-    for (int c : cands) {
-        if (c % kSg != 0 || N % c != 0) continue;
-        if ((size_t)c > maxwg) continue;
+    // The device reports max_wg=1024, and MT=4 (grf 128) launched at 640.
+    // grf_size<256> (MT>4) rejects a work-group above 512:
+    // "Total number of work-items in a work-group cannot exceed 512".
+    size_t cap = maxwg;
+    if (mt > 4 && cap > 512) cap = 512;
+    int cap_i = (int)cap;
+    if (cap_i > N) cap_i = N;
+    cap_i -= cap_i % kSg;
+    if (cap_i < kSg) cap_i = kSg;
+    Layout best = make_layout(kSg, mt, mode);
+    for (int c = cap_i; c >= kSg; c -= kSg) {
+        if (N % c != 0) continue;
         if ((size_t)(c / kSg) > maxsg) continue;
         Layout L = make_layout(c, mt, mode);
         if (L.total <= budget) return L;
     }
     if (best.total > budget) {
-        std::fprintf(stderr, "prefill SLM %zu exceeds budget %zu (local %zu) at cols=64\n", best.total, budget, local);
+        std::fprintf(stderr, "prefill SLM %zu exceeds budget %zu (local %zu) at cols=%d\n", best.total, budget, local, kSg);
     }
     return best;
 }

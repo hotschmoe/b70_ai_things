@@ -159,12 +159,15 @@ Implementation note (A2, 2026-10-20, signatures unchanged):
 ## C1 addition -- 2026-10-20
 
 `gemv` and `moe_gemv` signatures are unchanged. Q4_K / Q5_K / Q6_K / IQ4_XS
-GEMV with K divisible by 256 stays on KREG. Every other GEMV and every
-`moe_gemv` quantizes x to Q8_1 once, then one subgroup owns one output row
-and dots with the DP4A IQ/Q2_0 path (or a float dequant for Q2_K, Q3_K,
-and the K-quants). Q2_K is ggml id 10 (256 values, 84 bytes). Q3_K is id 11
-(256 values, 110 bytes). Dequant of both is bit-exact. GEMV tolerance is
-the Q8_1 gate, atol/rtol 5e-2.
+GEMV with K divisible by 256 stays on KREG. Every other dense GEMV quantizes
+x to Q8_1 once, stages two weight rows in SLM, and reuses that decode across
+a chunk of M activations. `moe_gemv` quantizes x once; a subgroup of 16 owns
+two output rows and reloads the Q8 block once when both rows are the same
+token. IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, and Q2_0 dots are
+DP4A in the vec-convert form (dpct::dp4a). Q2_K, Q3_K, and the K-quants on
+this path use the float dequant. Q2_K is ggml id 10 (256 values, 84 bytes).
+Q3_K is id 11 (256 values, 110 bytes). Dequant of both is bit-exact. GEMV
+tolerance is the Q8_1 gate, atol/rtol 5e-2.
 
 ```
 moe_layer(Tensor x, Tensor gate_q, int gate_type, Tensor up_q, int up_type,

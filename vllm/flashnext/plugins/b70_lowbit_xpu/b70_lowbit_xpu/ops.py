@@ -1,4 +1,9 @@
-"""Lazy loader for the b70 low-bit SYCL extension."""
+"""Lazy loader for the b70 low-bit SYCL extension.
+
+Decode calls must be XPU-graph safe: the schema lives in the SYCL library,
+fake kernels cover Dynamo / FakeTensor, and the wrappers do not sync or
+allocate a fresh empty plane on every call.
+"""
 
 from __future__ import annotations
 
@@ -7,10 +12,55 @@ import os
 import torch
 
 _LOADED = False
+_FAKES = False
+# One empty int2 hi-plane per device. Allocating it inside a capture is a
+# new graph-pool block every replay setup; the profile run fills this cache.
+_EMPTY_HI: dict[str, torch.Tensor] = {}
 
 DEFAULT_SO = (
     "/mnt/vm_8tb/b70/build/vllm-flashnext/b70_lowbit_xpu/libb70_lowbit_xpu.so"
 )
+
+
+def _register_fakes() -> None:
+    global _FAKES
+    if _FAKES:
+        return
+    from torch.library import register_fake
+
+    @register_fake("b70_lowbit::gemv")
+    def _gemv_fake(x, plane2, plane_hi, scale, bits):
+        del plane_hi, scale, bits
+        return x.new_empty((x.shape[0], plane2.shape[0]))
+
+    @register_fake("b70_lowbit::moe_gemv")
+    def _moe_fake(
+        x,
+        ids,
+        router_w,
+        w13_plane2,
+        w13_plane_hi,
+        w13_scale,
+        w2_plane2,
+        w2_plane_hi,
+        w2_scale,
+        bits,
+    ):
+        del ids, router_w, w13_plane2, w13_plane_hi, w13_scale
+        del w2_plane2, w2_plane_hi, w2_scale, bits
+        return x.new_empty((x.shape[0], x.shape[1]))
+
+    @register_fake("b70_lowbit::prefill_wna16")
+    def _wna_fake(x, plane2, plane_hi, scale, bits):
+        del plane_hi, scale, bits
+        return x.new_empty((x.shape[0], plane2.shape[0]))
+
+    @register_fake("b70_lowbit::prefill_wxa8")
+    def _wxa_fake(x, plane2, plane_hi, scale, bits):
+        del plane_hi, scale, bits
+        return x.new_empty((x.shape[0], plane2.shape[0]))
+
+    _FAKES = True
 
 
 def _load() -> None:
@@ -24,13 +74,26 @@ def _load() -> None:
             "Build it with plugins/b70_lowbit_xpu/build.sh."
         )
     torch.ops.load_library(path)
+    _register_fakes()
     _LOADED = True
 
 
 def _hi(plane_hi: torch.Tensor | None, like: torch.Tensor) -> torch.Tensor:
-    if plane_hi is None:
-        return torch.empty(0, dtype=torch.uint8, device=like.device)
-    return plane_hi
+    if plane_hi is not None:
+        return plane_hi
+    key = str(like.device)
+    cached = _EMPTY_HI.get(key)
+    if cached is None or cached.device != like.device:
+        cached = torch.empty(0, dtype=torch.uint8, device=like.device)
+        _EMPTY_HI[key] = cached
+    return cached
+
+
+def _ready(t: torch.Tensor) -> torch.Tensor:
+    # Already-contiguous parameters must not allocate during capture.
+    if t.is_contiguous():
+        return t
+    return t.contiguous()
 
 
 def gemv(
@@ -43,10 +106,10 @@ def gemv(
     """Dense GEMV. x is [M, K] bf16, M=1..8. Returns [M, N] bf16."""
     _load()
     return torch.ops.b70_lowbit.gemv(
-        x.contiguous(),
-        plane2.contiguous(),
-        _hi(plane_hi, x).contiguous(),
-        scale.contiguous(),
+        _ready(x),
+        _ready(plane2),
+        _ready(_hi(plane_hi, x)),
+        _ready(scale),
         int(bits),
     )
 
@@ -69,18 +132,22 @@ def moe_gemv(
     half of w13 rows, up is the second. Shared experts are not applied.
     """
     _load()
-    ids_i = ids.to(torch.int32).contiguous()
-    router = router_w.to(torch.float32).contiguous()
+    # dtype casts are no-ops when the runner already produced int32 / fp32.
+    # A real cast is a captured kernel, not a host sync.
+    if ids.dtype != torch.int32:
+        ids = ids.to(torch.int32)
+    if router_w.dtype != torch.float32:
+        router_w = router_w.to(torch.float32)
     return torch.ops.b70_lowbit.moe_gemv(
-        x.contiguous(),
-        ids_i,
-        router,
-        w13_plane2.contiguous(),
-        _hi(w13_plane_hi, x).contiguous(),
-        w13_scale.contiguous(),
-        w2_plane2.contiguous(),
-        _hi(w2_plane_hi, x).contiguous(),
-        w2_scale.contiguous(),
+        _ready(x),
+        _ready(ids),
+        _ready(router_w),
+        _ready(w13_plane2),
+        _ready(_hi(w13_plane_hi, x)),
+        _ready(w13_scale),
+        _ready(w2_plane2),
+        _ready(_hi(w2_plane_hi, x)),
+        _ready(w2_scale),
         int(bits),
     )
 
@@ -95,10 +162,10 @@ def prefill_wna16(
     """Prefill GEMM. Unpack to bf16 and ESIMD bf16 DPAS. x is [M, K] bf16."""
     _load()
     return torch.ops.b70_lowbit.prefill_wna16(
-        x.contiguous(),
-        plane2.contiguous(),
-        _hi(plane_hi, x).contiguous(),
-        scale.contiguous(),
+        _ready(x),
+        _ready(plane2),
+        _ready(_hi(plane_hi, x)),
+        _ready(scale),
         int(bits),
     )
 
@@ -113,9 +180,9 @@ def prefill_wxa8(
     """Prefill GEMM with per-group int8 activations. Decode does not use this."""
     _load()
     return torch.ops.b70_lowbit.prefill_wxa8(
-        x.contiguous(),
-        plane2.contiguous(),
-        _hi(plane_hi, x).contiguous(),
-        scale.contiguous(),
+        _ready(x),
+        _ready(plane2),
+        _ready(_hi(plane_hi, x)),
+        _ready(scale),
         int(bits),
     )

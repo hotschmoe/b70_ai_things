@@ -719,3 +719,117 @@ VERDICT: MTP on the FlashAttention graph is the highest tok/s so far
 config (C1 p50 12.81 ms). Next: PIECEWISE with breakable cudagraphs,
 FlashAttention, no inductor.
 
+
+## 2026-10-20 05:25 D1 -- PIECEWISE breakable graph captures
+
+CONFIG: cudagraph_mode PIECEWISE, compilation mode NONE,
+VLLM_USE_BREAKABLE_CUDAGRAPH=1, ATTN=FLASH_ATTN, SYCL GDN, async on,
+no MTP, B70_XPU_CG_RECLAIM=500, capture sizes 1,2,3,4,8. No inductor.
+COMMAND: B70_AGENT=d1-graph-piecewise VLLM_USE_BREAKABLE_CUDAGRAPH=1
+CARD=1 PORT=18081 GRAPH=1 GRAPH_MODE=PIECEWISE ATTN=FLASH_ATTN MTP=0
+bash vllm/flashnext/harness/serve_ornith_gptq.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-serve-graph-piecewise.log
+Bench: harness/bench_latency.py --tag graph-piecewise-fa --decode-tokens 64
+--out .../logs/d1-bench-graph-piecewise.json
+RESULT: Capture 5 PIECEWISE graphs in 2 s, then 5 in 1 s. No traceback.
+Identity ok, coherence ok. C1 ITL p50/p90/p99 13.23/13.36/13.49 ms,
+76.38 tok/s, TTFT 93.77 ms, n=64. C2 ITL p50 14.10 and 14.10 ms,
+70.23 and 72.01 tok/s. Prefill 168.51/1038.40/5104.96 ms
+(6035/7882/6418 tok/s).
+VERDICT: PIECEWISE works on XPU with breakable graphs and FlashAttention.
+C1 is 0.4 ms slower than FULL_DECODE_ONLY on the same attention path
+(12.81 ms). Prefill matches eager FlashAttention. Next: cudagraph_mode FULL.
+
+
+## 2026-10-20 05:28 D1 -- FULL graph matches FULL_DECODE_ONLY
+
+CONFIG: cudagraph_mode FULL, compilation mode NONE, FlashAttention,
+SYCL GDN, async on, no MTP, B70_XPU_CG_RECLAIM=500, capture sizes
+1,2,3,4,8.
+COMMAND: B70_AGENT=d1-graph-full CARD=1 PORT=18081 GRAPH=1
+GRAPH_MODE=FULL ATTN=FLASH_ATTN MTP=0
+bash vllm/flashnext/harness/serve_ornith_gptq.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-serve-graph-full.log
+Bench: harness/bench_latency.py --tag graph-full-fa --decode-tokens 64
+--out .../logs/d1-bench-graph-full.json
+RESULT: Capture 2 FULL graphs in 1 s, then 4 in 1 s. No traceback.
+Identity ok, coherence ok. C1 ITL p50/p90/p99 12.84/13.05/13.25 ms,
+77.93 tok/s, TTFT 85.15 ms, n=64. C2 ITL p50 13.81 and 13.80 ms,
+73.20 and 72.75 tok/s. Prefill 168.06/1036.19/5103.20 ms
+(6051/7899/6420 tok/s).
+VERDICT: FULL and FULL_DECODE_ONLY are the same decode latency on this
+capture list (12.84 vs 12.81 ms). The latency config is FlashAttention
+plus SYCL GDN with either mode: C1 p50 12.8 ms, under 15 ms. Report:
+vllm/flashnext/reports/1D1_overhead.md. Claude Fable 5.1 and Claude
+5.5 both still exit unrecognized_model and "Not logged in". Server
+stopped after this bench.
+
+## 2026-10-20 05:33 C1 -- fused MoE misses 1.2x, IQ3_S at 41%
+
+CONFIG: card 0, ZE_AFFINITY_MASK=0, Arc Pro B70. Installed
+plugins/b70_gguf_xpu/_C.so is the third binary (6391032 bytes): vec-form
+DP4A, night ALU IQ dots, 2-row moe, dense SLM with an M-chunk of 4,
+memcpy 4/8-byte IQ loads, fused moe_layer, Q2_K id 10 and Q3_K id 11.
+Quiet CPU lock was busy (C2), so this run did not take bin/cpu-run
+--quiet. Both-card xpu-health skipped; card 1 was leased and this is a
+single-card kernel. unitrace/onetrace are not installed.
+COMMAND: B70_AGENT=C1 bin/gpu-run --card 0, cp --remove-destination of
+/mnt/vm_8tb/b70/build/vllm-flashnext/c1-so/_C.so onto the plugin .so,
+then scripts/c1_run.sh. Waited behind C2's prefill_gpu.sh (acquired
+05:28).
+RESULT: failures=0. Dequant 0 bf16 mismatches on every type including
+Q2_K and Q3_K. Q5_K head M=1 808.6 us (88.9% of 608), M=8 4316 us
+(the shift-form DP4A binary had been 6917 us; that form is reverted).
+IQ3_S token_embd M=1 1094 us (41.1%; A2 1594 us / 28.2%), M=8 2255 us
+(19.9%; A2 6338 us). Small-N KREG device time is the behind number:
+IQ4_XS 128 us (21%), Q6_K 129 us (33%), Q4_K 128 us (23%), against
+80% targets of 34/53/36 us. IQ2_XS gate T=1 behind 68 us (first fused
+binary 60.5 us, scalar 71.9 us). Fused moe_layer T=2/4/8 a2 404/758/1374
+us, matching the earlier fused binaries. Quiet-run T=1 a2 stays 216 us.
+Strata C1 card0 routed R2 is 93 us for 20 entries
+(moe_report.md, IQ3_S/Q2_0); fused shared expert is ~19 us/layer
+(mmvq_report.md). 1.2x of that is missed by about 3x on our 10-entry
+plus shared call.
+VERDICT: fusion removed the extra launches (3 * ~122 us a2 down to one
+216 us call). The expert dot is the wall. Wider loads did not move it.
+Report: vllm/flashnext/reports/1C1_moe_decode.md. Plugin .so left at
+the third binary. Next step named there, not started: IQ4_NL kNightNl
+is +4% on the down only; XMX at M=128 is 1-7 GB/s; pipelined KREG
+regressed in the night lab.
+
+## 2026-10-20 05:36 C2 -- prefill grouped GEMM measured
+
+CONFIG: card 0, Arc Pro B70, icpx 2026.1. Library
+plugins/b70_gguf_xpu/b70_gguf_xpu/_C.full.so sha256
+edefe35868158518bbe5cbfd11e7097f6bdc8c73b893e246a910af8b3282f533
+(6386936 bytes; same file as _C.bench.so). Package _C.so left as C1's
+6391032-byte binary. Mode 0 fp16 DPAS 8x16x16 for 11 GGUF types, MT=4
+and MT=16. Mode 1 bf16 and mode 2 int8 at MT=16 for eight types.
+One launch per projection (fused gate/up, then down), device sort,
+next-block preload. MT>4 work-groups capped at 512. Bench under
+cpu-run --quiet. Unique-byte GB/s, 608 GB/s roof. Expert-only 48-layer
+tok/s does not include attention.
+COMMAND: B70_AGENT=C2 bin/gpu-run --card 0 scripts/prefill_gpu.sh
+(log /mnt/vm_8tb/b70/build/c2-prefill-gpu-correct.log, 74s, exit 0).
+Then B70_GGUF_SO=_C.bench.so bin/gpu-run --card 0 bin/cpu-run --quiet
+scripts/prefill_gpu.sh --bench-only
+(log .../c2-prefill-gpu-bench2.log, quiet 39s, gpu-run 75s, exit 0).
+RESULT: Health before and after both runs HEALTHY, card 0. Correctness
+VERDICT failures=0. fp16 max abs 1.487e-03 (44 checks). bf16 max abs
+1.093e-02. int8 far_frac <= 0.013. Layer T=3 max abs 1.214e-04.
+unsigned short joint_matrix is rejected (matrix_type::uint16); bf16
+runs. Layer IQ3_XXS+Q2_0 E=512 topk=10: T=512 13885 us (GU 10268,
+down 3440, cols=640 mt=4), expert-only 768 tok/s. T=4096 27599 us
+(GU 19563, down 5085, GU cols=320 mt=16), expert-only 3092 tok/s.
+T=12288 66129 us (GU 45207, down 11710), expert-only 3871 tok/s.
+bf16 T=512 24709 us, int8 T=512 29104 us, both slower than fp16.
+A2 single-expert shapes got slower: IQ4_NL M=128 N=2560 344 us vs
+A2 136 us; IQ3_XXS M=128 N=640 647 us vs A2 306 us. Dense Q4_K
+N=12288 K=2560 is 5.30 / 42.0 / 126 ms at M=512 / 4096 / 12288.
+GU actual traffic is about 120 GB/s. Strata's ~2200 tok/s layer at
+T=12288 is about 116 ms including attention. This expert layer is
+66 ms. Report: vllm/flashnext/reports/1C2_prefill.md.
+VERDICT: Correct fp16/bf16/int8 prefill path. Not a 2000 tok/s
+prefill. Next, not started: parallel row-tile entries for dense, and
+an SGN=4 (64-column, X from global) trial on the T=4096/12288 layer.
+
