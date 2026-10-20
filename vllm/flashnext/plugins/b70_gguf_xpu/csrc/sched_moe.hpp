@@ -465,9 +465,9 @@ inline sycl::event b70_sched_silu(sycl::queue& q, const B70SchedPlan* plan, cons
     const int n = host_ent * I;
     constexpr int L = 128;
     const size_t global = (size_t)((n + L - 1) / L) * (size_t)L;
-    return q.submit([&](sycl::handler& h) {
-        h.depends_on(dep);
-        h.parallel_for<b70_sched_silu_k>(sycl::nd_range<1>(global, (size_t)L), [=](sycl::nd_item<1> it) {
+    return q.submit([&](sycl::handler& cgh) {
+        cgh.depends_on(dep);
+        cgh.parallel_for<b70_sched_silu_k>(sycl::nd_range<1>(global, (size_t)L), [=](sycl::nd_item<1> it) {
             const int i = (int)it.get_global_id(0);
             if (i >= n) return;
             const int e = i / I;

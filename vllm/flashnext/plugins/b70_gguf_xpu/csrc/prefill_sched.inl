@@ -12,8 +12,10 @@
 // and loads X from global. One group per expert; row tiles above MT*8
 // walk serially inside that group.
 //
-// B70_PREFILL_SCHED=reuse|s64 overrides the auto pick (avg rows >= 48
-// selects reuse). B70_PREFILL_MT=4|16 and B70_PREFILL_RM=32|64 too.
+// B70_PREFILL_SCHED=reuse|s64 overrides the auto pick. Dense (E<=1)
+// uses reuse rm64. Experts use s64 (reuse was slower at T=512/4096/12288).
+// B70_PREFILL_MT=4|16 (default 4 when avg rows <= 32, else 16) and
+// B70_PREFILL_RM=32|64 too.
 
 constexpr int kReuseNsg = 8;
 constexpr int kReuseBk = 256;
@@ -23,8 +25,8 @@ int sched_kind(int rows, int experts) {
     const char* e = std::getenv("B70_PREFILL_SCHED");
     if (e && std::strcmp(e, "s64") == 0) return 1;
     if (e && std::strcmp(e, "reuse") == 0) return 2;
-    const int avg = (rows + experts - 1) / experts;
-    return avg >= 48 ? 2 : 1;
+    (void)rows;
+    return experts <= 1 ? 2 : 1;
 }
 
 int sched_mt(int rows, int experts) {

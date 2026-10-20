@@ -28,7 +28,9 @@ from vllm.v1.kv_cache_interface import KVCacheConfig
 
 from kvoffload.park import missing_kinds
 
-logger = init_logger(__name__)
+# The vLLM handler is attached to the "vllm" logger. A kvoffload.*
+# name does not show up in the serve log.
+logger = init_logger("vllm.kvoffload.hybrid")
 
 
 def _iter_layer_specs(spec: object) -> list[object]:

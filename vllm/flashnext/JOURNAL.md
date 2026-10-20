@@ -1485,3 +1485,31 @@ reference now slices to the native stride. This rerun is the one above.
 VERDICT: MIXED_PROBE_OK. Safe to serve the mixed checkpoint with
 B70_LOWBIT_SO pointing at e1mix.so. This kernel is not the templated
 moe_gemv used for the int4 vs int3 arm.
+
+## 2026-10-20 07:38 G1 -- host restore of Ornith KV plus GDN
+
+CONFIG: card 0, host UMD, TP=1, port 18111, container vllm-fn-g1-kv-c0.
+Ornith GPTQ int4, dtype float16, max-model-len 32768,
+num-gpu-blocks-override 45, mamba-cache-mode align, prefix caching on,
+no async scheduling. HybridCPUOffloadConnector, cpu_bytes_to_use
+17179869184. PIECEWISE graphs, compilation mode 0,
+VLLM_USE_BREAKABLE_CUDAGRAPH=1, B70_XPU_CG_RECLAIM=500. Served names
+hotschmoe-dev then ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2.
+COMMAND: CARD=0 PORT=18111 vllm/flashnext/kvoffload/serve_ornith.sh
+Log /mnt/vm_8tb/b70/build/vllm-flashnext/logs/g1-serve.log
+Then evict_test.py inside the container. JSON g1-evict.json.
+Metrics snapshot g1-metrics.txt. An earlier PIECEWISE+inductor serve
+died on missing ocloc (g1-serve-inductor-fail.log, 114s, exit 1).
+RESULT: Block size 1088. PIECEWISE capture 5+5 graphs. KV override
+245 -> 45 (39852 tokens, concurrency 1.22x at 32768). Hold 330s, exit 0.
+A is 30464 tokens. Cold TTFT 5.177s, cached 0 (5884 tok/s). Resident
+replay TTFT 0.267s, cached 29376. After B and C, restore TTFT 0.732s,
+cached 29376, computed 1088, host delta 29376, device delta 0.
+Greedy text matches the cold control and the resident replay.
+One host load: 666009600 bytes in 0.461s. That is 29376*20480 bytes of
+full-attention KV plus 30*2146304 bytes, one GDN snapshot.
+Stores: 2064875520 bytes, 93 jobs, 0.475s. Post-health card 0 HEALTHY
+(16s). Card 1 was held by E1 and was not probed.
+VERDICT: Pass. A fully evicted hybrid prefix resumes from host RAM
+with no extra recompute beyond the align-mode tail. No fork commit.
+Report: vllm/flashnext/reports/1G1_kv_offload.md.
