@@ -1014,9 +1014,244 @@ static torch::Tensor gemv(
   return y;
 }
 
+// One K-group of x, already in SLM, as fp32. Shared by every row this
+// work-item owns so the bf16->fp32 convert is not repeated per row.
+SYCL_ESIMD_FUNCTION esimd::simd<float, 128> load_x_f32(int byte_off) {
+  esimd::simd<float, 128> xf;
+#pragma unroll
+  for (int s = 0; s < 4; ++s) {
+    esimd::simd<uint16_t, 32> xu =
+        esimd::slm_block_load<uint16_t, 32>(byte_off + s * 64);
+    xf.template select<32, 1>(s * 32) = bf16_to_f32<32>(xu);
+  }
+  return xf;
+}
+
+template <int BITS>
+SYCL_ESIMD_FUNCTION float dot_cached(
+    const uint8_t* row2,
+    const uint8_t* rowhi,
+    const uint16_t* scale_row,
+    int g,
+    esimd::simd<float, 128> xf) {
+  float sc = bf16_u16_to_f32(scale_row[g]);
+  esimd::simd<float, 128> wf = dequant_group<BITS>(row2, rowhi, g, sc);
+  return hsum128(xf * wf);
+}
+
+SYCL_ESIMD_FUNCTION float dot_cached_bits(
+    int bits,
+    const uint8_t* row2,
+    const uint8_t* rowhi,
+    const uint16_t* scale_row,
+    int g,
+    esimd::simd<float, 128> xf) {
+  if (bits == 2) {
+    return dot_cached<2>(row2, rowhi, scale_row, g, xf);
+  }
+  if (bits == 4) {
+    return dot_cached<4>(row2, rowhi, scale_row, g, xf);
+  }
+  return dot_cached<3>(row2, rowhi, scale_row, g, xf);
+}
+
+// B70_LOWBIT_GEMV_ROWS=2 or 4. Each work-item owns that many output rows
+// and reuses one register-cached activation group across them (and across
+// gate and up). The 1-row kernel reloads and reconverts x for every row.
+// 0 keeps that kernel. Mixed expert bits take the same cached path.
+template <int BITS, int ROWS>
+struct GateUpRowsKernel {
+  const uint16_t* x;
+  const int32_t* ids;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* hid;
+  int slots;
+  int I;
+  int H;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int E;
+  int topk;
+  const int32_t* ebits;
+
+  void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<kSlmRowBytes>();
+    const int slot = (int)it.get_global_id(0);
+    const int lane = (int)it.get_local_id(1);
+    const int grp = (int)it.get_group(1);
+    const int row0 = grp * (kGemvWg * ROWS) + lane;
+    if (slot < slots) {
+      const int x_row = slot / topk;
+      for (int g = lane; g < groups; g += kGemvWg) {
+        const uint16_t* src =
+            x + ((size_t)x_row * (size_t)H + (size_t)g * 128);
+        slm_store_group(src, g * 128 * (int)sizeof(uint16_t));
+      }
+    }
+    esimd::barrier();
+    if (slot >= slots) {
+      return;
+    }
+    const int e = ids[slot];
+    const bool live = e >= 0 && e < E;
+    const int use_bits = (live && ebits) ? ebits[e] : BITS;
+    float gacc[ROWS];
+    float uacc[ROWS];
+#pragma unroll
+    for (int r = 0; r < ROWS; ++r) {
+      gacc[r] = 0.f;
+      uacc[r] = 0.f;
+    }
+    if (live) {
+      const int n13 = I * 2;
+      for (int g = 0; g < groups; ++g) {
+        esimd::simd<float, 128> xf =
+            load_x_f32(g * 128 * (int)sizeof(uint16_t));
+#pragma unroll
+        for (int r = 0; r < ROWS; ++r) {
+          const int row = row0 + r * kGemvWg;
+          if (row >= I) {
+            continue;
+          }
+          const size_t gate_row = (size_t)e * (size_t)n13 + (size_t)row;
+          const size_t up_row = gate_row + (size_t)I;
+          gacc[r] += dot_cached_bits(
+              use_bits,
+              plane2 + gate_row * (size_t)stride2,
+              plane_hi ? plane_hi + gate_row * (size_t)stride_hi
+                        : plane2 + gate_row * (size_t)stride2,
+              scale + gate_row * (size_t)groups,
+              g,
+              xf);
+          uacc[r] += dot_cached_bits(
+              use_bits,
+              plane2 + up_row * (size_t)stride2,
+              plane_hi ? plane_hi + up_row * (size_t)stride_hi
+                        : plane2 + up_row * (size_t)stride2,
+              scale + up_row * (size_t)groups,
+              g,
+              xf);
+        }
+      }
+    }
+#pragma unroll
+    for (int r = 0; r < ROWS; ++r) {
+      const int row = row0 + r * kGemvWg;
+      if (row >= I) {
+        continue;
+      }
+      float gv = bf16_roundtrip(gacc[r]);
+      float uv = bf16_roundtrip(uacc[r]);
+      float h = live ? gv / (1.f + sycl::exp(-gv)) * uv : 0.f;
+      hid[(size_t)slot * (size_t)I + row] = f32_to_bf16_u16(h);
+    }
+  }
+};
+
+template <int BITS, int ROWS>
+struct DownRowsKernel {
+  const uint16_t* hid;
+  const int32_t* ids;
+  const float* router;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int T;
+  int H;
+  int I;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int E;
+  int topk;
+  const int32_t* ebits;
+
+  void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<kSlmRowBytes>();
+    const int t = (int)it.get_global_id(0);
+    const int lane = (int)it.get_local_id(1);
+    const int grp = (int)it.get_group(1);
+    const int row0 = grp * (kGemvWg * ROWS) + lane;
+    float acc[ROWS];
+#pragma unroll
+    for (int r = 0; r < ROWS; ++r) {
+      acc[r] = 0.f;
+    }
+    for (int k = 0; k < topk; ++k) {
+      const int slot = t * topk + k;
+      if (t < T) {
+        for (int g = lane; g < groups; g += kGemvWg) {
+          const uint16_t* src =
+              hid + ((size_t)slot * (size_t)I + (size_t)g * 128);
+          slm_store_group(src, g * 128 * (int)sizeof(uint16_t));
+        }
+      }
+      esimd::barrier();
+      if (t < T) {
+        const int e = ids[slot];
+        const bool live = e >= 0 && e < E;
+        if (live) {
+          const int use_bits = ebits ? ebits[e] : BITS;
+          const float w = router[slot];
+          for (int g = 0; g < groups; ++g) {
+            esimd::simd<float, 128> xf =
+                load_x_f32(g * 128 * (int)sizeof(uint16_t));
+#pragma unroll
+            for (int r = 0; r < ROWS; ++r) {
+              const int row = row0 + r * kGemvWg;
+              if (row >= H) {
+                continue;
+              }
+              const size_t wrow = (size_t)e * (size_t)H + (size_t)row;
+              float d = dot_cached_bits(
+                  use_bits,
+                  plane2 + wrow * (size_t)stride2,
+                  plane_hi ? plane_hi + wrow * (size_t)stride_hi
+                            : plane2 + wrow * (size_t)stride2,
+                  scale + wrow * (size_t)groups,
+                  g,
+                  xf);
+              acc[r] += w * bf16_roundtrip(d);
+            }
+          }
+        }
+      }
+      esimd::barrier();
+    }
+    if (t < T) {
+#pragma unroll
+      for (int r = 0; r < ROWS; ++r) {
+        const int row = row0 + r * kGemvWg;
+        if (row < H) {
+          y[(size_t)t * (size_t)H + row] = f32_to_bf16_u16(acc[r]);
+        }
+      }
+    }
+  }
+};
+
+static int gemv_row_count() {
+  const char* env = std::getenv("B70_LOWBIT_GEMV_ROWS");
+  if (env == nullptr || env[0] == '\0') {
+    return 0;
+  }
+  if (env[0] == '4' && env[1] == '\0') {
+    return 4;
+  }
+  if (env[0] == '2' && env[1] == '\0') {
+    return 2;
+  }
+  return 0;
+}
+
 // B70_LOWBIT_MOE_LAUNCHES=2 fuses SiLU into gate/up and the router sum into
 // down (two submits, full N grid). =1 is one submit with one work-group per
 // token. Unset stays the four-submit path.
+// B70_LOWBIT_GEMV_ROWS=2 or 4 selects the multi-row kernels on the =2 path.
 static torch::Tensor launch_reduced_moe(
     const torch::Tensor& x,
     const torch::Tensor& ids,
@@ -1083,22 +1318,52 @@ static torch::Tensor launch_reduced_moe(
       record_use(t);
     }
     uint16_t* hp = reinterpret_cast<uint16_t*>(hid.data_ptr());
-    const size_t gI = ((size_t)I + kGemvWg - 1) / kGemvWg * kGemvWg;
-    const size_t gH = ((size_t)H + kGemvWg - 1) / kGemvWg * kGemvWg;
-    q.parallel_for(
-        sycl::nd_range<2>(
-            sycl::range<2>((size_t)slots, gI),
-            sycl::range<2>(1, (size_t)kGemvWg)),
-        GateUpSiluKernel<BITS>{
-            xp, idp, up2, uph, usc, hp, slots, I, H, H / 128, up_stride2,
-            up_stride_hi, E, topk, ebits});
-    q.parallel_for(
-        sycl::nd_range<2>(
-            sycl::range<2>((size_t)T, gH),
-            sycl::range<2>(1, (size_t)kGemvWg)),
-        DownReduceKernel<BITS>{
-            hp, idp, rp, dp2, dph, dsc, yp, T, H, I, I / 128, dn_stride2,
-            dn_stride_hi, E, topk, ebits});
+    const int rows = gemv_row_count();
+    auto launch_old = [&]() {
+      const size_t gI = ((size_t)I + kGemvWg - 1) / kGemvWg * kGemvWg;
+      const size_t gH = ((size_t)H + kGemvWg - 1) / kGemvWg * kGemvWg;
+      q.parallel_for(
+          sycl::nd_range<2>(
+              sycl::range<2>((size_t)slots, gI),
+              sycl::range<2>(1, (size_t)kGemvWg)),
+          GateUpSiluKernel<BITS>{
+              xp, idp, up2, uph, usc, hp, slots, I, H, H / 128, up_stride2,
+              up_stride_hi, E, topk, ebits});
+      q.parallel_for(
+          sycl::nd_range<2>(
+              sycl::range<2>((size_t)T, gH),
+              sycl::range<2>(1, (size_t)kGemvWg)),
+          DownReduceKernel<BITS>{
+              hp, idp, rp, dp2, dph, dsc, yp, T, H, I, I / 128, dn_stride2,
+              dn_stride_hi, E, topk, ebits});
+    };
+    auto launch_rows = [&](auto row_tag) {
+      constexpr int ROWS = decltype(row_tag)::value;
+      const int tile = kGemvWg * ROWS;
+      const int up_grp = (I + tile - 1) / tile;
+      const int dn_grp = (H + tile - 1) / tile;
+      q.parallel_for(
+          sycl::nd_range<2>(
+              sycl::range<2>((size_t)slots, (size_t)up_grp * kGemvWg),
+              sycl::range<2>(1, (size_t)kGemvWg)),
+          GateUpRowsKernel<BITS, ROWS>{
+              xp, idp, up2, uph, usc, hp, slots, I, H, H / 128, up_stride2,
+              up_stride_hi, E, topk, ebits});
+      q.parallel_for(
+          sycl::nd_range<2>(
+              sycl::range<2>((size_t)T, (size_t)dn_grp * kGemvWg),
+              sycl::range<2>(1, (size_t)kGemvWg)),
+          DownRowsKernel<BITS, ROWS>{
+              hp, idp, rp, dp2, dph, dsc, yp, T, H, I, I / 128, dn_stride2,
+              dn_stride_hi, E, topk, ebits});
+    };
+    if (rows == 4) {
+      launch_rows(std::integral_constant<int, 4>{});
+    } else if (rows == 2) {
+      launch_rows(std::integral_constant<int, 2>{});
+    } else {
+      launch_old();
+    }
   };
   if (bits == 2) {
     run(std::integral_constant<int, 2>{});

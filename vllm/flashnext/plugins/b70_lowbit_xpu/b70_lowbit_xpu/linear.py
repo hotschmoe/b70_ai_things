@@ -233,6 +233,7 @@ class B70LowbitLinearMethod:
         bias: torch.Tensor | None = None,
     ) -> torch.Tensor:
         out_features = layer.weight.shape[0]
+        out_dtype = x.dtype
         x2 = x.reshape(-1, x.shape[-1])
         if x2.dtype != torch.bfloat16:
             x2 = x2.to(torch.bfloat16)
@@ -251,4 +252,7 @@ class B70LowbitLinearMethod:
             )
         if bias is not None:
             y = y + bias.to(y.dtype)
-        return y.view(*x.shape[:-1], out_features)
+        y = y.view(*x.shape[:-1], out_features)
+        if y.dtype != out_dtype:
+            y = y.to(out_dtype)
+        return y

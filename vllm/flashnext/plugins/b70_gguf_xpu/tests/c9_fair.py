@@ -96,7 +96,7 @@ def graph_us(fn, calls: int, reps: int) -> float:
 
 def run_one(d: dict, reps: int) -> None:
     T, I, K = d["T"], d["I"], d["K"]
-    x = to_xpu(d["x"], torch.bfloat16)
+    x = to_xpu(d["x"].reshape(T, K), torch.bfloat16)
     ids = to_xpu(d["ids"].reshape(T, d["topk"]))
     router = to_xpu(d["router"].reshape(T, d["topk"]))
     gates = [to_xpu(d["gate"]) for _ in range(8)]

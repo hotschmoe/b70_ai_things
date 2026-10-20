@@ -32,6 +32,7 @@ CAPTURE_SIZES="${CAPTURE_SIZES:-1,2,3,4,8}"
 ATTN="${ATTN:-}"
 GDN_BACKEND="${GDN_BACKEND:-}"
 ASYNC="${ASYNC:-1}"
+MAX_BATCHED="${MAX_NUM_BATCHED_TOKENS:-}"
 NAME="${NAME:-vllm-fn-lowbit-c${CARD}}"
 MODEL="${MODEL:-$REPO/models/files/ornith-1.5-35b-a3b/gptq-int4-mixedcal-v2}"
 ALIAS="${ALIAS:-ornith-1.5-35b-a3b-b70-lowbit-int4}"
@@ -87,6 +88,9 @@ fi
 if [[ "$ASYNC" == "0" ]]; then
   ARGS+=(--no-async-scheduling)
 fi
+if [[ -n "$MAX_BATCHED" ]]; then
+  ARGS+=(--max-num-batched-tokens "$MAX_BATCHED")
+fi
 
 echo "serve_lowbit: card=$CARD port=$PORT dtype=$DTYPE max_len=$MAX_LEN graph=$GRAPH mode=$GRAPH_MODE attn=${ATTN:-default} name=$NAME"
 echo "serve_lowbit: model=$MODEL"
@@ -102,7 +106,9 @@ if [[ -n "${B70_LOWBIT_SO:-}" ]]; then
   ENV_ARGS+=(--env "B70_LOWBIT_SO=${B70_LOWBIT_SO}")
 fi
 for key in B70_XPU_CG_RECLAIM B70_REPLAY_LOG B70_STEP_TIMER B70_STEP_LOG \
-           VLLM_USE_BREAKABLE_CUDAGRAPH B70_LOWBIT_PREFILL; do
+           VLLM_USE_BREAKABLE_CUDAGRAPH B70_LOWBIT_PREFILL \
+           B70_LOWBIT_PREFILL_SWITCH B70_LOWBIT_PREFILL_FILE \
+           B70_LOWBIT_FWD_SPLIT B70_LOWBIT_FWD_LOG B70_LOWBIT_GEMV_ROWS; do
   if [[ -n "${!key:-}" ]]; then
     ENV_ARGS+=(--env "${key}=${!key}")
   fi

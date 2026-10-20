@@ -15,3 +15,9 @@ def register() -> None:
 
     ensure_registered()
     _REGISTERED = True
+    import os
+
+    if os.environ.get("B70_LOWBIT_FWD_SPLIT") == "1":
+        from b70_lowbit_xpu.fwd_split import install
+
+        install()

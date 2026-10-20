@@ -32,6 +32,205 @@ def _install_param(layer: torch.nn.Module, name: str, data: torch.Tensor) -> Non
     )
 
 
+# Reused across layers. Keyed by device, dtype, and shape so a prefill
+# chunk does not allocate a fresh expert scratch on every layer.
+_SCRATCH: dict = {}
+# (name, start_event, end_event) recorded when B70_LOWBIT_FWD_SPLIT=1.
+_TIMER_SPANS: list = []
+
+
+def _prefill_flag() -> str:
+    """B70_LOWBIT_PREFILL, or one line from B70_LOWBIT_PREFILL_FILE.
+
+    The file is read on each apply so a long serve can switch matmul/bmm
+    without reloading weights. Set B70_LOWBIT_PREFILL_SWITCH=1 to enable
+    that read. Unset, the env value is fixed for the process.
+    """
+    if os.environ.get("B70_LOWBIT_PREFILL_SWITCH") == "1":
+        path = os.environ.get(
+            "B70_LOWBIT_PREFILL_FILE",
+            "/mnt/vm_8tb/b70/build/vllm-flashnext/logs/e2-prefill-mode.txt",
+        )
+        try:
+            with open(path, encoding="ascii") as fh:
+                line = fh.read().strip()
+        except OSError:
+            line = ""
+        if line:
+            return line
+    return os.environ.get("B70_LOWBIT_PREFILL", "")
+
+
+def _span(name: str):
+    class _Bracket:
+        def __enter__(self):
+            self.on = os.environ.get("B70_LOWBIT_FWD_SPLIT") == "1"
+            if self.on:
+                import torch
+
+                self.a = torch.xpu.Event(enable_timing=True)
+                self.b = torch.xpu.Event(enable_timing=True)
+                self.a.record()
+            return self
+
+        def __exit__(self, *exc):
+            if self.on:
+                self.b.record()
+                _TIMER_SPANS.append((name, self.a, self.b))
+            return False
+
+    return _Bracket()
+
+
+def drain_timer_ms() -> dict:
+    """Sum recorded XPU-event spans. Caller synchronizes first."""
+    acc: dict = {}
+    spans = list(_TIMER_SPANS)
+    _TIMER_SPANS.clear()
+    for name, start, end in spans:
+        acc[name] = acc.get(name, 0.0) + float(start.elapsed_time(end))
+    return acc
+
+
+def _scratch(key, shape, dtype, device):
+    import torch
+
+    buf = _SCRATCH.get(key)
+    if (
+        buf is None
+        or buf.dtype != dtype
+        or buf.device != device
+        or tuple(buf.shape) != tuple(shape)
+    ):
+        buf = torch.empty(shape, dtype=dtype, device=device)
+        _SCRATCH[key] = buf
+    return buf
+
+
+def _group_slots(ids: torch.Tensor, num_experts: int):
+    """Sort slots by expert. One D2H of the max count, for the bmm pad."""
+    topk = int(ids.shape[1])
+    flat = ids.reshape(-1)
+    if flat.dtype != torch.int32:
+        flat = flat.to(torch.int32)
+    slots = int(flat.shape[0])
+    key = torch.where(flat >= 0, flat, torch.full_like(flat, num_experts))
+    order = torch.argsort(key, stable=True)
+    counts = torch.bincount(key, minlength=num_experts + 1)
+    active = counts[:num_experts]
+    if num_experts <= 1:
+        starts = torch.zeros(num_experts, dtype=torch.int32, device=ids.device)
+    else:
+        tail = torch.cumsum(active[:-1], dim=0).to(torch.int32)
+        starts = torch.cat(
+            (torch.zeros(1, dtype=torch.int32, device=ids.device), tail), 0
+        )
+    mmax = int(active.max().item()) if slots and num_experts else 0
+    return order, key, starts, mmax, topk
+
+
+def _scatter_rows(src, expert, local, num_experts: int, mmax: int, k: int):
+    """src [S, K] -> padded [E, M, K] at (expert, local). One index_copy."""
+    import torch
+
+    dest = _scratch(
+        ("pad", num_experts, mmax, k, src.dtype, src.device.type, src.device.index),
+        (num_experts, mmax, k),
+        src.dtype,
+        src.device,
+    )
+    if src.numel() == 0:
+        return dest
+    flat_i = expert.to(torch.int64) * mmax + local.to(torch.int64)
+    dest.view(num_experts * mmax, k).index_copy_(0, flat_i, src)
+    return dest
+
+
+def expert_prefill_bmm(
+    x: torch.Tensor,
+    topk_ids: torch.Tensor,
+    topk_weights: torch.Tensor,
+    w13_plane2: torch.Tensor,
+    w13_plane_hi: torch.Tensor | None,
+    w13_scale: torch.Tensor,
+    w2_plane2: torch.Tensor,
+    w2_plane_hi: torch.Tensor | None,
+    w2_scale: torch.Tensor,
+    bits: int,
+) -> torch.Tensor:
+    """One unpack of every expert and one vendor bmm per projection.
+
+    Same math as the per-expert F.linear loop: bf16 GEMM, fp32 SiLU, fp32
+    router index_add. Empty experts are still in the batch. A pad past
+    8 GB falls back to the loop so a one-expert hotspot cannot allocate
+    the full [E, T*topk, K] cube.
+    """
+    t_tokens, hidden = x.shape
+    num_experts = int(w13_plane2.shape[0])
+    n13 = int(w13_plane2.shape[1])
+    intermediate = n13 // 2
+    with _span("unpack_w13"):
+        w13 = ops.unpack_bf16(
+            w13_plane2.reshape(num_experts * n13, -1),
+            None
+            if w13_plane_hi is None
+            else w13_plane_hi.reshape(num_experts * n13, -1),
+            w13_scale.reshape(num_experts * n13, -1),
+            bits,
+        ).view(num_experts, n13, hidden)
+    with _span("unpack_w2"):
+        w2 = ops.unpack_bf16(
+            w2_plane2.reshape(num_experts * hidden, -1),
+            None
+            if w2_plane_hi is None
+            else w2_plane_hi.reshape(num_experts * hidden, -1),
+            w2_scale.reshape(num_experts * hidden, -1),
+            bits,
+        ).view(num_experts, hidden, intermediate)
+    with _span("group"):
+        order, key, starts, mmax, topk = _group_slots(topk_ids, num_experts)
+    y = torch.zeros(t_tokens, hidden, dtype=torch.float32, device=x.device)
+    if mmax <= 0:
+        return y.to(torch.bfloat16)
+    mmax_pad = (mmax + 7) & ~7
+    if num_experts * mmax_pad * hidden * 2 > 8_000_000_000:
+        raise RuntimeError(
+            f"bmm pad {num_experts}*{mmax_pad}*{hidden} exceeds 8GB"
+        )
+    slots = int(order.shape[0])
+    pos = torch.arange(slots, device=x.device, dtype=torch.int32)
+    sorted_e = key[order]
+    valid = sorted_e < num_experts
+    local = pos - starts[sorted_e.clamp(0, max(num_experts - 1, 0))]
+    tok = torch.div(order, topk, rounding_mode="floor")
+    expert = sorted_e[valid]
+    local_v = local[valid]
+    tok_v = tok[valid]
+    flat_i = expert.to(torch.int64) * mmax_pad + local_v.to(torch.int64)
+    with _span("pad_x"):
+        gathered = x.index_select(0, tok_v)
+        xpad = _scatter_rows(gathered, expert, local_v, num_experts, mmax_pad, hidden)
+    with _span("bmm_w13"):
+        # w13 is [E, N, K]. bmm(W, X^T) keeps the large weight contiguous.
+        gu_nm = torch.bmm(w13, xpad.transpose(1, 2).contiguous())
+        gu = gu_nm.transpose(1, 2).contiguous().view(num_experts * mmax_pad, n13)
+        gu = gu.index_select(0, flat_i)
+    with _span("silu"):
+        gate = gu[:, :intermediate]
+        up = gu[:, intermediate:]
+        hid = (F.silu(gate.float()) * up.float()).to(torch.bfloat16)
+    with _span("pad_hid"):
+        hpad = _scatter_rows(hid, expert, local_v, num_experts, mmax_pad, intermediate)
+    with _span("bmm_w2"):
+        down_nm = torch.bmm(w2, hpad.transpose(1, 2).contiguous())
+        down = down_nm.transpose(1, 2).contiguous().view(num_experts * mmax_pad, hidden)
+        down = down.index_select(0, flat_i)
+    with _span("reduce"):
+        weight = topk_weights.reshape(-1).to(torch.float32)[order[valid]].unsqueeze(-1)
+        y.index_add_(0, tok_v.to(torch.int64), down.float() * weight)
+    return y.to(torch.bfloat16)
+
+
 class B70LowbitMoEMethod:
     """Routed experts. T<=8 uses the fused GEMV. Larger T gathers per expert.
 
@@ -336,6 +535,7 @@ class B70LowbitMoEMethod:
     ) -> torch.Tensor:
         del shared_experts, shared_experts_input
         in_shape = x.shape
+        out_dtype = x.dtype
         x2 = x.reshape(-1, in_shape[-1])
         if x2.dtype != torch.bfloat16:
             x2 = x2.to(torch.bfloat16)
@@ -368,7 +568,10 @@ class B70LowbitMoEMethod:
             )
         else:
             y = self._prefill(layer, x2, topk_weights, topk_ids)
-        return y.view(*in_shape[:-1], y.shape[-1])
+        y = y.view(*in_shape[:-1], y.shape[-1])
+        if y.dtype != out_dtype:
+            y = y.to(out_dtype)
+        return y
 
     def _prefill_matmul(
         self,
@@ -436,17 +639,27 @@ class B70LowbitMoEMethod:
         topk_weights: torch.Tensor,
         topk_ids: torch.Tensor,
     ) -> torch.Tensor:
-        # B70_LOWBIT_PREFILL=grouped is the one-submit-per-projection path.
-        # Unset stays the per-expert loop (the measured 116 tok/s path).
-        if (
-            os.environ.get("B70_LOWBIT_PREFILL", "") == "matmul"
-            and self.per_expert is None
-        ):
+        # bmm: one grouped unpack and one vendor bmm per projection.
+        # matmul: the same unpack, then one GEMM per occupied expert.
+        # grouped: one ESIMD DPAS submit per projection.
+        # Unset stays the per-expert WNA16 loop.
+        flag = _prefill_flag()
+        if flag == "bmm" and self.per_expert is None:
+            return expert_prefill_bmm(
+                x,
+                topk_ids,
+                topk_weights,
+                layer.w13_weight,
+                getattr(layer, "w13_weight_plane_hi", None),
+                layer.w13_weight_scale,
+                layer.w2_weight,
+                getattr(layer, "w2_weight_plane_hi", None),
+                layer.w2_weight_scale,
+                self.bits,
+            )
+        if flag == "matmul" and self.per_expert is None:
             return self._prefill_matmul(layer, x, topk_weights, topk_ids)
-        if (
-            os.environ.get("B70_LOWBIT_PREFILL", "") == "grouped"
-            and self.per_expert is None
-        ):
+        if flag == "grouped" and self.per_expert is None:
             y = ops.moe_prefill(
                 x,
                 topk_ids,

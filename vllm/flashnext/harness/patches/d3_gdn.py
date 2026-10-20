@@ -167,7 +167,9 @@ def _forward(self, hidden_states, orig):
         if token_indx is None or slot is None or num_accepted is None or cu is None:
             _once("specmeta", "b70_d3 gdn skip: spec metadata missing")
             return orig(self, hidden_states)
-        has_initial = torch.ones(slot.shape[0], dtype=torch.bool, device=slot.device)
+        # The spec kernel ignores this mask. Reuse the stable buffer so
+        # capture does not allocate.
+        has_initial = _has_ones(self, slot)
     else:
         cu = md.non_spec_query_start_loc
         slot = md.non_spec_state_indices_tensor
@@ -201,9 +203,20 @@ def _forward(self, hidden_states, orig):
         and ssm_state.stride(-2) == 128
         and ssm_state.stride(-3) == 128 * 128
     )
-    slot_ok = slot.dtype == torch.int32 and cu.dtype == torch.int32 and (
-        use_spec or (slot.dim() == 1 and cu.shape[0] == slot.shape[0] + 1)
-    )
+    if use_spec:
+        spec_rows = 3 + int(slot.shape[-1]) - 1
+        slot_ok = (
+            slot.dtype == torch.int32
+            and cu.dtype == torch.int32
+            and slot.dim() == 2
+            and conv_state.size(1) >= spec_rows
+            and token_indx.dtype == torch.int32
+            and num_accepted.dtype == torch.int32
+        )
+    else:
+        slot_ok = slot.dtype == torch.int32 and cu.dtype == torch.int32 and (
+            slot.dim() == 1 and cu.shape[0] == slot.shape[0] + 1
+        )
     if (
         not conv_ok
         or not ssm_ok
