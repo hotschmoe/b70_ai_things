@@ -30,7 +30,130 @@ case "${XPU_RUN_CARD:-}" in
   both|"") unset ZE_AFFINITY_MASK || true ;;
 esac
 
+check_loader_override() {
+  local base
+  echo "xpu-run: UMD override label=${XPU_UMD_LABEL:-unknown} clang=${XPU_UMD_CLANG:-unset}"
+  echo "xpu-run: LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
+  echo "xpu-run: ZE_AFFINITY_MASK=${ZE_AFFINITY_MASK-<unset>} card=${XPU_RUN_CARD:-<unset>}"
+  for base in libze_loader.so.1 libze_intel_gpu.so.1 libigdgmm.so.12 libigdrcl.so \
+              libigc.so.2 libigdfcl.so.2 libiga64.so.2; do
+    if [[ ! -e "/host-umd/${base}" ]]; then
+      echo "xpu-run: FAIL override missing /host-umd/${base}" >&2
+      ls -l /host-umd >&2 || true
+      return 1
+    fi
+  done
+  if [[ ! -e /usr/local/lib/libigc.so.2 || ! -e /usr/local/lib/libigdfcl.so.2 || ! -e /usr/local/lib/libiga64.so.2 ]]; then
+    echo "xpu-run: FAIL override IGC is not mounted under /usr/local/lib" >&2
+    ls -l /usr/local/lib >&2 || true
+    return 1
+  fi
+  if [[ -n "${XPU_UMD_CLANG:-}" && ! -e "/usr/local/lib/${XPU_UMD_CLANG}" && ! -e "/host-umd/${XPU_UMD_CLANG}" ]]; then
+    echo "xpu-run: FAIL override clang ${XPU_UMD_CLANG} is not mounted" >&2
+    return 1
+  fi
+  echo "xpu-run: override file sizes"
+  stat -c '%n %s' \
+    /host-umd/libze_loader.so.1 \
+    /host-umd/libze_intel_gpu.so.1 \
+    /host-umd/libigdgmm.so.12 \
+    /host-umd/libigdrcl.so \
+    /host-umd/libigc.so.2 \
+    /host-umd/libigdfcl.so.2 \
+    /host-umd/libiga64.so.2
+  local so
+  for so in /host-umd/libze_loader.so.1 /host-umd/libze_intel_gpu.so.1 \
+            /host-umd/libigc.so.2 /host-umd/libigdfcl.so.2 /host-umd/libiga64.so.2; do
+    echo "=== ldd ${so} ==="
+    ldd "$so"
+    if ldd "$so" | grep -q 'not found'; then
+      echo "xpu-run: FAIL ldd not found for ${so}" >&2
+      return 1
+    fi
+  done
+  XPU_UMD_CLANG="${XPU_UMD_CLANG:-}" /usr/bin/python3.12 - <<'PY'
+import ctypes
+import os
+import sys
+
+ctypes.CDLL("libze_loader.so.1")
+ctypes.CDLL("libze_intel_gpu.so.1")
+ctypes.CDLL("libigdgmm.so.12")
+ctypes.CDLL("libigc.so.2")
+ctypes.CDLL("libigdfcl.so.2")
+ctypes.CDLL("libiga64.so.2")
+clang = os.environ.get("XPU_UMD_CLANG", "")
+if clang:
+    ctypes.CDLL(clang)
+seen = {}
+for line in open("/proc/self/maps"):
+    parts = line.split()
+    if not parts:
+        continue
+    path = parts[-1]
+    base = os.path.basename(path)
+    for key in ("libze_loader", "libze_intel_gpu", "libigdgmm", "libigc.so",
+                "libigdfcl", "libiga64", "libopencl-clang", "libigc-clang"):
+        if key in base and key not in seen:
+            seen[key] = path
+            print("RESOLVED", key, path)
+ok = True
+allowed = ("/host-umd/", "/usr/local/lib/", "/usr/lib/x86_64-linux-gnu/")
+for key in ("libze_loader", "libze_intel_gpu", "libigdgmm", "libigc.so", "libigdfcl", "libiga64"):
+    path = seen.get(key, "")
+    if not path.startswith(allowed):
+        print("FAIL", key, "resolved outside override mounts:", path or "<missing>")
+        ok = False
+clang_path = seen.get("libopencl-clang", "")
+if clang and not clang_path.startswith(allowed):
+    print("FAIL clang resolved outside override mounts:", clang_path or "<missing>")
+    ok = False
+expect_loader = os.environ.get("XPU_HOST_LOADER_BYTES", "")
+expect_igc = os.environ.get("XPU_HOST_IGC_BYTES", "")
+loader = seen.get("libze_loader", "")
+igc = seen.get("libigc.so", "")
+if expect_loader and loader:
+    sz = os.path.getsize(loader)
+    print("xpu-run: libze_loader bytes", sz)
+    if str(sz) != expect_loader:
+        print("FAIL loader size", sz, "!= selected", expect_loader)
+        ok = False
+if expect_igc and igc:
+    sz = os.path.getsize(igc)
+    print("xpu-run: libigc bytes", sz)
+    if str(sz) != expect_igc:
+        print("FAIL libigc size", sz, "!= selected", expect_igc)
+        ok = False
+sys.exit(0 if ok else 1)
+PY
+  if [[ -d /dev/dri ]]; then
+    if ! command -v sycl-ls >/dev/null 2>&1; then
+      echo "xpu-run: FAIL sycl-ls not on PATH" >&2
+      return 1
+    fi
+    echo "=== sycl-ls ==="
+    sycl-ls
+    echo "=== torch.xpu ==="
+    /opt/venv/bin/python - <<'PY'
+import torch
+count = torch.xpu.device_count()
+print("torch.xpu.device_count", count)
+if count < 1:
+    raise SystemExit("no xpu device")
+print("torch.xpu.name", torch.xpu.get_device_name(0))
+x = torch.ones((4, 4), device="xpu")
+print("matmul_sum", float((x @ x).sum()))
+print("DEVICE_QUERY_OK")
+PY
+  fi
+  echo "xpu-run: loader check ok (UMD override ${XPU_UMD_LABEL:-} ahead of pip)"
+}
+
 check_loader() {
+  if [[ "${XPU_UMD_MODE:-}" == "override" ]]; then
+    check_loader_override
+    return
+  fi
   local loader=/host-umd/libze_loader.so.1.28.2
   local soname=/host-umd/libze_loader.so.1
   local gpu=/host-umd/libze_intel_gpu.so.1

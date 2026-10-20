@@ -32,6 +32,14 @@
 #   --workdir DIR     Default: repo root.
 #   --check           Build the runtime image if needed, run the loader
 #                     check with no /dev/dri and no gpu-run lease, then exit.
+#   --umd DIR         Mount this extracted userspace instead of the host
+#                     26.22 / IGC 2.36.3 / loader 1.28.2 stack. Same as
+#                     XPU_RUN_UMD=DIR. DIR is a version directory with
+#                     root/ from dpkg-deb -x, or any directory that
+#                     contains usr/. Replaces libze_intel_gpu, libigc,
+#                     libigdfcl, libiga64, libigdgmm, libze_loader, and
+#                     the OpenCL ICD. Unset keeps the host mounts.
+#                     Additive opt-in (D2 owns this script).
 #   --skip-loader-check
 #                     Do not ldd/dlopen libze_loader before the command.
 #   -h | --help       Print this header.
@@ -70,6 +78,7 @@
 #
 # Env honored from the caller:
 #   B70_AGENT             lease label (default: xpu-run)
+#   XPU_RUN_UMD           same as --umd DIR (flag wins when both are set)
 #   B70_GPU_LOCK_TIMEOUT  seconds to wait for the lease (default here: 0,
 #                         wait until the card is free). gpu-run's own
 #                         default of 600 is overridden only when unset.
@@ -96,6 +105,15 @@ CHECK=0
 SKIP_LOADER=0
 EXTRA_ENV=()
 CMD=()
+# Empty unless --umd / XPU_RUN_UMD selects an extracted tree.
+UMD_DIR="${XPU_RUN_UMD:-}"
+UMD_MODE=""
+UMD_LABEL=""
+UMD_ZE_SDK=""
+UMD_CLANG=""
+UMD_OCLOC=""
+TRITON_CACHE_HOST="${B70}/build/vllm-flashnext/cache/triton"
+SYCL_CACHE_HOST="${B70}/build/vllm-flashnext/cache/sycl"
 
 usage() {
   awk 'NR>1 && /^#/ { sub(/^# ?/, ""); print; next } NR>1 { exit }' "$0"
@@ -157,6 +175,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     --workdir=*)
       WORKDIR="${1#--workdir=}"
+      shift
+      ;;
+    --umd)
+      if [[ -z "${2:-}" ]]; then
+        echo "xpu-run: --umd requires a directory" >&2
+        exit 2
+      fi
+      UMD_DIR="$2"
+      shift 2
+      ;;
+    --umd=*)
+      UMD_DIR="${1#--umd=}"
+      if [[ -z "$UMD_DIR" ]]; then
+        echo "xpu-run: --umd requires a directory" >&2
+        exit 2
+      fi
       shift
       ;;
     --check)
@@ -246,6 +280,108 @@ add_igc "$HOST_LOCAL/libiga64.so.2"
 add_igc "$HOST_LOCAL/libopencl-clang2.so.17"
 IGC_BYTES=$(stat -c %s "$(readlink -f "$HOST_LOCAL/libigc.so.2")")
 
+# Replace the host library lists with an extracted deb tree. The host
+# block above still runs so a missing host stack fails closed; --umd
+# then swaps the mounts. Host behavior is unchanged when UMD_DIR is empty.
+apply_umd_override() {
+  local spec="$1"
+  local root="$spec"
+  local -a found_libs=() found_igc=()
+  local -A seen=()
+  local path base real igc_real fcl_real
+  if [[ ! -d "$spec" ]]; then
+    echo "xpu-run: --umd directory not found: $spec" >&2
+    exit 1
+  fi
+  if [[ -d "$spec/root/usr" ]]; then
+    root="$spec/root"
+  fi
+  if [[ ! -d "$root/usr" ]]; then
+    echo "xpu-run: --umd has no usr/ tree under $spec (dpkg-deb -x into root/)" >&2
+    exit 1
+  fi
+  while IFS= read -r -d '' path; do
+    base=$(basename "$path")
+    if [[ -n "${seen[$base]:-}" ]]; then
+      continue
+    fi
+    case "$base" in
+      libze_loader.so)
+        # build_docker_args mounts the SONAME bytes at this linker name.
+        continue
+        ;;
+      libze_loader.so*|libze_intel_gpu.so*|libigdgmm.so*|libigdrcl.so|libze_validation_layer.so*|libze_tracing_layer.so*|libocloc.so*)
+        seen[$base]=1
+        found_libs+=("$path")
+        ;;
+      libigc.so*|libigdfcl.so*|libiga64.so*|libopencl-clang*|libigc-clang.so*)
+        seen[$base]=1
+        found_igc+=("$path")
+        ;;
+    esac
+  done < <(find "$root" \( -type f -o -type l \) -print0)
+  local need found p
+  for need in libze_loader.so.1 libze_intel_gpu.so.1 libigdgmm.so.12 libigdrcl.so libigc.so.2 libigdfcl.so.2 libiga64.so.2; do
+    found=0
+    for p in "${found_libs[@]+"${found_libs[@]}"}" "${found_igc[@]+"${found_igc[@]}"}"; do
+      if [[ "$(basename "$p")" == "$need" ]]; then
+        found=1
+        break
+      fi
+    done
+    if [[ "$found" != 1 ]]; then
+      echo "xpu-run: --umd missing $need under $root" >&2
+      exit 1
+    fi
+  done
+  HOST_FILES=("${found_libs[@]}")
+  HOST_IGC_FILES=("${found_igc[@]}")
+  real=""
+  for p in "${found_libs[@]}"; do
+    if [[ "$(basename "$p")" == "libze_loader.so.1" ]]; then
+      real=$(readlink -f "$p")
+      break
+    fi
+  done
+  igc_real=""
+  fcl_real=""
+  for p in "${found_igc[@]}"; do
+    if [[ "$(basename "$p")" == "libigc.so.2" ]]; then
+      igc_real=$(readlink -f "$p")
+    fi
+    if [[ "$(basename "$p")" == "libigdfcl.so.2" ]]; then
+      fcl_real=$(readlink -f "$p")
+    fi
+  done
+  LOADER_BYTES=$(stat -c %s "$real")
+  IGC_BYTES=$(stat -c %s "$igc_real")
+  UMD_MODE=override
+  UMD_LABEL=$(basename "${spec%/}")
+  UMD_CLANG=""
+  if [[ -n "$fcl_real" ]] && command -v objdump >/dev/null 2>&1; then
+    UMD_CLANG=$(objdump -p "$fcl_real" | awk '/NEEDED/ && /clang/ { print $2; exit }')
+  fi
+  if [[ -z "$UMD_CLANG" ]]; then
+    UMD_CLANG=$(find "$root" -name 'libopencl-clang*.so*' \( -type f -o -type l \) -printf '%f\n' | sort | head -1)
+  fi
+  UMD_OCLOC=""
+  if [[ -d "$root/usr/bin" ]]; then
+    UMD_OCLOC=$(find "$root/usr/bin" -type f -name 'ocloc*' | head -1 || true)
+  fi
+  if [[ -f "$root/usr/include/level_zero/ze_api.h" ]]; then
+    UMD_ZE_SDK="$root/usr"
+  fi
+  # JIT caches are per UMD so a kernel finalized by one IGC is not replayed
+  # by another. The host default directories stay in place when --umd is unset.
+  TRITON_CACHE_HOST="${B70}/build/vllm-flashnext/cache/triton-${UMD_LABEL}"
+  SYCL_CACHE_HOST="${B70}/build/vllm-flashnext/cache/sycl-${UMD_LABEL}"
+  echo "xpu-run: UMD override label=${UMD_LABEL} root=${root} loader_bytes=${LOADER_BYTES} igc_bytes=${IGC_BYTES} clang=${UMD_CLANG:-missing} ocloc=${UMD_OCLOC:-missing}" >&2
+}
+
+if [[ -n "$UMD_DIR" ]]; then
+  apply_umd_override "$UMD_DIR"
+fi
+
 ensure_image() {
   local rebuild=0
   if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
@@ -306,8 +442,8 @@ build_docker_args() {
     -e HF_HUB_DISABLE_TELEMETRY=1
     -e XDG_CACHE_HOME="${B70}/build/vllm-flashnext/cache/xdg"
     -e VLLM_CACHE_ROOT="${B70}/build/vllm-flashnext/cache/vllm"
-    -e TRITON_CACHE_DIR="${B70}/build/vllm-flashnext/cache/triton"
-    -e SYCL_CACHE_DIR="${B70}/build/vllm-flashnext/cache/sycl"
+    -e TRITON_CACHE_DIR="${TRITON_CACHE_HOST}"
+    -e SYCL_CACHE_DIR="${SYCL_CACHE_HOST}"
     -e SYCL_CACHE_PERSISTENT=1
     -e TMPDIR="${B70}/build/vllm-flashnext/tmp"
     -e OCL_ICD_FILENAMES=/host-umd/libigdrcl.so
@@ -321,15 +457,38 @@ build_docker_args() {
     echo "xpu-run: warning: oneAPI 2026.1 icpx missing at ${icpx_bin}" >&2
     echo "xpu-run: warning: Triton XPU kernels will fail to compile" >&2
   fi
-  local ze_sdk="${B70}/build/vllm-flashnext/level-zero-sdk"
+  local ze_sdk="${UMD_ZE_SDK:-${B70}/build/vllm-flashnext/level-zero-sdk}"
   if [[ ! -f "${ze_sdk}/include/level_zero/ze_api.h" ]]; then
     echo "xpu-run: missing ${ze_sdk}/include/level_zero/ze_api.h" >&2
     exit 1
   fi
   DOCKER_ARGS+=(-v "${ze_sdk}:/opt/level-zero:ro")
-  # -lze_loader wants the unversioned name. The host package ships the SONAME.
-  mount_lib "$HOST_LIB/libze_loader.so.1" "/host-umd/libze_loader.so"
-  mount_lib "$HOST_LIB/libze_loader.so.1" "/usr/lib/x86_64-linux-gnu/libze_loader.so"
+  if [[ "$UMD_MODE" == "override" ]]; then
+    DOCKER_ARGS+=(
+      -e XPU_UMD_MODE=override
+      -e "XPU_UMD_LABEL=${UMD_LABEL}"
+      -e "XPU_UMD_CLANG=${UMD_CLANG}"
+    )
+  fi
+  # -lze_loader wants the unversioned name. Use the SONAME file from the
+  # selected stack (host or --umd), not a hardcoded host path.
+  local loader_soname="" src_probe
+  for src_probe in "${HOST_FILES[@]}"; do
+    if [[ "$(basename "$src_probe")" == "libze_loader.so.1" ]]; then
+      loader_soname="$src_probe"
+      break
+    fi
+  done
+  if [[ -z "$loader_soname" ]]; then
+    echo "xpu-run: libze_loader.so.1 is not in the selected UMD set" >&2
+    exit 1
+  fi
+  mount_lib "$loader_soname" "/host-umd/libze_loader.so"
+  mount_lib "$loader_soname" "/usr/lib/x86_64-linux-gnu/libze_loader.so"
+  if [[ -n "$UMD_OCLOC" ]]; then
+    mount_lib "$UMD_OCLOC" "/host-umd/ocloc"
+    mount_lib "$UMD_OCLOC" "/usr/bin/ocloc"
+  fi
   local src base
   for src in "${HOST_FILES[@]}"; do
     base=$(basename "$src")
@@ -377,6 +536,8 @@ mkdir -p \
   "${B70}/build/vllm-flashnext/cache/vllm" \
   "${B70}/build/vllm-flashnext/cache/triton" \
   "${B70}/build/vllm-flashnext/cache/sycl" \
+  "${TRITON_CACHE_HOST}" \
+  "${SYCL_CACHE_HOST}" \
   "${B70}/build/vllm-flashnext/logs"
 
 RENDER_GID=$(getent group render | cut -d: -f3)
@@ -442,7 +603,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-echo "xpu-run: card=${CARD} name=${NAME} mem=${MEMORY} shm=${SHM} port=${PORT:-none}" >&2
+echo "xpu-run: card=${CARD} name=${NAME} mem=${MEMORY} shm=${SHM} port=${PORT:-none} umd=${UMD_LABEL:-host}" >&2
 # gpu-run execs the command and waits. Disable our EXIT trap's stop once
 # docker itself is the foreground child: an EXIT from a clean return would
 # race docker --rm. The trap still covers INT/TERM during the wait.

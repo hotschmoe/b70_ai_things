@@ -15,7 +15,8 @@ mkdir -p "$OUT"
 test -f "$SRC/lowbit_kernels.cpp"
 test -f "$TORCH/include/c10/xpu/XPUStream.h"
 test -f "$PYINC/Python.h"
-echo "build.sh start $(date '+%F %T') src=$SRC"
+SO_NAME="${SO_NAME:-libb70_lowbit_xpu.so}"
+echo "build.sh start $(date '+%F %T') src=$SRC so=$SO_NAME"
 
 # AOT for BMG needs llvm-foreach from the compiler tree and the host ocloc
 # (26.22). The oneAPI image does not ship a matching ocloc.
@@ -36,6 +37,7 @@ docker run --rm -i --network none \
   --memory 48g --cpus 4 \
   -e RPATH_VENV="$VENV/lib" \
   -e RPATH_TORCH="$TORCH/lib" \
+  -e SO_NAME="$SO_NAME" \
   -v "$SRC":/src:ro \
   -v "$OUT":/work \
   -v "$TORCH":/torch:ro \
@@ -64,7 +66,7 @@ if ! command -v icpx >/dev/null 2>&1; then
 fi
 command -v icpx >/dev/null || { echo NO_icpx; exit 2; }
 icpx --version | head -1
-echo '=================== BUILD libb70_lowbit_xpu.so ==================='
+echo "=================== BUILD ${SO_NAME} ==================="
 set +e
 # per_kernel split: this TU has plain SYCL kernels and ESIMD kernels.
 icpx -fsycl -fPIC -shared -std=c++20 -O2 \
@@ -79,7 +81,7 @@ icpx -fsycl -fPIC -shared -std=c++20 -O2 \
   -Wl,-rpath,"$RPATH_TORCH" \
   -Wl,--no-as-needed \
   -ltorch -ltorch_cpu -ltorch_xpu -lc10 -lc10_xpu \
-  -o /work/libb70_lowbit_xpu.so \
+  -o "/work/${SO_NAME}" \
   2> /work/build_lowbit.err
 rc=$?
 set -e
@@ -89,6 +91,6 @@ if [ "$rc" -ne 0 ]; then
   tail -160 /work/build_lowbit.err
   exit "$rc"
 fi
-ls -l /work/libb70_lowbit_xpu.so
+ls -l "/work/${SO_NAME}"
 echo '=== BUILD OK ==='
 EOS

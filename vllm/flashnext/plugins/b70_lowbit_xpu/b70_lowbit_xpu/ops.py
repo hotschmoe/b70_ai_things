@@ -60,6 +60,31 @@ def _register_fakes() -> None:
         del plane_hi, scale, bits
         return x.new_empty((x.shape[0], plane2.shape[0]))
 
+    # The grouped op is absent from an older .so. Skip the fake then so
+    # decode still loads. B70_LOWBIT_PREFILL=grouped needs the new library.
+    try:
+        getattr(torch.ops.b70_lowbit, "moe_prefill")
+    except AttributeError:
+        _FAKES = True
+        return
+
+    @register_fake("b70_lowbit::moe_prefill")
+    def _moe_prefill_fake(
+        x,
+        ids,
+        router_w,
+        w13_plane2,
+        w13_plane_hi,
+        w13_scale,
+        w2_plane2,
+        w2_plane_hi,
+        w2_scale,
+        bits,
+    ):
+        del ids, router_w, w13_plane2, w13_plane_hi, w13_scale
+        del w2_plane2, w2_plane_hi, w2_scale, bits
+        return x.new_empty((x.shape[0], x.shape[1]))
+
     _FAKES = True
 
 
@@ -166,6 +191,42 @@ def prefill_wna16(
         _ready(plane2),
         _ready(_hi(plane_hi, x)),
         _ready(scale),
+        int(bits),
+    )
+
+
+def moe_prefill(
+    x: torch.Tensor,
+    ids: torch.Tensor,
+    router_w: torch.Tensor,
+    w13_plane2: torch.Tensor,
+    w13_plane_hi: torch.Tensor | None,
+    w13_scale: torch.Tensor,
+    w2_plane2: torch.Tensor,
+    w2_plane_hi: torch.Tensor | None,
+    w2_scale: torch.Tensor,
+    bits: int,
+) -> torch.Tensor:
+    """Grouped expert prefill. One DPAS submit per projection, all experts.
+
+    x is [T, H] bf16. ids is [T, topk] int32. router_w is [T, topk] float.
+    Returns [T, H] bf16. Counts are not read back to the host.
+    """
+    _load()
+    if ids.dtype != torch.int32:
+        ids = ids.to(torch.int32)
+    if router_w.dtype != torch.float32:
+        router_w = router_w.to(torch.float32)
+    return torch.ops.b70_lowbit.moe_prefill(
+        _ready(x),
+        _ready(ids),
+        _ready(router_w),
+        _ready(w13_plane2),
+        _ready(_hi(w13_plane_hi, x)),
+        _ready(w13_scale),
+        _ready(w2_plane2),
+        _ready(_hi(w2_plane_hi, x)),
+        _ready(w2_scale),
         int(bits),
     )
 

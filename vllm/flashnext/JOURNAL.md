@@ -833,3 +833,265 @@ VERDICT: Correct fp16/bf16/int8 prefill path. Not a 2000 tok/s
 prefill. Next, not started: parallel row-tile entries for dense, and
 an SGN=4 (64-column, X from global) trial on the T=4096/12288 layer.
 
+## 2026-10-20 05:58 E1 -- lowbit GEMV and MoE replay inside an XPU graph
+
+CONFIG: card 1, image vllm-flashnext-xpu:py312, host UMD via xpu-run.
+.so /mnt/vm_8tb/b70/build/vllm-flashnext/b70_lowbit_xpu/libb70_lowbit_xpu.so
+unchanged (1442856 bytes). Python wrappers register_fake for gemv,
+moe_gemv, prefill_wna16, prefill_wxa8 and cache the empty int2 hi plane.
+B70_LOWBIT_MOE_LAUNCHES=2. Tiny shapes, bits 2/3/4. xpu-health card 1
+HEALTHY before the probe (23s, img vllm-xpu-env:int8g-v0251).
+COMMAND: B70_AGENT=E1 vllm/flashnext/harness/xpu-run.sh --card 1
+--memory 16g --name b70-lowbit-graph-probe --env B70_LOWBIT_MOE_LAUNCHES=2
+-- python3 -u plugins/b70_lowbit_xpu/tests/graph_probe.py
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/e1-graph-probe.log
+RESULT: fake shapes ok. Replay max_abs 0.000e+00 for gemv and moe at
+bits 2, 3, and 4. GRAPH_PROBE_OK. Wall about 15s after the loader
+check. Capture-time buffers are not results; the check is a NaN fill
+then replay against a fresh eager call. Card 1 released.
+VERDICT: The decode ops are graph-capturable with no .so change.
+Next is the int3 Qwen3.6-35B-A3B FULL_DECODE_ONLY serve on card 1.
+
+## 2026-10-20 06:05 C4 -- Qwen3.6 IQ3_XXS one-card GGUF is coherent
+
+CONFIG: fork /mnt/vm_8tb/b70/build/vllm-flashnext/vllm branch b70/flashnext
+tip e3f784ebb2, ahead of origin/main 2296c12e47 by 7, not pushed. Card 0.
+HF /mnt/cache/b70/devmodel/Qwen/Qwen3.6-35B-A3B. GGUF UD-IQ3_XXS. Eager
+TP=1, max_model_len 2048, max_num_seqs 1, gpu_memory_utilization 0.90,
+language-model-only, load-format b70_gguf, quantization b70_gguf.
+B70_GGUF_REF=0, B70_EAGER_QK=0, GDN auto (sycl). Port 18104. Names
+hotschmoe-dev then qwen3.6-35b-a3b-ud-iq3-xxs. xpu-health card 0 OK
+before.
+COMMAND: CARD=0 PORT=18104 B70_AGENT=C4
+vllm/flashnext/harness/serve_qwen36_gguf.sh. Log
+/mnt/vm_8tb/b70/logs/grok-flashnext/C4_serve_c0_outfix.log. Two POST
+/v1/completions temperature 0 max_tokens 16, prompt "The capital of
+France is". Then bench_latency.py --prefill 1024 --decode-tokens 32
+--out /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c4-bench-outfix.json.
+docker stop -t 25, then xpu-health --card 0.
+RESULT: placed 733, skipped_mtp 20, q8_dequant 7, 16.96 GiB, 29.27 s.
+KV 8.93 GiB (110080 tokens). Identity hotschmoe-dev first. Both greedy
+strings matched: " Paris.\nThe capital of France is Paris.\nThe capital
+of France is". C1 ITL p50 87.62 ms (11.72 tok/s), short-prompt TTFT
+265 ms. Prefill 1017 tok, TTFT 5755 ms, 177 tok/s. C2 ITL p50 ~86 ms
+with max_num_seqs 1, so one stream queued (TTFT 3198 vs 302 ms).
+Teardown gpu-run exit 0, 178 s. Card 0 HEALTHY after.
+VERDICT: Step 1 passes. gdn_out kept GGUF K order and the activation
+permutation is now the inverse of restore_rows. CPU mapping tests
+15/15. Kernel, host-ref, and triton serves before this fix were
+deterministic non-Paris strings. XPU gemv/dequant matched gguf-py
+(C4_kernel_oracle.log). Step 1b not started: card 1 held by E1.
+Report: vllm/flashnext/reports/1C4_e2e_gguf.md.
+
+## 2026-10-20 06:02 C5 -- Strata routed bench reproduces on card 0
+
+CONFIG: card 0, ZE_AFFINITY_MASK=0, ONEAPI_DEVICE_SELECTOR=level_zero:*.
+Binary /mnt/vm_8tb/b70/build/night-wt/moe/src-ep/build-sycl-ep/ep_night_bench
+(104919720 bytes, 2026-10-16 14:32). Worktree HEAD 1c360526, the DD pin.
+Image sha256:e41d59c0 (strata-ab-build:ocloc), icpx 2026.1.0.20260617,
+IGC libigc.so.2.36.3. AOT flags from that build.ninja: -O3 -fsycl
+-fsycl-targets=spir64_gen -device bmg-g31 -fsycl-default-sub-group-size=32
+-fsycl-device-code-split=per_kernel -fp-model=precise
+-cl-fp32-correctly-rounded-divide-sqrt. Shape EPB_PAIRS=21:42
+EPB_SCEN=3 (IQ3_S/Q2_0, C1 card0 10 groups / 20 entries, T=4). Timer is
+the bench's graph replay (48 layers, median of 5 x 20). xpu-health
+--card 0 HEALTHY before and after (img vllm-xpu-env:int8g-v0251).
+COMMAND: B70_AGENT=C5 bin/cpu-run --quiet bin/gpu-run --card 0
+/mnt/vm_8tb/b70/build/vllm-flashnext/c5/run_repro.sh
+RESULT: pre_health_rc=0, bench_rc=0, post_health_rc=0, 46s. Bitwise yes
+(153600 floats, 0 diffs). us per call: base gu/dn/all 64.74/44.79/109.53;
+R2 all 96.87 (gu 56.61); IQ all 94.21; IQR2 gu/dn/all 53.97/18.68/72.64.
+Published moe_report.md R2 (rows=2, IQ off) is 53.5/40.8/93.2. Today's
+R2 all is 96.87 us. The DD also sets STRATA_NIGHT_IQ=1; that column is
+72.64 us, and the down phase drops from 40.8 us published to 18.68 us.
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/c5/repro_ocloc_iq3s_c1c0.log.
+VERDICT: The published ~93 us routed number is reproduced (R2 96.87 us)
+on the historical AOT binary and IGC 2.36.3. The served IQ+R2 kernel is
+72.64 us on this card today. Next: relink the same objects with
+strata-sycl-dev:020 (IGC 2.41.5), then the same source with the plugin
+toolchain.
+
+## 2026-10-20 06:20 F1 -- UMD opt-in checked, card 0 campaign starting
+
+CONFIG: container-scoped UMD A/B. Host is unchanged: kernel
+7.1.0-070100-generic, compute-runtime 26.22.38646.4-0, IGC 2.36.3
+under /usr/local/lib, Level Zero loader 1.28.2. No apt, no dpkg, no
+host library replacement. Extracted trees, not installed:
+/mnt/vm_8tb/b70/build/vllm-flashnext/umd/26.27.39122.11 (upstream
+Dockerfile.xpu: IGC 2.38.2, loader 1.32.0, gmmlib 22.10.0) and
+umd/26.35.39758.10 (newest intel/compute-runtime release, 2026-09-17,
+matching IGC 2.41.5). Loader 1.34.0 exists and is not the loader NEO
+26.35 was built with, so both non-host trees use loader 1.32.0.
+Harness change is additive only (D2 owns harness/): xpu-run.sh
+--umd DIR / XPU_RUN_UMD, and xpu-entrypoint.sh check_loader_override
+when XPU_UMD_MODE=override. Host default still requires
+libze_loader.so.1.28.2 and still rejects a resolved 1.32 or 26.27
+path. Override mounts libze_intel_gpu, libigc, libigdfcl, libiga64,
+libigdgmm, libze_loader, the OpenCL ICD, and the IGC clang soname
+(libopencl-clang2.so.17 on 26.27, libopencl-clang2.so.22.1 on 26.35).
+Override Triton and SYCL caches are suffixed with the version label.
+COMMAND: bash -n on both scripts. xpu-run.sh --check with no --umd,
+--umd 26.27.39122.11, and --umd 26.35.39758.10. No GPU and no lease.
+Logs: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/f1-check-host.log,
+f1-check-2627.log, f1-check-2635.log. Then bin/xpu-health --card 0.
+RESULT: syntax ok. All three --check runs exited 0. Host loader
+1773224 bytes, libigc 95845480, clang libopencl-clang2.so.17. 26.27
+loader 1036264, libigc 96015048, clang .17. 26.35 loader 1036264,
+libigc 104543000, clang .22.1. ldd and the mapped files resolve under
+/host-umd. --check has no /dev/dri, so the sycl-ls / torch.xpu query
+is still ahead of the GPU arms. Card 0 HEALTHY at 06:16 UTC
+(img vllm-xpu-env:int8g-v0251) after C5 released it. Card 1 stays
+with E1 (vllm-fn-lowbit-e1, port 18084). F1 will hold card 0 for
+about 2 to 2.5 hours: host, 26.27, and 26.35. Each arm is a device
+probe, Ornith GPTQ int4 FULL_DECODE_ONLY FLASH_ATTN, the Triton
+attention plus Triton GDN graph, and b70_gguf_xpu gpu_check plus
+moe_layer_bench. Port 18091. The plugin _C.so is the existing AOT
+binary (6391032 bytes, mtime 2026-10-20 04:32). This A/B does not
+rebuild it. C5 is separately relinking that plugin with IGC 2.41.5.
+VERDICT: Opt-in is in place and the host path still checks out.
+Measurements start on card 0.
+
+## 2026-10-20 06:16 C5 -- IGC 2.41.5 and immediate lists do not move the routed kernel
+
+CONFIG: same night-lab objects as the 06:02 control (worktree 1c360526), relinked
+in strata-sycl-dev:020 (icpx 2026.1.0.20260617, ocloc 26.35.39758.10, IGC
+libigc.so.2.41.5+1788943183) to c5/ep_night_bench_020 (103051936 bytes). Link
+flags: -fsycl-targets=spir64_gen -device bmg-g31
+-cl-fp32-correctly-rounded-divide-sqrt -allow_caching
+-fsycl-device-code-split=per_kernel. Card 0, ZE_AFFINITY_MASK=0. xpu-health
+--card 0 HEALTHY before and after (post_health_rc=0).
+COMMAND: B70_AGENT=C5 bin/cpu-run --quiet bin/gpu-run --card 0
+/mnt/vm_8tb/b70/build/vllm-flashnext/c5/run_020.sh (101s, every docker rc 0).
+RESULT: IQ3_S/Q2_0, C1 card0 10g/20e, bitwise yes (153600, 0). us per call:
+- historical AOT, runtime IGC 2.36.3 (06:02): R2 all 96.87, IQR2 all 72.64
+- 020 AOT binary, runtime IGC 2.41.5: R2 55.72/95.86, IQR2 53.78/18.88/72.66
+- 020 AOT binary, runtime IGC 2.36.3: R2 55.75/96.12, IQR2 53.88/19.08/72.96
+- historical binary, SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1: R2
+  56.23/96.50, IQR2 53.71/19.43/73.14
+IQ2_XS/IQ4_NL, same scenario (gate matches C1, up does not): 020 IQR2
+47.17/38.46/85.64; historical IMM=0 IQR2 47.18/38.24/85.42.
+Logs: c5/repro_020_iq3s.log, c5/repro_020oldrt_iq3s.log, c5/repro_old_iq3s_imm1.log,
+c5/repro_020_iq2xs.log, c5/repro_old_iq2xs_imm0.log.
+VERDICT: IGC 2.36.3 vs 2.41.5, at codegen and at runtime, and immediate
+command lists, move this kernel by about 1 us. Not the 216 vs 93 gap. Next:
+JIT vs AOT on these objects, then the same source with the plugin toolchain,
+then our moe_layer under both.
+
+## 2026-10-20 06:22 E1 -- int3 FULL_DECODE_ONLY graph, C1 ITL 11.29 ms
+
+CONFIG: card 1, vllm-flashnext-xpu:py312, b70_lowbit, B70_LOWBIT_MOE_LAUNCHES=2,
+.dtype bfloat16, TP=1, language-model-only, max-model-len 33792,
+gpu-memory-utilization 0.90, max-num-seqs 4, port 18084, no MTP.
+GRAPH=1 GRAPH_MODE=FULL_DECODE_ONLY ATTN=FLASH_ATTN B70_XPU_CG_RECLAIM=500.
+Model /mnt/cache/b70/devmodel/quant/qwen36-w3a16-g128-experts-w4a16-trunk.
+Served hotschmoe-dev, alias qwen36-w3a16-b70-lowbit. Container
+vllm-fn-lowbit-e1. Same .so as C3 (1442856 bytes). xpu-health card 1
+HEALTHY before the probe. Capture sizes requested 1,2,3,4,8; the engine
+captured 4 FULL graphs (size 8 dropped at max-num-seqs 4).
+COMMAND: B70_AGENT=E1 B70_XPU_CG_RECLAIM=500 B70_LOWBIT_MOE_LAUNCHES=2
+GRAPH=1 GRAPH_MODE=FULL_DECODE_ONLY ATTN=FLASH_ATTN CARD=1 PORT=18084
+NAME=vllm-fn-lowbit-e1 MODEL=.../qwen36-w3a16-g128-experts-w4a16-trunk
+ALIAS=qwen36-w3a16-b70-lowbit plugins/b70_lowbit_xpu/serve_lowbit.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/e1-int3-graph-serve.log
+Bench: B70_AGENT=E1 bin/cpu-run --quiet harness/bench_latency.py
+--base-url http://127.0.0.1:18084 --model hotschmoe-dev
+--alias qwen36-w3a16-b70-lowbit --tag e1-int3-graph-fdo --decode-tokens 64
+--timeout 900 --out .../logs/e1-int3-graph-bench.json (377s, exit 0).
+RESULT: Weight load 23.48 s, then GPTQ repack, then capture: 2 FULL
+graphs in 1 s and 4 FULL graphs in 1 s. No traceback. init engine 19.38 s.
+KV cache 11.16 GiB. Identity ok, coherence ok (Paris, both texts identical).
+C1 ITL p50/p90/p99 11.29/11.52/11.97 ms, 90.34 tok/s, TTFT 2388.12 ms
+on a 24-token prompt, n=57 (EOS before 64). C2 ITL p50 15.65 and 15.65 ms,
+65.44 and 65.34 tok/s, TTFT 2834.96 and 2834.36 ms. Prefill
+1017/8185/32762 tok TTFT 10238.57/72872.08/282960.21 ms
+(99.33/112.32/115.78 tok/s). MTP off. C3 eager int3 on the same checkpoint
+was C1 ITL 51.73 ms and prefill 98.98/112.72/115.83 tok/s.
+VERDICT: Decode ops captured. C1 ITL is 4.6x the eager int3 number and
+under the 15 ms milestone. Prefill is still the per-expert eager path,
+about 116 tok/s at 32K. Server left up for perplexity, then the int4
+graph arm. Grouped prefill is written and not compiled yet.
+
+## 2026-10-20 06:28 E1 -- int3 served perplexity 9.12
+
+CONFIG: the live int3 FULL_DECODE_ONLY server on port 18084. Same 4x512
+wikitext windows as quant/run_quant.py --mode eval
+(/mnt/cache/b70/devmodel/quant/_work/qwen36/ppl_s512_n4.pt). prompt_logprobs
+on /v1/completions, max_tokens 1, temperature 0. First token of each
+window dropped. Unpack reference for this slice is 9.19.
+COMMAND: docker run --network host --memory 8g (no /dev/dri)
+python3 tests/ppl_serve.py --base-url http://127.0.0.1:18084
+--model hotschmoe-dev --out .../logs/e1-int3-ppl.json
+RESULT: windows nll 1.8132, 2.4407, 2.2146, 2.3734. tokens=2044.
+ppl 9.1199, nll 2.2105.
+VERDICT: Served int3 matches the unpack slice within 0.07 ppl. The
+on-the-fly unpack eval is not required for this checkpoint.
+
+## 2026-10-20 06:23 D2 -- GPTQ MTP head is native, not Shisa
+
+CONFIG: CPU only, no GPU lease. Ornith GPTQ int4 mixedcal-v2 (6 shards)
+against bf16-mtp-shisa/model-mtp.safetensors (19 BF16 tensors). Manifest
+head_source_name Ornith-1.5-35B-A3B-MTP-ONLY, native_mtp_removed 785.
+vLLM method mtp takes EagleProposer (use_eagle includes mtp).
+qwen3_5_mtp.py sets quant_config None when quantization_config.dynamic
+contains a "-:" key mentioning mtp, so the drafter is unquantized.
+COMMAND: python3 header walk plus numeric compare. GPTQ MTP tensors
+decoded as BF16. Trunk norms decoded as F16 on the GPTQ side and BF16
+on the Shisa side. Expert 0 compared to Shisa fused row 0
+(gate_up[:512], gate_up[512:], down[0]).
+RESULT: GPTQ mtp.* is 785 tensors, dtype census BF16 785, int4 0.
+Trunk matches the Shisa trunk numerically: layer 0 input LN mean
+0.03110 std 0.04909 max_abs 3e-8; post-attn LN mean -0.10520 max_abs 0;
+layer 3 input LN mean -0.07980 max_abs 0; final norm mean 1.63973
+max_abs 0; layer 0 gate max_abs 3e-8. Every MTP tensor differs.
+q_proj cos -0.0001 rel 1.44; fc cos 0.050 rel 1.08; router gate cos
+0.0005 rel 1.12; shared down cos -0.0001 rel 1.09; expert 0 gate/up/down
+cos about 0, rel 1.26 to 1.29. GPTQ mtp.norm mean 0.022813 std 0.000166
+(near constant). Shisa mtp.norm mean 1.92405 std 0.296714, same scale
+as the trunk final norm. GPTQ MTP input LN std 0.0030 vs Shisa 0.1567.
+q_norm std 0.0068 vs 0.338. Claude Fable 5.1 and Claude 5.5 both exit
+unrecognized_model and "Not logged in".
+VERDICT: The 0.38 acceptance is the native GPTQ head, loaded unquantized
+and in BF16. It is a real head, not a failed random load, and it is not
+the Shisa code-tuned head. Next GPU run overlays the 19 Shisa tensors
+onto the drafter (harness/patches/d2_mtp_shisa.py) and benches spec 1,
+2, and 3. The int4 trunk GEMV overlay is written and stays off until
+the queued card-1 floor shows graph replay max_abs near 0. That floor
+is still waiting on E1's lease. No Ornith server was started.
+
+## 2026-10-20 06:33 D2 -- fp16 GEMV stack is 7.15 ms; int4 gemv is slower
+
+CONFIG: card 1, Arc Pro B70, container vllm-fn-d2-gemv, no model load.
+torch XPU graph replay with device events. fp16 F.linear shapes are the
+Ornith decode projections: GDN qkvz 12288x2048, ba 64x2048, out
+2048x4096, attn qkv 9216x2048, attn o 2048x4096, shared gate/up
+1024x2048, shared down 2048x512, router 256x2048, lm_head 248320x2048.
+Distinct-weight stack is 30 GDN triples + 10 attention pairs + 40
+shared pairs + 40 routers + lm_head (231 GEMMs, 3.611 GiB). int4 is
+b70_lowbit gemv, bits=4, RTN group 128, replay compared to a fresh
+eager gemv. Roof 608 GB/s. Norms are xpu_fused_add_gemma_rms_norm.
+COMMAND: B70_AGENT=d2-gemv B70_GPU_LOCK_TIMEOUT=0 harness/xpu-run.sh
+--card 1 --name vllm-fn-d2-gemv --memory 48g -- python -u
+harness/d2_gemv_floor.py
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d2-gemv-floor.log
+Waited on E1 from 06:07, ran after that lease dropped, exit 0.
+RESULT: fp16 stack M=1 7.153 ms, 542.0 GB/s, 89.1% of 608. M=4 7.194 ms,
+538.9 GB/s. M=1 per-call (4-copy graph / 4, except lm_head): qkvz
+0.0931 ms (540 GB/s), ba 0.0055, out 0.0363 (463 GB/s), attn qkv 0.0708
+(533 GB/s), attn o 0.0367 (457 GB/s), shared gate/up 0.0070, shared
+down 0.0049, router 0.0049, lm_head 1.707 ms (596 GB/s, 98%). Scaled
+by layer count that sums to 7.50 ms (30/30/30/10/10/40/40/40/1).
+80 Gemma norms 0.183 ms. Triton fp16 qkvz best 0.180 ms at 280 GB/s,
+max_abs 1.6e-2; lm_head best 1.760 ms, max_abs 6.3e-2. int4 graph
+replay_max_abs 0 and eager vs dequant slice 0 on qkvz, out, attn qkv,
+and lm_head. int4 device time: qkvz 0.169 ms (77 GB/s), out 0.066 ms
+(66 GB/s), attn qkv 0.054 ms (179 GB/s), lm_head 1.191 ms (220 GB/s).
+VERDICT: The fp16 trunk plus lm_head is already at 89% of 608. The
+11.4 ms decode replay is about 4 ms above this 7.15 ms stack, not a
+4x miss against a 3 ms int4 roof. b70_lowbit int4 gemv captures
+cleanly but is slower than oneDNN fp16 on the large GDN projection
+(0.169 vs 0.093 ms) because it runs at 66-220 GB/s. Swapping the trunk
+would regress decode. Norm fusion cannot move a 0.18 ms class. The
+int4 overlay stays off. Next: eager per-region profile of the real
+Ornith step, then the Shisa MTP overlay. A faster int4 GEMV (above
+about 400 GB/s at N=12288 K=2048 and at lm_head) is the kernel request;
+no fork change.

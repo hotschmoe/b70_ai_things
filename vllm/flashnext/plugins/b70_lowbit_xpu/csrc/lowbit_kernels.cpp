@@ -1334,6 +1334,275 @@ static torch::Tensor prefill_wxa8(
   return y;
 }
 
+// One work-group owns one expert and one 16-wide N tile. B for the whole
+// K is unpacked into SLM once (K<=2048, 16 columns, bf16 VNNI: 64 KiB),
+// then each work-item DPAS-walks its own 8-row chunks. Empty experts
+// return after slm_init so the group stays convergent.
+static constexpr int kGroupedLocal = 8;
+static constexpr int kGroupedSlm = 65536;
+
+template <int BITS>
+struct GroupedPrefillKernel {
+  const uint16_t* x;
+  const int32_t* order;
+  const int32_t* offsets;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int K;
+  int N;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int E;
+  int topk;
+  int tiles_n;
+  int x_per_slot;
+
+  void operator()(sycl::nd_item<1> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<kGroupedSlm>();
+    const int wg = (int)it.get_group(0);
+    const int lid = (int)it.get_local_id(0);
+    const int e = wg / tiles_n;
+    const int tn = wg - e * tiles_n;
+    const int begin = e < E ? offsets[e] : 0;
+    const int end = e < E ? offsets[e + 1] : 0;
+    const int count = end - begin;
+    if (e >= E || count <= 0) {
+      return;
+    }
+    const int n0 = tn * 16;
+    const int steps = K >> 4;
+    for (int step = lid; step < steps; step += kGroupedLocal) {
+      const int k0 = step << 4;
+      const int g = k0 >> 7;
+      esimd::simd<uint16_t, 256> raw(0);
+#pragma unroll
+      for (int c = 0; c < 16; ++c) {
+        const size_t row = (size_t)e * (size_t)N + (size_t)(n0 + c);
+        const uint8_t* row2 = plane2 + row * (size_t)stride2;
+        const uint8_t* rowhi =
+            plane_hi ? plane_hi + row * (size_t)stride_hi : row2;
+        esimd::simd<int32_t, 16> codes =
+            load_codes16(row2, rowhi, k0, BITS);
+        float wsc = bf16_u16_to_f32(scale[row * (size_t)groups + (size_t)g]);
+        esimd::simd<float, 16> wf = esimd::convert<float>(codes) * wsc;
+        esimd::simd<uint16_t, 16> hb = f32_to_bf16_u16v<16>(wf);
+#pragma unroll
+        for (int kk = 0; kk < 16; ++kk) {
+          raw[(kk / 2) * 32 + c * 2 + (kk % 2)] = hb[kk];
+        }
+      }
+#pragma unroll
+      for (int s = 0; s < 8; ++s) {
+        esimd::slm_block_store<uint16_t, 32>(
+            step * 512 + s * 64, raw.template select<32, 1>(s * 32));
+      }
+    }
+    esimd::barrier();
+    const int n_row_tiles = (count + 7) >> 3;
+    for (int tm = lid; tm < n_row_tiles; tm += kGroupedLocal) {
+      const int m0 = tm << 3;
+      esimd::simd<float, 128> acc(0.f);
+      for (int step = 0; step < steps; ++step) {
+        const int k0 = step << 4;
+        esimd::simd<uint16_t, 128> az(0);
+        esimd::simd<bf16_t, 128> a = az.template bit_cast_view<bf16_t>();
+#pragma unroll
+        for (int r = 0; r < 8; ++r) {
+          if (m0 + r < count) {
+            const int slot = order[begin + m0 + r];
+            const int x_row = x_per_slot ? slot : slot / topk;
+            esimd::simd<uint16_t, 16> xu = esimd::block_load<uint16_t, 16>(
+                x + ((size_t)x_row * (size_t)K + (size_t)k0),
+                esimd::overaligned<32>);
+            a.template select<16, 1>(r * 16) =
+                xu.template bit_cast_view<bf16_t>();
+          }
+        }
+        esimd::simd<uint16_t, 256> brow(0);
+#pragma unroll
+        for (int s = 0; s < 8; ++s) {
+          brow.template select<32, 1>(s * 32) =
+              esimd::slm_block_load<uint16_t, 32>(step * 512 + s * 64);
+        }
+        esimd::simd<bf16_t, 256> b = brow.template bit_cast_view<bf16_t>();
+        acc = esimd::xmx::dpas<8, 8, float>(acc, b, a);
+      }
+#pragma unroll
+      for (int r = 0; r < 8; ++r) {
+        if (m0 + r < count) {
+          const int slot = order[begin + m0 + r];
+          esimd::simd<float, 16> row = acc.template select<16, 1>(r * 16);
+          esimd::simd<uint16_t, 16> hb = f32_to_bf16_u16v<16>(row);
+          esimd::block_store<uint16_t, 16>(
+              y + ((size_t)slot * (size_t)N + (size_t)n0),
+              hb,
+              esimd::overaligned<32>);
+        }
+      }
+    }
+  }
+};
+
+template <int BITS>
+static void launch_grouped(
+    sycl::queue& q,
+    const torch::Tensor& x,
+    const torch::Tensor& order,
+    const torch::Tensor& offsets,
+    const torch::Tensor& plane2,
+    const torch::Tensor& plane_hi,
+    const torch::Tensor& scale,
+    const torch::Tensor& y,
+    int K,
+    int N,
+    int E,
+    int topk,
+    int x_per_slot) {
+  const int tiles_n = N / 16;
+  const int steps = K / 16;
+  TORCH_CHECK(steps * 512 <= kGroupedSlm, "grouped prefill K exceeds SLM");
+  GroupedPrefillKernel<BITS> k{
+      reinterpret_cast<const uint16_t*>(x.data_ptr()),
+      order.data_ptr<int32_t>(),
+      offsets.data_ptr<int32_t>(),
+      plane2.data_ptr<uint8_t>(),
+      hi_ptr(plane_hi),
+      reinterpret_cast<const uint16_t*>(scale.data_ptr()),
+      reinterpret_cast<uint16_t*>(y.data_ptr()),
+      K,
+      N,
+      K / 128,
+      (int)plane2.size(2),
+      BITS == 2 ? 0 : (int)plane_hi.size(2),
+      E,
+      topk,
+      tiles_n,
+      x_per_slot};
+  const size_t local = (size_t)kGroupedLocal;
+  const size_t ngrp = (size_t)E * (size_t)tiles_n;
+  q.parallel_for(
+      sycl::nd_range<1>(sycl::range<1>(ngrp * local), sycl::range<1>(local)),
+      k);
+}
+
+// Eager prefill. One histogram, one sort, then one DPAS submit for gate/up
+// across every expert, SiLU, one DPAS submit for down, and the router sum.
+// Counts stay on device.
+static torch::Tensor moe_prefill(
+    const torch::Tensor& x,
+    const torch::Tensor& ids,
+    const torch::Tensor& router_w,
+    const torch::Tensor& w13_plane2,
+    const torch::Tensor& w13_plane_hi,
+    const torch::Tensor& w13_scale,
+    const torch::Tensor& w2_plane2,
+    const torch::Tensor& w2_plane_hi,
+    const torch::Tensor& w2_scale,
+    int64_t bits) {
+  TORCH_CHECK(x.is_xpu() && x.is_contiguous(), "x");
+  TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2, "x [T,H]");
+  TORCH_CHECK(ids.is_xpu() && ids.is_contiguous(), "ids");
+  TORCH_CHECK(ids.scalar_type() == at::kInt && ids.dim() == 2, "ids");
+  TORCH_CHECK(router_w.is_xpu() && router_w.is_contiguous(), "router");
+  TORCH_CHECK(router_w.scalar_type() == at::kFloat, "router fp32");
+  TORCH_CHECK(ids.sizes() == router_w.sizes(), "router shape");
+  TORCH_CHECK(bits == 2 || bits == 3 || bits == 4, "bits");
+  const int T = (int)x.size(0);
+  const int H = (int)x.size(1);
+  const int topk = (int)ids.size(1);
+  TORCH_CHECK(ids.size(0) == T && T >= 1 && topk >= 1, "topk");
+  TORCH_CHECK(w13_plane2.dim() == 3 && w2_plane2.dim() == 3, "expert rank");
+  const int E = (int)w13_plane2.size(0);
+  const int N13 = (int)w13_plane2.size(1);
+  TORCH_CHECK(N13 % 2 == 0 && (N13 % 16) == 0 && (H % 16) == 0, "tile");
+  const int I = N13 / 2;
+  TORCH_CHECK(w2_plane2.size(0) == E && w2_plane2.size(1) == H, "down");
+  check_planes(
+      w13_plane2.reshape({(int64_t)E * N13, w13_plane2.size(2)}),
+      bits == 2 ? w13_plane_hi
+                : w13_plane_hi.reshape({(int64_t)E * N13, w13_plane_hi.size(2)}),
+      w13_scale.reshape({(int64_t)E * N13, w13_scale.size(2)}),
+      (int64_t)E * N13,
+      H,
+      (int)bits);
+  check_planes(
+      w2_plane2.reshape({(int64_t)E * H, w2_plane2.size(2)}),
+      bits == 2 ? w2_plane_hi
+                : w2_plane_hi.reshape({(int64_t)E * H, w2_plane_hi.size(2)}),
+      w2_scale.reshape({(int64_t)E * H, w2_scale.size(2)}),
+      (int64_t)E * H,
+      I,
+      (int)bits);
+  const int slots = T * topk;
+  const at::DeviceGuard guard(x.device());
+  auto flat = ids.reshape({-1});
+  auto key = torch::where(flat >= 0, flat, torch::full_like(flat, E));
+  auto counts =
+      torch::bincount(key.to(at::kLong), std::nullopt, E + 1).to(at::kInt);
+  auto order =
+      torch::argsort(key, /*stable=*/true, /*dim=*/-1, /*descending=*/false)
+          .to(at::kInt);
+  // cumsum of an integer tensor is int64. The kernel reads int32 offsets.
+  auto csum = torch::cumsum(counts.slice(0, 0, E), 0);
+  auto offsets =
+      torch::cat({torch::zeros({1}, counts.options()), csum}, 0).to(at::kInt);
+  auto gu = torch::zeros({slots, N13}, x.options());
+  auto hid = torch::zeros({slots, I}, x.options());
+  auto down = torch::zeros({slots, H}, x.options());
+  auto y = torch::empty({T, H}, x.options());
+  for (const torch::Tensor& t :
+       {x, ids, router_w, w13_plane2, w13_plane_hi, w13_scale, w2_plane2,
+        w2_plane_hi, w2_scale, key, counts, order, offsets, gu, hid, down, y}) {
+    record_use(t);
+  }
+  auto& q = c10::xpu::getCurrentXPUStream().queue();
+  auto launch = [&](auto tag, const torch::Tensor& act, const torch::Tensor& p2,
+                    const torch::Tensor& phi, const torch::Tensor& sc,
+                    const torch::Tensor& out, int K, int N, int x_per_slot) {
+    constexpr int BITS = decltype(tag)::value;
+    launch_grouped<BITS>(
+        q, act, order, offsets, p2, phi, sc, out, K, N, E, topk, x_per_slot);
+  };
+  if (bits == 2) {
+    launch(std::integral_constant<int, 2>{}, x, w13_plane2, w13_plane_hi,
+           w13_scale, gu, H, N13, 0);
+  } else if (bits == 3) {
+    launch(std::integral_constant<int, 3>{}, x, w13_plane2, w13_plane_hi,
+           w13_scale, gu, H, N13, 0);
+  } else {
+    launch(std::integral_constant<int, 4>{}, x, w13_plane2, w13_plane_hi,
+           w13_scale, gu, H, N13, 0);
+  }
+  q.parallel_for(
+      sycl::range<2>((size_t)slots, (size_t)I),
+      SiluMulKernel{
+          reinterpret_cast<const uint16_t*>(gu.data_ptr()),
+          reinterpret_cast<uint16_t*>(hid.data_ptr()),
+          I});
+  if (bits == 2) {
+    launch(std::integral_constant<int, 2>{}, hid, w2_plane2, w2_plane_hi,
+           w2_scale, down, I, H, 1);
+  } else if (bits == 3) {
+    launch(std::integral_constant<int, 3>{}, hid, w2_plane2, w2_plane_hi,
+           w2_scale, down, I, H, 1);
+  } else {
+    launch(std::integral_constant<int, 4>{}, hid, w2_plane2, w2_plane_hi,
+           w2_scale, down, I, H, 1);
+  }
+  q.parallel_for(
+      sycl::range<2>((size_t)T, (size_t)H),
+      RouterReduceKernel{
+          reinterpret_cast<const uint16_t*>(down.data_ptr()),
+          router_w.data_ptr<float>(),
+          reinterpret_cast<uint16_t*>(y.data_ptr()),
+          topk,
+          H});
+  return y;
+}
+
 TORCH_LIBRARY(b70_lowbit, m) {
   m.def(
       "gemv(Tensor x, Tensor plane2, Tensor plane_hi, Tensor scale, int bits) "
@@ -1348,6 +1617,10 @@ TORCH_LIBRARY(b70_lowbit, m) {
   m.def(
       "prefill_wxa8(Tensor x, Tensor plane2, Tensor plane_hi, Tensor scale, "
       "int bits) -> Tensor");
+  m.def(
+      "moe_prefill(Tensor x, Tensor ids, Tensor router_w, Tensor w13_plane2, "
+      "Tensor w13_plane_hi, Tensor w13_scale, Tensor w2_plane2, "
+      "Tensor w2_plane_hi, Tensor w2_scale, int bits) -> Tensor");
 }
 
 TORCH_LIBRARY_IMPL(b70_lowbit, XPU, m) {
@@ -1355,4 +1628,5 @@ TORCH_LIBRARY_IMPL(b70_lowbit, XPU, m) {
   m.impl("moe_gemv", &moe_gemv);
   m.impl("prefill_wna16", &prefill_wna16);
   m.impl("prefill_wxa8", &prefill_wxa8);
+  m.impl("moe_prefill", &moe_prefill);
 }

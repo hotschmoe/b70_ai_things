@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import torch
 import torch.nn.functional as F
 
@@ -319,6 +321,22 @@ class B70LowbitMoEMethod:
         topk_weights: torch.Tensor,
         topk_ids: torch.Tensor,
     ) -> torch.Tensor:
+        # B70_LOWBIT_PREFILL=grouped is the one-submit-per-projection path.
+        # Unset stays the per-expert loop (the measured 116 tok/s path).
+        if os.environ.get("B70_LOWBIT_PREFILL", "") == "grouped":
+            y = ops.moe_prefill(
+                x,
+                topk_ids,
+                topk_weights,
+                layer.w13_weight,
+                getattr(layer, "w13_weight_plane_hi", None),
+                layer.w13_weight_scale,
+                layer.w2_weight,
+                getattr(layer, "w2_weight_plane_hi", None),
+                layer.w2_weight_scale,
+                self.bits,
+            )
+            return y
         t_tokens, hidden = x.shape
         n13 = layer.w13_weight.shape[1]
         intermediate = n13 // 2

@@ -1,10 +1,7 @@
-// C2 prefill GEMM.
-// One launch covers every expert of a projection. Tokens are sorted on device,
-// activations gathered into expert-major order, then a joint_matrix kernel
-// (Strata night_grouped_expert.inc:230, with the next-group preload at :275).
-// Each work-group owns as many output columns as SLM allows so the activation
-// tile is staged once and reused across those columns.
-// mode 0: fp16 DPAS 8x16x16 (the Strata tile). mode 1: bf16 DPAS 8x16x16.
+// C2 prefill GEMM. C6 replaced mode 0 (fp16) with two schedules in
+// prefill_sched.inl. Mode 1 (bf16) and mode 2 (int8) stay on the wide
+// SLM kernel below.
+// mode 0: fp16 DPAS 8x16x16. mode 1: bf16 DPAS 8x16x16.
 // mode 2: int8 DPAS 8x16x32 with per-32-block scales (evaluated, extra rounding).
 #include "grouped_api.hpp"
 #include "grouped_raw.hpp"
@@ -124,6 +121,7 @@ struct GemmArgs {
     float* Y;
     int E, N, K, rb, n_wrow;
     int gu;
+    int rows_hint;
     Layout lay;
 };
 
@@ -412,29 +410,20 @@ void dispatch_eval16(sycl::queue& q, int type, const GemmArgs& a) {
     }
 }
 
+#include "prefill_sched.inl"
+
 void run_gemm(sycl::queue& q, int type, int mode, int mt, const GemmArgs& a) {
+    if (mode == 0) {
+        launch_sched(q, type, a);
+        return;
+    }
 #ifdef B70_PREFILL_SMOKE
-    if (mode != 0 || (type != B70_IQ3_XXS && type != B70_Q2_0)) {
-        throw std::runtime_error("b70 prefill smoke build: fp16 IQ3_XXS and Q2_0 only");
-    }
-    if (type == B70_IQ3_XXS) {
-        if (mt == 4) launch_gemm<B70_IQ3_XXS, 4, 0>(q, a);
-        else launch_gemm<B70_IQ3_XXS, 16, 0>(q, a);
-    } else if (mt == 4) {
-        launch_gemm<B70_Q2_0, 4, 0>(q, a);
-    } else {
-        launch_gemm<B70_Q2_0, 16, 0>(q, a);
-    }
+    throw std::runtime_error("b70 prefill smoke build: fp16 only");
 #else
-    if (mode == 1 || mode == 2) {
-        g_split.mt = 16;
-        if (mode == 1) dispatch_eval16<1>(q, type, a);
-        else dispatch_eval16<2>(q, type, a);
-    } else if (mt == 4) {
-        dispatch_fp16_all<0, 4>(q, type, a);
-    } else {
-        dispatch_fp16_all<0, 16>(q, type, a);
-    }
+    g_split.mt = 16;
+    (void)mt;
+    if (mode == 1) dispatch_eval16<1>(q, type, a);
+    else dispatch_eval16<2>(q, type, a);
 #endif
 }
 
@@ -655,6 +644,7 @@ at::Tensor b70_prefill_grouped_op(at::Tensor x, at::Tensor q, at::Tensor expert_
     args.rb = rb;
     args.n_wrow = (int)N;
     args.gu = 0;
+    args.rows_hint = M;
     args.lay = choose_layout(queue, (int)N, mt, (int)mode);
     g_split.cols = args.lay.cols;
     g_split.mt = mt;
@@ -715,6 +705,7 @@ at::Tensor b70_prefill_dense_op(at::Tensor x, at::Tensor q, int64_t ggml_type, i
     args.rb = rb;
     args.n_wrow = (int)N;
     args.gu = 0;
+    args.rows_hint = M;
     args.lay = choose_layout(queue, (int)N, mt, (int)mode);
     g_split.cols = args.lay.cols;
     g_split.mt = mt;
@@ -800,6 +791,7 @@ at::Tensor b70_prefill_moe_layer_op(at::Tensor x, at::Tensor ids, at::Tensor q_g
     gu_args.rb = rb_gu;
     gu_args.n_wrow = (int)F;
     gu_args.gu = 1;
+    gu_args.rows_hint = M;
     gu_args.lay = choose_layout(queue, (int)(2 * F), mt, (int)mode);
     g_split.cols = gu_args.lay.cols;
     g_split.mt = mt;
@@ -822,6 +814,7 @@ at::Tensor b70_prefill_moe_layer_op(at::Tensor x, at::Tensor ids, at::Tensor q_g
     dn.rb = rb_dn;
     dn.n_wrow = (int)H;
     dn.gu = 0;
+    dn.rows_hint = M;
     dn.lay = choose_layout(queue, (int)H, mt, (int)mode);
     tick_begin(queue, on, ts);
     run_gemm(queue, (int)type_down, (int)mode, mt, dn);

@@ -13,6 +13,39 @@ import os
 # the real interpreter would also be silent; re-raise only when torch
 # imported and registration itself failed.
 
+# D2: copy the Shisa MTP head onto the drafter after load.
+if os.environ.get("B70_D2_SHISA_MTP") == "1":
+    try:
+        from d2_mtp_shisa import install as _d2_shisa_install
+
+        _d2_shisa_install()
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+
+# D2: int4 GEMV for fp16 trunk projections and lm_head. Decode M only.
+if os.environ.get("B70_D2_INT4_LINEAR") == "1":
+    try:
+        from d2_int4_linear import install as _d2_int4_install
+
+        _d2_int4_install()
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+
+# D2: per-region XPU-graph device times inside one decode step.
+if os.environ.get("B70_D2_PROFILE") == "1":
+    try:
+        from d2_profile import install as _d2_profile_install
+
+        _d2_profile_install()
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+
 # D1: eager-step timer. The finder does not import torch or vLLM.
 if os.environ.get("B70_STEP_TIMER") == "1":
     try:
