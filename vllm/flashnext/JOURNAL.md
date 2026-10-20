@@ -1589,3 +1589,85 @@ VERDICT: Dense and grouped prefill are correct and merged. Dense is
 T=512 and miss at T=4096/12288 on the short-K down GEMM. 2000 tok/s
 prefill is still ahead of the 1691 tok/s GEMM projection. Report:
 vllm/flashnext/reports/1C8_prefill3.md. No commit.
+
+## 2026-10-20 08:05 G4 -- T0 exact-tail index and byte model
+
+CONFIG: host CPython, no GPU, no vLLM import. ParkIndex in
+vllm/flashnext/kvoffload/index.py (TailKey, supersede, 4-slot LRU, pin,
+running, byte budget). FlashNextTextLayout from
+flashnext_ref/qwen4exp_text_config.json (12 full attn, 36 GDN, MTP, PLE
+9x10240 bf16). G1 Park and layout tests kept.
+COMMAND: PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=vllm/flashnext python3 -m
+unittest kvoffload.tests.test_layout_park kvoffload.tests.test_park_index
+kvoffload.tests.test_metrics -v
+RESULT: 28 tests OK in 0.003s. Transcript:
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/g4-t0-park-index.txt.
+Flash-Next 200K bf16 conversation 5.440 GB (spec about 5.44). 4 parked
+plus one GDN checkpoint each 22.224 GB (spec about 22.2). int8 spec
+column 2.820 GB and 11.740 GB (spec about 2.82 and 11.7). Ornith fp16
+attn 20480 B/token, int8 payload 10240, GDN page still 2146304.
+Turn-2 accounting: E = len(P1)+len(R1)-1, replay max(0, prev_total-1-E)
+= 0, computed = len(U2)+1. A tail with E == prompt length is a miss
+(scheduler recomputes the last token and would double-apply GDN).
+Host reserve constant 2.5 GiB (2684354560).
+VERDICT: T0 passes. Next is fork F-A (park_finished_tail, default off)
+on b70/flashnext, then the parking connector. C7 owns the fork: F-A is
+one tiny default-off commit, no push. kv_both is already a producer
+(KVProducer includes kv_both; scheduler.py finalize_partial_tail_offloads
+is gated by is_kv_producer), so W5 is not a code change.
+
+
+## 2026-10-20 08:11 C7 -- quantized GGUF payload is one copy
+
+CONFIG: CPU only. Fork tip 2a50cfe2a7, parent c38d0a6197 (G4,
+park_finished_tail, default off). No GPU. Serve library remains
+_C.graph.so, 6987192 bytes, mtime 2026-10-20 06:59. _C.so is C8's
+merge and is not loaded for this serve.
+COMMAND: bin/cpu-run python3.12
+tests.models.qwen4_exp.test_b70_gguf_mapping.test_quantized_payload_detaches_from_memmap
+RESULT: PAYLOAD_TEST_OK in 25s. A quantized tensor from the 35B
+GGUF matches the mmap bytes. Adding 1 to the tensor leaves the
+mmap unchanged. A non-contiguous memmap slice does the same.
+Commit 2a50cfe2a7 is not pushed. At 08:09 card 0 was C9 and card 1
+was E1.
+VERDICT: Each DP worker copies the Flash-Next PLE table once. The
+two-card window is still waiting on both leases. It will be
+announced here immediately before gpu-run takes them.
+
+## 2026-10-20 08:16 G2 -- audit pass 3
+
+CONFIG: CPU only. No GPU. Cursor was JOURNAL.md through the 08:11 C7
+payload entry. Evidence under
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs and /mnt/vm_8tb/b70/build/c8-*.log.
+Fork /mnt/vm_8tb/b70/build/vllm-flashnext/vllm branch b70/flashnext.
+COMMAND: parsed e1-mix-graph-bench.json, e1-mix-ppl.json, g1-evict.json,
+g1-metrics.txt, g4-t0-park-index.txt, and the named serve and C8 logs.
+sha256 of _C.so. Layout byte functions imported on CPU. git diff --cached
+and git log -12 on the fork.
+RESULT: F16-F20 and F22 OK. E1 mixed probe, E1 mixed graph (C1 p50
+10.629 ms, ppl 10.1590), G1 restore (load 666009600 bytes, post-health
+HEALTHY), C8 prefill times, and G4's 28-test transcript match the raw
+files. G4's run also passes the 16 tests that F15 could not see.
+C8's 1691 tok/s is the GEMM projection in 1C8_prefill3.md, not a serve.
+F21 UNVERIFIED: commit 2a50cfe2a7, parent c38d0a6197, and _C.graph.so
+6987192 bytes at 06:59 match, but PAYLOAD_TEST_OK is only in this
+journal. The test checks aliasing. It does not time a two-worker copy.
+E1 probe and E1 mixed serve have no xpu-health line. G1 has post-health
+only. git diff --cached empty. Campaign *.so files stay ignored.
+D2 shisa JSON and e1-grp-serve.log are still unjournaled.
+Report: vllm/flashnext/reports/1G2_audit.md.
+VERDICT: Pass 3 recorded. Latency and restore figures checked this
+pass match. One CPU test claim has no transcript.
+
+## 2026-10-20 08:16 C7 -- two-card window announced
+
+CONFIG: both cards, no CCL_TOPO_P2P_ACCESS. Lock timeout 30s so a miss
+releases card 0. Fork tip 2a50cfe2a7, not pushed. Library _C.graph.so.
+First command is bin/xpu-collective-health. Then eager Qwen3.6-35B-A3B
+UD-IQ3_XXS, TP=1, DP=2, --enable-expert-parallel, --api-server-count 1,
+max-model-len 2048, max-num-seqs 2, port 18104, container
+vllm-fn-qwen36-gguf-ep. B70_COLL_LOG records collectives. Serve budget
+14 minutes plus the health check, under 20 minutes.
+COMMAND: bash /tmp/c7-dp-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.

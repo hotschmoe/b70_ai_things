@@ -207,5 +207,9 @@ int8 values; the KREG 48-byte block is unchanged.
 Expert ids are grouped on device, including under a captured graph. Invalid
 ids contribute 0. The shared expert is one extra group with routing weight 1.
 `reserve_decode` also reserves this path's scratch (T=8, topk=16, K=I=8192).
-A grow while the queue is recording throws. Side library: set `B70_GGUF_SO`
-to `b70_gguf_xpu/_C.c9.so`. The default `_C.so` is not replaced by the C9 build.
+A grow while the queue is recording throws. The C9 build writes
+`b70_gguf_xpu/_C.c9.so` and does not itself replace `_C.so`. C8's later full
+link of this kernels.cpp installed the same schedule into the default
+`_C.so` (sha 086595a0, 2026-10-20 07:40). `B70_MOE_SCHED=0` still selects
+the C1 kernels. Q6_K, Q2_K, Q3_K, and IQ4_XS stay on those kernels, so a
+layer whose shared expert is one of those types does not take this path.

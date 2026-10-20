@@ -6,7 +6,9 @@ budget, and the Ornith serve/test that prove a parked conversation
 resumes without recomputing the prefix.
 """
 
+from kvoffload.index import ParkIndex
 from kvoffload.layout import (
+    FlashNextTextLayout,
     OrnithTextLayout,
     checkpoint_boundary,
     scaled_attention_block_size,
@@ -14,8 +16,10 @@ from kvoffload.layout import (
 from kvoffload.park import Park, resume_tokens
 
 __all__ = [
+    "FlashNextTextLayout",
     "OrnithTextLayout",
     "Park",
+    "ParkIndex",
     "checkpoint_boundary",
     "resume_tokens",
     "scaled_attention_block_size",

@@ -315,3 +315,177 @@ stdout was found under logs/ or b70/logs.
 Verdict: UNVERIFIED that the process exited 0. The expected numbers
 match the test source.
 Suggested fix: save the unittest transcript next to the journal entry.
+
+## Pass 3 -- 2026-10-20 08:16 UTC
+
+Cursor: JOURNAL.md through the 08:11 C7 payload entry (1635 lines).
+New since pass 2: E1 mixed probe, G1 KV restore, E1 mixed graph,
+C8 prefill, G4 park index, C7 payload copy. Fork tip moved from
+4d73572e14 to 2a50cfe2a7 during this pass.
+D2 shisa JSON and e1-grp-serve.log have no journal claim yet.
+
+### F16. E1 mixed probe matches the log
+
+Claim: moe_gemv_mixed matches templated moe_gemv on uniform int3
+(rel_l2 0) and matches prefill within rel_l2 0.02 and cos 0.999.
+probe_rc=0. Library libb70_lowbit_xpu_e1mix.so is 2280328 bytes.
+Evidence: logs/e1-mixed-probe.log. uniform3 vs moe_gemv
+rel_l2=0 cos=1 max_abs=0. uniform3 vs prefill rel_l2=4.2257e-03.
+mix-small rel_l2=1.5849e-03. mix-23 full K rel_l2=1.0336e-03
+cos=0.999999 max_abs=1024. mix-234 rel_l2=3.9934e-03 cos=0.999992
+max_abs=2048. MIXED_PROBE_OK. gpu-run done in 18s exit 0.
+probe_rc=0. The .so path in the log is 2280328 bytes.
+No xpu-health line in that log.
+Verdict: OK. Health before and after was not recorded.
+Suggested fix: none for the numbers. Print xpu-health on the next
+GPU probe.
+
+### F17. G1 host restore matches the evict JSON and the serve log
+
+Claim: Ornith PIECEWISE serve on card 0 restores a fully evicted
+prefix. Block 1088. KV 245 -> 45 (39852 tokens, 1.22x). Cold TTFT
+5.177s (5884 tok/s), resident 0.267s, restore 0.732s with cached
+29376, computed 1088, host delta 29376, device delta 0. One load
+of 666009600 bytes in 0.461s. Stores 2064875520 bytes, 93 jobs,
+0.475s. Greedy texts match. Hold 330s exit 0. Post-health HEALTHY
+in 16s. Earlier inductor serve died on missing ocloc, 114s, exit 1.
+Evidence: g1-evict.json has those fields (restored_ttft_s 0.73167,
+cold_ttft_s 5.17721, 30464/5.17721 = 5884 tok/s). All three texts
+are "Note A. The quick brown fox keeps talking about topic A. Note A".
+passed true. g1-metrics.txt load 6.660096e+08 in 0.46075s, one load,
+store 2.06487552e+09 in 0.47466s, count 93. 29376*20480 + 30*2146304
+= 666009600. g1-serve.log: served-model-name hotschmoe-dev first,
+cpu_bytes 17179869184, two PIECEWISE captures of 5/5, override
+245 -> 45, 39,852 tokens, 1.22x, done in 330s exit 0. Prometheus
+model_name is hotschmoe-dev. g1-health-after.log HEALTHY cards 0,
+done in 16s exit 0. g1-serve-inductor-fail.log FileNotFoundError
+ocloc, done in 114s exit 1. The "card busy" lines are flock waits
+in bin/gpu-run, then a later acquire. No /v1/models body was saved.
+No g1-health-before.log.
+Verdict: OK for the restore numbers and the post-health. This run
+used its own greedy prompt, not the Paris harness. Pre-health was
+not saved.
+Suggested fix: save /v1/models next to g1-evict.json.
+
+### F18. E1 mixed graph bench, perplexity, and serve log match
+
+Claim: qwen36-mixed FULL_DECODE_ONLY, C1 ITL 10.63/10.96/11.12 ms,
+95.54 tok/s, TTFT 2123.48 ms, n=64. C2 p50 14.26 and 13.97. Prefill
+112.47/126.94/129.10 tok/s. Ppl 10.1590, nll 2.3184, windows
+1.9115/2.5400/2.3456/2.4763, tokens 2044. Identity hotschmoe-dev,
+both texts the capital-of-France string. bits=3, 40 layers, shapes
+(256, 192, 1024) and (256, 48, 2048). Two captures of 1 s. Weight
+14.38 GiB in 522 s. KV 10.78 GiB. init engine 18.07 s. Exit 0.
+Design-mix bytes 368050176. Count-weighted average 300158976.
+Evidence: e1-mix-graph-bench.json first_ok and alias_ok. C1 p50
+10.629, p90 10.958, p99 11.117, mean 10.636, tok/s 95.539, TTFT
+2123.475, n=64. C2 streams match the printed p50/p90/p99 and tok/s
+(p99 21.745 and 14.916). Prefill rows match. Both texts are
+" Paris.\nThe capital of France is Paris.\nThe capital of France is".
+e1-mix-ppl.json nll 2.318358, ppl 10.15898, windows 1.911537,
+2.539995, 2.345628, 2.476273. e1-mix-serve.log: FLASH_ATTN,
+FULL_DECODE_ONLY, B70_LOWBIT_MOE_LAUNCHES=2, B70_LOWBIT_SO=
+libb70_lowbit_xpu_e1mix.so, B70_LOWBIT_PREFILL absent,
+B70_XPU_CG_RECLAIM=500. Forty w13 repacks at bits=3 with those
+shapes. Model loading took 14.38 GiB and 522.401 s. Available KV
+10.78 GiB. Two FULL captures finished in 1 s each (sizes 2 then 4).
+init engine 18.07 s. gpu-run done in 981s exit 0.
+0.8*393216000+0.2*267386880 = 368050176.
+(7573*267386880 + 2667*393216000)/10240 = 300158976, using the
+hist asserted in test_mixed_cpu.py. int4 10.23 / int3 11.29 are
+the previously checked benches. 11.29-10.63 = 0.66 ms. No HEALTH
+line in the serve log. Checkpoint file size on disk is 14.23 GiB;
+14.38 GiB is the device-memory line.
+Verdict: OK. Different checkpoint from the int3 and int4 arms, and
+the journal quotes this arm's own greedy string. Health before and
+after was not recorded.
+Suggested fix: record xpu-health for this serve. The prefill path
+is still the per-expert loop, which the entry already says.
+
+### F19. C8 prefill times match the build logs
+
+Claim: dense Q4_K reuse-rm64 1227.1/10243.9/30689.3 us
+(26.25/25.16/25.19 TF) at M=512/4096/12288. torch.mm
+323.0/1855.5/5481.5 us. C2 was 5296/42016/126036 us. Experts
+9716.9, 28335.7, 76670.8 us. Down at T=12288 is 19.2 ms vs C2
+11.7 ms. Decode behind_us merged 367.3/315.0/515.1/815.1 vs
+04:32 472.7/417.0/713.9/1383.3. compare_cpu 13/13 mismatches=0.
+HEALTH_BEFORE/AFTER 0. Full link 89s exit 0. _C.so sha
+086595a0... GEMM-only projection 7265 ms, 1691 tok/s. Dense is
+4.1x C2 and 5.6x behind torch at M=12288.
+Evidence: /mnt/vm_8tb/b70/build/c8-prefill-c8bench2.log has those
+dense, torch, and layer lines, HEALTH_BEFORE 0, HEALTH_AFTER 0,
+failures=0. Down split at T=12288 s64-mt16 is 19165.4 us.
+c2-prefill-gpu-bench2.log dense 5295.8/42015.7/126036.2 us and
+down=11710.2 us. Expert rows 13884.8/768.2, 27598.9/3091.9,
+66129.1/3871.2. c8-task3.log has both behind_us sets, TASK3_FAIL:0,
+HEALTH_BEFORE 0 and HEALTH_AFTER 0. c8-compare-cpu.log every row
+mismatches=0 and VERDICT failures=0 types=13/13.
+c8-full-build.log cpu-run 89s exit 0. sha256 of _C.so and
+_C.c8full.so is 086595a01babbc366b3d5366147464ebd24022fba0b65d83b1ff530489c70d55.
+_C.c8.so sha starts 82f8e4296849c1c3. 2*12288*12288*2560/30.6893e-3/1e12
+= 25.19 TF. 126036/30689 = 4.11. 30689/5482 = 5.60.
+48*76670.8 us = 3680.2 ms. The report's piece table sums to 7265.0 ms.
+12288/7.265 s = 1691 tok/s. That projection is not a served prefill.
+_C.graph.so is still 6987192 bytes, mtime 06:59, and was not the
+library under test. *.so matches vllm/flashnext/.gitignore line 2
+and is not staged.
+Verdict: OK.
+Suggested fix: none. Keep the 1691 tok/s figure labeled as a GEMM
+projection when it is quoted against the 2000 tok/s target.
+
+### F20. G4 byte model and the 28-test transcript match
+
+Claim: 28 tests OK in 0.003s. Flash-Next 200k conversation 5.440 GB,
+4 parked plus one checkpoint each 22.224 GB, int8 2.820 and 11.740 GB.
+Ornith fp16 attention 20480 B/token, int8 10240, GDN page 2146304.
+Host reserve 2684354560. A tail with end == prompt length is a miss.
+Evidence: logs/g4-t0-park-index.txt lists 28 tests and "OK" after
+0.003s. FlashNextTextLayout().conversation_bytes(200000) is
+5440442368 (5.440 GB). parked_with_one_checkpoint_each(4, 200000)
+is 22223601664 (22.224 GB). int8 pair is 2819642368 and
+11740401664 (2.820 and 11.740 GB). HOST_RESERVE_BYTES is 5<<29.
+test_park_index.py asserts 20480, 10240, 2146304, and the reserve.
+index.py lookup_key and find return no hit when end >= prompt_len.
+The 16 tests from F15 are in this run and passed. The 07:12 process
+stdout is still absent.
+Verdict: OK.
+Suggested fix: none. F15's missing 07:12 transcript stays a gap for
+that process only.
+
+### F21. C7 fork identity matches; the payload run has no transcript
+
+Claim: fork tip 2a50cfe2a7, parent c38d0a6197 (park_finished_tail,
+default off). PAYLOAD_TEST_OK in 25s. A 35B quantized tensor matches
+the mmap, add-1 leaves the mmap, and a non-contiguous slice does the
+same. _C.graph.so still 6987192 bytes, mtime 06:59. Commit not pushed.
+Each DP worker copies the PLE table once.
+Evidence: git log on b70/flashnext shows 2a50cfe2a7 parent
+c38d0a6197, ahead 11 of origin/main. cache.py park_finished_tail
+defaults False. _C.graph.so stat is 6987192 bytes at 06:59:04 UTC.
+The new test asserts the three aliasing checks. It does not print
+PAYLOAD_TEST_OK. That string is only in JOURNAL.md. No transcript
+under logs/ or /mnt/vm_8tb/b70/logs. The commit message says a
+contiguous memmap was copied twice. The test does not count copies
+and does not start two workers.
+Verdict: UNVERIFIED that the 25s run exited 0. Commit, parent,
+default-off flag, and the serve library stat are OK. The DP-worker
+sentence is the commit message, not a measured two-worker result.
+Suggested fix: save the cpu-run stdout. Say the test checked
+aliasing.
+
+### F22. Code spot check and repo hygiene
+
+Claim: none filed by other agents. This pass looked for a new
+graph-capture host sync, a bad expert index, and a staged binary.
+Evidence: lowbit_kernels.cpp GEMV writes zero and returns when
+e < 0 or e >= E, before the weight load. gguf csrc has no
+synchronize, .item, .cpu, or tolist; kreg.hpp still says capture
+must not queue.wait. E1's mixed serve left B70_LOWBIT_PREFILL
+unset, so the already-filed per-expert prefill host sync is still
+that serve's prefill path, and the journal says so. git diff
+--cached is empty. Campaign *.so files are ignored. The unstaged
+vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so
+is the pre-existing file from pass 1, not a new campaign binary.
+Verdict: OK.
+Suggested fix: none.

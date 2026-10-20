@@ -19,11 +19,41 @@ DTYPE_BYTES = {
     "float16": 2,
     "bfloat16": 2,
     "float32": 4,
+    "int8": 1,
+    "uint8": 1,
 }
 
 
 def _cdiv(a: int, b: int) -> int:
     return (a + b - 1) // b
+
+
+def gdn_state_bytes(
+    num_k_heads: int,
+    num_v_heads: int,
+    head_k_dim: int,
+    head_v_dim: int,
+    conv_kernel: int,
+    conv_dtype: str,
+    ssm_dtype: str,
+) -> int:
+    """Unpadded conv state plus recurrent state for one linear layer.
+
+    Qwen GDN convolves q, k, and v. The conv width is 2 * key + value.
+    """
+    conv_dim = head_k_dim * num_k_heads * 2 + head_v_dim * num_v_heads
+    conv_tokens = (conv_kernel - 1) * conv_dim
+    conv_bytes = conv_tokens * DTYPE_BYTES[conv_dtype]
+    ssm_bytes = num_v_heads * head_v_dim * head_k_dim * DTYPE_BYTES[ssm_dtype]
+    return conv_bytes + ssm_bytes
+
+
+def attn_bytes_per_token_per_layer(
+    num_kv_heads: int,
+    head_dim: int,
+    kv_dtype: str,
+) -> int:
+    return num_kv_heads * head_dim * 2 * DTYPE_BYTES[kv_dtype]
 
 
 @dataclass(frozen=True)
@@ -50,11 +80,8 @@ class OrnithTextLayout:
     kernel_block_alignment: int = 64
 
     def attn_bytes_per_token_per_layer(self) -> int:
-        return (
-            self.num_kv_heads
-            * self.head_dim
-            * 2
-            * DTYPE_BYTES[self.kv_dtype]
+        return attn_bytes_per_token_per_layer(
+            self.num_kv_heads, self.head_dim, self.kv_dtype
         )
 
     def attn_bytes_per_token(self) -> int:
@@ -69,15 +96,15 @@ class OrnithTextLayout:
 
     def gdn_state_bytes_per_layer(self) -> int:
         """Unpadded conv state plus recurrent state for one linear layer."""
-        conv_tokens = (self.conv_kernel - 1) * self.conv_dim()
-        conv_bytes = conv_tokens * DTYPE_BYTES[self.conv_dtype]
-        ssm_bytes = (
-            self.num_v_heads
-            * self.head_v_dim
-            * self.head_k_dim
-            * DTYPE_BYTES[self.ssm_dtype]
+        return gdn_state_bytes(
+            self.num_k_heads,
+            self.num_v_heads,
+            self.head_k_dim,
+            self.head_v_dim,
+            self.conv_kernel,
+            self.conv_dtype,
+            self.ssm_dtype,
         )
-        return conv_bytes + ssm_bytes
 
     def gdn_snapshot_bytes(self) -> int:
         """One conversation-boundary snapshot across every linear layer."""
@@ -133,6 +160,102 @@ def checkpoint_boundary(num_tokens: int, block_size: int, drop_eagle: bool = Fal
 
 def full_attn_bytes(layout: OrnithTextLayout, num_tokens: int) -> int:
     return num_tokens * layout.attn_bytes_per_token()
+
+
+# Spec 5.4 rounds the int8 KV kernel (not built yet) to this many bytes
+# per attention layer per token: 1024 B of int8 payload plus 16 B of scale.
+INT8_SPEC_BYTES_PER_LAYER_TOKEN = 1040
+
+# XPU PLE private tensor is _conv_state[slots, 9, 10240] bf16 (spec 2.7).
+PLE_STATE_ROWS = 9
+PLE_STATE_WIDTH = 10240
+
+
+@dataclass(frozen=True)
+class FlashNextTextLayout:
+    """qwen4_exp text tower from flashnext_ref/qwen4exp_text_config.json.
+
+    48 layers, full attention every 4th layer (12 full, 36 GDN). MTP is
+    one extra full-attention KV stream. PLE is one short conv state.
+    """
+
+    full_attention_layers: int = 12
+    linear_attention_layers: int = 36
+    num_kv_heads: int = 2
+    head_dim: int = 256
+    kv_dtype: str = "bfloat16"
+    num_k_heads: int = 16
+    num_v_heads: int = 48
+    head_k_dim: int = 128
+    head_v_dim: int = 128
+    conv_kernel: int = 4
+    conv_dtype: str = "bfloat16"
+    ssm_dtype: str = "float32"
+    mtp_layers: int = 1
+    ple_rows: int = PLE_STATE_ROWS
+    ple_width: int = PLE_STATE_WIDTH
+    ple_dtype: str = "bfloat16"
+
+    def attn_bytes_per_token_per_layer(self) -> int:
+        return attn_bytes_per_token_per_layer(
+            self.num_kv_heads, self.head_dim, self.kv_dtype
+        )
+
+    def attn_bytes_per_token(self) -> int:
+        return self.full_attention_layers * self.attn_bytes_per_token_per_layer()
+
+    def mtp_bytes_per_token(self) -> int:
+        return self.mtp_layers * self.attn_bytes_per_token_per_layer()
+
+    def gdn_state_bytes_per_layer(self) -> int:
+        return gdn_state_bytes(
+            self.num_k_heads,
+            self.num_v_heads,
+            self.head_k_dim,
+            self.head_v_dim,
+            self.conv_kernel,
+            self.conv_dtype,
+            self.ssm_dtype,
+        )
+
+    def gdn_snapshot_bytes(self) -> int:
+        return self.linear_attention_layers * self.gdn_state_bytes_per_layer()
+
+    def ple_state_bytes(self) -> int:
+        return self.ple_rows * self.ple_width * DTYPE_BYTES[self.ple_dtype]
+
+    def conversation_bytes(self, num_tokens: int) -> int:
+        """One parked conversation: full-attn KV, MTP KV, GDN end, PLE."""
+        if num_tokens < 0:
+            raise ValueError("num_tokens must be non-negative")
+        per_token = self.attn_bytes_per_token() + self.mtp_bytes_per_token()
+        return (
+            num_tokens * per_token
+            + self.gdn_snapshot_bytes()
+            + self.ple_state_bytes()
+        )
+
+    def int8_conversation_bytes(self, num_tokens: int) -> int:
+        """Spec 5.4 int8 column. GDN and PLE stay in their native dtypes."""
+        if num_tokens < 0:
+            raise ValueError("num_tokens must be non-negative")
+        per_token = (
+            self.full_attention_layers + self.mtp_layers
+        ) * INT8_SPEC_BYTES_PER_LAYER_TOKEN
+        return num_tokens * per_token + self.gdn_snapshot_bytes() + self.ple_state_bytes()
+
+    def parked_with_one_checkpoint_each(
+        self, conversations: int, num_tokens: int, *, int8: bool = False
+    ) -> int:
+        """4 parked conversations plus one aligned GDN checkpoint each."""
+        if conversations < 0:
+            raise ValueError("conversations must be non-negative")
+        one = (
+            self.int8_conversation_bytes(num_tokens)
+            if int8
+            else self.conversation_bytes(num_tokens)
+        )
+        return conversations * (one + self.gdn_snapshot_bytes())
 
 
 def upstream_pool_bytes(

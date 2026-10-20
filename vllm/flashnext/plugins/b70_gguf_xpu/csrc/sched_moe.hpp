@@ -128,13 +128,13 @@ struct B70SchedArena {
     size_t cap = 0;
 };
 
-inline B70SchedArena& b70_sched_arena() {
-    static B70SchedArena a;
-    return a;
+inline B70SchedArena& b70_sched_arena(sycl::queue& q) {
+    static B70SchedArena a[2];
+    return a[b70_device_slot(q)];
 }
 
 inline B70SchedMem b70_sched_scratch(sycl::queue& q) {
-    B70SchedArena& a = b70_sched_arena();
+    B70SchedArena& a = b70_sched_arena(q);
     const size_t n = b70_sched_bytes();
     void* raw = b70_device_grow(q, a.p, a.cap, n, 1, n);
     a.p = static_cast<uint8_t*>(raw);

@@ -323,6 +323,29 @@ inline bool b70_queue_recording(sycl::queue& q) {
 // need is in elements. elem is the element size. floor is the decode ceiling.
 // Returns the existing pointer when it already fits. Otherwise allocates a
 // new block and leaks the old one. Throws if the queue is recording.
+// One process, two devices (EP sidecar). Scratch is a raw device pointer.
+// A single static would allocate on the first card and then be reused on
+// the other. Slot by sycl::device so each card owns its block.
+inline int b70_device_slot(const sycl::queue& q) {
+    struct Slot {
+        bool set = false;
+        sycl::device dev{sycl::device()};
+    };
+    static Slot slots[2];
+    const sycl::device d = q.get_device();
+    for (int i = 0; i < 2; ++i) {
+        if (slots[i].set && slots[i].dev == d) return i;
+    }
+    for (int i = 0; i < 2; ++i) {
+        if (!slots[i].set) {
+            slots[i].dev = d;
+            slots[i].set = true;
+            return i;
+        }
+    }
+    return 0;
+}
+
 inline void* b70_device_grow(sycl::queue& q, void* ptr, size_t& cap, size_t need, size_t elem, size_t floor) {
     size_t n = need < floor ? floor : need;
     // 16-byte alignment of the byte count.
@@ -340,11 +363,15 @@ inline void* b70_device_grow(sycl::queue& q, void* ptr, size_t& cap, size_t need
 }
 
 inline B70Q8* b70_q8_scratch(sycl::queue& q, size_t nblk) {
-    static B70Q8* ptr = nullptr;
-    static size_t cap = 0;
-    void* raw = b70_device_grow(q, ptr, cap, nblk, sizeof(B70Q8), kB70Q8Floor);
-    ptr = static_cast<B70Q8*>(raw);
-    return ptr;
+    struct Slot {
+        B70Q8* ptr = nullptr;
+        size_t cap = 0;
+    };
+    static Slot slots[2];
+    Slot& s = slots[b70_device_slot(q)];
+    void* raw = b70_device_grow(q, s.ptr, s.cap, nblk, sizeof(B70Q8), kB70Q8Floor);
+    s.ptr = static_cast<B70Q8*>(raw);
+    return s.ptr;
 }
 
 // One work-item per 32-value block. amax is the max abs of the whole block,
