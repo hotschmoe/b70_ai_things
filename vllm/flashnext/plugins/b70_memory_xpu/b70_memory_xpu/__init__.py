@@ -16,8 +16,16 @@ def register():
     if fix:
         from .fixes import install
         install()
-        from .allocator import install as install_allocator
-        install_allocator()
+        import torch
+        from vllm.platforms import current_platform
+        if current_platform.is_xpu():
+            # The installed vllm-xpu-kernels override reports a different
+            # total/free pair from the native PyTorch allocator API.
+            # Keep profiling and allocation on the same device-memory API.
+            torch.accelerator.get_memory_info = torch.xpu.mem_get_info
+            print("b70_memory: native PyTorch XPU memory info enabled", flush=True)
+            from .profiling import install as install_profiling
+            install_profiling()
     if report:
         from .observe import install
         install(report)

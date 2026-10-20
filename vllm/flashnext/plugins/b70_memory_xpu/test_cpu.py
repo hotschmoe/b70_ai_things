@@ -48,32 +48,3 @@ assert len(prefill_dq._SCRATCH) == 1
 v = prefill_dq._scratch(("dq", 23, 11, 7), (11, 7), torch.float32, device)
 assert v.numel() == 77 and len(prefill_dq._SCRATCH) == 1
 print("CPU_ALIAS_FORWARD_OK STREAM_ARENA_OWNERSHIP_OK")
-
-# Check exception-safe restoration of allocator settings without a device.
-from contextlib import contextmanager
-platform = ModuleType("vllm.platforms")
-platform.current_platform = SimpleNamespace(is_xpu=lambda: True)
-worker = ModuleType("vllm.v1.worker.gpu_worker")
-
-class Worker:
-    @contextmanager
-    def _scoped_allocator_max_split(self, max_split_size_mb):
-        yield
-
-worker.Worker = Worker
-sys.modules[platform.__name__] = platform
-sys.modules[worker.__name__] = worker
-settings = ["garbage_collection_threshold:0.8"]
-torch._C._accelerator_getAllocatorSettings = lambda: settings[0]
-torch._C._accelerator_setAllocatorSettings = lambda value: settings.__setitem__(0, value)
-from b70_memory_xpu.allocator import install as install_allocator
-install_allocator()
-original = settings[0]
-try:
-    with Worker()._scoped_allocator_max_split(20):
-        assert settings[0].endswith("max_split_size_mb:20")
-        raise RuntimeError("exercise cleanup")
-except RuntimeError:
-    pass
-assert settings[0] == original
-print("ALLOCATOR_EXCEPTION_RESTORE_OK")

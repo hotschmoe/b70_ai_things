@@ -10,6 +10,10 @@ export B70_AGENT=${B70_AGENT:-X1} B70_GPU_LOCK_TIMEOUT=${B70_GPU_LOCK_TIMEOUT:-7
 PORT=${PORT:-18121}
 MTP_TOKENS=${MTP_TOKENS:-2}
 NAME=${NAME:-vllm-fn-x1-flashnext-mtp${MTP_TOKENS}}
+SPEC_ARGS=()
+if [[ "$MTP_TOKENS" != 0 ]]; then
+  SPEC_ARGS=(--speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":$MTP_TOKENS}")
+fi
 PYPATH=$BUILD/vllm:$STRATA/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu
 if [[ -e "$BUILD/c7b-fa-overlay/vllm_xpu_kernels/libattn_kernels_xe_2.so" ]]; then
   PYPATH=$BUILD/c7b-fa-overlay:$PYPATH
@@ -24,19 +28,23 @@ if ((available < 8388608)); then echo "ABORT MemAvailable=$available"; exit 4; f
   --env B70_GGUF_SO="${B70_GGUF_SO:-$REPO/vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu/_C.o3.so}" \
   --env PYTHONPATH="$PYPATH" \
   --env B70_GGUF_REF=0 --env B70_EAGER_QK=0 --env B70_PREFILL=0 \
+  --env B70_FUSE_SHARED=0 \
   --env B70_XPU_CG_RECLAIM=500 \
+  --env SYCL_CACHE_PERSISTENT=0 \
+  --env SYCL_CACHE_DIR="$BUILD/cache/sycl-x1-flashnext" \
   --env HF_HUB_OFFLINE=1 --env TRANSFORMERS_OFFLINE=1 \
   -- vllm serve /mnt/vm_8tb/b70/build/backend-decision/hf-flashnext \
   --host 0.0.0.0 --port "$PORT" \
   --served-model-name hotschmoe-dd "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-vllm-rt-mtp${MTP_TOKENS}" \
   --tensor-parallel-size 1 --data-parallel-size 2 --api-server-count 1 \
   --enable-expert-parallel --dtype bfloat16 --max-model-len 2048 \
-  --max-num-batched-tokens 1024 --gpu-memory-utilization 0.98 \
+  --max-num-batched-tokens 512 --gpu-memory-utilization 0.98 \
   --max-num-seqs 2 --language-model-only --load-format b70_gguf \
   --quantization b70_gguf --trust-remote-code \
   --attention-backend "${ATTN:-FLASH_ATTN}" \
+  --mamba-cache-mode align \
   --no-enable-prefix-caching \
-  --speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":$MTP_TOKENS}" \
+  "${SPEC_ARGS[@]}" \
   --compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,3,4,6,8]}' &
 serve_pid=$!
 cleanup() {

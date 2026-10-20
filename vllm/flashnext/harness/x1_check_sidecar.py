@@ -18,7 +18,6 @@ from pathlib import Path
 import numpy as np
 import torch
 from transformers import AutoConfig
-
 from vllm.config import set_current_vllm_config
 from vllm.models.qwen4_exp.gguf.config import B70GGUFConfig
 from vllm.models.qwen4_exp.gguf.mtp_loader import load_mtp_weights
@@ -56,13 +55,26 @@ for layer, value in (
     shard = layer.b70_shards["full"]
     w = _ref_matrix(shard.packed, shard.qtype, hidden, hidden)
     # Independent RMS normalization uses the folded rt gamma.
-    name = "pre_fc_norm_embedding.weight" if value.ndim == 2 else "pre_fc_norm_hidden.weight"
-    index = [line.split() for line in Path(os.environ["B70_MTP_RT"], "dense.txt").read_text().splitlines()]
+    name = (
+        "pre_fc_norm_embedding.weight"
+        if value.ndim == 2
+        else "pre_fc_norm_hidden.weight"
+    )
+    index = [
+        line.split()
+        for line in Path(os.environ["B70_MTP_RT"], "dense.txt").read_text().splitlines()
+    ]
     row = next(row for row in index if row[0] == name)
-    gamma = np.fromfile(Path(os.environ["B70_MTP_RT"], "dense.bin"),
-                        dtype=np.float32, count=int(row[3]), offset=int(row[4]))
+    gamma = np.fromfile(
+        Path(os.environ["B70_MTP_RT"], "dense.bin"),
+        dtype=np.float32,
+        count=int(row[3]),
+        offset=int(row[4]),
+    )
     source = emb if value.ndim == 2 else wide.flatten(1)
-    expected = source * torch.rsqrt(source.square().mean(-1, keepdim=True) + text.rms_norm_eps)
+    expected = source * torch.rsqrt(
+        source.square().mean(-1, keepdim=True) + text.rms_norm_eps
+    )
     expected = (expected * torch.from_numpy(gamma)).reshape_as(value)
     torch.testing.assert_close(value.float(), expected, atol=2e-3, rtol=2e-3)
     refs.append(expected @ w.T)

@@ -418,6 +418,11 @@ class QsaRunner:
         half = int(self.batch.cos.shape[1])
         if half == 0 or n == 0:
             return
+        if positions.ndim == 2 and n > 8 and os.environ.get("B70_PREFILL_QSA") == "1":
+            from b70_qsa_xpu.prefill import rope_rows
+
+            rope_rows(self, x, positions, token0, n)
+            return
         if positions.ndim == 2:
             for j in range(n):
                 thw = positions[:, token0 + j].to(torch.int32)
@@ -518,6 +523,11 @@ class QsaRunner:
         return iq_i
 
     def _append_request(self, s: int, t0: int, t1: int, q, k, v, gate, iq, raw, positions, pos_cpu, nreq: int) -> None:
+        if os.environ.get("B70_PREFILL_QSA") == "1":
+            from b70_qsa_xpu.prefill import append_request
+
+            append_request(self, s, t0, t1, k, v, raw, positions, pos_cpu, nreq)
+            return
         for t in range(t0, t1):
             self.batch.pos.fill_(-1)
             self.batch.pos[s] = int(pos_cpu[t])

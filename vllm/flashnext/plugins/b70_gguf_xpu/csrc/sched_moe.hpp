@@ -70,6 +70,37 @@ constexpr int kSchedMaxEnt = kSchedMaxT * kSchedMaxTopk + kSchedMaxT; // 136
 constexpr int kSchedMaxGrp = kSchedMaxEnt;
 constexpr int kSchedMaxDim = 8192;
 constexpr int kSchedWg = 256;
+#ifndef B70_PROBE_LOADONLY
+#define B70_PROBE_LOADONLY 0
+#endif
+#ifndef B70_PTR_WALK
+#define B70_PTR_WALK 1
+#endif
+constexpr int b70_c_elems(int t) {
+    return (t == B70_Q8_0 || t == B70_IQ4_NL) ? 32 : t == B70_Q2_0 ? 64 : 256;
+}
+constexpr int b70_c_bytes(int t) {
+    switch (t) {
+    case B70_Q8_0: return 34;
+    case B70_Q4_K: return 144;
+    case B70_Q5_K: return 176;
+    case B70_Q6_K: return 210;
+    case B70_IQ2_XXS: return 66;
+    case B70_IQ2_XS: return 74;
+    case B70_IQ3_XXS: return 98;
+    case B70_IQ4_NL: return 18;
+    case B70_IQ3_S: return 110;
+    case B70_IQ2_S: return 82;
+    case B70_IQ4_XS: return 136;
+    case B70_Q2_K: return 84;
+    case B70_Q3_K: return 110;
+    case B70_Q2_0: return 18;
+    default: return 0;
+    }
+}
+#ifndef B70_GRID_SLM
+#define B70_GRID_SLM 1
+#endif
 constexpr int kSchedLn = 8;
 constexpr int kSchedSg = 16;
 constexpr int kSchedRb = kSchedWg / kSchedLn; // 32
@@ -79,6 +110,13 @@ constexpr int kSchedRb = kSchedWg / kSchedLn; // 32
 #endif
 constexpr int kSchedRpl = B70_SCHED_RPL;
 constexpr int kSchedRows = kSchedRb * kSchedRpl; // virtual rows per work-group
+// Down kernel lanes per row (I is short: 20 parts per row at I=640). -DB70_DOWN_LN=4 for the A/B.
+#ifndef B70_DOWN_LN
+#define B70_DOWN_LN 8
+#endif
+constexpr int kDownLn = B70_DOWN_LN;
+constexpr int kDownRb = kSchedWg / kDownLn;
+constexpr int kDownRows = kDownRb * kSchedRpl;
 
 struct B70SchedPlan {
     int ng;
@@ -93,6 +131,7 @@ struct B70SchedPlan {
     int grb[kSchedMaxGrp];
     int urb[kSchedMaxGrp];
     int drb[kSchedMaxGrp];
+    float sw[kSchedMaxT]; // O3 stage 3: per-token shared weight sigmoid(x . w_sg)
 };
 
 #define B70_SCHED_TYPES(M)                                                                                             \
@@ -207,9 +246,10 @@ inline const B70Q8S* b70_q8s_cptr(const uint8_t* base, size_t block) {
 }
 
 // xor 4,2,1 stays inside an aligned 8-lane rib of a 16-lane subgroup.
+template <int LN = kSchedLn>
 inline float b70_sched_lanes(sycl::sub_group sg, float v) {
 #pragma unroll
-    for (int o = kSchedLn / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
+    for (int o = LN / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
     return v;
 }
 
@@ -224,15 +264,62 @@ inline void b70_q8s_i8(const B70Q8S* a, int u[8]) {
 // One k-pass over R rows (Strata rows_dot_multi_iq, RPL=R). Dead rows repeat a
 // live pointer and are not stored. Activation words load once per block and
 // are reused across the R rows and EC entries.
-template <int TYPE, int EC, int R>
+template <int TYPE, int EC, int R, class G = B70GridG, int LN = kSchedLn>
 inline void b70_sched_rows(sycl::sub_group sg, const uint8_t* const (&rows)[R], const B70Q8S* const (&xs)[EC], int nb,
-                           int sub, float (&out)[R][EC]) {
+                           int sub, float (&out)[R][EC], const G& grid = G{}) {
     float s[R][EC];
 #pragma unroll
     for (int r = 0; r < R; ++r)
 #pragma unroll
         for (int e = 0; e < EC; ++e) s[r][e] = 0.f;
-    for (int blk = sub; blk < nb; blk += kSchedLn) {
+#if B70_PTR_WALK
+    if constexpr (b70_dp4a_type<TYPE>() && LN % (b70_c_elems(TYPE) / 32) == 0) {
+        // O3 stage 3: walk block pointers. With P parts per block and P | 8,
+        // lane sub always takes part (sub % P) of blocks sub/P, +8/P, ... so the
+        // per-iteration 64-bit block multiply becomes one pointer add.
+        constexpr int P = b70_c_elems(TYPE) / 32;
+        constexpr int BB = b70_c_bytes(TYPE);
+        const int gl = sub & (P - 1);
+        const uint8_t* rp[R];
+#pragma unroll
+        for (int r = 0; r < R; ++r) rp[r] = rows[r] + (size_t)(sub / P) * BB;
+        const B70Q8S* xp[EC];
+#pragma unroll
+        for (int e = 0; e < EC; ++e) xp[e] = xs[e] + sub;
+        for (int blk = sub; blk < nb; blk += LN) {
+            int u[EC][8];
+            float d[EC];
+#pragma unroll
+            for (int e = 0; e < EC; ++e) {
+                d[e] = xp[e]->d;
+                b70_q8s_i8(xp[e], u[e]);
+                xp[e] += LN;
+            }
+#pragma unroll
+            for (int r = 0; r < R; ++r) {
+#if B70_PROBE_LOADONLY
+                if constexpr (TYPE == B70_IQ3_S) {
+                    // Probe only: the weight loads of b70_prep<IQ3_S>, almost no ALU.
+                    const uint8_t* b = rp[r];
+                    const uint64_t qq = b70_ld8_a2(b + 2 + 8 * gl);
+                    const uint32_t sb4 = b70_ld4_a2(b + 74 + 4 * gl);
+                    const uint32_t x = (uint32_t)qq ^ (uint32_t)(qq >> 32) ^ sb4 ^ b[66 + gl] ^ b[106 + (gl >> 1)];
+                    rp[r] += (LN / P) * BB;
+#pragma unroll
+                    for (int e = 0; e < EC; ++e) s[r][e] += (float)(x & 0xffu) * b70_h2f(b) * d[e] + (float)u[e][0];
+                    continue;
+                }
+#endif
+                B70Part m;
+                b70_prep<TYPE>(rp[r], gl, m, grid);
+                rp[r] += (LN / P) * BB;
+#pragma unroll
+                for (int e = 0; e < EC; ++e) s[r][e] += b70_apply_u<TYPE>(m, u[e], d[e]);
+            }
+        }
+    } else
+#endif
+    for (int blk = sub; blk < nb; blk += LN) {
         if constexpr (b70_dp4a_type<TYPE>()) {
             int u[EC][8];
             float d[EC];
@@ -245,7 +332,7 @@ inline void b70_sched_rows(sycl::sub_group sg, const uint8_t* const (&rows)[R], 
 #pragma unroll
             for (int r = 0; r < R; ++r) {
                 B70Part m;
-                b70_prep<TYPE>(rows[r], blk, m);
+                b70_prep<TYPE>(rows[r], blk, m, grid);
 #pragma unroll
                 for (int e = 0; e < EC; ++e) s[r][e] += b70_apply_u<TYPE>(m, u[e], d[e]);
             }
@@ -268,7 +355,7 @@ inline void b70_sched_rows(sycl::sub_group sg, const uint8_t* const (&rows)[R], 
 #pragma unroll
     for (int r = 0; r < R; ++r)
 #pragma unroll
-        for (int e = 0; e < EC; ++e) out[r][e] = b70_sched_lanes(sg, s[r][e]);
+        for (int e = 0; e < EC; ++e) out[r][e] = b70_sched_lanes<LN>(sg, s[r][e]);
 }
 
 class b70_sched_plan_k;
@@ -444,10 +531,14 @@ static_assert(kSchedPlanWg >= kSchedMaxT * kSchedMaxTopk, "plan work-group cover
 inline sycl::event b70_sched_plan_q8(sycl::queue& q, B70SchedPlan* plan, const int32_t* ids, int T, int topk, int E,
                                      int gate_type, int up_type, int down_type, int grb, int urb, int drb, int sg_type,
                                      int su_type, int sd_type, int sgrb, int surb, int sdrb, int shared,
-                                     const uint16_t* x, uint8_t* yb, int K) {
+                                     const uint16_t* x, uint8_t* yb, int K, const void* sgi = nullptr,
+                                     int sgi_dtype = 0) {
     const int nb = K / 32;
     const int nq = T * nb * 8;
-    const int nwg = 1 + (nq + kSchedPlanWg - 1) / kSchedPlanWg;
+    // O3 stage 3: work-groups 1..T compute the shared-expert gate
+    // sigmoid(x[t] . w_sg) when sgi is given (bf16 = 1, fp32 = 2).
+    const int nsg = sgi != nullptr ? T : 0;
+    const int nwg = 1 + nsg + (nq + kSchedPlanWg - 1) / kSchedPlanWg;
     return q.submit([&](sycl::handler& h) {
         sycl::local_accessor<int, 1> sid(sycl::range<1>(kSchedMaxT * kSchedMaxTopk), h);
         sycl::local_accessor<int, 1> scnt(sycl::range<1>(kSchedMaxT * kSchedMaxTopk), h);
@@ -524,8 +615,24 @@ inline sycl::event b70_sched_plan_q8(sycl::queue& q, B70SchedPlan* plan, const i
                     }
                     return;
                 }
+                if (wg <= nsg) {
+                    const int t = wg - 1;
+                    const uint16_t* xr = x + (size_t)t * (size_t)K;
+                    float acc = 0.f;
+                    if (sgi_dtype == 1) {
+                        const uint16_t* w = static_cast<const uint16_t*>(sgi);
+                        for (int k = lid; k < K; k += kSchedPlanWg)
+                            acc = sycl::fma(b70_bf16_to_fp32(xr[k]), b70_bf16_to_fp32(w[k]), acc);
+                    } else {
+                        const float* w = static_cast<const float*>(sgi);
+                        for (int k = lid; k < K; k += kSchedPlanWg) acc = sycl::fma(b70_bf16_to_fp32(xr[k]), w[k], acc);
+                    }
+                    const float dot = sycl::reduce_over_group(it.get_group(), acc, sycl::plus<float>());
+                    if (lid == 0) plan->sw[t] = 1.f / (1.f + sycl::exp(-dot));
+                    return;
+                }
                 // Q8(x): lane l of an 8-lane rib takes values 4l..4l+3 of block blk.
-                const int gid = (wg - 1) * kSchedPlanWg + lid;
+                const int gid = (wg - 1 - nsg) * kSchedPlanWg + lid;
                 const int blk0 = gid >> 3;
                 const int lane = gid & 7;
                 const bool live = gid < nq;
@@ -625,8 +732,8 @@ inline const uint8_t* b70_sched_gu_ptr(int v, int I, int expert, int grb, int ur
 
 // One chunk width. Called from the single gate/up kernel for EC 4, then 2, then 1.
 // The slices are disjoint. nchunk is work-group uniform (it depends only on the group).
-template <int TYPE, int EC>
-inline void b70_sched_gu_chunks(sycl::sub_group sg, const B70SchedPlan* plan, const uint8_t* q8x,
+template <int TYPE, int EC, class G>
+inline void b70_sched_gu_chunks(const G& grid, sycl::sub_group sg, const B70SchedPlan* plan, const uint8_t* q8x,
                                 const uint8_t* const (&rows)[kSchedRpl], float* gout, float* uout, int base, int nchunk,
                                 int nb, int sub, int I, const bool (&live)[kSchedRpl], const bool (&isup)[kSchedRpl],
                                 const int (&rr)[kSchedRpl]) {
@@ -639,7 +746,7 @@ inline void b70_sched_gu_chunks(sycl::sub_group sg, const B70SchedPlan* plan, co
             xs[j] = b70_q8s_cptr(q8x, (size_t)t * (size_t)nb);
         }
         float o[kSchedRpl][EC];
-        b70_sched_rows<TYPE, EC, kSchedRpl>(sg, rows, xs, nb, sub, o);
+        b70_sched_rows<TYPE, EC, kSchedRpl>(sg, rows, xs, nb, sub, o, grid);
         if (sub == 0) {
 #pragma unroll
             for (int j = 0; j < EC; ++j) {
@@ -666,6 +773,9 @@ inline sycl::event b70_sched_gu_one(sycl::queue& q, const B70SchedPlan* plan, co
     const int nb = K / 32;
     return q.submit([&](sycl::handler& h) {
         b70_sched_deps(h, deps, ndeps);
+        constexpr int GW = (B70_GRID_SLM && b70_dp4a_type<TYPE>()) ? b70_grid_words<TYPE>() : 0;
+        constexpr int SW = (GW > 0 && b70_sign_tab_type<TYPE>()) ? 512 : 0;  // 256 x u64 sign masks
+        sycl::local_accessor<uint64_t, 1> gslm(sycl::range<1>(GW > 0 ? (GW + SW) / 2 : 1), h);
         h.parallel_for<b70_sched_gu_k<TYPE>>(
             b70_sched_grid(host_groups, gx),
             [=](sycl::nd_item<3> it) [[sycl::reqd_sub_group_size(kSchedSg)]] {
@@ -676,6 +786,9 @@ inline sycl::event b70_sched_gu_one(sycl::queue& q, const B70SchedPlan* plan, co
                 const int e0 = plan->start[g];
                 const int span = plan->start[g + 1] - e0;
                 if (span <= 0) return;
+                // O3 stage 3: this type's codebook grid is staged in SLM after the work-group-uniform
+                // exits and before any per-lane exit (32-bit addresses for the 8 gathers per part).
+                auto body = [&](const auto& grid) {
                 const int lid = (int)it.get_local_id(2);
                 const int rib = lid / kSchedLn;
                 const int sub = lid - rib * kSchedLn;
@@ -711,15 +824,46 @@ inline sycl::event b70_sched_gu_one(sycl::queue& q, const B70SchedPlan* plan, co
                 const int n1 = span % 2;
                 int e = e0;
                 if (n4 > 0) {
-                    b70_sched_gu_chunks<TYPE, 4>(sg, plan, q8x, rows, gout, uout, e, n4, nb, sub, I, live, isup, rr);
+                    b70_sched_gu_chunks<TYPE, 4>(grid, sg, plan, q8x, rows, gout, uout, e, n4, nb, sub, I, live, isup, rr);
                     e += n4 * 4;
                 }
                 if (n2 > 0) {
-                    b70_sched_gu_chunks<TYPE, 2>(sg, plan, q8x, rows, gout, uout, e, n2, nb, sub, I, live, isup, rr);
+                    b70_sched_gu_chunks<TYPE, 2>(grid, sg, plan, q8x, rows, gout, uout, e, n2, nb, sub, I, live, isup, rr);
                     e += n2 * 2;
                 }
                 if (n1 > 0) {
-                    b70_sched_gu_chunks<TYPE, 1>(sg, plan, q8x, rows, gout, uout, e, n1, nb, sub, I, live, isup, rr);
+                    b70_sched_gu_chunks<TYPE, 1>(grid, sg, plan, q8x, rows, gout, uout, e, n1, nb, sub, I, live, isup, rr);
+                }
+                };
+                if constexpr (GW > 0) {
+                    uint64_t* raw = gslm.template get_multi_ptr<sycl::access::decorated::no>().get();
+                    uint32_t* w32 = reinterpret_cast<uint32_t*>(raw);
+                    const uint32_t* src = b70_grid_src<TYPE>();
+                    for (int i = (int)it.get_local_id(2); i < GW; i += kSchedWg) w32[i] = src[i];
+                    if constexpr (SW > 0) {
+                        // entry v: byte j = 0xFF if bit j of v; ksign7 types fold parity into bit 7
+                        for (int v = (int)it.get_local_id(2); v < 256; v += kSchedWg) {
+                            uint32_t b = (uint32_t)v;
+                            if constexpr (TYPE == B70_IQ2_XXS || TYPE == B70_IQ2_XS || TYPE == B70_IQ3_XXS)
+                                b = (b & 127u) ^ (((uint32_t)sycl::popcount(b & 127u) & 1u) << 7);
+                            const uint32_t l0 = ((b & 0xFu) * 0x00204081u) & 0x01010101u;
+                            const uint32_t l1 = (((b >> 4) & 0xFu) * 0x00204081u) & 0x01010101u;
+                            raw[GW / 2 + v] = (uint64_t)(l0 * 0xFFu) | ((uint64_t)(l1 * 0xFFu) << 32);
+                        }
+                    }
+                    sycl::group_barrier(it.get_group());
+                    B70GridL gl{sycl::address_space_cast<sycl::access::address_space::local_space,
+                                                         sycl::access::decorated::yes>(
+                                    static_cast<const uint32_t*>(w32)),
+                                sycl::address_space_cast<sycl::access::address_space::local_space,
+                                                         sycl::access::decorated::yes>(
+                                    static_cast<const uint64_t*>(raw)),
+                                sycl::address_space_cast<sycl::access::address_space::local_space,
+                                                         sycl::access::decorated::yes>(
+                                    static_cast<const uint64_t*>(raw + GW / 2))};
+                    body(gl);
+                } else {
+                    body(B70GridG{});
                 }
             });
     });
@@ -767,8 +911,8 @@ inline sycl::event b70_sched_silu(sycl::queue& q, const B70SchedPlan* plan, cons
     });
 }
 
-template <int TYPE, int EC>
-inline void b70_sched_down_chunks(sycl::sub_group sg, const uint8_t* q8h, const uint8_t* const (&rows)[kSchedRpl],
+template <int TYPE, int EC, class G>
+inline void b70_sched_down_chunks(const G& grid, sycl::sub_group sg, const uint8_t* q8h, const uint8_t* const (&rows)[kSchedRpl],
                                   float* partial, int base, int nchunk, int nb, int sub, int K,
                                   const bool (&live)[kSchedRpl], const int (&rr)[kSchedRpl]) {
     for (int c = 0; c < nchunk; ++c) {
@@ -777,7 +921,7 @@ inline void b70_sched_down_chunks(sycl::sub_group sg, const uint8_t* q8h, const 
 #pragma unroll
         for (int j = 0; j < EC; ++j) xs[j] = b70_q8s_cptr(q8h, (size_t)(e + j) * (size_t)nb);
         float o[kSchedRpl][EC];
-        b70_sched_rows<TYPE, EC, kSchedRpl>(sg, rows, xs, nb, sub, o);
+        b70_sched_rows<TYPE, EC, kSchedRpl, G, kDownLn>(sg, rows, xs, nb, sub, o, grid);
         if (sub == 0) {
 #pragma unroll
             for (int j = 0; j < EC; ++j)
@@ -793,11 +937,14 @@ template <int TYPE>
 inline sycl::event b70_sched_down_one(sycl::queue& q, const B70SchedPlan* plan, const uint8_t* q8h, const uint8_t* down,
                                       const uint8_t* sdown, float* partial, int host_groups, int I, int K,
                                       sycl::event dep) {
-    const int gx = (K + kSchedRows - 1) / kSchedRows;
+    const int gx = (K + kDownRows - 1) / kDownRows;
     if (gx <= 0 || host_groups <= 0) return dep;
     const int nb = I / 32;
     return q.submit([&](sycl::handler& h) {
         h.depends_on(dep);
+        constexpr int GW = (B70_GRID_SLM && b70_dp4a_type<TYPE>()) ? b70_grid_words<TYPE>() : 0;
+        constexpr int SW = (GW > 0 && b70_sign_tab_type<TYPE>()) ? 512 : 0;  // 256 x u64 sign masks
+        sycl::local_accessor<uint64_t, 1> gslm(sycl::range<1>(GW > 0 ? (GW + SW) / 2 : 1), h);
         h.parallel_for<b70_sched_down_k<TYPE>>(
             b70_sched_grid(host_groups, gx),
             [=](sycl::nd_item<3> it) [[sycl::reqd_sub_group_size(kSchedSg)]] {
@@ -809,11 +956,14 @@ inline sycl::event b70_sched_down_one(sycl::queue& q, const B70SchedPlan* plan, 
                 const int e0 = plan->start[g];
                 const int span = plan->start[g + 1] - e0;
                 if (span <= 0) return;
+                // O3 stage 3: this type's codebook grid is staged in SLM after the work-group-uniform
+                // exits and before any per-lane exit (32-bit addresses for the 8 gathers per part).
+                auto body = [&](const auto& grid) {
                 const int lid = (int)it.get_local_id(2);
-                const int rib = lid / kSchedLn;
-                const int sub = lid - rib * kSchedLn;
+                const int rib = lid / kDownLn;
+                const int sub = lid - rib * kDownLn;
                 auto sg = it.get_sub_group();
-                const int r0 = row_wg * kSchedRows + rib;
+                const int r0 = row_wg * kDownRows + rib;
                 if (r0 >= K) return;
                 const int expert = plan->expert[g];
                 const bool sh = expert < 0;
@@ -825,7 +975,7 @@ inline sycl::event b70_sched_down_one(sycl::queue& q, const B70SchedPlan* plan, 
                 const uint8_t* rows[kSchedRpl];
 #pragma unroll
                 for (int i = 0; i < kSchedRpl; ++i) {
-                    const int r = r0 + i * kSchedRb;
+                    const int r = r0 + i * kDownRb;
                     live[i] = r < K;
                     rr[i] = live[i] ? r : r0;
                     rows[i] = basep + ((size_t)ex * (size_t)K + (size_t)rr[i]) * (size_t)drb;
@@ -835,15 +985,46 @@ inline sycl::event b70_sched_down_one(sycl::queue& q, const B70SchedPlan* plan, 
                 const int n1 = span % 2;
                 int e = e0;
                 if (n4 > 0) {
-                    b70_sched_down_chunks<TYPE, 4>(sg, q8h, rows, partial, e, n4, nb, sub, K, live, rr);
+                    b70_sched_down_chunks<TYPE, 4>(grid, sg, q8h, rows, partial, e, n4, nb, sub, K, live, rr);
                     e += n4 * 4;
                 }
                 if (n2 > 0) {
-                    b70_sched_down_chunks<TYPE, 2>(sg, q8h, rows, partial, e, n2, nb, sub, K, live, rr);
+                    b70_sched_down_chunks<TYPE, 2>(grid, sg, q8h, rows, partial, e, n2, nb, sub, K, live, rr);
                     e += n2 * 2;
                 }
                 if (n1 > 0) {
-                    b70_sched_down_chunks<TYPE, 1>(sg, q8h, rows, partial, e, n1, nb, sub, K, live, rr);
+                    b70_sched_down_chunks<TYPE, 1>(grid, sg, q8h, rows, partial, e, n1, nb, sub, K, live, rr);
+                }
+                };
+                if constexpr (GW > 0) {
+                    uint64_t* raw = gslm.template get_multi_ptr<sycl::access::decorated::no>().get();
+                    uint32_t* w32 = reinterpret_cast<uint32_t*>(raw);
+                    const uint32_t* src = b70_grid_src<TYPE>();
+                    for (int i = (int)it.get_local_id(2); i < GW; i += kSchedWg) w32[i] = src[i];
+                    if constexpr (SW > 0) {
+                        // entry v: byte j = 0xFF if bit j of v; ksign7 types fold parity into bit 7
+                        for (int v = (int)it.get_local_id(2); v < 256; v += kSchedWg) {
+                            uint32_t b = (uint32_t)v;
+                            if constexpr (TYPE == B70_IQ2_XXS || TYPE == B70_IQ2_XS || TYPE == B70_IQ3_XXS)
+                                b = (b & 127u) ^ (((uint32_t)sycl::popcount(b & 127u) & 1u) << 7);
+                            const uint32_t l0 = ((b & 0xFu) * 0x00204081u) & 0x01010101u;
+                            const uint32_t l1 = (((b >> 4) & 0xFu) * 0x00204081u) & 0x01010101u;
+                            raw[GW / 2 + v] = (uint64_t)(l0 * 0xFFu) | ((uint64_t)(l1 * 0xFFu) << 32);
+                        }
+                    }
+                    sycl::group_barrier(it.get_group());
+                    B70GridL gl{sycl::address_space_cast<sycl::access::address_space::local_space,
+                                                         sycl::access::decorated::yes>(
+                                    static_cast<const uint32_t*>(w32)),
+                                sycl::address_space_cast<sycl::access::address_space::local_space,
+                                                         sycl::access::decorated::yes>(
+                                    static_cast<const uint64_t*>(raw)),
+                                sycl::address_space_cast<sycl::access::address_space::local_space,
+                                                         sycl::access::decorated::yes>(
+                                    static_cast<const uint64_t*>(raw + GW / 2))};
+                    body(gl);
+                } else {
+                    body(B70GridG{});
                 }
             });
     });
@@ -870,8 +1051,11 @@ inline sycl::event b70_sched_down_dispatch(sycl::queue& q, int type, const B70Sc
     }
 }
 
+// out_mode 0: fp32 y [T, K] = routed + shared (shared weight sw[t] if has_sg,
+// else 1). out_mode 1: bf16 [2, T, K], routed in [0], weighted shared in [1]
+// (the MoE runner adds them, as it did with its own shared output).
 inline sycl::event b70_sched_red(sycl::queue& q, const B70SchedPlan* plan, const float* partial, const float* router,
-                                 float* y, int T, int topk, int K, sycl::event dep) {
+                                 void* yv, int T, int topk, int K, sycl::event dep, int has_sg = 0, int out_mode = 0) {
     const int n = T * K;
     constexpr int L = 128;
     const size_t global = (size_t)((n + L - 1) / L) * (size_t)L;
@@ -883,14 +1067,30 @@ inline sycl::event b70_sched_red(sycl::queue& q, const B70SchedPlan* plan, const
             const int t = i / K;
             const int k = i - t * K;
             const int nent = plan->nent;
-            float s = 0.f;
-            for (int e = 0; e < nent; ++e) {
-                if (plan->tok[e] != t) continue;
-                const int slot = plan->slot[e];
-                const float w = slot < topk ? router[(size_t)t * (size_t)topk + slot] : 1.f;
-                s = sycl::fma(partial[(size_t)e * (size_t)K + k], w, s);
+            const float shw = has_sg ? plan->sw[t] : 1.f;
+            if (out_mode == 0) {
+                float s = 0.f;
+                for (int e = 0; e < nent; ++e) {
+                    if (plan->tok[e] != t) continue;
+                    const int slot = plan->slot[e];
+                    const float w = slot < topk ? router[(size_t)t * (size_t)topk + slot] : shw;
+                    s = sycl::fma(partial[(size_t)e * (size_t)K + k], w, s);
+                }
+                static_cast<float*>(yv)[i] = s;
+            } else {
+                float s = 0.f;
+                float sh = 0.f;
+                for (int e = 0; e < nent; ++e) {
+                    if (plan->tok[e] != t) continue;
+                    const int slot = plan->slot[e];
+                    const float pv = partial[(size_t)e * (size_t)K + k];
+                    if (slot < topk) s = sycl::fma(pv, router[(size_t)t * (size_t)topk + slot], s);
+                    else sh = sycl::fma(pv, shw, sh);
+                }
+                uint16_t* yb = static_cast<uint16_t*>(yv);
+                yb[i] = b70_fp32_to_bf16(s);
+                yb[(size_t)n + i] = b70_fp32_to_bf16(sh);
             }
-            y[i] = s;
         });
     });
 }
@@ -910,8 +1110,10 @@ inline bool b70_sched_try(sycl::queue& q, const uint16_t* x, const uint8_t* gate
                           const uint8_t* up, int up_type, int up_rb, const uint8_t* down, int down_type, int down_rb,
                           const int32_t* ids, const float* router, const uint8_t* sgate, int sg_type, int sg_rb,
                           const uint8_t* sup, int su_type, int su_rb, const uint8_t* sdown, int sd_type, int sd_rb,
-                          float* y, int T, int topk, int E, int I, int K) {
+                          void* y, int T, int topk, int E, int I, int K, const void* sgi = nullptr,
+                          int sgi_dtype = 0, int out_mode = 0) {
     if (!b70_sched_enabled()) return false;
+    if (!B70_SCHED_FUSE && (sgi != nullptr || out_mode != 0)) return false;
     if (T <= 0 || topk <= 0 || T > kSchedMaxT || topk > kSchedMaxTopk) return false;
     if (I <= 0 || K <= 0 || I > kSchedMaxDim || K > kSchedMaxDim) return false;
     if ((I % 32) != 0 || (K % 32) != 0) return false;
@@ -928,7 +1130,7 @@ inline bool b70_sched_try(sycl::queue& q, const uint16_t* x, const uint8_t* gate
 #if B70_SCHED_FUSE
     const sycl::event ep = b70_sched_plan_q8(q, mem.plan, ids, T, topk, E, gate_type, up_type, down_type, gate_rb, up_rb,
                                              down_rb, sg_type, su_type, sd_type, sg_rb, su_rb, sd_rb, shared, x, mem.q8x,
-                                             K);
+                                             K, shared ? sgi : nullptr, sgi_dtype);
     const double tp = b70_sched_stamp(phase, q, ep, t0);
     const sycl::event eq = ep;
     const double tq = 0.0;
@@ -997,7 +1199,8 @@ inline bool b70_sched_try(sycl::queue& q, const uint16_t* x, const uint8_t* gate
 
     if (phase) q.wait();
     t0 = std::chrono::steady_clock::now();
-    const sycl::event er = b70_sched_red(q, mem.plan, mem.partial, router, y, T, topk, K, ed);
+    const sycl::event er = b70_sched_red(q, mem.plan, mem.partial, router, y, T, topk, K, ed,
+                                           (shared && sgi != nullptr) ? 1 : 0, out_mode);
     const double tr = b70_sched_stamp(phase, q, er, t0);
     if (phase) {
         std::fprintf(stderr,

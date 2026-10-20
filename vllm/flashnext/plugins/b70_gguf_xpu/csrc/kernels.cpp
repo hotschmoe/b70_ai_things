@@ -311,10 +311,11 @@ void b70_reserve_decode_queue(void* queue) {
     b70_sched_reserve(q_of(queue));
 }
 
-void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate_type, const uint8_t* up, int up_type,
+void b70_moe_layer2(void* queue, const uint16_t* x, const uint8_t* gate, int gate_type, const uint8_t* up, int up_type,
                    const uint8_t* down, int down_type, const int32_t* expert_ids, const float* router,
                    const uint8_t* sgate, int sg_type, const uint8_t* sup, int su_type, const uint8_t* sdown, int sd_type,
-                   float* y, int T, int topk, int E, int I, int K) {
+                   void* y, int T, int topk, int E, int I, int K, const void* sgi, int sgi_dtype,
+                    int out_mode) {
     const int grb = b70_row_bytes(gate_type, K);
     const int urb = b70_row_bytes(up_type, K);
     const int drb = b70_row_bytes(down_type, I);
@@ -336,9 +337,21 @@ void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate
     b70_check_a2(sdown, "shared down");
     sycl::queue& sq = q_of(queue);
     if (!b70_sched_try(sq, x, gate, gate_type, grb, up, up_type, urb, down, down_type, drb, expert_ids, router, sgate,
-                       sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, y, T, topk, E, I, K))
+                       sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, y, T, topk, E, I, K, sgi, sgi_dtype, out_mode)) {
+        if (sgi != nullptr || out_mode != 0)
+            throw std::runtime_error("b70_gguf: moe_layer_sh needs the fused decode schedule (sched types, T<=8)");
         b70_moe_layer_launch(sq, x, gate, gate_type, grb, up, up_type, urb, down, down_type, drb, expert_ids, router,
-                             sgate, sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, y, T, topk, E, I, K);
+                             sgate, sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, static_cast<float*>(y), T,
+                             topk, E, I, K);
+    }
+}
+
+void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate_type, const uint8_t* up, int up_type,
+                   const uint8_t* down, int down_type, const int32_t* expert_ids, const float* router,
+                   const uint8_t* sgate, int sg_type, const uint8_t* sup, int su_type, const uint8_t* sdown, int sd_type,
+                   float* y, int T, int topk, int E, int I, int K) {
+    b70_moe_layer2(queue, x, gate, gate_type, up, up_type, down, down_type, expert_ids, router, sgate, sg_type, sup,
+                   su_type, sdown, sd_type, y, T, topk, E, I, K, nullptr, 0, 0);
 }
 
 int b70_grouped_gemm(void* queue, int type, const uint16_t* x, const uint8_t* w, const int32_t* entries, float* y,

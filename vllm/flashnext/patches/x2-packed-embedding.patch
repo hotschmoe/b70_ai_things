@@ -1,0 +1,11 @@
+diff --git a/vllm/models/qwen4_exp/xpu/model.py b/vllm/models/qwen4_exp/xpu/model.py
+--- a/vllm/models/qwen4_exp/xpu/model.py
++++ b/vllm/models/qwen4_exp/xpu/model.py
+@@ -811,6 +811,7 @@
+         self.embed_tokens = VocabParallelEmbedding(
+             self.vocab_size,
+             config.hidden_size,
++            quant_config=self.quant_config,
+         )
+ 
+         def get_layer(prefix: str):

@@ -73,6 +73,16 @@ def _register_fakes() -> None:
             (x.shape[0], k_hidden), dtype=torch.float32, device=x.device
         )
 
+    # O3 stage 3: moe_layer_sh exists only in O3 stage 3+ builds.
+    ns3 = getattr(torch.ops, "b70_gguf", None)
+    if ns3 is not None and hasattr(ns3, "moe_layer_sh"):
+
+        @register_fake("b70_gguf::moe_layer_sh")
+        def _moe_layer_sh_fake(x, gate_q, gate_type, up_q, up_type, down_q, down_type, expert_ids, router_w,
+                               shared_gate_q, shared_gate_type, shared_up_q, shared_up_type, shared_down_q,
+                               shared_down_type, shared_gate_inp, n_inter, k_hidden):
+            return torch.empty((2, x.shape[0], k_hidden), dtype=torch.bfloat16, device=x.device)
+
     # reserve_decode exists only in _C.graph.so. The default _C.so must
     # still load for other agents.
     ns = getattr(torch.ops, "b70_gguf", None)
@@ -187,6 +197,26 @@ def moe_layer(
         int(shared_down_type),
         int(n_inter),
         int(k_hidden),
+    )
+
+
+def moe_layer_sh(x, gate_q, gate_type: int, up_q, up_type: int, down_q, down_type: int, expert_ids, router_w,
+                 n_inter: int, k_hidden: int, shared_gate_q, shared_gate_type: int, shared_up_q, shared_up_type: int,
+                 shared_down_q, shared_down_type: int, shared_gate_inp=None):
+    """Decode MoE layer with the shared expert fused (O3 stage 3). x bf16 [T, K] -> bf16 [2, T, K].
+
+    [0] is the routed sum. [1] is the shared expert times sigmoid(x . shared_gate_inp)
+    per token (weight 1 when shared_gate_inp is None). shared_gate_inp is bf16 or fp32 [K].
+    """
+    load()
+    import torch
+
+    if shared_gate_inp is None:
+        shared_gate_inp = _empty_u8(x.device)
+    return torch.ops.b70_gguf.moe_layer_sh(
+        x, gate_q, int(gate_type), up_q, int(up_type), down_q, int(down_type), expert_ids, router_w,
+        shared_gate_q, int(shared_gate_type), shared_up_q, int(shared_up_type), shared_down_q,
+        int(shared_down_type), shared_gate_inp, int(n_inter), int(k_hidden),
     )
 
 

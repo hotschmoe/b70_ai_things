@@ -15,6 +15,15 @@ void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate
                    const uint8_t* down, int down_type, const int32_t* expert_ids, const float* router,
                    const uint8_t* sgate, int sg_type, const uint8_t* sup, int su_type, const uint8_t* sdown, int sd_type,
                    float* y, int T, int topk, int E, int I, int K);
+// O3 stage 3. sgi: shared-expert gate input weight [K] (bf16 = 1, fp32 = 2)
+// giving per-token shared weight sigmoid(x . sgi); nullptr = weight 1.
+// out_mode 0: fp32 [T, K] (as b70_moe_layer). out_mode 1: bf16 [2, T, K],
+// routed sum then weighted shared. Requires the fused decode schedule.
+void b70_moe_layer2(void* queue, const uint16_t* x, const uint8_t* gate, int gate_type, const uint8_t* up, int up_type,
+                    const uint8_t* down, int down_type, const int32_t* expert_ids, const float* router,
+                    const uint8_t* sgate, int sg_type, const uint8_t* sup, int su_type, const uint8_t* sdown,
+                    int sd_type, void* y, int T, int topk, int E, int I, int K, const void* sgi, int sgi_dtype,
+                    int out_mode);
 // x: fp16 [M, K]. entries: int32 [n_ent, 3] = expert, row0, nrows. y: float [M, N].
 // Returns 0 when the XMX kernel is launched. Nonzero when the shape is refused.
 int b70_grouped_gemm(void* queue, int type, const uint16_t* x, const uint8_t* w, const int32_t* entries,

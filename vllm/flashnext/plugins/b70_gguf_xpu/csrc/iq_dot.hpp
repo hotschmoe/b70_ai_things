@@ -6,6 +6,7 @@
 // night::q2_spread4 (:2431). K-quants, IQ4_XS, Q2_K and Q3_K still decode
 // to float and FMA against qs * d.
 #pragma once
+#include <type_traits>
 
 inline int b70_swar_ne4(uint32_t x) {
     x = (x | (x >> 4)) & 0x0F0F0F0Fu;
@@ -82,7 +83,11 @@ inline uint32_t b70_unpack_ksigns(uint32_t v) {
     v &= 0xffu;
     const uint32_t p = (uint32_t)sycl::popcount(v) & 1u;
     const uint32_t s = v ^ (p << 7);
+#if defined(B70_SIGN_MUL) && B70_SIGN_MUL == 0
     return s * 0x01010101u;
+#else
+    return s;  // B70_SIGN_MUL path reads the low byte only
+#endif
 }
 
 inline void b70_q8_i8(const B70Q8& a, int u[8]) {
@@ -91,20 +96,42 @@ inline void b70_q8_i8(const B70Q8& a, int u[8]) {
     for (int i = 0; i < 8; ++i) u[i] = p[i];
 }
 
+// O3 stage 3: 4 sign bits -> per-byte lsb by one multiply (shifts 0/7/14/21
+// do not overlap for a 4-bit value, so no carries), mask = lsb * 0xFF.
+// Same bytes as the swar_ne4 masks, about half the ALU ops (the gate/up loop
+// is ALU-bound). -DB70_SIGN_MUL=0 keeps swar_ne4.
+#ifndef B70_SIGN_MUL
+#define B70_SIGN_MUL 1
+#endif
+inline int b70_sgn_bits4(uint32_t g, uint32_t b4) {
+    const uint32_t lsb = ((b4 & 0xFu) * 0x00204081u) & 0x01010101u;
+    return (int)((g ^ (lsb * 0xFFu)) + lsb);
+}
+
 inline void b70_grid_signed(uint32_t lo, uint32_t hi, uint32_t signs, int& g0, int& g1) {
+#if B70_SIGN_MUL
+    g0 = b70_sgn_bits4(lo, signs);
+    g1 = b70_sgn_bits4(hi, signs >> 4);
+#else
     const uint32_t m0 = (uint32_t)b70_swar_ne4(signs & 0x08040201u);
     const uint32_t m1 = (uint32_t)b70_swar_ne4(signs & 0x80402010u);
     g0 = b70_sgn(lo, m0);
     g1 = b70_sgn(hi, m1);
+#endif
 }
 
 // IQ2_S / IQ3_S sign byte: bits 0..7 select weights 0..7. Not ksign7.
 // Same masks as NQ<122> / NQ<121> (iq_kernels.dp.cpp:2651, :2677).
 inline void b70_byte_signed(uint32_t sb, uint32_t lo, uint32_t hi, int& g0, int& g1) {
+#if B70_SIGN_MUL
+    g0 = b70_sgn_bits4(lo, sb);
+    g1 = b70_sgn_bits4(hi, sb >> 4);
+#else
     const uint32_t m0 = (uint32_t)b70_swar_ne4(((sb & 0x03u) << 7) | ((sb & 0x0Cu) << 21));
     const uint32_t m1 = (uint32_t)b70_swar_ne4(((sb & 0x30u) << 3) | ((sb & 0xC0u) << 17));
     g0 = b70_sgn(lo, m0);
     g1 = b70_sgn(hi, m1);
+#endif
 }
 
 // IQ4_NL: four nibbles in the low 4 bits of each byte -> four codebook bytes.
@@ -149,6 +176,60 @@ inline uint32_t b70_nibble_word(const uint8_t* qs, int base, int hi) {
 // Eight packed signed words for one 32-weight group, plus the integer
 // finish (same truncating divisions as Multi<>::finish). fin:
 // 0 plain sum, 1 IQ2_XXS, 2 IQ2_XS/IQ2_S split halves, 3 IQ3_XXS, 4 IQ3_S.
+// O3 stage 3: grid table source for b70_prep. B70GridG reads the global
+// constant tables (64-bit addresses per gather). B70GridL reads a copy staged
+// in SLM by the calling work-group (32-bit addresses, shorter latency).
+struct B70GridG {};
+struct B70GridL {
+    sycl::multi_ptr<const uint32_t, sycl::access::address_space::local_space, sycl::access::decorated::yes> p32;
+    sycl::multi_ptr<const uint64_t, sycl::access::address_space::local_space, sycl::access::decorated::yes> p64;
+    // 256 x u64 sign masks (byte j = 0xFF when bit j is set); for the ksign7
+    // types entry v already holds the parity bit 7. Null when not staged.
+    sycl::multi_ptr<const uint64_t, sycl::access::address_space::local_space, sycl::access::decorated::yes> ps64;
+};
+#ifndef B70_SIGN_TAB
+#define B70_SIGN_TAB 0  // measured slower (66.3 vs 61.6 us T=1): SLM u64 gathers
+#endif
+template <int TYPE>
+inline constexpr bool b70_sign_tab_type() {
+    return B70_SIGN_TAB && (TYPE == B70_IQ2_XXS || TYPE == B70_IQ2_XS || TYPE == B70_IQ2_S || TYPE == B70_IQ3_XXS ||
+                            TYPE == B70_IQ3_S);
+}
+// Signed grid words from a staged sign mask: (g ^ m) + (m & 1s), as b70_sgn.
+template <class G>
+inline void b70_tab_signed(const G& grid, uint32_t idx, uint32_t lo, uint32_t hi, int& g0, int& g1) {
+    const uint64_t m = grid.ps64[idx];
+    const uint32_t m0 = (uint32_t)m;
+    const uint32_t m1 = (uint32_t)(m >> 32);
+    g0 = (int)((lo ^ m0) + (m0 & 0x01010101u));
+    g1 = (int)((hi ^ m1) + (m1 & 0x01010101u));
+}
+template <class G>
+inline uint32_t b70_g32(const G& g, const uint32_t* tab, uint32_t i) {
+    if constexpr (std::is_same_v<G, B70GridL>) return g.p32[i];
+    else return tab[i];
+}
+template <class G>
+inline uint64_t b70_g64(const G& g, const uint64_t* tab, uint32_t i) {
+    if constexpr (std::is_same_v<G, B70GridL>) return g.p64[i];
+    else return tab[i];
+}
+// Words of the grid each grid type needs in SLM (0 = no table).
+template <int TYPE>
+inline constexpr int b70_grid_words() {
+    return TYPE == B70_IQ2_XXS ? 512 : TYPE == B70_IQ2_XS ? 1024 : TYPE == B70_IQ2_S ? 2048
+         : TYPE == B70_IQ3_XXS ? 256 : TYPE == B70_IQ3_S ? 512 : 0;
+}
+template <int TYPE>
+inline const uint32_t* b70_grid_src() {
+    if constexpr (TYPE == B70_IQ2_XXS) return reinterpret_cast<const uint32_t*>(iq2xxs_grid);
+    else if constexpr (TYPE == B70_IQ2_XS) return reinterpret_cast<const uint32_t*>(iq2xs_grid);
+    else if constexpr (TYPE == B70_IQ2_S) return reinterpret_cast<const uint32_t*>(iq2s_grid);
+    else if constexpr (TYPE == B70_IQ3_XXS) return iq3xxs_grid;
+    else if constexpr (TYPE == B70_IQ3_S) return iq3s_grid;
+    else return nullptr;
+}
+
 struct B70Part {
     int w[8];
     int a;
@@ -182,8 +263,8 @@ inline constexpr bool b70_dp4a_type() {
            TYPE == B70_IQ3_S || TYPE == B70_IQ4_NL || TYPE == B70_Q2_0 || b70_kq_type<TYPE>();
 }
 
-template <int TYPE>
-inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
+template <int TYPE, class G = B70GridG>
+inline void b70_prep(const uint8_t* row, int gi, B70Part& m, const G& grid = G{}) {
     if constexpr (TYPE == B70_Q8_0) {
         // qs is at offset 2, so the 32 int8 are not 4-aligned. Pack bytes.
         const uint8_t* b = row + (size_t)gi * 34;
@@ -204,9 +285,12 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
         const uint32_t aux = (uint32_t)(qq >> 32);
 #pragma unroll
         for (int k = 0; k < 4; ++k) {
-            const uint64_t g = iq2xxs_grid[(q2 >> (8 * k)) & 0xffu];
+            const uint64_t g = b70_g64(grid, iq2xxs_grid, (q2 >> (8 * k)) & 0xffu);
             int g0, g1;
-            b70_grid_signed((uint32_t)g, (uint32_t)(g >> 32), b70_unpack_ksigns(aux >> (7 * k)), g0, g1);
+            if constexpr (std::is_same_v<G, B70GridL> && b70_sign_tab_type<TYPE>())
+                b70_tab_signed(grid, (aux >> (7 * k)) & 127u, (uint32_t)g, (uint32_t)(g >> 32), g0, g1);
+            else
+                b70_grid_signed((uint32_t)g, (uint32_t)(g >> 32), b70_unpack_ksigns(aux >> (7 * k)), g0, g1);
             m.w[2 * k] = g0;
             m.w[2 * k + 1] = g1;
         }
@@ -220,9 +304,12 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
 #pragma unroll
         for (int k = 0; k < 4; ++k) {
             const uint32_t q = (uint32_t)((qq >> (16 * k)) & 0xffffu);
-            const uint64_t g = iq2xs_grid[q & 511u];
+            const uint64_t g = b70_g64(grid, iq2xs_grid, q & 511u);
             int g0, g1;
-            b70_grid_signed((uint32_t)g, (uint32_t)(g >> 32), b70_unpack_ksigns(q >> 9), g0, g1);
+            if constexpr (std::is_same_v<G, B70GridL> && b70_sign_tab_type<TYPE>())
+                b70_tab_signed(grid, (q >> 9) & 127u, (uint32_t)g, (uint32_t)(g >> 32), g0, g1);
+            else
+                b70_grid_signed((uint32_t)g, (uint32_t)(g >> 32), b70_unpack_ksigns(q >> 9), g0, g1);
             m.w[2 * k] = g0;
             m.w[2 * k + 1] = g1;
         }
@@ -241,9 +328,12 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
             const uint32_t qs = (qs4 >> (8 * k)) & 0xffu;
             const uint32_t sb = (sb4 >> (8 * k)) & 0xffu;
             const uint32_t idx = qs | ((qh << (8 - 2 * k)) & 0x300u);
-            const uint64_t g = iq2s_grid[idx];
+            const uint64_t g = b70_g64(grid, iq2s_grid, idx);
             int g0, g1;
-            b70_byte_signed(sb, (uint32_t)g, (uint32_t)(g >> 32), g0, g1);
+            if constexpr (std::is_same_v<G, B70GridL> && b70_sign_tab_type<TYPE>())
+                b70_tab_signed(grid, sb, (uint32_t)g, (uint32_t)(g >> 32), g0, g1);
+            else
+                b70_byte_signed(sb, (uint32_t)g, (uint32_t)(g >> 32), g0, g1);
             m.w[2 * k] = g0;
             m.w[2 * k + 1] = g1;
         }
@@ -260,7 +350,12 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
         for (int k = 0; k < 4; ++k) {
             const uint32_t qw = (uint32_t)((qq >> (16 * k)) & 0xffffu);
             int g0, g1;
-            b70_grid_signed(iq3xxs_grid[qw & 0xffu], iq3xxs_grid[qw >> 8], b70_unpack_ksigns(aux >> (7 * k)), g0, g1);
+            if constexpr (std::is_same_v<G, B70GridL> && b70_sign_tab_type<TYPE>())
+                b70_tab_signed(grid, (aux >> (7 * k)) & 127u, b70_g32(grid, iq3xxs_grid, qw & 0xffu),
+                               b70_g32(grid, iq3xxs_grid, qw >> 8), g0, g1);
+            else
+                b70_grid_signed(b70_g32(grid, iq3xxs_grid, qw & 0xffu), b70_g32(grid, iq3xxs_grid, qw >> 8),
+                                b70_unpack_ksigns(aux >> (7 * k)), g0, g1);
             m.w[2 * k] = g0;
             m.w[2 * k + 1] = g1;
         }
@@ -280,7 +375,10 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
             const uint32_t i0 = (qw & 0xffu) | ((qh << (8 - 2 * k)) & 0x100u);
             const uint32_t i1 = (qw >> 8) | ((qh << (7 - 2 * k)) & 0x100u);
             int g0, g1;
-            b70_byte_signed(sb, iq3s_grid[i0], iq3s_grid[i1], g0, g1);
+            if constexpr (std::is_same_v<G, B70GridL> && b70_sign_tab_type<TYPE>())
+                b70_tab_signed(grid, sb, b70_g32(grid, iq3s_grid, i0), b70_g32(grid, iq3s_grid, i1), g0, g1);
+            else
+                b70_byte_signed(sb, b70_g32(grid, iq3s_grid, i0), b70_g32(grid, iq3s_grid, i1), g0, g1);
             m.w[2 * k] = g0;
             m.w[2 * k + 1] = g1;
         }

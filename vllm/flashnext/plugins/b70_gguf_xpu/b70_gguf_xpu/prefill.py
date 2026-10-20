@@ -11,7 +11,7 @@ _LOADED = False
 
 
 def load() -> None:
-    """Load the prebuilt SYCL extension. Call only inside bin/gpu-run --card 0."""
+    """Load the prebuilt SYCL extension while holding a GPU lease."""
     global _LOADED
     if _LOADED:
         return
@@ -23,7 +23,7 @@ def load() -> None:
         raise FileNotFoundError(f"missing {so}; run scripts/build.sh")
     torch.ops.load_library(str(so))
     wide = os.environ.get("B70_PREFILL_WIDE_SO")
-    if wide:
+    if wide and not hasattr(torch.ops.b70_gguf, "prefill_dequant_wide"):
         torch.ops.load_library(wide)
     _LOADED = True
 

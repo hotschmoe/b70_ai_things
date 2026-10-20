@@ -220,3 +220,82 @@ TORCH_LIBRARY_IMPL(b70_gguf, XPU, m) {
     m.impl("prefill_pad_grouped", b70_prefill_pad_grouped_op);
     m.impl("prefill_unpad_scatter", b70_prefill_unpad_scatter_op);
 }
+
+// ---- O3 stage 3: moe_layer with the shared expert and its sigmoid gate fused. New op; moe_layer unchanged. ----
+// shared_gate_inp: [K] bf16 or fp32 (empty = weight 1). Returns bf16 [2, T, K]: routed sum, then weighted shared.
+at::Tensor moe_layer_sh(at::Tensor x, at::Tensor gate_q, int64_t gate_type, at::Tensor up_q, int64_t up_type,
+                        at::Tensor down_q, int64_t down_type, at::Tensor expert_ids, at::Tensor router_w,
+                        at::Tensor shared_gate_q, int64_t shared_gate_type, at::Tensor shared_up_q,
+                        int64_t shared_up_type, at::Tensor shared_down_q, int64_t shared_down_type,
+                        at::Tensor shared_gate_inp, int64_t I, int64_t K) {
+    check_xpu(x, "x");
+    check_xpu(gate_q, "gate_q");
+    check_xpu(up_q, "up_q");
+    check_xpu(down_q, "down_q");
+    check_xpu(expert_ids, "expert_ids");
+    check_xpu(router_w, "router_w");
+    TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2 && x.size(1) == K && x.is_contiguous(),
+                "x must be contiguous bf16 [T, K]");
+    TORCH_CHECK(expert_ids.scalar_type() == at::kInt && expert_ids.dim() == 2, "expert_ids must be int32 [T, topk]");
+    TORCH_CHECK(router_w.scalar_type() == at::kFloat && router_w.sizes() == expert_ids.sizes(),
+                "router_w must be fp32 [T, topk]");
+    TORCH_CHECK(expert_ids.size(0) == x.size(0), "expert_ids rows must match tokens");
+    const int64_t T = x.size(0);
+    const int64_t topk = expert_ids.size(1);
+    const int grb = b70_row_bytes((int)gate_type, (int)K);
+    const int urb = b70_row_bytes((int)up_type, (int)K);
+    const int drb = b70_row_bytes((int)down_type, (int)I);
+    TORCH_CHECK(grb > 0 && urb > 0 && drb > 0, "bad moe layer type or shape");
+    TORCH_CHECK(gate_q.numel() % (I * grb) == 0, "gate_q numel is not E*I*row_bytes");
+    const int64_t E = gate_q.numel() / (I * grb);
+    TORCH_CHECK(up_q.numel() == E * I * urb, "up_q numel does not match gate E");
+    TORCH_CHECK(down_q.numel() == E * K * drb, "down_q numel does not match gate E");
+    const bool shared = shared_gate_q.defined() && shared_gate_q.numel() > 0;
+    const uint8_t* sg = nullptr;
+    const uint8_t* su = nullptr;
+    const uint8_t* sd = nullptr;
+    const void* sgi = nullptr;
+    int sgi_dtype = 0;
+    if (shared) {
+        check_xpu(shared_gate_q, "shared_gate_q");
+        check_xpu(shared_up_q, "shared_up_q");
+        check_xpu(shared_down_q, "shared_down_q");
+        const int sgrb = b70_row_bytes((int)shared_gate_type, (int)K);
+        const int surb = b70_row_bytes((int)shared_up_type, (int)K);
+        const int sdrb = b70_row_bytes((int)shared_down_type, (int)I);
+        TORCH_CHECK(sgrb > 0 && shared_gate_q.numel() == I * sgrb, "shared gate shape");
+        TORCH_CHECK(surb > 0 && shared_up_q.numel() == I * surb, "shared up shape");
+        TORCH_CHECK(sdrb > 0 && shared_down_q.numel() == K * sdrb, "shared down shape");
+        sg = shared_gate_q.data_ptr<uint8_t>();
+        su = shared_up_q.data_ptr<uint8_t>();
+        sd = shared_down_q.data_ptr<uint8_t>();
+        if (shared_gate_inp.defined() && shared_gate_inp.numel() > 0) {
+            check_xpu(shared_gate_inp, "shared_gate_inp");
+            TORCH_CHECK(shared_gate_inp.numel() == K && shared_gate_inp.is_contiguous(), "shared_gate_inp must be [K]");
+            TORCH_CHECK(shared_gate_inp.scalar_type() == at::kBFloat16 || shared_gate_inp.scalar_type() == at::kFloat,
+                        "shared_gate_inp must be bf16 or fp32");
+            sgi = shared_gate_inp.data_ptr();
+            sgi_dtype = shared_gate_inp.scalar_type() == at::kBFloat16 ? 1 : 2;
+        }
+    }
+    auto y = at::empty({2, T, K}, x.options().dtype(at::kBFloat16));
+    sycl::queue& queue = c10::xpu::getCurrentXPUStream().queue();
+    b70_moe_layer2(&queue, static_cast<const uint16_t*>(x.data_ptr()), gate_q.data_ptr<uint8_t>(), (int)gate_type,
+                   up_q.data_ptr<uint8_t>(), (int)up_type, down_q.data_ptr<uint8_t>(), (int)down_type,
+                   expert_ids.data_ptr<int32_t>(), router_w.data_ptr<float>(), sg, (int)shared_gate_type, su,
+                   (int)shared_up_type, sd, (int)shared_down_type, y.data_ptr(), (int)T, (int)topk, (int)E, (int)I,
+                   (int)K, sgi, sgi_dtype, 1);
+    return y;
+}
+
+TORCH_LIBRARY_FRAGMENT(b70_gguf, m) {
+    m.def(
+        "moe_layer_sh(Tensor x, Tensor gate_q, int gate_type, Tensor up_q, int up_type, Tensor down_q, int down_type, "
+        "Tensor expert_ids, Tensor router_w, Tensor shared_gate_q, int shared_gate_type, Tensor shared_up_q, "
+        "int shared_up_type, Tensor shared_down_q, int shared_down_type, Tensor shared_gate_inp, int n_inter, "
+        "int k_hidden) -> Tensor");
+}
+
+TORCH_LIBRARY_IMPL(b70_gguf, XPU, m) {
+    m.impl("moe_layer_sh", moe_layer_sh);
+}

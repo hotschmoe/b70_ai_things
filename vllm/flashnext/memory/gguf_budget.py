@@ -75,7 +75,10 @@ def main():
                   shard_device_bytes=device, trunk_bytes=trunk,
                   dp2_weight_bytes_per_card=experts // 2 + trunk,
                   ep_weight_bytes=[experts * 138 // 512 + trunk, experts * 374 // 512],
-                  old_full_dense_duplicate_bytes=full_dense_duplicates,
+                  # GateLinear/conv and HC/PLE containers bypass the GGUF
+                  # linear method in the measured Flash-Next XPU model.
+                  old_full_dense_duplicate_bytes=0,
+                  full_dense_if_quantized_upper_bound_bytes=full_dense_duplicates,
                   old_merged_dense_placeholder_bytes=merged_dense_placeholders,
                   dense_dq_cache_bytes=sum(dq.values()),
                   dense_dq_shared_max_bytes=max(dq.values()), dense_dq_keys=dq,

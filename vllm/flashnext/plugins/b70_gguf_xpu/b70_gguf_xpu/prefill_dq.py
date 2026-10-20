@@ -112,7 +112,12 @@ def dequant(q, ggml_type: int, rows: int, cols: int, dtype=None):
     load()
     if dtype is None:
         dtype = torch.bfloat16
-    buf = _scratch(("dq", int(ggml_type), rows, cols, dtype, _devkey(q)), (rows, cols), dtype, q.device)
+    key = ("dq", int(ggml_type), rows, cols, dtype, _devkey(q))
+    if os.environ.get("B70_PREFILL_BUCKET") == "1":
+        # Bucket counts vary by layer. Each projection consumes this view
+        # before the next dequant on its queue; do not retain every count.
+        key = ("dq_bucket", dtype, _devkey(q), torch.xpu.current_stream(q.device).sycl_queue)
+    buf = _scratch(key, (rows, cols), dtype, q.device)
     torch.ops.b70_gguf.prefill_dequant(q, int(ggml_type), int(rows), int(cols), buf)
     return buf
 
@@ -139,8 +144,7 @@ def _sanitize(ids, e: int):
     if flat.dtype != torch.int32:
         flat = flat.to(torch.int32)
     ok = (flat >= 0) & (flat < e)
-    if bool(ok.all()):
-        return flat
+    # Keep invalid slots on device; testing ok.all() stalls the host queue.
     return torch.where(ok, flat, torch.full_like(flat, -1))
 
 
@@ -158,10 +162,10 @@ class _Group:
         st = starts.cpu()
         self.order = order
         self.starts = starts
-        self.mv = int(st[-1])
         self.M = m
         self.E = e
-        self.starts_cpu = [int(st[i]) for i in range(e + 1)]
+        self.starts_cpu = st.tolist()
+        self.mv = self.starts_cpu[-1]
         diffs = [self.starts_cpu[i + 1] - self.starts_cpu[i] for i in range(e)]
         raw = max(diffs) if diffs else 0
         self.mmax = (max(raw, 1) + 7) & ~7 if self.mv else 0
@@ -206,8 +210,8 @@ def _project_loop(act, group: _Group, w, n: int, k: int):
     )
     if group.mv == 0:
         return y
-    packed = _scratch(("packed", group.mv, k, act.dtype, _devkey(act)), (group.mv, k), act.dtype, act.device)
-    outp = _scratch(("packed_y", group.mv, n, act.dtype, _devkey(act)), (group.mv, n), act.dtype, act.device)
+    packed = _scratch(("packed", k, act.dtype, _devkey(act)), (group.mv, k), act.dtype, act.device)
+    outp = _scratch(("packed_y", n, act.dtype, _devkey(act)), (group.mv, n), act.dtype, act.device)
     torch.ops.b70_gguf.prefill_row_gather(act, packed, group.order, int(group.mv))
     st = group.starts_cpu
     for e in range(group.E):
@@ -227,7 +231,7 @@ def _project(act, group: _Group, w, n: int, k: int, how: str):
 def _reduce(slots, router, t: int, topk: int, h: int):
     import torch
 
-    if os.environ.get("B70_PREFILL_REDUCE") == "triton":
+    if os.environ.get("B70_PREFILL_REDUCE") in ("triton", "grouped"):
         from .prefill_reduce import reduce_slots
 
         return reduce_slots(slots, router, t, topk, h)
@@ -266,8 +270,13 @@ def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h
     e = int(q_gate.numel() // (f * rb))
     if how == "hybrid" and type_up == int(type_gu):
         return _moe_hybrid(x, ids, q_gate, q_up, q_down, router, type_gu, type_down, h, f, e, t, topk)
+    if how == "hybrid":
+        how = "bmm"
     flat = _sanitize(ids, e)
     group = _Group(flat, e)
+    if how == "bmm" and ((group.mmax > 8 and e * group.mmax > float(os.environ.get("B70_PREFILL_PAD_RATIO", "2")) * group.mv)
+                         or e * group.mmax * h * 2 > 8_000_000_000):
+        how = "loop"
     xb = _as_bf16(x)
     tok = torch.arange(t, device=x.device).unsqueeze(1).expand(t, topk).reshape(-1)
     act = xb[tok]

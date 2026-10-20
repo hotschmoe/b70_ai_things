@@ -83,6 +83,7 @@ def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int,
         marks.append((name, ev))
 
     stamp("start")
+    LAST.pop("fallback", None)
     flat = prefill_dq._sanitize(ids, e)
     group = prefill_dq._Group(flat, e)
     stamp("group")
@@ -93,15 +94,24 @@ def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int,
     if group.mv == 0 or group.mmax == 0:
         return torch.zeros(t, h, dtype=torch.float32, device=x.device)
     cap = group.mmax
+    LAST["cap"] = cap
+    # vLLM's zero-input profile can route every token to the same experts.
+    # Padding all E experts to that capacity creates multi-GiB empty GEMMs.
+    max_ratio = float(os.environ.get("B70_PREFILL_PAD_RATIO", "2"))
+    if (cap > 8 and e * cap > max_ratio * group.mv) or e * cap * h * 2 > 8_000_000_000:
+        LAST["fallback"] = "loop_skew"
+        return prefill_dq.moe_dq(
+            x, ids, q_gate, q_up, q_down, router, type_gu, type_down, h, f, how="loop"
+        )
     xb = x if x.dtype == torch.bfloat16 else x.to(torch.bfloat16)
-    tok = torch.arange(t, device=x.device).unsqueeze(1).expand(t, topk).reshape(-1)
-    act = xb[tok]
-    if act.shape != (t * topk, h):
-        raise RuntimeError("act shape")
+    direct = os.environ.get("B70_PREFILL_REDUCE") == "grouped"
+    if not direct:
+        tok = torch.arange(t, device=x.device).unsqueeze(1).expand(t, topk).reshape(-1)
+        act = xb[tok]
     w_gu = prefill_dq._scratch(
-        ("c13gu", e, f, h, _dev(x)), (e, 2 * f, h), torch.bfloat16, x.device
+        ("c13gu", f, h, _dev(x)), (e, 2 * f, h), torch.bfloat16, x.device
     )
-    w_dn = prefill_dq._scratch(("c13dn", e, h, f, _dev(x)), (e, h, f), torch.bfloat16, x.device)
+    w_dn = prefill_dq._scratch(("c13dn", h, f, _dev(x)), (e, h, f), torch.bfloat16, x.device)
     gu_flat = w_gu.view(e * 2 * f, h)
     dn_flat = w_dn.view(e * h, f)
     torch.ops.b70_gguf.prefill_dequant_wide(q_gate, int(type_gu), e * f, h, gu_flat, 1, f)
@@ -124,8 +134,13 @@ def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int,
     else:
         torch.ops.b70_gguf.prefill_dequant_wide(q_down, int(type_down), e * h, f, dn_flat, 0, 0)
         stamp("dq_down")
-    xpad = prefill_dq._scratch(("c13x", e, h, _dev(x)), (e, cap, h), torch.bfloat16, x.device)
-    torch.ops.b70_gguf.prefill_pad_grouped(act, xpad, group.order, group.starts, int(group.mv))
+    xpad = prefill_dq._scratch(("c13x", h, _dev(x)), (e, cap, h), torch.bfloat16, x.device)
+    if direct:
+        from .prefill_reduce import pad_tokens
+
+        pad_tokens(xb, xpad, group.order, group.starts, topk)
+    else:
+        torch.ops.b70_gguf.prefill_pad_grouped(act, xpad, group.order, group.starts, int(group.mv))
     stamp("pad")
     y = torch.bmm(xpad, w_gu.transpose(1, 2))
     stamp("bmm_gu")
@@ -137,16 +152,25 @@ def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int,
         stamp("wait_down")
     yd = torch.bmm(hid, w_dn.transpose(1, 2))
     stamp("bmm_dn")
-    slots = act if group.mv == act.shape[0] else torch.zeros_like(act)
-    torch.ops.b70_gguf.prefill_unpad_scatter(yd, slots, group.order, group.starts, int(group.mv))
-    stamp("unpad")
-    out = prefill_dq._reduce(slots, router, t, topk, h)
+    if direct:
+        from .prefill_reduce import reduce_grouped
+
+        out = reduce_grouped(yd, group.order, group.starts, router, t, topk, h)
+    else:
+        slots = act if group.mv == act.shape[0] else torch.zeros_like(act)
+        torch.ops.b70_gguf.prefill_unpad_scatter(yd, slots, group.order, group.starts, int(group.mv))
+        stamp("unpad")
+        out = prefill_dq._reduce(slots, router, t, topk, h)
     stamp("reduce")
     if marks is not None:
         torch.xpu.synchronize(x.device)
         parts = []
+        stage_ms = {}
         for i in range(1, len(marks)):
-            parts.append(f"{marks[i][0]}={marks[i - 1][1].elapsed_time(marks[i][1]):.2f}ms")
+            ms = marks[i - 1][1].elapsed_time(marks[i][1])
+            stage_ms[marks[i][0]] = ms
+            parts.append(f"{marks[i][0]}={ms:.2f}ms")
+        LAST["profile_ms"] = stage_ms
         LAST["profile"] = " ".join(parts)
         print(f"PROFILE T={t} {LAST['profile']}", flush=True)
     LAST["cap"] = cap

@@ -53,6 +53,9 @@ struct Layer {
     const int32_t* map1 = nullptr;
     int nexp = 0;
     bool ready0 = false, ready1 = false;
+    // Last eager shape compiled outside the flag spin. 0 means none.
+    int eager_T = 0;
+    int eager_topk = 0;
 };
 
 struct State {
@@ -172,6 +175,8 @@ void load_moe() {
 
 void* inbox_at(size_t off) { return static_cast<uint8_t*>(S().inbox.local) + off; }
 void* inbox_remote(size_t off) { return static_cast<uint8_t*>(S().inbox.remote) + off; }
+
+void eager_prejit_layer(Layer& L, int layer, const uint16_t* x, const float* w, const int32_t* ids, int T, int topk);
 
 }  // namespace
 
@@ -418,7 +423,8 @@ std::vector<int64_t> ep_read_errors() {
     return out;
 }
 
-void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer) {
+void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer,
+                 uint32_t spin) {
     State& s = S();
     Layer& L = s.layers[layer];
     if (s.cap_on && !s.cap_started) {
@@ -448,7 +454,7 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
 
     // Card 1 first. Its first node waits, so card 0's push releases it.
     ep_bump(*s.q1, ctr1);
-    ep_wait(*s.q1, flag_in, ctr1, s.spin, s.err1 + layer, 11);
+    ep_wait(*s.q1, flag_in, ctr1, spin, s.err1 + layer, 11);
     ep_copy_uncached(*s.q1, s.stage_ids, inbox_at(s.off_ids), ids_b);
     ep_copy_uncached(*s.q1, s.stage_w, inbox_at(s.off_w), w_b);
     ep_copy_uncached(*s.q1, s.stage_x, inbox_at(s.off_x), x_b);
@@ -465,7 +471,7 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
     a.memset(s.y0, 0, (size_t)T * (size_t)K * sizeof(float));
     s.moe(&a, x, L.g0, L.gt, L.u0, L.ut, L.d0, L.dt, s.ids0, w, nullptr, 0, nullptr, 0, nullptr, 0, s.y0, T, topk,
           L.e0, L.I, L.K);
-    ep_wait(a, flag_ret, ctr0, s.spin, s.err0 + layer, 12);
+    ep_wait(a, flag_ret, ctr0, spin, s.err0 + layer, 12);
     ep_add_uncached(a, y, s.y0, static_cast<float*>(s.psum.local), n4);
     s.calls += 1;
 }
@@ -499,7 +505,22 @@ void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int
         std::fflush(stdout);
         throw std::runtime_error("ep flag timeout on a previous call");
     }
-    enqueue_moe(x, w, ids, y, T, topk, K, layer);
+    // Profile runs max_num_batched_tokens with attention metadata skipped.
+    // enqueue_moe arms card 1's flag_in wait before card 0 posts. A host
+    // JIT inside the card-1 moe launch, or the projections already queued
+    // on card 0, burns that spin. Flash-Next's first profile died at layer
+    // 2 with err0=0 err1=11 after layers 0 and 1 returned. Compile this
+    // shape and drain card 0 before the wait is armed. Capture must not
+    // host-wait (Level Zero 44) and records the pipelined chain as-is.
+    if (!s.cap_on && !recording) eager_prejit_layer(L, layer, x, w, ids, T, topk);
+    // Card 1 has 374 experts against card 0's 138. The flag_ret spin starts
+    // only after card 0's own experts finish, so it must cover the rest of
+    // card 1. Profile T=2048 topk=10 passed layers 0 and 1 at spin 200000
+    // and died on layer 2 with err0=12 err1=0. Eager uses a wider budget.
+    // Capture keeps s.spin; the recorded decode shapes are small.
+    uint32_t spin = s.spin;
+    if (!s.cap_on && !recording && spin < 10000000u) spin = 10000000u;
+    enqueue_moe(x, w, ids, y, T, topk, K, layer, spin);
     if (s.cap_on && s.implicit_cap && layer == s.last_ep && s.cap_started) {
         ep_capture_end(s.cap_key);
         s.implicit_cap = false;
@@ -546,11 +567,30 @@ void reset_epochs() {
 }
 
 void prejit_moe(sycl::queue& q, const uint16_t* x, const int32_t* ids, const float* w, float* y, const Layer& L,
-                const uint8_t* g, const uint8_t* u, const uint8_t* d, int T, int E) {
+                const uint8_t* g, const uint8_t* u, const uint8_t* d, int T, int E, int topk) {
     State& s = S();
     q.memset(y, 0, (size_t)T * (size_t)L.K * sizeof(float));
-    s.moe(&q, x, g, L.gt, u, L.ut, d, L.dt, ids, w, nullptr, 0, nullptr, 0, nullptr, 0, y, T, 1, E, L.I, L.K);
+    s.moe(&q, x, g, L.gt, u, L.ut, d, L.dt, ids, w, nullptr, 0, nullptr, 0, nullptr, 0, y, T, topk, E, L.I, L.K);
     q.wait();
+}
+
+void eager_prejit_layer(Layer& L, int layer, const uint16_t* x, const float* w, const int32_t* ids, int T, int topk) {
+    if (L.eager_T == T && L.eager_topk == topk) return;
+    State& s = S();
+    sycl::queue& a = q0();
+    const size_t n_ids = (size_t)T * (size_t)topk;
+    // Card 1 has no real ids yet. Zero its stage so the compile launch
+    // does not index off the end of the expert pack.
+    s.q1->memset(s.stage_ids, 0, n_ids * 4);
+    s.q1->memset(s.stage_w, 0, n_ids * 4);
+    s.q1->memset(s.stage_x, 0, (size_t)T * (size_t)L.K * 2);
+    s.q1->wait();
+    std::printf("EP eager prejit layer=%d T=%d topk=%d\n", layer, T, topk);
+    std::fflush(stdout);
+    prejit_moe(*s.q1, s.stage_x, s.stage_ids, s.stage_w, s.y1, L, L.g1, L.u1, L.d1, T, L.e1, topk);
+    prejit_moe(a, x, ids, w, s.y0, L, L.g0, L.u0, L.d0, T, L.e0, topk);
+    L.eager_T = T;
+    L.eager_topk = topk;
 }
 
 }  // namespace
@@ -648,13 +688,13 @@ void ep_compute_warmup(int layer) {
     // JIT each card's expert kernel on its own queue, outside the flag spin.
     std::printf("EP WARMUP prejit layer=%d T=%d\n", layer, 1);
     std::fflush(stdout);
-    prejit_moe(*s.q1, s.stage_x, s.stage_ids, s.stage_w, s.y1, L, L.g1, L.u1, L.d1, 1, L.e1);
-    prejit_moe(a, x, ids, w, y, L, L.g0, L.u0, L.d0, 1, L.e0);
+    prejit_moe(*s.q1, s.stage_x, s.stage_ids, s.stage_w, s.y1, L, L.g1, L.u1, L.d1, 1, L.e1, 1);
+    prejit_moe(a, x, ids, w, y, L, L.g0, L.u0, L.d0, 1, L.e0, 1);
     if (Tpre > 1) {
         std::printf("EP WARMUP prejit layer=%d T=%d\n", layer, Tpre);
         std::fflush(stdout);
-        prejit_moe(*s.q1, s.stage_x, s.stage_ids, s.stage_w, s.y1, L, L.g1, L.u1, L.d1, Tpre, L.e1);
-        prejit_moe(a, x, ids, w, y, L, L.g0, L.u0, L.d0, Tpre, L.e0);
+        prejit_moe(*s.q1, s.stage_x, s.stage_ids, s.stage_w, s.y1, L, L.g1, L.u1, L.d1, Tpre, L.e1, 1);
+        prejit_moe(a, x, ids, w, y, L, L.g0, L.u0, L.d0, Tpre, L.e0, 1);
     }
     reset_epochs();
     int ok = 0;
@@ -665,7 +705,7 @@ void ep_compute_warmup(int layer) {
         s.q1->memset(s.done1, 0, 4);
         a.wait();
         s.q1->wait();
-        enqueue_moe(x, w, ids, y, 1, 1, L.K, layer);
+        enqueue_moe(x, w, ids, y, 1, 1, L.K, layer, s.spin);
         s.q1->wait();
         a.wait();
         std::printf("EP WARMUP moe attempt=%d layer=%d err0=%u err1=%u\n", attempt, layer, s.err0[layer],

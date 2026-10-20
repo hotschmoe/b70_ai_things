@@ -4183,8 +4183,1064 @@ Suggested fix: quote 117993036 kB from the window file. Print the
 sha of _C.c12.so into the window log before serve. Leave the
 result for the log that contains READY or SERVE_RC.
 
+## Pass 15 -- 2026-10-20 16:11 UTC
+
+CPU only. No GPU, no commit. Cursor is the journal after the 15:36
+G2b milestone, including the 15:39 C7b result that was inserted
+above that milestone, through the 16:10 headings.
+
+### F148 -- 15:39 staged PLE, FA decode kernel missing
+
+Claim: the 15:34 window died during FULL capture at 15:39:23.
+SERVE_RC 1. MemAvailable 117993036. B70_GGUF_SO is _C.c12.so sha
+b3c15e14. The PLE host copy did not fire. FlashAttention paged
+decode is not compiled for 16,256,64,false,false,false. The
+PyTorch fallback calls cu_seqlens_q.cpu() inside the graph and
+Level Zero returns error 44. No DEVICE_LOST. No greedy and no ITL.
+The installed package is vllm-xpu-kernels 0.1.15.4. The conf line
+exists at HEAD 19c6ddc and is absent from tag v0.1.15.
+
+Evidence: c7b-fn-graph-window-fa-missing.out has health 15:34:42
+HEALTH_RC 0, MEM_AVAILABLE_KB 117993036, serve 15:35:19, stop
+15:39:35, SERVE_RC 1. c7b-graph-serve-fa-missing.log places 1224
+and memmaps 28800138240 on both workers, loads 24.9 GiB, then
+Capturing CUDA graphs (FULL) 0/2. The config string
+16,256,64,false,false,false is in the log. input_ids.to count is
+0. The stack is capture_model, cudagraph_utils.py:502
+forward_fn(CUDAGraphMode.NONE) inside torch.cuda.graph, then
+flash_attn_interface.py _fallback_varlen_attn
+cu_seqlens_q.cpu().tolist(), error 44, at 15:39:23. DEVICE_LOST
+count 0. OutOfMemory 0. gpu-run done in 255s exit 1. B70_GGUF_SO
+is _C.c12.so. The host venv METADATA is Version 0.1.15.4, mtime
+2026-10-19 22:31:15. The serve log does not print that version.
+vllm-xpu-kernels HEAD is 19c6ddc and
+paged_decode_default.conf:129 is that line. git grep of tag
+v0.1.15 returns no hits. No health-after in the window file.
+
+Verdict: OK on the capture path, the missing specialization, the
+fallback D2H, error 44, SERVE_RC 1, the 117993036 kB figure, the
+c12 path, and the conf line. The 15:34 journal MemAvailable
+117593984 remains the F147 mismatch. The worker error time is
+15:39:23 and the window stop is 15:39:35. Not an ITL. No greedy.
+Health-after is missing.
+
+Suggested fix: keep this log. The side library is F149. Do not
+call capture passed until a window reaches READY.
+
+### F149 -- 16:02 Xe2 paged-decode side library
+
+Claim: BUILD_OK 16:00:05 in 59s. libattn_kernels_xe_2.so is
+11944232 bytes with OFFLOAD_DEVICE_CODE 10813072 bytes. The
+enabled trait is decode_policy_q16_h256_p64. The abi3 module
+NEEDs only that Xe2 library. The shared 0.1.15.4 wheel mtime is
+still 2026-10-19 22:31.
+
+Evidence: c7b-fa-build.log ends BUILD_OK 16:00:05 and gpu-run
+done in 59s exit 0. The side so is 11944232 bytes, mtime 15:59:59.
+readelf section OFFLOAD_DEVICE_CODE is size 0xa4fe90, which is
+10813072. The so contains the filename
+paged_decode_kernel_template_q16_h256_p64_fff.cpp. It does not
+contain the literal decode_policy_q16_h256_p64. readelf -d on
+_vllm_fa2_C.abi3.so NEEDs libattn_kernels_xe_2.so and also
+libze_loader, libtorch, libc10, libsycl, libstdc++, and libc.
+The venv copy of libattn_kernels_xe_2.so is 306868136 bytes,
+mtime 2026-10-19 22:31:14. The side build's own METADATA is
+Version 0.1.16 under c7b-fa-kernel.
+
+Verdict: OK on the build exit, the two sizes, the template
+filename, and that the venv so was not replaced. WRONG that the
+abi3 module NEEDs only the Xe2 library. UNVERIFIED the exact
+trait identifier decode_policy_q16_h256_p64. The side library
+has not been in a serve log yet.
+
+Suggested fix: say the abi3 NEEDs the Xe2 library among its
+other NEEDED entries. Quote the template filename. Serve it
+from the overlay without replacing the venv wheel, which this
+build did.
+
+### F150 -- X1 proxy baseline and the served name
+
+Claim: the 15:58 window died on `leanup: command not found`
+after health-before, using _C.o3.so be76661b. The sidecar CPU
+check printed FLASHNEXT_PAYLOAD_AUDIT_OK and
+WIDE_FC_REFERENCE_OK [2,4,2560]. The retry measured a no-MTP
+baseline: identity first hotschmoe-dd, coherence pass, 4 x 96
+greedy ids, C1 p50 9.27 ms and 108.24 tok/s, C2 p50
+12.48/12.38 ms and 82.34/74.93 tok/s. Post-health HEALTHY.
+This is not Flash-Next performance. Claude consults returned
+unrecognized_model.
+
+Evidence: x1/window-mtp0-harness-error.out shows the be76661b
+hash, health HEALTHY card 0, then line 42 `leanup: command not
+found`. x1/sidecar-cpu-r2.log prints
+X1_FLASHNEXT_PAYLOAD_AUDIT_OK and
+X1_WIDE_FC_REFERENCE_OK torch.Size([2, 4, 2560]), cpu-run exit
+0 in 34s. x1/models-mtp0.json and bench-mtp0.json first id is
+hotschmoe-dd, alias qwen3.6-35b-a3b-ud-iq3-xxs-mtp0, first_ok
+true. Coherence verdicts OK, Paris texts. MTP enabled false.
+C1 p50 9.274712 ms, decode_tok_s 108.235. C2 p50 12.476716 and
+12.379291, tok/s 82.339 and 74.927. C2 completion_tokens are
+44 and 61, and stream 1 p99 is 59.42. greedy-mtp0.json has 4
+rows of 96 token ids and no match field. window-mtp0.out ends
+BENCH_RC=0 and X1_WINDOW_DONE ready=1, with a HEALTHY probe
+after the bench. fable51.txt and claude55.txt both say
+unrecognized_model. The root is Qwen3.6-35B-A3B, not the
+Flash-Next HF tree.
+
+Verdict: OK on the broken first script, the sidecar tokens
+(with the X1_ prefix), the bench numbers, coherence, MTP off,
+and health around that card-0 window. The first id matches the
+heading and does not match the track rule that the first
+served id is hotschmoe-dev. C2 did not both return 96 tokens.
+Not a Flash-Next ITL. The 9.27 ms figure is this 35B proxy.
+
+Suggested fix: put hotschmoe-dev first and keep the research
+alias second. Quote C2 completions 44 and 61 and the stream-1
+p99 59.42 next to the p50.
+
+### F151 -- X2 header budget
+
+Claim: routed bytes 42912972800, trunk 4115863040, DP weights
+per card 25572349440, sidecar cards 15682250240 and
+31346585600. BF16 KV 24576 bytes/token, INT8 with per-64 FP16
+scales 12672, indexer 768. Corrected linear duplicates are
+186040320 bytes, not 1.42 GiB. CPU test printed
+CPU_ALIAS_FORWARD_OK, STREAM_ARENA_OWNERSHIP_OK, and
+REGISTER_OK. No GPU savings yet. The 16:10 card-0 allocator
+probe was pending at this read.
+
+Evidence: x2/headers.json fields: trunk_bytes 4115863040,
+dp2_weight_bytes_per_card 25572349440, ep_weight_bytes
+[15682250240, 31346585600]. shard_device_bytes 47028835840
+minus trunk_bytes is 42912972800, and that integer occurs
+once in the file. kv_bytes_per_token bf16 24576, strata_int8
+12672, qsa_indexer_bf16 768. old_full_dense_duplicate_bytes
+129024000 plus old_merged_dense_placeholder_bytes 57016320
+is 186040320. The string 1.42 is not in the x2 files read.
+cpu-test.log has CPU_ALIAS_FORWARD_OK and
+STREAM_ARENA_OWNERSHIP_OK. register.log has REGISTER_OK.
+The 16:10 heading still said RESULT pending.
+
+Verdict: OK on the header integers and the two CPU tokens.
+The 186040320 figure is that sum. UNVERIFIED the previous
+1.42 GiB estimate as a logged number. No GPU measurement in
+these files. Not an ITL.
+
+Suggested fix: name the two fields that sum to 186040320.
+Leave the allocator probe for its own log.
+
+### F152 -- X3 one-card op timings
+
+Claim: card-1 T=12288 medians: Flash-Next GDN conv/chunk
+6.699 ms, full attention 23.875 ms, HC mix 12.187, combine
+2.679, PLE hash 903.32, gather 938.01, whole 990.09. Mode-0
+follow-up: GDN conv 6.725, fused norm 0.989, attention
+24.155, PLE whole 983.97 to 79.47 with the numpy hash
+(902.72 to 2.91). Expert blk.36 56.89 to 47.08. Reduction
+max_abs 1.91e-6. Post-health HEALTHY. CPU hash X3_HASH_OK.
+The _C.x3wide.so build is 898512 bytes, exit 0. The 1.38 s
+figure is a full-model sum, not a measured TTFT. An early
+GDN core was 7.47 ms.
+
+Evidence: x3/ops-card1.json event_ms: flashnext.gdn_conv_chunk
+6.698802, full_attention 23.874896, hc_mix 12.1870, hc_combine
+2.6792, ple_hash 903.3217, ple_gather 938.0136, ple_whole
+990.0934. ops-card1.log health HEALTHY before and after; the
+docker command exited 1 in 76s. x3/ops-rest.json:
+flashnext.gdn_conv_chunk 6.724948, gdn_norm_gate 0.988646,
+full_attention 24.155312, ple_whole 983.971693,
+ple_whole_numpy 79.465860, ple_hash 902.714635,
+ple_hash_numpy 2.909453, experts.36 56.89151 and triton_reduce
+47.080104. 35b.gdn_norm_gate there is 0.70875. ops-rest.log
+gpu-run exit 0 in 78s and HEALTHY before and after.
+ops-basic2.log contains 7.47. wide-build.log contains 898512
+and exit 0. ops-rest.log has no 1.91e-6 and no allclose.
+X3_HASH_OK is in plugins/.../x3_hash_check.py and in the
+journal. No stdout log under x3 contains it. PLE whole delta
+is 904.5 ms. This pass did not recompute 1.38 s.
+
+Verdict: OK on the card1 and rest medians, both health pairs,
+the 7.47 citation, and the wide so size. The card1 docker
+exit 1 is a Python failure around a run that still wrote the
+json; the rest run is the exit 0. UNVERIFIED X3_HASH_OK
+actually printed, the 1.91e-6 reduction check, and the 1.38 s
+sum. These are single-op medians at T=12288, not a serve TTFT
+and not an ITL. The 16:08 heading's 35B A/B serve was still
+a request, not a result, at this read.
+
+Suggested fix: save the hash-check stdout and the reduction
+allclose line. Keep the 1.38 s labeled as a sum of these
+medians until a serve measures TTFT.
+
+### F153 -- O3 stage 2 K-quant times, and the closeness claim
+
+Claim: T=1 graph us old to new: Q2_K 485.5 to 49.3, Q3_K 268.2
+to 79.4, Q4_K 96.8 to 59.2, Q5_K 119.4 to 78.7, Q6_K 581.9 to
+88.4, IQ4_XS 110.5 to 81.8. T=4: 1179 to 126, 685 to 196, 252
+to 149, 302 to 193, 1397 to 213, 280 to 199. New vs old cos
+1.000000 and the result is bit-close. Gates failures=0 and
+HEALTHY before and after. 35B C1 p50 9.30 ms (stage 1 was
+9.34) and C2 12.53 ms/stream. Installed _C.so, _C.graph.so,
+and _C.o3b.so are sha e9e5282d...91befa1, 10221368 bytes.
+_C.o3.so stays be76661b.
+
+Evidence: o3/kq2.log us_graph T=1 old/new: 485.46/49.31,
+268.20/79.43, 96.75/59.16, 119.42/78.66, 581.89/88.42,
+110.46/81.82. T=4: 1179.34/125.97, 684.84/196.43,
+251.63/148.67, 302.13/193.21, 1396.57/213.08, 280.41/198.70.
+Every old row has cos=0.000000. Every new row has
+cos=1.000000. New max_abs is 1.22e-4 (Q2_K), 3.9e-3 (Q3_K),
+1.0 (Q4_K), 8 (Q5_K), 144 (Q6_K), and 128 (IQ4_XS) at T=1.
+gates_b.log contains failures=0 four times and HEALTHY twice.
+The fair quartet 68.4/99.8/141.4/176.8 was not pulled from
+that file in this pass. o3/bench_35b_o3b.json identity first
+is hotschmoe-dev, first_ok true, coherence OK. C1 p50
+9.298447. C2 p50 12.529993 and 12.539181, completions 46 and
+40. The three installed libraries hash to
+e9e5282d9d4cc3def64d17516e847021d623735fde357fef690208ab291befa1
+and are 10221368 bytes. _C.o3.so is still be76661b,
+10135104 bytes. _C.c12.so is still b3c15e14.
+
+Verdict: OK on the microbench times, the 35B identity and
+coherence, the C1 p50, and the installed hash. The new rows'
+cos field is 1.000000. That is not bit-close for Q4_K and
+above: max_abs is 1 to 144. The old rows' cos field is 0.
+C2 is 12.530 and 12.539, not one shared 12.53, and the two
+streams again stopped at 46 and 40 tokens. UNVERIFIED the
+fair quartet and the bandwidth rows. Not a Flash-Next ITL.
+The 9.30 ms result is the 35B card-0 serve.
+
+Suggested fix: publish max_abs next to cos for each type.
+Do not say bit-close for Q6_K while max_abs is 144. Quote
+both C2 streams.
+
+### F154 -- hygiene at 16:11 UTC
+
+Claim: no new staged secret or untracked binary from this
+pass's status check. Other agents committed.
+
+Evidence: git diff --cached --stat line count 0. porcelain
+was 13 paths. The only path flagged by a binary suffix is
+still vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so.
+vllm/flashnext/.gitignore still ignores *.so. Repo HEAD is
+952f1971. The two parents on git log are 387bd818 and
+ad52e8ef. Fork tip is still 0a6170da8c, ahead 18. This pass
+did not review those commit diffs. The X1 bench's first id
+is the F150 name issue, and it is not staged as a secret.
+
+Verdict: OK on an empty index and no new staged binary.
+The commits are other agents' work. This pass does not
+re-audit them.
+
+Suggested fix: leave the push-allreduce so unstaged. Keep
+hotschmoe-dev first on the next proxy serve.
+## Pass 16 -- 2026-10-20 16:53 UTC
+
+Cursor: JOURNAL headings after the 16:12 G2b milestone through the
+16:50 X1 collective heading. The 16:43 O3 entry is still an
+announcement (s3a.log exists; no RESULT heading). The 16:43 X2
+aliases arm was still pending. window-flash-mtp0.out was reopened
+at 16:50:05 for the control retry and has no RESULT yet.
+
+### F155 -- C7b 16:18 Flash-Next IQ3_XXS FULL graph serve
+
+Claim: logs/c7b-fn-graph-window.sh served Flash-Next IQ3_XXS,
+TP=1 DP=2 EP, FULL_DECODE_ONLY, FLASH_ATTN, reclaim 500, capture
+1,2,3,4,8, max_model_len 2048, seqs 4, util 0.98, _C.c12.so, FA
+overlay. READY 16:15:28, SERVE_RC 0, WINDOW_DONE 16:16:18. Greedy
+323 and 667 match. First id hotschmoe-dev. C1 ITL p50 81.75 ms
+(14.88 tok/s). C2 p50 33.20 and 33.14 ms (18.83 tok/s per stream).
+Prefill 1017 tokens at 62.5 tok/s. KV 4352 and 4608 tokens,
+available KV 0.64 GiB. AnonPages 14085920 kB. Worker RSS 4930408
+and 4938344 kB. Capture finished with no missing-kernel line and
+no Level Zero error 44. Post-health COLLECTIVE_HEALTH_OK.
+
+Evidence: logs/c7b-fn-graph-window.out has HEALTH_RC 0,
+MEM_AVAILABLE_KB 117876416, READY 16:15:28, both CHAT rows match,
+GREEDY_RC 0, BENCH_RC 0, stop stamp 16:16:06, SERVE_RC 0,
+WINDOW_DONE with no clock on that line. The string 16:16:18 is
+absent. logs/c7b-bench-graph.json identity ids are hotschmoe-dev
+then qwen3.8-flash-next-iq3-xxs, first_ok true, coherence ok.
+decode_c1 itl_p50_ms 81.754281, itl_mean_ms 67.196293,
+decode_tok_s 14.881773, completion_tokens 64. C2 p50 33.204481
+and 33.144879, decode_tok_s 18.831348 and 18.832733. Prefill
+built 1017, prefill_tok_s 62.511842. mtp.enabled false.
+logs/c7b-graph-serve.log (52362 bytes at this read) has
+served_model_name hotschmoe-dev first, cudagraph_mode
+FULL_DECODE_ONLY, capture sizes [1, 2, 3, 4, 8], util 0.98,
+B70_GGUF_SO=_C.c12.so, PYTHONPATH starting at c7b-fa-overlay.
+Capturing CUDA graphs (FULL) reaches 100 percent, then "Graph
+capturing finished". Counts: error 44 = 0, Paged decode kernel
+not compiled = 0, Traceback = 0, DEVICE_LOST = 0,
+OutOfMemoryError = 0. KV lines are 4,352 and 4,608 tokens.
+Available KV cache memory 0.64 GiB. The docker command carries
+SYCL_CACHE_PERSISTENT=1 from the wrapper and a later
+SYCL_CACHE_PERSISTENT=0 from the script. logs/c7b-rss-graph-ready.txt
+matches AnonPages 14085920 and both worker RSS figures.
+logs/c7b-coll-health-graph-after.txt is COLLECTIVE_HEALTH_OK
+p2p=0 HEALTHY, gpu-run exit 0. There is no c7b-health-after.txt.
+
+Verdict: OK on identity, coherence, greedy, capture completion,
+KV, RSS, and the rounded bench fields. The serve is a real
+Flash-Next graph window and the rates are the ones in the JSON.
+14.88 tok/s is decode_tok_s from the mean ITL (1000/67.196).
+1000/p50 is 12.23 tok/s. The out file stamps stop at 16:16:06.
+This is far from the Strata reference printed in the same JSON
+(C1 7.09 ms). 32k was not run.
+
+Suggested fix: stamp WINDOW_DONE from the out file and label
+14.88 tok/s as the mean rate.
+
+### F156 -- X1 proxy MTP depth 2
+
+Claim: matched card-0 proxy, same library as the no-MTP baseline.
+Identity and coherence pass, health before and after HEALTHY.
+C1 chunk ITL p50 18.29 ms, 143.12 tok/s = 6.99 effective ms/token
+(baseline 9.24). C2 chunk p50 28.66/28.42 ms, 91.38/84.28 tok/s
+= 10.94/11.86 effective. Acceptance 114/148 = 0.77027. Three
+forced-96 prompts match. The hash-table prompt first differs at
+token 82, after shared EOS at token 78 (id 248044). 367 tokens
+match through the first EOS.
+
+Evidence: x1/window-mtp2.out pins _C.o3.so sha be76661b, card-0
+health HEALTHY before the bench and again after H1e released
+card 0, X1_WINDOW_DONE ready=1. GREEDY_RC=3 from
+x1_compare_greedy.py, then BENCH_RC=0. x1/models-mtp2.json and
+x1/bench-mtp2.json first id is hotschmoe-dd, alias
+qwen3.6-35b-a3b-ud-iq3-xxs-mtp2, root
+/mnt/cache/b70/devmodel/Qwen/Qwen3.6-35B-A3B. first_ok is true
+because expect_first is hotschmoe-dd. Coherence ok. C1 p50
+18.294401, n_chunks 37, completion_tokens 96, decode_tok_s
+143.123730. C2 p50 28.661820 and 28.420415, decode_tok_s
+91.375966 and 84.279185, completion_tokens 46 and 40. MTP
+accepted_during_bench 114, draft_tokens 148, rate
+0.7702702702702703. x1/greedy-eos-gate.json: three rows
+identical_forced_96 true; hash-table row identical_through_eos
+true, identical_forced_96 false, baseline_end 79. Token ids:
+index 78 is 248044 on both sides, first mismatch is index 82.
+3*96 + 79 = 367. 1000/143.12373 = 6.986. The 9.24 baseline
+matches 1000/108.235 from the F150 no-MTP bench, which is the
+effective rate there.
+
+Verdict: WRONG against the hotschmoe-dev rule. The harness
+expected hotschmoe-dd and reported first_ok on that expectation.
+OK on the chunk times, acceptance, EOS index, and the 367 count.
+Chunk ITL is per chunk (37 chunks for 96 tokens on C1). This is
+the 35B proxy. It is a latency measurement on that proxy.
+
+Suggested fix: put hotschmoe-dev first in --served-model-name
+and in the bench --model flag. Keep reporting chunk ITL and
+effective ms/token as separate fields.
+
+### F157 -- X1 Flash-Next control segfault
+
+Claim: both ranks placed weights, load 23.97 GiB/card in 122-124 s.
+The first XCCL all-gather in profiling segfaulted in
+getSortedImages / PersistentDeviceCodeCache::getItemFromDisc /
+allgatherv_ll_ring. No ready, no greedy, no ITL. C7b disables
+persistent SYCL cache and this harness left it enabled.
+
+Evidence: x1/flash-mtp0.log and the preserved copy
+x1/flash-mtp0-sycl-cache-crash.log are 95088 bytes. Both workers
+log "Model loading took 23.97 GiB" at 122.257 s and 124.058 s,
+placed 1224 tensors. The segfault stack contains
+getSortedImages, PersistentDeviceCodeCache::getItemFromDisc, and
+allgatherv_ll_ring. READY count in that log is 0. DEVICE_LOST
+count is 0. The docker command has only
+SYCL_CACHE_PERSISTENT=1, B70_GGUF_SO=_C.o3.so, FA overlay first
+on PYTHONPATH, served-model-name hotschmoe-dd then a detailed
+IQ3 alias, max-num-batched-tokens 512, max-num-seqs 2, util
+0.98, FULL_DECODE present, enforce-eager absent.
+CCL_TOPO_P2P_ACCESS is absent. x1/flash-models-mtp0.json is 0
+bytes. Preserved x1/window-flash-mtp0-sycl-cache-crash.out
+(11230 bytes) has pre-health HEALTHY on cards 0 and 1,
+SERVE_NOT_READY, RuntimeError cancelled, gpu-run exit 1 in
+215 s, then post-health HEALTHY on cards 0 and 1, and
+X1_FLASH_WINDOW_DONE ready=0. The live window-flash-mtp0.out
+was replaced at 16:50:05 by the retry and is a different file.
+
+Verdict: OK that this arm produced no ITL and that the stack
+names the persistent device-code cache. The launch requested
+hotschmoe-dd first; /v1/models never came back. The finished
+window's post-health is both cards, which completes the 16:42
+"card 0 passed, post-health finishing" sentence. The cache flag
+differs from C7b (C7b's later --env is 0). The library and
+shape also differ: this arm is _C.o3.so, batch 512, seqs 2;
+C7b was _C.c12.so, batch 2048, seqs 4.
+
+Suggested fix: keep the preserved crash log as the evidence
+file. On the retry, set the served name to hotschmoe-dev and
+record the library and batch next to the cache flag.
+
+### F158 -- X2 allocator probes and the eager DP baseline
+
+Claim: split setter leaves 67108864 reserved for 2097152 live
+bytes. Totals 34242297856. First arm driver 137662464 and
+profiler 202674176; second driver delta 0 and profiler
+65011712. Native total 34242297856 versus vLLM total
+32530182144, free gap 1712115712, and a 0.98 budget delta of
+1677873398. UR-off keeps the 64 MiB reservation; expandable
+segments use 20 MiB. The eager DP arm reached READY 16:36:22
+as hotschmoe-dd, greedy 323/667, owned storage 26656237720,
+allocated 26741253120, embedding BF16 1271398400, QSA
+placeholder 39321600, GDN b/a 17694720, actual aliases
+57016320, peak reserved 29345447936, post-profile reserved
+28087156736, headroom 1258291200, overcount 79198208, largest
+free block 835928064. One fork line passes quant_config to
+embed_tokens, expected save 998246400, and was not in this arm.
+
+Evidence: x2/allocator-probe.log shows both the default and
+max_split_size_mb:20 arms with allocated 2097152, reserved
+67108864, total 34242297856. First current_profiler 202674176
+and reserve_adjusted 137662464. Second current_profiler
+65011712 and reserve_adjusted 0. Card-0 health after is
+HEALTHY. x2/info-probe.log contains both totals. Their
+difference is 1712115712. 1712115712 * 0.98 = 1677873397.76,
+which rounds to 1677873398. Card-1 health after is HEALTHY.
+x2/allocator-ur-off.log still has reserved 67108864 and one
+arm with reserved 20971520. x2/current/models.json first id is
+hotschmoe-dd, second qwen3.8-flash-next-iq3-xxs, root
+hf-flashnext. x2/current/greedy.json matches 323 and 667.
+x2/current-summary.json total_owned_storage 26656237720,
+after_profile torch_allocated 26741253120, torch_memory
+28087156736, torch_peak 28078742528, reserved_slack
+1345903616, possible_double_count 1337489408, embedding weight
+category 1271398400. x2/current/484-weights.json embedding
+parameter is 1271398400 bytes bf16. Twelve index_qk_proj
+parameters at 3276800 sum to 39321600. Thirty-six in_proj_ba
+parameter sizes of 491520 sum to 17694720, and the a.dense plus
+b.dense shards sum to the same 17694720. Those two shard sums
+are 57016320. Shard storage ids differ from the parameter
+storage ids (same-storage count 0). operations reserved max is
+29345447936. 29345447936 - 28087156736 = 1258291200.
+1337489408 - 1258291200 = 79198208. The allocator-after-profile
+file has one inactive block of size 835928064, and that is the
+max inactive size (255 inactive blocks). 273152000 is in
+x2/headers.json and is absent from the weight dump.
+1271398400 - 273152000 = 998246400. The uncommitted fork diff
+adds quant_config=self.quant_config at the embed constructor in
+vllm/models/qwen4_exp/xpu/model.py, and embedding.py empties
+layer.weight when packed is set. That drop is load time.
+
+Verdict: OK on the probe integers, the greedy match, the owned
+storage, the embedding byte count, the 57016320 shard sum, the
+peak reserved, and the derived headroom. WRONG on the served
+name: first id is hotschmoe-dd. The dense shard storages are
+separate allocations in this dump. The packed size and the
+998246400 save were not measured on this arm. This window is a
+memory and coherence run. It has no ITL.
+
+Suggested fix: serve hotschmoe-dev first on the aliases arm.
+Report 57016320 as the extra dense-shard bytes. Measure the
+embedding size again after the quant_config constructor is in
+the process that loads the model.
+
+### F159 -- X3 grouped-expert times and the census tight check
+
+Claim: Flash-Next T=12288 conv 2.206 ms, delta 4.633 ms, whole
+6.747 ms. Direct grouped 41.801 ms versus triton slot-reduce
+47.215 ms. Tiles 48.213/53.769/61.171 ms. Peak deltas 7.018 GiB
+direct versus 7.604 slot, tiles 2.168/1.318/0.894 GiB. The
+later census says direct full-E and same-type tiling passed
+1e-7 absolute / 1e-5 relative, mixed 17/16/20 max_abs 0.00133,
+the 5e-2 reference passed, and post-health was HEALTHY.
+
+Evidence: x3/checks-tile.json event_ms values are conv
+2.206302, delta 4.632656, whole 6.747032, grouped 41.801354,
+triton 47.215417, tiles 48.213438, 53.769479, 61.170990.
+peak_allocated minus base_allocated is 7.017523, 7.603919,
+2.168093, 1.318361, 0.894472 GiB. x3/census.log prints
+MOE_REFERENCE_OK 17 17 20 max_abs 0.000697777 and
+MOE_REFERENCE_OK 17 16 20 max_abs 0.001329824, then
+MOE_GROUPED_REFERENCE_OK for 17 17 20 tiles 0 and 2 and for
+17 16 20 tile 0. The next line is torch.testing.assert_close
+atol=1e-7 rtol=1e-5, which raises AssertionError. Mismatched
+elements 1952/163840. Greatest absolute difference
+0.001329824. Greatest relative difference 13.610393. gpu-run
+exit 1. Post-health card 1 HEALTHY. X3_OPS_DONE_RC=1. The
+string 5e-2 is absent. The 16:13 "27.52 GiB then a 6 GiB bmm"
+sentence was not re-read from x3/serve.log in this pass.
+
+Verdict: OK on the checks-tile event_ms and GiB deltas, and on
+the 0.00133 rounding of 0.001329824. WRONG that this census
+passed the 1e-7 / 1e-5 check. That assert is the process
+failure. The MOE_REFERENCE_OK lines did print, with max_abs
+under 0.05, and the literal 5e-2 constant is not in the log.
+These rows are per-op event times from checks-tile.json.
+
+Suggested fix: keep the 5e-2 OK token and record the assert
+exit 1 beside it. Leave the tight tolerance in place for
+unchanged geometry, and treat the mixed-type 0.00133 gap as
+an open mismatch.
+
+### F160 -- H1e EP flag timeouts
+
+Claim: the H1e retry ended with a layer-2 EP flag timeout, and
+h1e-health-after.txt is HEALTHY on both cards.
+
+Evidence: logs/h1e-fn-window-flag2.out (serve 16:23:56, stop
+16:27:52) has SERVE_RC 1, "serve exited before ready",
+NOT_READY skip greedy, health before and after HEALTHY on
+cards 0 and 1. The serve tail prints "EP flag timeout layer=2
+err0=0 err1=11" and RuntimeError: ep flag timeout. Sidecar
+_C.so sha in that window is 5a0a047c; MoE pin _C.o3.so is
+be76661b. logs/h1e-fn-window-flag12.out starts 16:42:21, stops
+16:47:03, SERVE_RC 1, again not ready. Its serve log prints
+"EP flag timeout layer=2 err0=12 err1=0". The sidecar sha
+printed for flag12 is 1a134e8e. logs/h1e-health-after.txt is
+HEALTHY on cards 0 and 1. No greedy and no bench JSON.
+
+Verdict: OK for the layer-2 timeout, the non-ready exit, and
+the both-card health after. Flag12 is a second failure with a
+different sidecar hash and swapped err ranks. Neither window
+is an ITL. There is still no H1e RESULT heading of its own;
+the 16:29 X2 note matches flag2.
+
+Suggested fix: give flag12 its own RESULT heading with the new
+sidecar sha and err0=12 err1=0, and keep hotschmoe-dev as the
+first served name when a retry reaches ready.
+
+### F161 -- X1 collective health, first log and r2
+
+Claim: the 16:45 check ran eager all-reduce successfully and
+then Inductor failed with missing ocloc. The 16:50 retry with
+ocloc on PATH returned COLLECTIVE_HEALTH_OK world_size=2
+shape=4x5120 compiled_iterations=10 p2p=None, exit 0, with no
+P2P override.
+
+Evidence: x1/collective-default.log has no line that records an
+eager all-reduce pass. It records COLLECTIVE_HEALTH_FAIL on
+both ranks, type InductorError, FileNotFoundError for ocloc,
+and "bin/xpu-collective-health.py FAILED". The word "correct"
+in that file is inside a CCL topology warning.
+CCL_TOPO_P2P_ACCESS is absent. SYCL_CACHE_PERSISTENT=0 is on
+the command. x1/collective-default-r2.log contains
+"COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120
+compiled_iterations=10 p2p=None", ocloc count 0, FAILED count
+0, gpu-run exit 0, cpu-run exit 0. P2P assignment count 0.
+
+Verdict: WRONG that the first log shows an eager all-reduce
+pass. OK that the first log dies on missing ocloc, and OK that
+r2 matches the 16:50 success line. r2 is a collective health
+result with no decode bench attached.
+
+Suggested fix: point the 16:45 RESULT at COLLECTIVE_HEALTH_FAIL,
+and keep the OK line on the r2 log only.
+
+### F162 -- X1 PLE graph rejection probe
+
+Claim: X1_PLE_XPU_GRAPH_REJECTION_REORDER_OK. Conv graph
+0.095748 ms over 50 replays. Probe exit 0. Health before
+HEALTHY; post-health later HEALTHY.
+
+Evidence: x1/ple-graph.log prints the OK token and
+"X1_PLE_CONV_GRAPH_MS 0.09574792". x1/ple-health-before.log
+and x1/ple-health-after.log are card-0 HEALTHY. The harness
+x1_ple_graph.py calls torch.xpu.synchronize and output.cpu()
+around the compare, and end.synchronize() on the timing event.
+This pass did not find a .cpu() inside the capture block.
+
+Verdict: OK. The printed time rounds to 0.095748 ms. This is
+a one-card graph replay of the conv primitive, recorded in
+the probe log.
+
+Suggested fix: none on the recorded token. Keep the CPU compare
+outside the captured region.
+
+### F163 -- hygiene at 16:53 UTC
+
+Claim: no new staged secrets or binaries. The fork gained the
+embed quant_config line and was not committed.
+
+Evidence: repo HEAD 952f1971. git diff --cached is empty.
+git status --porcelain is 59 paths. The only porcelain path
+with a binary suffix is the pre-existing modified
+vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so.
+vllm/flashnext/.gitignore line 2 is *.so. No porcelain name
+matches a secret pattern. embedding-reference.npz lives under
+/mnt/vm_8tb/b70/build/vllm-flashnext/x2/, outside the git
+index. Fork HEAD remains 0a6170da8c, ahead 18, with a dirty
+tree: embedding.py, linear.py, mapping.py, moe.py, model.py,
+mtp.py, model_runner.py, and three smaller files, 367
+insertions. The embed constructor change is the single added
+quant_config argument. This pass did not line-review moe.py.
+
+Verdict: OK on an empty index and no new staged binary. The
+fork edit is local and uncommitted. G2b did not commit.
+
+Suggested fix: leave the push-allreduce so unstaged. Review
+the moe.py hunk before any fork commit.
+
+
+## Pass 17 -- 2026-10-20 17:38 UTC
+
+Cursor: JOURNAL.md headings after the 16:55 G2b milestone, through
+the 17:32 X2 BF16 sidecar entry and the 17:33 X3 card1-gap note.
+At append the last heading was: ## 2026-10-20 17:33 X3 -- requested card1 gap after current X1
+The 17:33 X3 note is a lease request. It has no new measurement.
+x1/flash-mtp2.log is 74042 bytes, flash-models-mtp2.json is 1008 bytes, and flash-bench-mtp2.json exists. No MTP2 bench JSON is on disk, so this pass records no MTP2 ITL.
+CPU only. No GPU, no commit, no systemd, no DD action.
+
+### F164 -- H1e attempt 4 sidecar graph serve
+
+Claim: logs/h1e-bench-graph.json is a finished Flash-Next sidecar
+FULL graph serve. C1 ITL p50 is 60.156 ms, mean 54.368 ms, decode
+18.393 tok/s, TTFT 264.67 ms. C2 p50 is 32.061 ms on both streams.
+Prefill is 106.47 tok/s. Identity is hotschmoe-dev. Greedy 323/667
+passed. KV is 12.06 GiB and 84,224 tokens. SERVE_RC, GREEDY_RC, and
+BENCH_RC are 0. Health ran before and after.
+
+Evidence: logs/h1e-bench-graph.json tag ep-graph-2048, port 18116,
+model hotschmoe-dev. identity ids are hotschmoe-dev then
+qwen3.8-flash-next-iq3-xxs, first_ok true, expect_first
+hotschmoe-dev. coherence ok/same/mentions_paris, verdicts OK/OK.
+decode_c1 measured: ttft_ms 264.67142, prompt 24, completion 64,
+n_chunks 64, itl_p50_ms 60.155783, p90 89.402292, p99 98.675549,
+mean 54.367635, decode_tok_s 18.393296, prefill_tok_s 90.678472.
+decode_c2 p50 32.060791 and 32.061022, means 56.303794 and
+56.409440, decode_tok_s 17.760793 and 17.727529, completion 64.
+prefill built 1017/1024, ttft_ms 9551.768, prefill_tok_s
+106.472434. mtp.enabled false. The same JSON stores a Strata
+night-final citation c1_itl_ms 7.092199 and c1_tok_s 141.0.
+60.156/7.092 = 8.482. 32.061/10.870 = 2.950.
+1000/60.156 = 16.624, so 18.393 is decode_tok_s, the
+mean rate, and is a different number from 1000/p50.
+logs/h1e-models.json first id hotschmoe-dev, root hf-flashnext,
+max_model_len 2048. logs/h1e-greedy.json has two match-true rows
+and the strings 323 and 667. logs/h1e-kv.txt: Available KV 12.06
+GiB, XPU KV 84,224 tokens, concurrency for 2,048 is 41.12x, lcm
+block 1600. 84224/400000 = 0.21056, so a "0.211 of 2x200K"
+sentence is that ratio on this max_len-2048 pool.
+logs/h1e-fn-window-ok.out: sha 2e22f57e once, 5a0a047c and
+1a134e8e absent, HEALTH_BEFORE_RC:0, READY 17:00:34, GREEDY_RC:0,
+BENCH_RC:0, SERVE_RC:0, HEALTH_AFTER_RC:0, HEALTHY twice, no
+xe-reset string. logs/h1e-fn-serve-ok.log (72925 bytes): max_len
+2048, data_parallel_size=1 once, enable_expert_parallel absent,
+oneCCL absent, error 44 absent, key=8 absent, Graph capturing
+finished twice, model load 14.73 GiB and 131.079943 s. No separate
+h1e-health-after-ok.txt. This serve is world size 1. It is a
+different recipe from the C7b DP=2 graph serve.
+
+Verdict: OK on the JSON numbers, identity, greedy rows, window
+health, and SERVE_RC 0. No speed promotion. The Strata 7.09 ms
+figure in the JSON is a stored citation. The 84,224-token line is
+the max_len-2048 pool.
+
+Suggested fix: keep this sidecar result separate from C7b and from
+the X1 batch-512 serve. Report decode_tok_s and 1000/p50 as two
+different rates.
+
+### F165 -- X1 Flash-Next PLE-ring control
+
+Claim: x1/flash-bench-mtp0.json C1 p50 is 40.23 ms, decode 23.98
+tok/s, 84 completion tokens. C2 p50 is 44.35/44.18 ms and decode
+is 22.74 tok/s per stream. Coherence passed. The window finished
+ready=1 with both-card health.
+
+Evidence: x1/flash-bench-mtp0.json model hotschmoe-dd. identity ids
+are hotschmoe-dd then
+qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-vllm-rt-mtp0. first_ok is
+true because expect_first is hotschmoe-dd. coherence OK/OK, same,
+mentions Paris. C1: ttft 609.596, prompt 24, completion 84,
+n_chunks 83, p50 40.225736, p90 56.641009, p99 67.697716, mean
+42.217610, decode_tok_s 23.975661, prefill_tok_s 39.370. C2 p50
+44.347567 and 44.177473, means 43.978406 and 43.973624,
+decode_tok_s 22.738432 and 22.740905, completion 96, n_chunks 96.
+mtp.enabled false. 1000/40.226 = 24.860, so 23.976 is
+decode_tok_s. x1/flash-models-mtp0.json first id hotschmoe-dd,
+root hf-flashnext, max_model_len 2048. x1/window-flash-mtp0.out
+(9654 bytes): HEALTHY twice, GREEDY_RC=0, BENCH_RC=0,
+X1_FLASH_WINDOW_DONE, ready=1. x1/flash-mtp0.log: PLE position
+ring layers=1 width=1 on two workers, Model loading took 23.97 GiB
+twice, Graph capturing finished 4 times, error 44 absent,
+_C.o3.so once, SYCL_CACHE_PERSISTENT=1 once and =0 once. The log
+does not print a library sha. The greedy JSON is a token dump.
+GREEDY_RC=0 is the window flag. This pass did not find a 323/667
+match field in that JSON. The live flash-mtp0.log name is this
+success log. The earlier crash remains in
+x1/flash-mtp0-sycl-cache-crash.log.
+
+Verdict: OK on the bench numbers, coherence, capture, and both-card
+health in the window. WRONG on the served name: the first id is
+hotschmoe-dd, and the campaign rule requires hotschmoe-dev first.
+first_ok is true only because the harness expected hotschmoe-dd.
+No speed promotion. Library, batch, and DP/EP differ from F164 and
+from the C7b DP=2 serve, so the three p50 numbers are three recipes.
+
+Suggested fix: put hotschmoe-dev first in --served-model-name and
+set the harness expect_first to the same id. Keep n_chunks 83 beside
+completion 84.
+
+### F166 -- X1 int32 PLE stage failure and CPU fixture
+
+Claim: the cache-disabled control died in PLE warmup on an index-put
+dtype mismatch, before ready. Both ranks had loaded. A CPU fixture
+then exited 0. No target benchmark.
+
+Evidence: x1/flash-mtp0-int32.log contains the sentence "Index put
+requires the source and destination dtypes match" 8 times
+and the path mtp_ple.py. "23.97 GiB" occurs 2 times.
+"PLEHistory" occurs 0 times. x1/window-flash-mtp0-int32.out:
+HEALTHY twice, SERVE_NOT_READY, ready=0. x1/ple-cpu-int32.log ends
+with X1_PLE_REJECTION_AND_SLOT_REORDER_OK and cpu-run exit 0 in 11s.
+The same OK token also exists in older ple-cpu logs, so the token
+alone does not identify this fixture. The later PLE control in F165
+reached ready=1, which shows this dtype failure was cleared before
+that ready. This pass did not line-review the int64 cast.
+
+Verdict: OK that this attempt produced the dtype exception and no
+ready, with both-card health around a failed serve. The CPU fixture
+exit 0 is real for ple-cpu-int32.log. No ITL. The journal name
+PLEHistory.stage is absent in this log;
+the counted stack file is mtp_ple.py.
+
+Suggested fix: line-review the stage-entry cast before treating it
+as capture-safe. Cite ple-cpu-int32.log, not only the shared OK token.
+
+### F167 -- X2 aliases memory arm
+
+Claim: packed embedding, owned storage 25600975000 bytes per card,
+available KV 3687273595 / 3709179003 versus current 960932742 /
+982829958, BF16 bounds 137600 / 139200 tokens, greedy 323/667,
+2047-token prefills, READY 16:53:38, HEALTHY both cards 16:56:58.
+First id hotschmoe-dd. No speed claim.
+
+Evidence: x2/aliases-summary.json workers 492 and 493 each have
+total_owned_storage 25600975000. The digit string 273152000 occurs
+2 time(s) in that summary. x2/aliases/
+492-budget.json available_kv_bytes 3687273595. 493-budget.json
+available_kv_bytes 3709179003. x2/aliases/models.json first id
+hotschmoe-dd, root hf-flashnext, max_model_len 2048.
+x2/aliases/greedy.json has two match-true rows for 323 and 667.
+x2/aliases/prefill.json has two rows with prompt_tokens 2047,
+completion_tokens 1, finish_reason length. x2/window.log has
+READY=1 at 2026-10-20T16:53:38Z and RUN_DONE aliases at
+2026-10-20T16:56:58Z. x2/aliases/health-after.txt reached
+xpu-health HEALTHY (cards 0 1), gpu-run exit 0. x2/embedding-reference.log
+is one line: EMBED_REFERENCE_OK rows=8 values=20480 qtype=21.
+A search of x2 json/log/txt under 2 MB found 960932742 and
+982829958 only in x2/journal-before.txt, which is a copy of the
+journal sentence. 137600 inside 492-allocator JSON is a substring
+of an address (18446697181137600512), not a token field. 139200
+was not found as a labeled token bound.
+
+Verdict: OK on owned storage, the two available-KV integers, greedy,
+prefills, the READY stamp, and both-card health. WRONG on the first
+id hotschmoe-dd. UNVERIFIED on the "versus current" KV pair and on
+the 137600/139200 token bounds. The one-line embedding check records
+20480 values and qtype 21. No ITL. max_model_len is 2048.
+
+Suggested fix: write the token ceiling and the current-arm KV bytes
+into the result JSON. Keep hotschmoe-dev as the first served id.
+
+### F168 -- X2 FP8 per-token-head capacity
+
+Claim: FP8 KV at max_len 200000 measured available KV about 5.37e9
+and 5.39e9 bytes, page 3261440, block 3136, 137 pool blocks, and a
+much smaller transient headroom than the aliases arm. Greedy
+coherence was rejected. No speed claim.
+
+Evidence: x2/target-fp8_per_token_head/405-budget.json
+available_kv_bytes 5365499003, consumed 28189855744,
+peak_headroom_bytes 2097152. 423-budget.json available_kv_bytes
+5387396219, consumed 28167958528, peak_headroom_bytes 2097152.
+405-profile.json transient_peak_headroom 2097152. The aliases
+492-profile transient_peak_headroom is 1260388352. 405-kv-spec.json
+and 423-kv-spec.json page_bytes 3261440 and block_size 3136
+(3136*1040 = 3261440). 405-kv-initialized.json blocks 137.
+models.json first id hotschmoe-dd, max_model_len 200000.
+greedy.json: prompt "17 * 19" expected "323" match false; prompt
+"23 * 29" expected "667" match true. The failed row text is not
+ASCII and is omitted here. health-after.txt waited on X1 and X3,
+then xpu-health HEALTHY (cards 0 1), exit 0. The digit string
+5190451200 was not in the x2 result files scanned this pass.
+x2/target-fp8/ is an earlier failed CLI attempt (models.json empty,
+window READY=0 at 17:06:36) and is a different directory.
+
+Verdict: OK on the capacity integers and on the greedy mismatch.
+WRONG on the first id hotschmoe-dd. The coherence reject stands.
+UNVERIFIED on 5190451200. No speed result and no 200K generation
+quality result. The BF16 follow-up that was only "prepared" at
+17:26 is the later sidecar arm in F173.
+
+Suggested fix: keep this arm as a capacity probe. Publish a saved
+derivation if 5190451200 is still cited. First served id
+hotschmoe-dev.
+
+### F169 -- X2 note on the H1e 12.06 GiB pool
+
+Claim: 12.06 GiB is about 12.95 GB and can hold two 200K requests
+that need 10341580800 bytes. The max_len-2048 capacity line is not
+the long-context ceiling.
+
+Evidence: 12.06 * 1024**3 / 1e9 = 12.9493, so "about 12.95 GB"
+is the decimal-GB conversion of the logged 12.06 GiB. A search of
+json/log/txt/out under the build tree, skipping venv, cache, and the
+vllm source tree, found zero files containing 10341580800. The same
+digit string is also absent from the later sidecar artifacts. F164
+already shows the 84,224-token line is the max_len-2048 pool.
+
+Verdict: OK on the unit conversion. UNVERIFIED on 10341580800 as a
+saved result. The note correctly refuses to treat the short pool as
+a measured 200K miss. It does not create a 200K ITL.
+
+Suggested fix: save capacity.py stdout next to the journal note.
+
+### F170 -- X3 census-r2 timings
+
+Claim: census-r2 exited 0 with card1 health. HC mix 12.149 to 4.909
+ms, combine 3.560 to 1.517 ms. 35B experts cross over at 8192 tokens
+(29.818 to 13.776 ms), while 1024 fused is faster than dequant
+(10.741 versus 12.771). Real router weights land in a 110-122 ms
+skew fallback. A host wait and 513 scalar conversions were removed.
+
+Evidence: x3/census-r2.log JSON rows: flashnext.hc_mix_reference
+event_ms 12.148541, flashnext.hc_mix_fused 4.909323,
+flashnext.hc_combine_reference 3.56, flashnext.hc_combine_fused
+1.516562. 35b.experts.T8192.dq_off 29.818282 and T8192.dq_0
+13.77599. T1024.dq_off 10.741406 and T1024.dq_0 12.771198.
+HC_MIX_OK and HC_COMBINE_OK at max_abs 0. MOE_REFERENCE_OK max_abs
+0.000421591. AssertionError count 0. gpu-run ops exit 0, then
+xpu-health HEALTHY (cards 1), X3_OPS_DONE_RC=0. The CONFIG line
+uses _C.c12.so. Skew rows record event_ms from 110.369 (layer 0)
+through 121.780 (layer 12). Individual event_samples go higher
+(one layer-35 sample is 129.852). The names in the file are dq_off
+and dq_0. This pass did not confirm in source that dq_off means
+fused and dq_0 means dequant. The host-wait and "513 CPU scalar
+conversions" sentence was not line-reviewed. x3/census.log remains
+the earlier exit-1 gate and is a different file from census-r2.log.
+
+Verdict: OK on the event_ms values, the exit 0, and card1 health,
+with the journal rounding. The 110-122 ms sentence matches the
+recorded event_ms column. UNVERIFIED on the dq_off/dq_0 label
+mapping and on the host-wait removal. No ITL. Distinct from the
+F159 census failure.
+
+Suggested fix: cite dq_off and dq_0 in the timing sentence. Keep
+the max sample separate from the recorded event_ms.
+
+### F171 -- X3 expert-bucket probe
+
+Claim: layers 0/3/36 fallback 113.132/116.275/118.323 ms, untiled
+buckets 60.707/58.890/60.462 ms, tile64 63.583/67.339/64.852 ms.
+Peak incremental allocation 6.438 GiB falls to tile64
+1.411/1.442/1.473 GiB. Original atol=rtol=0.05 gate passed.
+Cosines 1.0/1.0/0.999719, worst max_abs 0.047396 at layer 36.
+GPU exit 0 in 76 s. Card1 health before and after. Not bit-exact.
+
+Evidence: x3/bucket.json event_ms: layer0 bucket0.tile0 113.132032,
+bucket1.tile0 60.707188, bucket1.tile64 63.582656; layer3
+116.274948, 58.89026, 67.339271; layer36 118.323021, 60.462448,
+64.852343. Incremental bytes (peak_allocated minus base_allocated)
+are 6912580096 on each bucket0 row, which is 6.438 GiB. tile64
+increments are 1.411, 1.442, and 1.473 GiB. x3/bucket.log:
+BUCKET_NUMERIC_OK layer 0 cos 1.0 max_abs 0.000959381, layer 3
+cos 1.0 max_abs 0.000456132, layer 36 cos 0.999718904 max_abs
+0.047395751. gpu-run done in 76s exit 0. Pre and post xpu-health
+HEALTHY (cards 1). X3_OPS_DONE_RC=0. The strings atol, rtol, and
+0.05 do not occur in bucket.log. bucket.layer3.bucket0.tile0 and
+bucket.layer36.bucket0.tile0 carry payload tile 64, while the row
+name says tile0 and the journal calls those rows fallback.
+bucket.layer0.bucket0.tile0 has an empty buckets object.
+
+Verdict: OK on the event_ms values, the incremental GiB arithmetic,
+the cosine/max_abs lines, exit 0, and card1 health. The worst
+max_abs 0.047396 is under 0.05, and the journal already refuses a
+bit-exact claim. UNVERIFIED that the logged gate used atol=rtol=0.05,
+because that threshold is not in the log. UNVERIFIED that the layer
+3 and layer 36 slow rows are an untiled fallback, because their
+payload tile field is 64. No ITL.
+
+Suggested fix: print the numeric tolerance next to BUCKET_NUMERIC_OK.
+Make the row name and the payload tile field agree before calling a
+row fallback.
+
+### F172 -- X3 QSA helper note
+
+Claim: a CPU reading of the QSA helper finds per-token unused work
+and a host M-RoPE loop. An opt-in path is proposed. No serving
+quality claim.
+
+Evidence: the 17:31 journal entry states the code observations and
+says no QSA serving quality claim is authorized by the helper tests
+alone. This pass did not line-review prefill.py or the model hook.
+No QSA result JSON was checked in as a completed measurement.
+
+Verdict: OK that the journal itself withholds a serving-quality
+claim. UNVERIFIED on the helper-cost description. No ITL.
+
+Suggested fix: measure the old and new helpers on card 1 and keep
+the stock serving path at QSA0 until those gates exist.
+
+### F173 -- X2 BF16 sidecar short gates
+
+Claim: eager BF16 sidecar, max_len 200000, seq 2, READY 17:29:39.
+Owned bytes 15710974104 / 31346585600. Card0 non-KV 18245832704,
+KV budget 15311619195, 389 blocks of 39321600 bytes. Two streams
+ceiling 300800 tokens each. 2x200K needs 10341580800 bytes.
+Embedding 20480 values bit-exact. Greedy 323 and 667 pass. Two
+2047-token prefills pass. The pool fits 2x200K. This is not 200K
+coherence or latency. Post-health was still stopping the server.
+
+Evidence: x2/window.log LEASE_ACQUIRED sidecar 17:25:45Z and
+READY=1 17:29:39Z. x2/sidecar/107-budget.json available_kv_bytes
+15311619195, consumed_bytes 18245832704. 107-profile.json
+non_kv_cache_memory 18245832704, weights_memory 15761584640.
+107-kv-initialized.json blocks 389. 107-kv-spec.json page_bytes
+3276800 and block_size 1600 on the layer specs opened, dtype
+bfloat16 on full attention, kv_quant_mode 0. 107-embedding-check.json
+bad 0, rows 8, values 20480. models.json first id hotschmoe-dd,
+max_model_len 200000, root hf-flashnext. greedy.json match true for
+323 and for 667. prefill.json two rows, prompt 2047, completion 1.
+serve.log EngineCore pid 107: Available KV 14.26 GiB, XPU KV
+593,893 tokens, maximum concurrency for 200,000 tokens per request
+2.97x, lcm block 1600. Enforce eager is logged. Graph capturing
+count is 0. error 44 count is 0. The sha string 2e22f57e occurs 0
+times in that serve log. 15710974104 occurs in no scanned result
+file. 31346585600 occurs as xpu:1/other_buffers in
+sidecar-summary.json and as ep_weight_bytes index 1 in headers.json.
+headers ep_weight_bytes is 15682250240 and 31346585600.
+300800 and 10341580800 and 39321600 were not found in the sidecar
+json/log set. 389 * 39321600 = 15296102400, which is not
+15311619195. 593893 / 2 = 296946.5, which is not 300800.
+health-after.txt now contains HEALTHY.
+Saved artifacts are named 107. The journal labels 138/374 were not
+tied to a worker-pid field in the files opened here. The serve log
+does contain those digit strings.
+
+Verdict: OK on non-KV 18245832704, KV budget 15311619195, block
+count 389, embedding bad=0, greedy, prefills, READY 17:29:39, and
+the engine pool line (593,893 tokens, 2.97x at 200,000). That
+engine line supports a pool large enough for two 200K requests as
+a capacity print. WRONG on the first id hotschmoe-dd. WRONG to
+pair 15710974104 with 31346585600 as the saved owned-byte fields;
+the saved ep_weight pair is 15682250240 / 31346585600.
+UNVERIFIED on 300800, 10341580800, 39321600, the H1e binary pin,
+and post-health. No 200K coherence result and no latency result.
+
+Suggested fix: quote ep_weight_bytes and the engine 593,893-token
+line in the journal. Store any 39321600 derivation beside
+page_bytes 3276800. Finish post-health before calling the arm
+closed. First served id hotschmoe-dev.
+
+### F174 -- hygiene and still-open serves
+
+Claim: no new staged secrets or binaries. The fork remains local
+and uncommitted.
+
+Evidence: repo HEAD 952f1971. git diff --cached is empty.
+git status --porcelain is 67 paths. Binary-suffix porcelain
+paths: ['vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so']. Secret-pattern porcelain
+paths: (none). Fork ## b70/flashnext...origin/main [ahead 18], HEAD
+0a6170da8c. git diff --stat tail:  10 files changed, 375 insertions(+), 42 deletions(-). moe.py was not
+line-reviewed this pass. x1/flash-mtp2.log is 74042 bytes, flash-models-mtp2.json is 1008 bytes, and flash-bench-mtp2.json exists. No MTP2 bench JSON is on disk, so this pass records no MTP2 ITL. x2/bf16-window.log was
+empty when first listed. Porcelain rose from 59 at pass 16.
+vllm/flashnext/.gitignore was not re-read this pass.
+
+Verdict: OK on an empty index and no new secret path. The only
+binary-suffix porcelain path is the pre-existing push-allreduce
+library. The fork edit is uncommitted. MTP2 has no bench yet.
+
+Suggested fix: leave the push-allreduce so unstaged. Review the
+moe.py hunk before any fork commit. Read the MTP2 serve only after
+it has a bench JSON or a journal RESULT.
+
+
+### F175 -- MTP2 bench, sidecar health, QSA timings
+
+Claim: the Pass 17 header and F174 say the MTP2 bench is absent. That
+clause was already false when those sentences were written. The 17:39
+X1 entry then reported the bench: acceptance 171/222 = 77.03%, C1
+33.04 tok/s and chunk p50 85.20 ms, C2 30.40/31.24 tok/s and chunk
+p50 83.37/83.53 ms, GREEDY_RC 3, BENCH_RC 0, EOS gate failed, READY
+17:35:42. The 17:39 X3 entry reports QSA helper times and says
+post-health was pending. The 17:39 X2 entry says sidecar post-health
+was HEALTHY at 17:37:17.
+
+Evidence: x1/flash-bench-mtp2.json tag X1-flashnext-full-mtp2, port
+18121. C1 ttft 662.741, prompt 24, completion 84, n_chunks 32, p50
+85.198412, mean 81.039059, decode_tok_s 33.038628. C2 p50 83.369975
+and 83.531668, n_chunks 39 and 38, completion 96, decode_tok_s
+30.403959 and 31.235475. 171/222 = 0.770270, which rounds to 77.03%.
+1000/85.198 = 11.737, so 33.039 tok/s is the token rate and the p50
+is the chunk interval. 84/32 = 2.625 tokens per chunk. Identity ids
+start with hotschmoe-dd, expect_first hotschmoe-dd, first_ok true.
+Coherence OK/OK. x1/flash-greedy-mtp2.json identical false,
+first_mismatch [17, None, None, None], four rows of 96 tokens,
+concurrent_identical false, concurrent lengths 87 and 96.
+x1/window-flash-mtp2.out has GREEDY_RC=3, BENCH_RC=0, one HEALTHY
+line for cards 0 and 1, and no second HEALTHY line. The window has
+no READY stamp. x1/flash-mtp2.log has 41 lines stamped 17:35:42,
+and that stamp is the route-registration burst, including Route
+/v1/models. Graph capturing finished 4 times, error 44 count 0,
+PLE width=3, gpu-run exit 0 in 323s. The indexes 4 and 72 from the
+C2 sentence are not fields in the greedy JSON.
+x2/window.log has RUN_DONE sidecar 2026-10-20T17:37:17Z.
+x2/sidecar/health-after.txt has card 0 OK, card 1 OK, xpu-health
+HEALTHY (cards 0 1), gpu-run exit 0 in 33s. x2/bf16-released was
+absent at the check.
+x3/qsa.json event_ms: qsa_append_token_loop 2060.655209,
+qsa_prefill_chunk 5340.441771, qsa_model_hook_append 22042.110261,
+qsa_model_hook_append_fast 3455.148282, indexer norm/M-RoPE
+4719.806093, fast indexer 0.795469. 3455.148 + 5340.442 = 8795.590
+ms, which is 8.796 s. 12 * 8.796 s = 105.55 s. Those two sums are
+arithmetic on the rows, not extra timers. x3/qsa.log: pre-health
+HEALTHY card 1, gpu-run done in 93s exit 0, QSA_PREFILL_NUMERIC_OK
+index_max_abs 0.0, then post-health HEALTHY card 1 and
+X3_OPS_DONE_RC=0. The journal text said post-health was pending.
+The log now has the later HEALTHY line. No page/tail/dead/length
+equality token was in the OK lines read here.
+Headings after the 17:39 X3 entry were present and are not given their own measured verdict here: ## 2026-10-20 17:39 X3 -- real Flash-Next candidate gated behind proxy; ## 2026-10-20 17:41 O3 -- card-0 gates window for stage 3 (about 7 minutes); ## 2026-10-20 17:41 X2 -- sidecar teardown and collective health complete
+
+Verdict: WRONG on the empty-bench clause in the Pass 17 header and
+F174. OK on the MTP2 rates, acceptance, GREEDY_RC=3, BENCH_RC=0,
+and first_mismatch [17, None, None, None]. WRONG served name
+hotschmoe-dd. UNVERIFIED on C2 mismatch indexes 4 and 72. The
+17:35:42 clock is the serve-log route burst. MTP2 post-health is
+absent from the window. No speed promotion. Sidecar post-health is
+OK, so the F173 UNVERIFIED post-health clause is closed by this
+file. QSA event_ms values are OK. The 8.796 s and 105 s lines are
+sums. QSA card1 post-health is OK in qsa.log. No QSA serving ITL.
+The X2 17:39 entry is a lease hold. The bf16-released path was
+absent at the check.
+
+Suggested fix: quote first_mismatch and the chunk-versus-token rate
+in the X1 note. Serve hotschmoe-dev first. Keep QSA0 as the serving
+candidate until a real serve is measured. Treat F175 as the MTP2
+file record.
 
 
 
+### F176 -- X2 collective close and the 593893 / 300800 arithmetic
 
+Claim: the 17:41 X2 entry says both-card post-health was HEALTHY at
+17:37:17, compiled collective health passed, and WINDOW_DONE was
+17:40:05. It also says the engine 593,893-token line is
+389/(125+6)*200000, and that a two-stream inversion with a null
+reservation yields 300800 tokens per stream. The 17:39 X3 and 17:41
+O3 entries are prepared windows, not results.
+
+Evidence: x2/window.log has RUN_DONE sidecar 2026-10-20T17:37:17Z and
+WINDOW_DONE 2026-10-20T17:40:05Z. x2/collective-after.txt (1946 bytes)
+has one COLLECTIVE_HEALTH_OK line: world_size=2 shape=4x5120
+compiled_iterations=10 p2p=0. Then xpu-collective-health HEALTHY and
+gpu-run exit 0 in 33s. FAILED count 0. 389/(125+6)*200000 =
+593893.12977, which rounds to the serve log's 593,893 tokens.
+(389 - 1 - 2*6) * 1600 / 2 = 300800 exactly. A null-only subtraction,
+(389-1)*1600/2, is 310400, so the 300800 figure also uses six blocks
+per stream on top of the null block. The 17:18 note is where that
+six-block reserve was stated. x3's 17:39 entry says the full model
+is prepared and not running. O3's 17:41 entry says the next O3 entry
+will carry the result. No O3 gate output was opened for this finding.
+No newer non-G2b heading was present after the 17:41 G2b addendum.
+
+Verdict: OK on WINDOW_DONE 17:40:05, the collective-after health
+line, and the 593,893 rounding. OK on 300800 as the null-plus-six
+arithmetic above. The 17:41 wording names the null reserve and does
+not restate the six blocks in that sentence. The X3 and O3 entries
+have no measured ITL. No speed promotion.
+
+Suggested fix: print (389-1-2*6)*1600/2 beside 300800 so the six
+GDN blocks stay visible. Keep the collective line as health, not
+as decode latency.
 

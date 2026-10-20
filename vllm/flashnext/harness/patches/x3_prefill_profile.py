@@ -8,15 +8,40 @@ import time
 
 
 def install():
-    target = 'vllm.v1.worker.gpu_model_runner'
+    targets = ('vllm.v1.worker.gpu_model_runner', 'vllm.v1.worker.gpu.model_runner')
     def patch(module):
         cls = module.GPUModelRunner
         original = cls.execute_model
         if getattr(original, '_x3', False):
             return
-        state = {'active': False, 'hooks': False, 'events': []}
+        state = {'active': False, 'hooks': False, 'events': [], 'enabled': True}
+        def measured(name, fn, *args, **kwargs):
+            if not state['enabled']:
+                return fn(*args,**kwargs)
+            remote = False
+            if name in ('ep_allgather','ep_reduce_scatter'):
+                sizes = kwargs.get('sizes',args[3] if len(args)>3 else None)
+                remote = sizes is not None and sum(sizes) >= 512
+            elif name == 'ep_compute':
+                value=kwargs.get('x',args[2] if len(args)>2 else None)
+                remote = value is not None and value.shape[0] >= 512
+            if not state['active'] and not remote:
+                return fn(*args, **kwargs)
+            state['remote_prefill'] = state.get('remote_prefill',False) or remote
+            import torch
+            a,b = torch.xpu.Event(enable_timing=True),torch.xpu.Event(enable_timing=True)
+            a.record();result=fn(*args,**kwargs);b.record()
+            state['events'].append((name,a,b))
+            return result
         def execute(self, scheduler_output, *args, **kwargs):
             import torch
+            profile_control=os.environ.get('B70_PREFILL_PROFILE_CONTROL')
+            if profile_control:
+                with open(profile_control) as f:
+                    mode=f.read().split()
+                    state['enabled']=bool(mode) and mode[0]=='1'
+                    if len(mode)>1:
+                        os.environ['B70_PREFILL_EP_RS']=mode[1]
             control = os.environ.get('B70_PREFILL_CONTROL')
             if control:
                 with open(control) as f:
@@ -25,9 +50,19 @@ def install():
                 selected = {'linear_attn', 'self_attn', 'experts', 'shared_expert',
                             'gate', 'input_layernorm', 'post_attention_layernorm',
                             'in_proj_qkvz', 'in_proj_ba', 'out_proj', 'qkv_proj',
-                            'o_proj', 'norm', 'gate_up_proj', 'down_proj'}
+                            'o_proj', 'norm', 'gate_up_proj', 'down_proj', 'ple', 'embed_tokens'}
                 for name, sub in self.model.named_modules():
-                    if name.rsplit('.', 1)[-1] not in selected:
+                    if sub.__class__.__name__ == 'HyperConnection':
+                        for method in ('mix','combine'):
+                            original_method = getattr(sub,method)
+                            def call(*a,_fn=original_method,_name='hc_'+method,**kw):
+                                return measured(_name,_fn,*a,**kw)
+                            setattr(sub,method,call)
+                    if name == '':
+                        name = 'model_total'
+                    elif sub.__class__.__name__ in ('Qwen4ExpDecoderLayer','Qwen3NextDecoderLayer'):
+                        name += '.layer_total'
+                    elif name.rsplit('.', 1)[-1] not in selected:
                         continue
                     stack = []
                     def pre(mod, inp, name=name, stack=stack):
@@ -40,32 +75,50 @@ def install():
                             state['events'].append((name, stack.pop(), ev))
                     sub.register_forward_pre_hook(pre)
                     sub.register_forward_hook(post)
+                from vllm.models.qwen4_exp.gguf.moe import B70GGUFMoEMethod
+                from vllm.distributed.device_communicators.xpu_communicator import XpuCommunicator
+                from vllm.v1.attention.backends.flash_attn import FlashAttentionImpl
+                for cls,method,label in ((B70GGUFMoEMethod,'apply','ep_compute'),
+                        (XpuCommunicator,'all_gatherv','ep_allgather'),
+                        (XpuCommunicator,'reduce_scatterv','ep_reduce_scatter'),
+                        (FlashAttentionImpl,'forward','attention_core'),
+                        (FlashAttentionImpl,'do_kv_cache_update','kv_cache_write')):
+                    old = getattr(cls,method)
+                    def call(*a,_fn=old,_name=label,**kw):
+                        return measured(_name,_fn,*a,**kw)
+                    setattr(cls,method,call)
                 state['hooks'] = True
             t = scheduler_output.total_num_scheduled_tokens
-            state['active'] = t >= 512
+            state['active'] = t >= 512 and state['enabled']
             state['events'] = []
+            state['remote_prefill'] = False
             start = time.perf_counter()
             result = original(self, scheduler_output, *args, **kwargs)
-            if state['active']:
+            if state['active'] or state['remote_prefill']:
                 torch.xpu.synchronize()
                 spans = [{'name': name, 'ms': a.elapsed_time(b)} for name, a, b in state['events']]
                 groups = {}
                 for row in spans:
                     key = row['name'].rsplit('.', 1)[-1]
                     groups[key] = groups.get(key, 0) + row['ms']
-                row = dict(T=t, wall_ms=(time.perf_counter()-start)*1000, groups=groups, spans=spans)
-                with open(os.environ['B70_PREFILL_PROFILE'], 'a') as f:
+                row = dict(T=t, pid=os.getpid(), remote_prefill=state['remote_prefill'],
+                           wall_ms=(time.perf_counter()-start)*1000, groups=groups, spans=spans)
+                path = os.environ['B70_PREFILL_PROFILE']
+                if os.environ.get('B70_PREFILL_PROFILE_RANKED') == '1':
+                    path += f'.{os.getpid()}.jsonl'
+                with open(path, 'a') as f:
                     f.write(json.dumps(row) + '\n')
                 print('X3_PREFILL', json.dumps({k:v for k,v in row.items() if k != 'spans'}), flush=True)
             state['active'] = False
             return result
         execute._x3 = True
         cls.execute_model = execute
-    if target in sys.modules:
-        patch(sys.modules[target]); return
+    for target in targets:
+        if target in sys.modules:
+            patch(sys.modules[target])
     class Finder(importlib.abc.MetaPathFinder):
         def find_spec(self, fullname, path, target_module=None):
-            if fullname != target:
+            if fullname not in targets:
                 return None
             spec = importlib.machinery.PathFinder.find_spec(fullname, path)
             old = spec.loader.exec_module

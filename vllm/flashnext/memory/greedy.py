@@ -20,5 +20,5 @@ for prompt, expected in (("17 * 19", "323"), ("23 * 29", "667")):
     rows.append(dict(prompt=prompt, expected=expected, text=text, match=text == expected))
 with open(output, "w", encoding="ascii") as f:
     json.dump(dict(ids=ids, rows=rows), f, indent=2)
-assert all(r["match"] for r in rows), rows
+assert all(r["match"] for r in rows), json.dumps(rows, ensure_ascii=True)
 print("IDENTITY_GREEDY_OK")

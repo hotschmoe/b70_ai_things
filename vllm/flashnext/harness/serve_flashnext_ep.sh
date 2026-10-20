@@ -76,11 +76,13 @@ if [[ ! -f "$SO" ]]; then
   echo "serve_flashnext_ep: missing $SO" >&2
   exit 1
 fi
-if ! nm -D "$SO" | grep -q '_Z13b70_moe_layerPvPKtPKhiS3_iS3_iPKiPKfS3_iS3_iS3_iPfiiiii'; then
+# grep -q closes the pipe early. Under pipefail that SIGPIPE looks
+# like a missing symbol. Read the whole nm listing.
+if ! nm -D "$SO" | grep '_Z13b70_moe_layerPvPKtPKhiS3_iS3_iPKiPKfS3_iS3_iS3_iPfiiiii' >/dev/null; then
   echo "serve_flashnext_ep: $SO is missing b70_moe_layer" >&2
   exit 1
 fi
-if ! nm -D "$SO" | grep -q '_Z24b70_reserve_decode_queuePv'; then
+if ! nm -D "$SO" | grep '_Z24b70_reserve_decode_queuePv' >/dev/null; then
   echo "serve_flashnext_ep: $SO is missing b70_reserve_decode_queue" >&2
   exit 1
 fi
@@ -155,6 +157,9 @@ cleanup() {
 trap cleanup EXIT
 
 OPT_ENV=()
+for key in ${!B70_PREFILL@}; do
+  OPT_ENV+=(--env "${key}=${!key}")
+done
 if [[ -n "${B70_EP_SPIN:-}" ]]; then
   OPT_ENV+=(--env "B70_EP_SPIN=${B70_EP_SPIN}")
 fi
