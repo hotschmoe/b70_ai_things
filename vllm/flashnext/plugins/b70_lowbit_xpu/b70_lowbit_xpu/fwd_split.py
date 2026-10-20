@@ -201,16 +201,14 @@ def _restore_syncs(orig) -> None:
     torch.Tensor.item, torch.Tensor.tolist, torch.xpu.synchronize = orig
 
 
-def install() -> None:
-    global _INSTALLED
-    if _INSTALLED:
-        return
-    from vllm.v1.worker.gpu_model_runner import GPUModelRunner
-
-    orig = GPUModelRunner.execute_model
+def _patch_runner(cls) -> None:
+    orig = cls.execute_model
 
     def wrapped(self, scheduler_output, *args, **kwargs):
         global _STEP
+        # Profile and graph-capture dummies must not synchronize or hook.
+        if kwargs.get("dummy_run") or kwargs.get("is_profile"):
+            return orig(self, scheduler_output, *args, **kwargs)
         ntok = int(getattr(scheduler_output, "total_num_scheduled_tokens", 0) or 0)
         from b70_lowbit_xpu.moe import _split_enabled
 
@@ -226,7 +224,8 @@ def install() -> None:
             _log("E2 fwd_split")
             for line in _config_lines(self):
                 _log(line)
-        layers = _find_layers(self.model)
+        model = getattr(self, "model", None)
+        layers = _find_layers(model) if model is not None else None
         spans: list = []
         handles = []
         seen = {"dtype": None, "shape": None}
@@ -286,9 +285,38 @@ def install() -> None:
             _log(f"step {step} {name} ms {acc[name]:.2f} n {counts[name]}")
         return out
 
-    GPUModelRunner.execute_model = wrapped
+    cls.execute_model = wrapped
+
+
+def install() -> None:
+    global _INSTALLED
+    if _INSTALLED:
+        return
+    # The XPU worker calls vllm.v1.worker.gpu.model_runner.GPUModelRunner.
+    # The older gpu_model_runner class is a different object. Patch both.
+    targets = []
+    for modname in (
+        "vllm.v1.worker.gpu.model_runner",
+        "vllm.v1.worker.gpu_model_runner",
+    ):
+        try:
+            mod = __import__(modname, fromlist=["GPUModelRunner"])
+            cls = mod.GPUModelRunner
+        except Exception:
+            continue
+        if any(cls is existing for existing in targets):
+            continue
+        targets.append(cls)
+    if not targets:
+        _log("fwd_split no GPUModelRunner")
+        return
+    for cls in targets:
+        _patch_runner(cls)
     _INSTALLED = True
-    _log("fwd_split installed")
+    _log(
+        "fwd_split installed "
+        + ",".join(cls.__module__ + "." + cls.__name__ for cls in targets)
+    )
 
 
 def _guard() -> None:

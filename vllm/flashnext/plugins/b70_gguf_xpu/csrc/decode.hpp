@@ -9,6 +9,7 @@
 #include "tables.inc"
 
 enum B70GgufType {
+    B70_Q8_0 = 8,
     B70_Q4_K = 12,
     B70_Q5_K = 13,
     B70_Q6_K = 14,
@@ -26,6 +27,7 @@ enum B70GgufType {
 
 inline bool b70_type_info(int type, int& block_elems, int& block_bytes) {
     switch (type) {
+    case B70_Q8_0: block_elems = 32; block_bytes = 34; return true;
     case B70_Q4_K: block_elems = 256; block_bytes = 144; return true;
     case B70_Q5_K: block_elems = 256; block_bytes = 176; return true;
     case B70_Q6_K: block_elems = 256; block_bytes = 210; return true;
@@ -157,6 +159,11 @@ inline void b70_decode32(const uint8_t* row, int gi, float* v) {
             v[j] = d * (float)b70_iq4nl(b[2 + j] & 0xf);
             v[j + 16] = d * (float)b70_iq4nl(b[2 + j] >> 4);
         }
+    } else if constexpr (TYPE == B70_Q8_0) {
+        // block_q8_0: fp16 scale, then 32 int8. 34 bytes, qs at offset 2.
+        const uint8_t* b = row + gi * 34;
+        const float d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        for (int l = 0; l < 32; ++l) v[l] = d * (float)(int8_t)b[2 + l];
     } else if constexpr (TYPE == B70_Q4_K) {
         const uint8_t* b = row + (gi / 8) * 144;
         const int gi8 = gi % 8;
@@ -345,6 +352,7 @@ inline void b70_decode32(const uint8_t* row, int gi, float* v) {
 
 inline void b70_decode32_switch(int type, const uint8_t* row, int gi, float* v) {
     switch (type) {
+    case B70_Q8_0: b70_decode32<B70_Q8_0>(row, gi, v); break;
     case B70_Q2_0: b70_decode32<B70_Q2_0>(row, gi, v); break;
     case B70_IQ4_NL: b70_decode32<B70_IQ4_NL>(row, gi, v); break;
     case B70_Q4_K: b70_decode32<B70_Q4_K>(row, gi, v); break;

@@ -78,6 +78,7 @@ void dispatch_type(int type, Fn fn) {
     case B70_Q2_K: fn.template operator()<B70_Q2_K>(); break;
     case B70_Q3_K: fn.template operator()<B70_Q3_K>(); break;
     case B70_Q2_0: fn.template operator()<B70_Q2_0>(); break;
+    case B70_Q8_0: fn.template operator()<B70_Q8_0>(); break;
     default: throw std::runtime_error("b70_gguf: prefill_dequant unsupported type");
     }
 }

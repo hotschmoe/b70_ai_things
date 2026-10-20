@@ -14,6 +14,7 @@ worker never emits finished_sending for stores.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 
 from vllm.config import VllmConfig
@@ -113,6 +114,10 @@ def _force_extra(vllm_config: VllmConfig) -> dict:
     extra["eviction_policy"] = "ConversationCachePolicy"
     extra["cache_policy_module_path"] = "kvoffload.policy"
     extra.setdefault("slots", 4)
+    # Default stays the upstream swap path. The measured T2 used that path.
+    if os.environ.get("B70_KVPARK_COPY", "0") == "1":
+        extra["spec_name"] = "ParkingOffloadingSpec"
+        extra["spec_module_path"] = "kvoffload.copy_spec"
     transfer.kv_connector_extra_config = extra
     return extra
 

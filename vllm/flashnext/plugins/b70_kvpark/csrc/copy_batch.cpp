@@ -128,6 +128,26 @@ sycl::queue& copy_queue() {
   return c10::xpu::getCurrentXPUStream().queue();
 }
 
+// The torch transfer stream and the copy engine are different queues.
+// A host wait is not required: the copy waits for the current stream,
+// and the current stream waits for the copy. Same-queue fallback is a no-op.
+void order_copy_after_current(sycl::queue& copy) {
+  sycl::queue& current = c10::xpu::getCurrentXPUStream().queue();
+  if (&current == &copy) {
+    return;
+  }
+  sycl::event ready = current.ext_oneapi_submit_barrier();
+  copy.ext_oneapi_submit_barrier(std::vector<sycl::event>{ready});
+}
+
+void order_current_after_copy(sycl::queue& copy, const sycl::event& done) {
+  sycl::queue& current = c10::xpu::getCurrentXPUStream().queue();
+  if (&current == &copy) {
+    return;
+  }
+  current.ext_oneapi_submit_barrier(std::vector<sycl::event>{done});
+}
+
 const char* alloc_name(sycl::usm::alloc kind) {
   switch (kind) {
     case sycl::usm::alloc::host:
@@ -180,6 +200,7 @@ int64_t copy_batch(
   TORCH_CHECK(src.numel() == dst.numel() && src.numel() == sizes.numel(), "equal counts");
   const at::DeviceGuard guard(at::Device(at::kXPU, c10::xpu::current_device()));
   sycl::queue& q = copy_queue();
+  order_copy_after_current(q);
   const int64_t* src_p = src.data_ptr<int64_t>();
   const int64_t* dst_p = dst.data_ptr<int64_t>();
   const int64_t* sz_p = sizes.data_ptr<int64_t>();
@@ -198,6 +219,9 @@ int64_t copy_batch(
     bytes += static_cast<int64_t>(n);
     any = true;
   }
+  if (any) {
+    order_current_after_copy(q, last);
+  }
   if (sync && any) {
     last.wait();
   }
@@ -209,6 +233,12 @@ int64_t engine_ordinal() {
   return engine().ordinal;
 }
 
+// 1 when this binary orders the copy queue against the current stream.
+// Older builds do not export this op.
+int64_t ordered() {
+  return 1;
+}
+
 }  // namespace
 
 TORCH_LIBRARY(b70_kvpark, m) {
@@ -216,6 +246,7 @@ TORCH_LIBRARY(b70_kvpark, m) {
   m.def("free_host(int ptr) -> ()");
   m.def("copy_batch(Tensor src, Tensor dst, Tensor sizes, bool sync) -> int");
   m.def("engine_ordinal() -> int");
+  m.def("ordered() -> int");
 }
 
 TORCH_LIBRARY_IMPL(b70_kvpark, CompositeExplicitAutograd, m) {
@@ -223,4 +254,5 @@ TORCH_LIBRARY_IMPL(b70_kvpark, CompositeExplicitAutograd, m) {
   m.impl("free_host", free_host);
   m.impl("copy_batch", copy_batch);
   m.impl("engine_ordinal", engine_ordinal);
+  m.impl("ordered", ordered);
 }

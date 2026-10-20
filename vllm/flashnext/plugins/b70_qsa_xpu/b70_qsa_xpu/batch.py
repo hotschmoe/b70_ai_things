@@ -29,6 +29,7 @@ class QsaBatch:
         pooled: bool = True,
         pos_base: np.ndarray | None = None,
         max_cells: int | None = None,
+        pages: torch.Tensor | None = None,
     ) -> None:
         table = np.asarray(block_table, dtype=np.int32)
         if table.ndim != 2:
@@ -47,10 +48,21 @@ class QsaBatch:
             self.block_size,
             pooled=self.pooled,
         )
-        flat = table.reshape(-1)
-        self.num_pages = int(flat.max()) + 1
         dev = self.device
-        self.pages = torch.zeros(self.num_pages, self.layout["page_bytes"], dtype=torch.uint8, device=dev)
+        page_bytes = int(self.layout["page_bytes"])
+        if pages is None:
+            flat = table.reshape(-1)
+            self.num_pages = int(flat.max()) + 1
+            self.pages = torch.zeros(self.num_pages, page_bytes, dtype=torch.uint8, device=dev)
+        else:
+            if pages.dtype != torch.uint8 or pages.ndim != 2:
+                raise ValueError("pages must be uint8 [num_pages, page_bytes]")
+            if int(pages.shape[1]) != page_bytes or not pages.is_contiguous():
+                raise ValueError("pages width or stride does not match the layout")
+            if pages.device != dev:
+                raise ValueError("pages are on the wrong device")
+            self.pages = pages
+            self.num_pages = int(pages.shape[0])
         self.block_table = torch.from_numpy(table.copy()).to(device=dev)
         if max_cells is None:
             max_cells = self.max_blocks * self.block_size

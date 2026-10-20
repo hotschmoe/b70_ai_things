@@ -67,6 +67,7 @@ inline void b70_acc_pair_sw(int type, const uint8_t* r0, const uint8_t* r1, bool
     case B70_IQ3_S: b70_acc_pair<B70_IQ3_S>(r0, r1, l0, l1, xr, ng, lane, a0, a1); break;
     case B70_IQ4_NL: b70_acc_pair<B70_IQ4_NL>(r0, r1, l0, l1, xr, ng, lane, a0, a1); break;
     case B70_Q2_0: b70_acc_pair<B70_Q2_0>(r0, r1, l0, l1, xr, ng, lane, a0, a1); break;
+    case B70_Q8_0: b70_acc_pair<B70_Q8_0>(r0, r1, l0, l1, xr, ng, lane, a0, a1); break;
     case B70_Q4_K: b70_acc_pair<B70_Q4_K>(r0, r1, l0, l1, xr, ng, lane, a0, a1); break;
     case B70_Q5_K: b70_acc_pair<B70_Q5_K>(r0, r1, l0, l1, xr, ng, lane, a0, a1); break;
     case B70_Q6_K: b70_acc_pair<B70_Q6_K>(r0, r1, l0, l1, xr, ng, lane, a0, a1); break;

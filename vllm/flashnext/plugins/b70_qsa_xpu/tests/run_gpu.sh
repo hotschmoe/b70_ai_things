@@ -22,9 +22,23 @@ if [[ "${B70_QSA_INNER:-}" == "1" ]]; then
   cd "$PLUGIN"
   export B70_QSA_SO="$SO"
   export PYTHONPATH="$PLUGIN:$REF${PYTHONPATH:+:$PYTHONPATH}"
-  # A hung kernel must not keep the card. 600s covers first-time JIT.
+  # A hung kernel must not keep the card. The second file JITs the batch set.
   timeout --signal=KILL 600 python -u tests/test_qsa_xpu.py
+  timeout --signal=KILL 900 python -u tests/test_qsa_batch.py
   exit $?
+fi
+
+echo "=== xpu-health before card $CARD ==="
+set +e
+B70_AGENT="${B70_AGENT:-G5}" \
+B70_GPU_LOCK_TIMEOUT="${B70_GPU_LOCK_TIMEOUT:-7200}" \
+  "$ROOT/bin/gpu-run" --card "$CARD" "$ROOT/bin/xpu-health" --card "$CARD"
+health_before=$?
+set -e
+echo "xpu-health before rc=$health_before"
+if [[ "$health_before" -ne 0 ]]; then
+  echo "xpu-health before failed rc=$health_before"
+  exit "$health_before"
 fi
 
 echo "=== xpu-run card $CARD ==="

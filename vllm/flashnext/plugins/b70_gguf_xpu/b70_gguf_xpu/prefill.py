@@ -87,6 +87,8 @@ def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_d
     Gate and up are separate packs with the same type. One launch covers gate+up
     (interleaved), then swiglu, then one launch for down.
     mode 0 and T >= DQ_T_MIN uses dequant + oneDNN bmm. B70_PREFILL_DQ_T overrides.
+    C11 (reports/1C11_expert_prefill.md): wider SGN and the SLM X kernel
+    (B70_PREFILL_XSLM=1) did not beat that split. Leave the threshold.
     """
     load()
     import torch

@@ -92,7 +92,11 @@ def dense_wants_dq(m: int, k: int) -> bool:
 
 
 def moe_wants_dq(t: int) -> bool:
-    """True when dequant + batched GEMM beat the fused expert layer."""
+    """True when dequant + batched GEMM beat the fused expert layer.
+
+    C11 remeasured the fused layer and two wider schedules. None of them
+    beat dequant + bmm at T>=12288, and bmm is still slower below that.
+    """
     forced = _env_threshold("B70_PREFILL_DQ_T")
     if forced == "off":
         return False

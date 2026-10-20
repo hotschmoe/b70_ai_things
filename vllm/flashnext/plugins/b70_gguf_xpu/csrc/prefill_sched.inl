@@ -12,8 +12,10 @@
 // block and loads X from global. One group per expert per N-strip; row
 // tiles above MT*8 walk serially inside that group.
 // B70_PREFILL_SGN=8|16|40 widens the strip for IQ3_XXS and Q2_0 when N
-// divides the strip and the device accepts the work-group. Wider strips
-// cut X re-reads (GU N=1280 is 20 strips at SGN=4 and 2 at SGN=40).
+// divides the strip and the work-group fits. Each subgroup still loads
+// X from global, so a wider strip does not cut those reads. MT>4
+// (grf 256) rejects a work-group above 512; SGN=40 is 640 and falls
+// back to SGN=4. Measured in reports/1C11_expert_prefill.md.
 //
 // B70_PREFILL_SCHED=reuse|s64 overrides the auto pick. Dense (E<=1)
 // uses reuse rm64. Experts use s64 (reuse was slower at T=512/4096/12288).
@@ -335,7 +337,10 @@ int device_max_wg(sycl::queue& q) {
 template <int TYPE, int MT>
 void launch_s64_wide(sycl::queue& q, const GemmArgs& a, int sgn) {
     const int maxwg = device_max_wg(q);
-    if (sgn * kSg > maxwg || a.N % (sgn * kSg) != 0) sgn = 4;
+    // grf_size<256> (MT>4) rejects a work-group above 512 even though
+    // the device reports 1024. SGN=40 is 640 and throws at T>=4096.
+    const int cap = (MT > 4 && maxwg > 512) ? 512 : maxwg;
+    if (sgn * kSg > cap || a.N % (sgn * kSg) != 0) sgn = 4;
     static int seen = -1;
     if (seen != sgn) {
         seen = sgn;

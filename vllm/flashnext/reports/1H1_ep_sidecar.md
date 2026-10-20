@@ -57,21 +57,23 @@ payload is 5.8 us, which is the data move, not the flag.
 
 ## M1 -- one real layer
 
-Status: r1 measured, r2 scoring scale-relative error.
+Status: pass (2026-10-20 10:21). Log `h1c-m1-layer-r2.log`.
 
-r1 (log `h1c-m1-layer-r1.log`, 09:54-09:56): own experts bitwise at
-T=1,2,4,8,4096 (`own_max=0`). Cosine versus one-card `moe_layer` is
-1.000000 at every T. Absolute max is 3.7e-9, 7.5e-9, 1.5e-8, 1.5e-8,
-3.0e-8. Per-element relative error (divide by max(|ref|, 1e-8)) is
-under 1e-2 except T=4096, where it is 7.5e-2 on near-zero outputs.
-Layer time: T=1 EP 580 us vs one-card 411 us; T=8 EP 591 us vs
-one-card 816 us. Transport warmup needed the second attempt
-(err1=11, then 0). Health after the numeric miss was HEALTHY.
-That window also rebound the devices because the script treated any
-nonzero rc as a device loss. The rerun resets only on DEVICE_LOST.
+CONFIG: blk.0 of the 35B UD-IQ3_XXS GGUF, E=256 split 128/128,
+topk=8, T=1,2,4,8,4096. Gate: bitwise `y_ep == y0+y1`, cosine > 0.999,
+and max|y_ep - y_full| / max|y_full| < 1e-2.
 
-The rerun gate is bitwise, cosine > 0.999, and
-max|y_ep - y_full| / max|y_full| < 1e-2. elem_rel stays in the log.
+RESULT: every T is bitwise (`own_max=0`) with cosine 1. Scale-relative
+error is 5.9e-8, 6.6e-8, 1.4e-7, 1.2e-7, 8.9e-8. Absolute max at
+T=4096 is 3.0e-8. The per-element ratio at T=4096 is 7.5e-2 because a
+few near-zero outputs are divided by 1e-8; that ratio is logged as
+`elem_rel` and is not the gate. An earlier run (r1) failed only that
+ratio and then rebound the devices. r2 does not. Layer time: T=1 EP
+500 us vs one-card 410 us; T=8 EP 592 us vs one-card 818 us.
+`PASS m1`, M1_RC=0. Health before and after HEALTHY (after rc 0 at
+10:40:23). No xe-reset on this run.
+
+VERDICT: the split matches one-card `moe_layer` inside FP32 reorder.
 
 ## M2 -- eager serve
 

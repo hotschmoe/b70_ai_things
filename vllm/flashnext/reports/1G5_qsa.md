@@ -445,3 +445,104 @@ by this unit test.
 | MTP draft QSA | M | no indexer module on the draft layer yet |
 | greedy >4K vs `strata_reference.json` | S once a serve exists | not a kernel gap |
 | park/restore of tail, dead, pooled, block_pos, int8 pages | M | G4, layout above |
+
+## 2026-10-20 10:38 G5b -- page spec, serve hook, fork commit
+
+The 09:07 note that the fork hook is uncommitted is stale. At 10:10 C7
+had not committed it. G5b committed only that file:
+
+    9761b7b48af63922e8be4599aebda548c8ba77e4
+    [XPU] Attach the default-off QSA plugin when B70_QSA=1
+
+Not pushed. G4's later 765993c197 sits on top of it. The fork worktree
+is clean. No further fork edits in this step.
+
+SYCL library rebuilt 10:16 under bin/cpu-run, rc 0:
+
+    /mnt/vm_8tb/b70/build/vllm-flashnext/b70_qsa_xpu/libb70_qsa_xpu.so
+    817928 bytes, icpx 2026.1, qsa_kernels.cpp + qsa_batch.cpp
+
+qsa_kernels.cpp signatures are unchanged, including the explicit RTNE
+fp16 scale round trip. The new translation unit is the batch SIMT path
+(kv append, indexer, scores, top-k, gather, attend, gate, union build,
+union attend). It is compiled. It is not yet compared to the CPU
+reference on a GPU.
+
+### KV spec (QSA_SPEC_OK)
+
+plugins/b70_qsa_xpu/b70_qsa_xpu/kv_spec.py. One uint8 state per vLLM
+block, state_content_bytes = page_bytes from layout.py. Pooled Flash-Next
+block 16 is 18944 bytes. Draft (no pooled rows) is 16896. The registry
+manager is FullAttentionManager and the uniform base is FullAttentionSpec,
+so merge keeps the page size. B70QsaBackend.get_supported_kernel_block_sizes
+returns the manager block size, and select_common_block_size keeps 16
+and 64 whole. A backend that advertises only kernel block 16 does split
+a 64-token manager block; that is the split the custom backend avoids.
+create_kv_cache_views of a uint8 page is [num_blocks, 1, 1, page_bytes]
+and a byte write lands at block_stride = page_bytes.
+
+The metadata builder copies block_table, slot_mapping, query_start_loc,
+and seq_lens. Cudagraph support is UNIFORM_SINGLE_TOKEN_DECODE, so a
+one-token-per-request decode can be captured and a chunked prefill stays
+eager. get_impl_cls still raises. Attention runs in the plugin.
+
+### Serve hook (QSA_SERVE_OK, CPU)
+
+model_hook.py patches get_kv_cache_spec and get_attn_backend on the
+attention instance inside attach_qsa. The fork diff does not grow.
+When attn.kv_cache is a contiguous uint8 buffer whose last dimension
+is the page, the runner binds it and writes through the metadata block
+table. A split kernel block is refused and the private one-sequence
+pool remains, with one stderr line. The first bind allocates. Do not
+capture that forward.
+
+Indexer tail, dead, block_pos, and the token count are keyed by the
+physical id of logical block 0, so a request can change batch rows
+between steps. pos < 0 is inactive. Each inactive row scatters to its
+own sink slot, because index_copy_ is undefined on a repeated index.
+Position 0 clears the gathered open block before the kernel runs.
+Import writes only the logical blocks named in the blob. It does not
+walk padding physical id 0, which may be another request's page.
+pos_base on this path is 0: pooled rows were rotated at absolute
+positions. export_state(seq) / import_state(seq, blob) use the live
+block-table row. export_request(phys) / import_request(dest, blob)
+take an explicit physical list for G4.
+
+Decode (max_query_len == 1) is one run_decode over the batch. Chunked
+prefill loops tokens on the host. That loop is the correctness path.
+The SIMT union kernel is the fast path and is not wired into the hook
+until the GPU test prints QSA_BATCH_OK.
+
+Draft: attach_draft(layer) and mark_draft(layer) select the no-pool
+page. set_draft_ids supplies the target selection. The existing fork
+hook calls attach_qsa, which is pooled. C7 owns the one-line MTP call.
+G5b did not edit mtp.py.
+
+QSA_SERVE_OK does not launch a kernel. It checks the page view, the
+external storage alias, gather/scatter, a physical remap, and the spec
+patch. GPU numeric agreement of the batch kernels is still the queued
+job.
+
+### GPU job
+
+CARD=0, B70_AGENT=G5b, timeout 7200 s, log
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/g5b-qsa-batch.log.
+xpu-health before card 0: HEALTHY, rc 0, gpu-run done in 26 s, lease
+released. xpu-run is waiting on card 0, held by H1 pid 3218685 since
+10:22:06 (bin/xpu-health). No QSA_XPU_OK or QSA_BATCH_OK in this log
+yet. No xe-reset. The .so was not rebuilt after 10:16.
+
+Greedy agreement with harness/strata_reference.json on prompts longer
+than 4K is still blocked until Flash-Next serves. Do not start
+hotschmoe-dd for it.
+
+### Work left at 10:38
+
+| item | size | note |
+| --- | --- | --- |
+| batch SIMT vs CPU, including graph replay | M, running | queued on card 0 behind H1 |
+| XMX union prefill, mode 1 only | L | after SIMT is green; else report SIMT |
+| hook uses union for chunked prefill | S once SIMT is green | host loop is the current prefill |
+| MTP draft call from C7 plus a GPU draft check | S + the queued test | mark_draft and set_draft_ids exist |
+| greedy >4K vs strata_reference.json | S once a serve exists | not a kernel gap |
+| park GPU round trip | S | CPU remap passed; GPU is in test_qsa_batch.py |

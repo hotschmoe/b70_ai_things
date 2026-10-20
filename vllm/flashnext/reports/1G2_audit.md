@@ -1219,3 +1219,340 @@ in the GDN page view.
 Suggested fix: none for the lowbit brace change. Keep
 active.max().item() off any graph-captured path.
 
+## Pass 6 -- 2026-10-20 10:16 UTC
+
+Cursor at write: JOURNAL.md still ended at the 10:05 C11 heading
+(line 2611). Entries below that time are owned by headings 09:42
+through 10:05. F46's unjournaled D3 bench is now the 09:50 D3
+heading. F42's mirror misses are now disclosed by the 09:51 H1c
+heading. G4 CLI stdout and G5 QSA_XPU_OK are still absent.
+
+### F48 -- H1c M0 warmup, 65/65, mirror disclosed
+
+Claim: the 09:38 rebuild plus the 09:51 heading. _C.so sha256
+bd4f4aa010c718da, 476912 bytes, 09:38. _C.ep.so still 55c154ee,
+8294752 bytes, 08:35. Init warmup clears the scored first-use miss.
+Eager 65/65 and graph 65/65. Mirror fails=3 is not a gate. Flag
+p50 is 1.771 us (heading "1.8 us"). Health before and after
+HEALTHY, no xe-reset.
+
+Evidence: logs/h1c-m0-probe.log and h1c-m0-window.out. PREFLIGHT
+64/4096/17520/65536 and 614400 ok. WARMUP touch inbox=1 parts=1
+flag1=1 flag0=1, exchange attempt=1 err0=0 err1=0, reset ok.
+Eager s=0 first_use push_bad=0, EAGER fails=0. Capture s=0
+capture_executed=0 push_bad=4380 ret_bad=153600, replay push_bad=0,
+GRAPH fails=0. MIRROR fails=3, push_bad 1700/1596/1566, err=0.
+PROBE5 zeMemOpenIpcHandle 2013265924 (ZE_RESULT_ERROR_INVALID_ARGUMENT
+0x78000004), same_ctx=1 path=2, bdf 0000:0b:00.0 and 0000:44:00.0.
+PROBE1 both ways n=200 min 1.667 p50 1.771 max 1.980. PROBE2
+65536 groups=64 us_p50 5.834 GBps 11.233. PROBE3 card0 5.834 card1
+5.833 host wall 26.631. PROBE4 plain_bad=0 uncached_bad=0. PASS
+eager 65/65 graph 65/65. PROBE_RC=0 at 09:49:45. Health before rc=0
+at 09:46:03, health after rc=0 at 09:50:40. No xe-reset in the window.
+
+Verdict: OK. The heading is honest about the mirror arm and the
+capture poison. "1.8 us" is the rounded 1.771 p50.
+
+Suggested fix: none for the scored gate. Keep the mirror arm out of
+the pass line until those three samples are explained.
+
+### F49 -- C9 grouped schedule table
+
+Claim: the 09:42 C9 heading. Strata whole-layer and plugin graph
+times, cosine, eager A/B, gates, and "1.65x to 2.04x slower than
+R2" / "1.23x to 1.46x" / "up to 1.63x eager".
+
+Evidence: c9/fair_all5.log, fair_ctrl.log, c5_anchor.log,
+ours6_sched1.log, ours6_sched0.log, run_ours7.outer.log (44s exit 0),
+health_ours_pre.log and health_ours_post.log HEALTHY card 0 rc 0.
+Control 60.14 / 105.06 / R2 92.39. C5 anchor R2 92.55, IQR2 69.69,
+gu 60.03, all 103.24. Fair rows match the journal table, including
+r2_iqr2_diff=0. Plugin sched=1 and sched=0 us_graph lists match.
+Eager re-read this continuation: sched1 moe_layer a2_us T=1/2/4/8
+230.7/289.9/492.7/877.3, sched0 234.7/397.6/735.6/1426.8, both
+VERDICT failures=0. 1426.8/877.3 = 1.626. Gates: gpu_check.log
+VERDICT failures=0, moe_layer_bench.log VERDICT failures=0,
+compare_cpu.log VERDICT failures=0 types=13/13 and mismatches=0 on
+every OK row, graph_probe.log GRAPH_PROBE_OK. No /v1/models and no
+35B serve in this stage. Library hashes match the heading
+(8a76f559 and 086595a0, both 7574840 bytes).
+
+The 1.65x-2.04x sentence divides plugin XPUGraph medians by Strata
+part-sums (186.32/112.89 = 1.651, 534.72/261.64 = 2.044). Those are
+different clocks: three waited eager parts versus one graph of 48
+calls. The arithmetic is right. The printed 5e-2 and 8e-2 tolerances
+are not in the gate logs. moe_layer_bench prints OK with max_rel up
+to 2.2e2, so that file did not enforce an 8e-2 relative cap.
+UD-IQ3_XXS "753 tensors, shared Q6_K 120, Q8_0 3" is stated in
+reports/1C9_moe_sched.md as a header scan. This pass did not open
+the GGUF.
+
+Verdict: OK on the times, the failures=0 lines, and the speedup
+arithmetic. UNVERIFIED the tensor census and the 5e-2/8e-2 constants.
+
+Suggested fix: cite the tolerance from the checker source next to
+the log, and attach the GGUF header count command to the census
+sentence. Keep the Strata comparison labeled as part-sum versus graph.
+
+### F50 -- E2 layer probes, 34 ms, GEMV mismatch
+
+Claim: the 09:42 and 09:51 E2 headings. Clean bmm 39.28 / 54.44 ms,
+layout and fast unpack, one layer 34.22 ms, rel about 1.8e-4, GEMV
+rows=2 max_abs 1.0, fast probe exited 1. The 22 s reconstruction is
+4*40*140 ms. Not a serve tok/s.
+
+Evidence: e2-bmm-probe.log, e2-grouped-probe.log, e2-layout-probe.log,
+e2-fast-probe.log, e2-layer-probe.log. Numbers match the headings,
+including SMALL_BMM_OK, E2_GROUPED_PROBE_OK, E2_LAYOUT_PROBE_OK,
+E2_LAYER_PROBE_OK, ESIMD max_abs 0, w13 3.78 vs 12.94, w2 1.99 vs
+6.53, bmm view 2.94, gather 0.52, index_add 7.03/7.66, layer spans
+that sum near 34.22, T8192_rel 1.770498e-04. e2-fast-probe.log ends
+at GEMV_MISMATCH. The process exit code is not in that log.
+int3-int4 0.0973-0.0724 = 0.0249 ms, times 40 is about 1.0 ms.
+40*54.44 ms = 2.18 s (heading uses 54 ms and 2.16 s). 40*34.22 ms
+= 1.37 s. 8185/5000 = 1.637 s. The 140 ms chunk is not a printed
+span (printed loops are 115.1 and 119.2). e1mm.so and e2.so mtimes
+were not moved by the 09:51 probes. No identity and no health claim
+on these probes. The served ITL gap 11.29 vs 10.23 is a prior journal
+pair, not re-benched here.
+
+Verdict: OK on the probe numbers. The 22 s line is an estimate.
+UNVERIFIED the fast-probe process rc. The GEMV mismatch line is real.
+
+Suggested fix: keep B70_LOWBIT_GEMV_ROWS unset. Record the fast-probe
+exit code in the log. Do not quote 22 s as a measured serve time.
+
+### F51 -- C11 build, SGN bench, and the nan probe
+
+Claim: 09:50 build in flight, 09:49 _C.c11.so built, 10:05 SGN bench.
+SGN 8/16/40 match SGN=4 on the small layer (max_abs 0). SGN=40 does
+not launch at T=4096 or 12288. Layer ms match the heading. SGN=16 is
+not faster than C10 bmm at T=12288. failures=1 inside the python.
+Health before and after 0. A dtype probe is "queued".
+
+Evidence: c11-build.log ends C11_BUILD_OK, 48 warnings, cpu-run 60s
+exit 0. _C.c11.so 1591952 bytes at 09:48. _C.c10.so and the default
+_C.so were not replaced. c11-bench2.log: waited on H1 xe-reset pid
+3201092 since 09:56:28, HEALTH_BEFORE 0, small-layer max_abs 0,
+FAIL sgn=40 vs bf16-weight max_abs 2.319e+01 max_rel 1.941e+00,
+ROUTE empty=0, event_us match the heading's ms (T=12288
+77920.4/76416.0/76137.6). SGN=40 at T=4096 and T=12288 raises
+RuntimeError, work-group above 512. Dequant gate/up/down
+7807.0/7814.6/7407.0 us (256.0/255.8/258.4 GB/s). Copy gate bf16
+6375.8 us / 526.3 GB/s. oneDNN TypeError on torch.nn.functional
+shadowed as F. BUDGET best_sgn 4/8/16. VERDICT failures=1, cpu-run
+exit 0, gpu-run exit 0, HEALTH_AFTER 0. The heading's "held since
+09:59" is the state after this bench; the bench itself waited on
+the 09:56 xe-reset.
+
+c11-bench.log (09:51) is an earlier run the 10:05 heading does not
+use: CHECK finite=False, VERDICT failures=4, gpu-run exit 1, health
+after HEALTHY. c11-nan.log (09:55) already finished: y_randn all NaN
+on both _C.c11.so and _C.c10.so, gate_bf16 finite max_abs 480,
+HEALTH_BEFORE and HEALTH_AFTER 0, C11_NAN_RC 0. c11-build-b.log ends
+C11_BUILD_OK, _C.c11b.so 1760272 bytes at 10:04, cpu-run 70s exit 0.
+c11-xslm.log and c11-dnn.log are only the lease wait on H1 xpu-health
+since 09:59:25. No dispatch change is claimed, and none is shown.
+
+Verdict: OK on the 10:05 bench numbers and on the build. The sentence
+"a dtype probe is queued" is WRONG as of 10:05: c11-nan.log had
+already finished at 09:55 and the outputs are nonfinite. The oneDNN
+wait was still true.
+
+Suggested fix: cite c11-nan.log in the C11 heading. Refuse SGN that
+makes the MT=16 group larger than 512 before submit, instead of
+raising from the runtime.
+
+### F52 -- D3 no-MTP and Shisa e2e
+
+Claim: the 09:50 D3 heading. No-MTP C1 ITL 12.60/12.83/13.07, 79.39
+tok/s, a 0.20 ms win versus D1 12.81/12.99/13.12 and 78.23. Shisa
+spec=2 C1 18.67/19.15/19.41, 121.67 tok/s, acceptance 113/170, versus
+D2 18.72/18.97/19.26 and 121.73 with the same 113/170. Identity and
+coherence pass. First Shisa attempt lost the device on ragged slot
+width 3. Second attempt skipped ragged and benched clean. Card 1
+HEALTHY. B70_D3_GDN_SPEC stays off in the verdict.
+
+Evidence: d3-bench-gdn.json matches the no-MTP numbers (F46's parse,
+now owned). d1-bench-graph-fa.json C1 p50/p90/p99 12.807/12.995/13.121,
+78.228 tok/s, C2 p50 13.749 and 13.748, prefill 6029.7/7888.3/6414.4.
+Raw delta versus D3 p50 12.603 is 0.204 ms, which rounds to 0.20.
+d2-bench-shisa-spec2.json C1 18.725/18.967/19.256, 121.734 tok/s,
+accepted 113, draft 170. d3-bench-shisa.json C1 18.674/19.154/19.414,
+121.669 tok/s, accepted 113 of 170. Identity on all three JSON files
+is hotschmoe-dev then ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2,
+first_ok and alias_ok true, short Paris coherence OK. D1, D2, and D3
+serves are the same checkpoint, FULL_DECODE_ONLY, FLASH_ATTN, max len
+33792, port 18081. D2's banner is gdn=default. D3 Shisa sets
+B70_D3_GDN=1 and B70_D3_GDN_SPEC=1, so the 0.05 ms pair is not a
+single-variable ablation.
+
+d3-serve-shisa.log is the second attempt (startup 09:46, gpu-run done
+in 186s exit 0). It logs "b70_d3 gdn skip spec ragged ntok=4
+slot=(2, 3)" and then uniform captures. GET /v1/models 200 and
+completion 200. Shutdown is SIGTERM, clean. The file contains no
+DEVICE_LOST string. reports/1D3_gdn_attn.md cites that same filename
+for a 09:29 first attempt. That text is gone. No d3* log contains
+HEALTHY or xe-reset. The spec bench ran with B70_D3_GDN_SPEC=1 even
+though the verdict says that flag stays off.
+
+Verdict: OK on the JSON numbers, the 0.204 ms rounding, the ragged
+skip, and the clean second shutdown. UNVERIFIED the first-attempt
+device loss and the card-1 HEALTHY line, because the cited log was
+overwritten and no health file was saved.
+
+Suggested fix: keep the first-attempt log under a distinct name.
+Save the xpu-health transcript next to the serve log. Say in the
+verdict that the spec bench turned B70_D3_GDN_SPEC on, and that the
+flag stays off for the daily path.
+
+### F53 -- G4 T2 abort on RequestOffloadState
+
+Claim: the 09:55 G4 heading. Health before OK. Ready 09:53:38.
+slots=4 chunks=1542 exact_tail=True, mmap 34.36 GB, the four TTFT
+lines, host HIT, then parking.py:578 AttributeError on
+_g4_tail_key, empty restored completion, cold filler HTTP 500, no
+T2_RESULT, health after HEALTHY. Not a pass.
+
+Evidence: g4-t2-driver-c1-r1.txt and r2.txt are identical. Ready
+09:53:38. Identity list hotschmoe-dev then the Ornith GPTQ alias.
+turn1 ttft 0.531s computed 3000, control 0.443s computed 3081,
+B 5.032s, C 5.023s, restored ttft 0.013s out=0 text empty, then
+HTTP Error 500. Serve log g4-t2-serve-c1-r1.txt: command line matches
+the heading (card 1, port 18111, 45 blocks, cpu_bytes 34359738368,
+shm 40g, memory 80g, PIECEWISE mode 0, park-finished-tail, fork
+serve path). Parking line at 09:53:32 matches slots/chunks/groups.
+mmap 34.36 GB. Queued tails end=3063/3144/30464/30464. Traceback
+at 09:54:06 is parking.py:578 `req_status._g4_tail_key = record.key`,
+AttributeError, EngineDeadError. Driver health after is xpu-health
+HEALTHY card 1, gpu-run exit 0, ATTEMPT_RC 1, T2_DRIVER_EXIT 1.
+No T2_RESULT. The log does not print the token HIT. The string
+swap_blocks_batch was not in the lines read.
+
+The file parking.py on disk now has no _g4_tail_key. Line 578 is
+`if record is None:`. The hit path stores
+`self._tail_choice[request.request_id]`. That edit is not in a
+journal heading yet. g4-t2-driver-c1-r3.txt (10:02) is a later
+attempt: SERVE_DIED before ready, card 1 held by H1 xpu-health since
+09:58:21, gpu-run timeout 180s, rc=124. g4-t2-health-after-c1.txt
+is that later wait (90s timeout, card held by E2), not the abort
+run's HEALTHY line. g4-t2-health-before-c1.txt is the 09:58 retry
+and is HEALTHY card 1.
+
+Verdict: OK on the abort numbers, the traceback, identity, and the
+driver's health-after. The HIT word is the code path, not a log
+token. The r3 timeout is unjournaled. The parking edit is unproven.
+
+Suggested fix: journal the r3 lease timeout separately. Re-run T2
+only after the _tail_choice path is the one loaded, and keep a
+T2_RESULT only if the restored completion is non-empty.
+
+### F54 -- H1c M1 r1, numeric miss, xe-reset
+
+Claim: the 09:59 H1c heading. Warmup, attempt 1 err1=11 then attempt
+2 clean, own_max=0 at every T, the full_max/elem_rel table, TIME
+T=1 580 vs 411 us and T=8 591 vs 816 us, M1_RC=1, xe-reset, health
+after HEALTHY at 09:58:47. The T=4096 miss is the relative
+definition. The gate is not described as passed.
+
+Evidence: h1c-m1-layer-r1.log (same bytes as h1c-m1-layer.log).
+qtypes 22/22/21, E=256. WARMUP touch all 1, exchange attempt=1
+err1=11, attempt=2 err0=0 err1=0. OK T=1/2/4/8 own_max=0 bitwise=1.
+full_max/full_rel: T=1 3.725e-09 / 8.720e-06, T=2 7.451e-09 /
+4.310e-04, T=4 1.490e-08 / 4.585e-04, T=8 1.490e-08 / 4.493e-04,
+T=4096 FAIL full_max 2.980e-08 full_rel 7.515e-02 cos 1. TIME
+579.6/410.9 and 591.1/816.1. FAIL layers=1. gpu-run done in 47s
+exit 1. h1c-m1-window-r1.out: health before HEALTHY cards 0 1,
+M1_RC=1 at 09:56:28, xe-reset unbind/bind both BDFs, collective
+HEALTHY, RECOVERED method=rebind, HEALTH_AFTER_RC=0 at 09:58:47.
+Host loader in the same log is libze_loader.so.1.28.2. The 09:52
+heading is only the window open and has no result.
+
+Verdict: OK. The printed table matches, with T=4's 4.585e-04 rounded
+to 4.5e-4 in the heading. M1_RC=1 means the process failed its own
+gate. "xe-reset on a numeric miss will not run again" is a promise,
+not a measurement.
+
+Suggested fix: score max|a-b| / max|b| in the gate that sets the
+process rc, and do not xe-reset on that numeric miss. Keep the
+elem_rel print.
+
+### F55 -- unjournaled E2 serve death and side logs
+
+Claim: no heading through 10:05 owns a lowbit e2 serve result.
+The 09:51 E2 heading says the next serve is still ahead.
+
+Evidence: logs/e2-serve.log, card 1, port 18084, int3 checkpoint
+qwen36-w3a16-g128-experts-w4a16-trunk, served-model-name
+hotschmoe-dev then qwen36-w3a16-b70-lowbit, FULL_DECODE_ONLY,
+FLASH_ATTN, max len 33792, max-num-batched-tokens 8192,
+B70_LOWBIT_SO=libb70_lowbit_xpu_e2u.so. Application startup complete.
+GET /v1/models 200 twice. The response body is not in the log, and
+there is no coherence text. At 10:14:26 a completion with
+prompt_token_ids_len=8204 and num_computed_tokens=7616 died in
+moe.py expert_prefill_bmm at torch.bmm:
+UR_RESULT_ERROR_OUT_OF_RESOURCES. HTTP 500. gpu-run done in 946s
+exit 0. No xpu-health line and no xe-reset in that log.
+e2-prefill-mode.txt contains "matmul". e2-fwd-split.log says
+fwd_split installed. No bench JSON and no tok/s.
+
+Verdict: UNVERIFIED as a journal claim because no heading owns it.
+The OOR and the engine death are in the raw log. Do not treat exit 0
+as a healthy serve.
+
+Suggested fix: a heading that records the OOR, whether /v1/models
+returned hotschmoe-dev first, and health after. Run xe-reset if the
+card is not HEALTHY before the next GPU job.
+
+### F56 -- code read this pass
+
+Claim: new plugin and parking code should not hide a bad bound or a
+host sync inside a captured op.
+
+Evidence: sched_moe.hpp b70_sched_gu checks g >= plan->ng and
+row_wg * kSchedRows >= 2 * I, and launches with
+reqd_sub_group_size(kSchedSg). No queue.wait in that launch. The
+grid size uses the host integer host_groups while the kernel also
+reads plan->ng. d3_gdn.py refuses spec when ntok != nseq * nwidth
+or the index is short, and the Shisa log shows that skip. The C11
+SGN=40 path does not pre-check the 512 work-item cap; the bench
+raises from the runtime (F51). ep probe.cpp and ep_kernels.cpp still
+call memcpy().wait() on host reads. The M0/M1 logs place warmup
+before the scored rows. This pass did not show those waits inside a
+replayed graph. moe.py expert_prefill_bmm is the OOR site (F55) and
+still uses a host .item() on the prefill pad path (F47). parking.py
+no longer writes _g4_tail_key; the crash traceback is from the code
+that ran at 09:54. The replacement _tail_choice path has not been
+re-measured. Plugin diff since the last status check is 33 lines in
+types.py, decode.hpp, dequant_fast.cpp, iq_dot.hpp, kernels.cpp,
+row_moe.hpp, and compare_cpu.py, with no synchronize or .item() added.
+
+Verdict: OK on the sched bounds and the ragged GDN guard. The C11
+work-group reject is a hard error, not a silent skip. UNVERIFIED
+whether any ep memcpy.wait sits inside capture. The parking fix is
+unproven.
+
+Suggested fix: size the sched grid from plan->ng. Pre-check C11
+work-group size. Keep ep host waits out of the captured submit.
+Re-bench T2 on the _tail_choice build.
+
+### F57 -- repo hygiene at 10:14 UTC
+
+Claim: no secrets, no newly staged binaries, no host UMD change, fork
+not pushed.
+
+Evidence: git diff --cached is empty. git status --short has 18 lines.
+The only binary is the pre-existing modified
+vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so.
+vllm/flashnext/.gitignore `*.so` ignores _C.c11.so and the ep _C.so.
+No secret-like names. Fork b70/flashnext tip moved from e442b4b53f
+to 9761b7b48a, "[XPU] Attach the default-off QSA plugin when
+B70_QSA=1", ahead 15 of origin/main, working tree clean. That commit
+does not supply the missing QSA_XPU_OK transcript (F44). Serve logs
+this pass still resolve host libze_loader.so.1.28.2 and IGC 2.36.3.
+No heading claims an apt or driver change.
+
+Verdict: OK.
+
+Suggested fix: none. Leave the pre-existing .so unstaged. Do not push.
+

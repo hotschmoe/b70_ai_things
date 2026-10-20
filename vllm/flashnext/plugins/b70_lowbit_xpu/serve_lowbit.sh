@@ -33,6 +33,7 @@ ATTN="${ATTN:-}"
 GDN_BACKEND="${GDN_BACKEND:-}"
 ASYNC="${ASYNC:-1}"
 MAX_BATCHED="${MAX_NUM_BATCHED_TOKENS:-}"
+PREFIX_CACHE="${PREFIX_CACHE:-1}"
 NAME="${NAME:-vllm-fn-lowbit-c${CARD}}"
 MODEL="${MODEL:-$REPO/models/files/ornith-1.5-35b-a3b/gptq-int4-mixedcal-v2}"
 ALIAS="${ALIAS:-ornith-1.5-35b-a3b-b70-lowbit-int4}"
@@ -90,6 +91,9 @@ if [[ "$ASYNC" == "0" ]]; then
 fi
 if [[ -n "$MAX_BATCHED" ]]; then
   ARGS+=(--max-num-batched-tokens "$MAX_BATCHED")
+fi
+if [[ "$PREFIX_CACHE" == "0" ]]; then
+  ARGS+=(--no-enable-prefix-caching)
 fi
 
 echo "serve_lowbit: card=$CARD port=$PORT dtype=$DTYPE max_len=$MAX_LEN graph=$GRAPH mode=$GRAPH_MODE attn=${ATTN:-default} name=$NAME"

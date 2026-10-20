@@ -239,6 +239,7 @@ void dispatch(int type, Fn fn) {
         B70_DISPATCH(B70_Q2_K)
         B70_DISPATCH(B70_Q3_K)
         B70_DISPATCH(B70_Q2_0)
+        B70_DISPATCH(B70_Q8_0)
     default: throw std::runtime_error("b70_gguf: unsupported ggml type");
     }
 }

@@ -32,6 +32,7 @@ GRAPH="${GRAPH:-1}"
 GRAPH_MODE="${GRAPH_MODE:-PIECEWISE}"
 CAPTURE_SIZES="${CAPTURE_SIZES:-1,2,3,4,8}"
 GPU_MEM="${GPU_MEM:-0.90}"
+MAX_NUM_SEQS="${MAX_NUM_SEQS:-2}"
 # PIECEWISE on this image has no ocloc, so inductor autotune dies.
 # D1's working path is compilation mode NONE plus breakable graphs.
 BREAKABLE="${VLLM_USE_BREAKABLE_CUDAGRAPH:-1}"
@@ -65,7 +66,7 @@ ARGS=(
   --gpu-memory-utilization "$GPU_MEM"
   --num-gpu-blocks-override "$NUM_GPU_BLOCKS"
   --language-model-only
-  --max-num-seqs 2
+  --max-num-seqs "$MAX_NUM_SEQS"
   --enable-prefix-caching
   --mamba-cache-mode align
   --enable-prompt-tokens-details
@@ -93,7 +94,7 @@ else
   ARGS+=(--compilation-config "$CFG")
 fi
 
-echo "g4 serve: card=$CARD port=$PORT max_len=$MAX_LEN blocks=$NUM_GPU_BLOCKS cpu_bytes=$CPU_BYTES shm=$SHM_SIZE memory=$MEMORY slots=$SLOTS graph=$GRAPH mode=$GRAPH_MODE breakable=$BREAKABLE reclaim=$RECLAIM name=$NAME"
+echo "g4 serve: card=$CARD port=$PORT max_len=$MAX_LEN blocks=$NUM_GPU_BLOCKS cpu_bytes=$CPU_BYTES shm=$SHM_SIZE memory=$MEMORY slots=$SLOTS seqs=$MAX_NUM_SEQS graph=$GRAPH mode=$GRAPH_MODE breakable=$BREAKABLE reclaim=$RECLAIM copy=${B70_KVPARK_COPY:-0} name=$NAME"
 echo "g4 serve: ${ARGS[*]}"
 
 export B70_AGENT="${B70_AGENT:-g4}"
@@ -101,8 +102,10 @@ export VLLM_USE_BREAKABLE_CUDAGRAPH="$BREAKABLE"
 export B70_XPU_CG_RECLAIM="$RECLAIM"
 exec "$HARNESS" --card "$CARD" --name "$NAME" --port "$PORT" \
   --shm-size "$SHM_SIZE" --memory "$MEMORY" \
-  --env "PYTHONPATH=${FORK}:$REPO/vllm/flashnext" \
+  --env "PYTHONPATH=${FORK}:$REPO/vllm/flashnext:$REPO/vllm/flashnext/plugins/b70_kvpark" \
   --env PYTHONDONTWRITEBYTECODE=1 \
   --env "VLLM_USE_BREAKABLE_CUDAGRAPH=$BREAKABLE" \
   --env "B70_XPU_CG_RECLAIM=$RECLAIM" \
+  --env "B70_KVPARK_COPY=${B70_KVPARK_COPY:-0}" \
+  --env "B70_KVPARK_SO=${B70_KVPARK_SO:-/mnt/vm_8tb/b70/build/vllm-flashnext/b70_kvpark/libb70_kvpark.so}" \
   -- "${ARGS[@]}"

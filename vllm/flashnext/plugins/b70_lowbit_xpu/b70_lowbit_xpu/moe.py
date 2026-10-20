@@ -139,8 +139,10 @@ def _group_slots(ids: torch.Tensor, num_experts: int):
         starts = torch.cat(
             (torch.zeros(1, dtype=torch.int32, device=ids.device), tail), 0
         )
-    mmax = int(active.max().item()) if slots and num_experts else 0
-    return order, key, starts, mmax, topk
+    # One D2H. The max sets the pad, and the counts are the tile bounds.
+    active_cpu = active.tolist() if slots and num_experts else []
+    mmax = max(active_cpu) if active_cpu else 0
+    return order, key, starts, mmax, topk, active_cpu
 
 
 def _scatter_rows(src, expert, local, num_experts: int, mmax: int, k: int):
@@ -160,6 +162,20 @@ def _scatter_rows(src, expert, local, num_experts: int, mmax: int, k: int):
     return dest
 
 
+def _bmm_tile(num_experts: int, mmax_pad: int, k: int, n: int) -> int:
+    """Experts per vendor bmm. One tile's operands stay under 256 MiB.
+
+    A single bmm of all 256 experts raised Level Zero
+    UR_RESULT_ERROR_OUT_OF_RESOURCES beside the KV cache. The per-expert
+    F.linear path fits in that residual. Tiling keeps the vendor GEMM.
+    """
+    budget = 256 * 1024 * 1024
+    per = mmax_pad * (k + n) * 2 + n * k * 2
+    if per <= 0:
+        return min(num_experts, 32)
+    return max(1, min(num_experts, 32, budget // per))
+
+
 def expert_prefill_bmm(
     x: torch.Tensor,
     topk_ids: torch.Tensor,
@@ -172,12 +188,11 @@ def expert_prefill_bmm(
     w2_scale: torch.Tensor,
     bits: int,
 ) -> torch.Tensor:
-    """One unpack of every expert and one vendor bmm per projection.
+    """Unpack every expert, then vendor bmm in expert tiles.
 
     Same math as the per-expert F.linear loop: bf16 GEMM, fp32 SiLU, fp32
-    router index_add. Empty experts are still in the batch. A pad past
-    8 GB falls back to the loop so a one-expert hotspot cannot allocate
-    the full [E, T*topk, K] cube.
+    router index_add. A tile is a contiguous expert id range. Empty
+    experts inside a tile stay in that bmm and are not gathered.
     """
     t_tokens, hidden = x.shape
     num_experts = int(w13_plane2.shape[0])
@@ -202,47 +217,68 @@ def expert_prefill_bmm(
             bits,
         ).view(num_experts, hidden, intermediate)
     with _span("group"):
-        order, key, starts, mmax, topk = _group_slots(topk_ids, num_experts)
+        order, key, starts, mmax, topk, active_cpu = _group_slots(
+            topk_ids, num_experts
+        )
     y = torch.zeros(t_tokens, hidden, dtype=torch.float32, device=x.device)
     if mmax <= 0:
         return y.to(torch.bfloat16)
     mmax_pad = (mmax + 7) & ~7
-    if num_experts * mmax_pad * hidden * 2 > 8_000_000_000:
-        raise RuntimeError(
-            f"bmm pad {num_experts}*{mmax_pad}*{hidden} exceeds 8GB"
-        )
+    starts_cpu = []
+    cursor = 0
+    for n_hit in active_cpu:
+        starts_cpu.append(cursor)
+        cursor += int(n_hit)
+    n_valid = cursor
     slots = int(order.shape[0])
     pos = torch.arange(slots, device=x.device, dtype=torch.int32)
     sorted_e = key[order]
-    valid = sorted_e < num_experts
+    # Invalid ids sort last, so the valid prefix is experts in id order.
     local = pos - starts[sorted_e.clamp(0, max(num_experts - 1, 0))]
     tok = torch.div(order, topk, rounding_mode="floor")
-    expert = sorted_e[valid]
-    local_v = local[valid]
-    tok_v = tok[valid]
-    flat_i = expert.to(torch.int64) * mmax_pad + local_v.to(torch.int64)
-    with _span("pad_x"):
-        gathered = x.index_select(0, tok_v)
-        xpad = _scatter_rows(gathered, expert, local_v, num_experts, mmax_pad, hidden)
-    with _span("bmm_w13"):
-        # xpad is [E, M, K], w13 is [E, N, K]. bmm(X, W^T) writes
-        # [E, M, N] directly. Forcing the X transpose contiguous, then
-        # transposing [E, N, M], was 7.4 ms plus 0.95 ms. The view is
-        # 2.94 ms and the following row gather is 0.52 ms (T=8192).
-        gu = torch.bmm(xpad, w13.transpose(1, 2))
-        gu = gu.reshape(num_experts * mmax_pad, n13).index_select(0, flat_i)
-    with _span("silu"):
-        gate = gu[:, :intermediate]
-        up = gu[:, intermediate:]
-        hid = (F.silu(gate.float()) * up.float()).to(torch.bfloat16)
-    with _span("pad_hid"):
-        hpad = _scatter_rows(hid, expert, local_v, num_experts, mmax_pad, intermediate)
-    with _span("bmm_w2"):
-        down = torch.bmm(hpad, w2.transpose(1, 2))
-        down = down.reshape(num_experts * mmax_pad, hidden).index_select(0, flat_i)
-    with _span("reduce"):
-        weight = topk_weights.reshape(-1).to(torch.float32)[order[valid]].unsqueeze(-1)
-        y.index_add_(0, tok_v.to(torch.int64), down.float() * weight)
+    expert = sorted_e[:n_valid]
+    local_v = local[:n_valid]
+    tok_v = tok[:n_valid]
+    order_v = order[:n_valid]
+    router = topk_weights.reshape(-1).to(torch.float32)
+    e_tile = min(
+        _bmm_tile(num_experts, mmax_pad, hidden, n13),
+        _bmm_tile(num_experts, mmax_pad, intermediate, hidden),
+    )
+    for e0 in range(0, num_experts, e_tile):
+        e1 = min(num_experts, e0 + e_tile)
+        lo = starts_cpu[e0]
+        hi = starts_cpu[e1] if e1 < num_experts else n_valid
+        if hi <= lo:
+            continue
+        ex = expert[lo:hi] - e0
+        loc = local_v[lo:hi]
+        tok_s = tok_v[lo:hi]
+        n_e = e1 - e0
+        flat = ex.to(torch.int64) * mmax_pad + loc.to(torch.int64)
+        with _span("pad_x"):
+            gathered = x.index_select(0, tok_s)
+            xpad = _scatter_rows(
+                gathered, ex, loc, n_e, mmax_pad, hidden
+            )
+        with _span("bmm_w13"):
+            # xpad is [tile, M, K], weight is [tile, N, K].
+            gu = torch.bmm(xpad, w13[e0:e1].transpose(1, 2))
+            gu = gu.reshape(n_e * mmax_pad, n13).index_select(0, flat)
+        with _span("silu"):
+            gate = gu[:, :intermediate]
+            up = gu[:, intermediate:]
+            hid = (F.silu(gate.float()) * up.float()).to(torch.bfloat16)
+        with _span("pad_hid"):
+            hpad = _scatter_rows(
+                hid, ex, loc, n_e, mmax_pad, intermediate
+            )
+        with _span("bmm_w2"):
+            down = torch.bmm(hpad, w2[e0:e1].transpose(1, 2))
+            down = down.reshape(n_e * mmax_pad, hidden).index_select(0, flat)
+        with _span("reduce"):
+            weight = router[order_v[lo:hi]].unsqueeze(-1)
+            y.index_add_(0, tok_s.to(torch.int64), down.float() * weight)
     return y.to(torch.bfloat16)
 
 

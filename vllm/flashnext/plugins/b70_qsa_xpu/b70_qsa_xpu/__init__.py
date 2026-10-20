@@ -1,9 +1,10 @@
 """vLLM general plugin: QSA indexer attention on XPU.
 
 Registration does not load the SYCL library. The first kernel call does.
-B70_QSA=1 on the fork model imports model_hook separately; this entry point
-stays a no-op so a missing .so does not break process start.
+The KV-cache spec is registered here when vLLM is already imported.
 """
+
+import sys
 
 _REGISTERED = False
 
@@ -13,3 +14,12 @@ def register() -> None:
     if _REGISTERED:
         return
     _REGISTERED = True
+    try:
+        from b70_qsa_xpu.kv_spec import register_specs
+
+        register_specs()
+    except Exception as exc:
+        print(
+            f"b70_qsa_xpu: KV spec not registered ({type(exc).__name__}: {exc})",
+            file=sys.stderr,
+        )

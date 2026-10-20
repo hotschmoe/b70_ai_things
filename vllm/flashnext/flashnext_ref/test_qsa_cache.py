@@ -137,6 +137,56 @@ def _feed_pair(
     return outs
 
 
+def test_plugin_layout_matches() -> None:
+    import sys
+    from pathlib import Path
+
+    plugin = Path(__file__).resolve().parents[1] / "plugins" / "b70_qsa_xpu"
+    sys.path.insert(0, str(plugin))
+    from b70_qsa_xpu.layout import page_layout
+
+    keys = (
+        "block_size",
+        "n_kv",
+        "head_dim",
+        "groups",
+        "idx_dim",
+        "idx_block",
+        "n_states",
+        "k_codes_off",
+        "v_codes_off",
+        "k_scale_off",
+        "v_scale_off",
+        "pooled_off",
+        "kv_bytes",
+        "pooled_bytes",
+        "page_bytes",
+    )
+    geoms = (QsaGeom(), _small())
+    for geom in geoms:
+        for block in (4, 8, 16):
+            for pooled in (True, False):
+                a = make_layout(geom, block, pooled=pooled)
+                b = page_layout(
+                    geom.n_kv,
+                    geom.head_dim,
+                    geom.idx_dim,
+                    geom.idx_block,
+                    block,
+                    pooled=pooled,
+                )
+                for key in keys:
+                    _check(
+                        f"plugin {key} hd{geom.head_dim} b{block} p{int(pooled)}",
+                        getattr(a, key) == b[key],
+                        f"{getattr(a, key)} vs {b[key]}",
+                    )
+                _check(
+                    f"plugin pooled hd{geom.head_dim} b{block} p{int(pooled)}",
+                    int(a.pooled) == b["pooled"],
+                )
+
+
 def test_layout_flashnext() -> None:
     lay = make_layout(QsaGeom(), 16, pooled=True)
     _check("kv region", lay.kv_bytes == 1056 * 16, str(lay.kv_bytes))
@@ -429,6 +479,7 @@ def test_flashnext_shape() -> None:
 
 def main() -> None:
     test_layout_flashnext()
+    test_plugin_layout_matches()
     test_write_step_inactive()
     test_batch_matches_state(4)
     test_batch_matches_state(8)

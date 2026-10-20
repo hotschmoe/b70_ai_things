@@ -114,13 +114,25 @@ struct B70Part {
 
 template <int TYPE>
 inline constexpr bool b70_dp4a_type() {
-    return TYPE == B70_IQ2_XXS || TYPE == B70_IQ2_XS || TYPE == B70_IQ2_S || TYPE == B70_IQ3_XXS || TYPE == B70_IQ3_S ||
-           TYPE == B70_IQ4_NL || TYPE == B70_Q2_0;
+    return TYPE == B70_Q8_0 || TYPE == B70_IQ2_XXS || TYPE == B70_IQ2_XS || TYPE == B70_IQ2_S || TYPE == B70_IQ3_XXS ||
+           TYPE == B70_IQ3_S || TYPE == B70_IQ4_NL || TYPE == B70_Q2_0;
 }
 
 template <int TYPE>
 inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
-    if constexpr (TYPE == B70_IQ2_XXS) {
+    if constexpr (TYPE == B70_Q8_0) {
+        // qs is at offset 2, so the 32 int8 are not 4-aligned. Pack bytes.
+        const uint8_t* b = row + (size_t)gi * 34;
+        const uint8_t* qs = b + 2;
+#pragma unroll
+        for (int j = 0; j < 8; ++j) {
+            uint32_t w = (uint32_t)qs[4 * j] | ((uint32_t)qs[4 * j + 1] << 8) | ((uint32_t)qs[4 * j + 2] << 16) |
+                         ((uint32_t)qs[4 * j + 3] << 24);
+            m.w[j] = (int)w;
+        }
+        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.fin = 0;
+    } else if constexpr (TYPE == B70_IQ2_XXS) {
         const int ib = gi & 7;
         const uint8_t* b = row + (size_t)(gi >> 3) * 66;
         const uint64_t qq = b70_loadu64(b + 2 + 8 * ib);
@@ -302,6 +314,9 @@ inline float b70_acc_k(int type, const uint8_t* row, int ng, int lane, const B70
         break;
     case B70_Q2_0:
         for (int g = lane; g < ng; g += 16) acc += b70_dot32<B70_Q2_0>(row, g, xr[g]);
+        break;
+    case B70_Q8_0:
+        for (int g = lane; g < ng; g += 16) acc += b70_dot32<B70_Q8_0>(row, g, xr[g]);
         break;
     case B70_Q4_K:
         for (int g = lane; g < ng; g += 16) acc += b70_dot32<B70_Q4_K>(row, g, xr[g]);

@@ -1,5 +1,6 @@
 """ggml type ids used by the Flash-Next IQ3_XXS GGUF mix."""
 
+Q8_0 = 8
 Q2_K = 10
 Q3_K = 11
 Q4_K = 12
@@ -16,6 +17,7 @@ Q2_0 = 42
 
 # (block elements, block bytes). Row bytes = (K / block_elems) * block_bytes.
 BLOCK = {
+    Q8_0: (32, 34),
     Q4_K: (256, 144),
     Q5_K: (256, 176),
     Q6_K: (256, 210),
@@ -32,6 +34,7 @@ BLOCK = {
 }
 
 NAMES = {
+    Q8_0: "Q8_0",
     Q4_K: "Q4_K",
     Q5_K: "Q5_K",
     Q6_K: "Q6_K",
