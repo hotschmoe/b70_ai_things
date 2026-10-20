@@ -413,3 +413,309 @@ D1 (prompts/D1_overhead.md): profile eager step, XPU graph capture, host
 overhead fixes; target C1 ITL < 15 ms on 35B int4.
 RESULT: pending.
 VERDICT: decode overhead is the top latency item; quality eval deferred.
+
+## 2026-10-20 04:45 D1 -- MTP eager latency on the running A3 serve
+
+CONFIG: card 1, Ornith GPTQ int4 mixedcal-v2, TP=1, dtype float16,
+language-model-only, enforce-eager, gpu-memory-utilization 0.90,
+max-model-len 33792, max-num-seqs 4, port 18081, MTP method=mtp
+num_speculative_tokens=2. Container vllm-fn-ornith-c1. Served names
+hotschmoe-dev then ornith-1.5-35b-a3b-GPTQ-int4-mixedcal-v2.
+XPUExpertsWNA16, FlashAttention. No graph.
+COMMAND: harness/bench_latency.py --base-url http://127.0.0.1:18081
+--tag mtp-eager --decode-tokens 64
+--out /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-bench-mtp.json
+RESULT: identity ok. Coherence ok, both texts identical and name Paris.
+C1 ITL p50/p90/p99 82.60/85.09/95.52 ms, 20.99 tok/s, n=64, n_chunks=37
+(about 1.73 tokens per SSE chunk). C2 streams 22.60 and 21.96 tok/s,
+ITL p50 82.05 and 82.02 ms. Prefill 1017/8185/32762 tok TTFT
+169.60/1052.88/5358.87 ms (5996/7774/6114 tok/s). MTP acceptance during
+the bench 87/218 = 0.399. Engine log at 04:40:36: mean acceptance
+length 1.77, per-position acceptance 0.683 and 0.083, draft acceptance
+38.3%, generation throughput 21.8 tok/s. A3 eager no-MTP reference was
+C1 ITL 74.78 ms and 13.57 tok/s. Chunk ITL did not drop. Tokens per
+step rose, so tok/s rose from 13.6 to 21.0. Prefill matches the eager
+reference. docker stop vllm-fn-ornith-c1 after the bench. gpu-run
+parent exited and card 1 lock was free.
+VERDICT: MTP eager is coherent. The engine step is still about 83 ms.
+Acceptance of the second draft token is 8%, so most of the extra
+forward is wasted. Per-token latency is about 48 ms (1000/20.99),
+still far from the 15 ms milestone. Next is an eager no-MTP step
+breakdown, then XPU graph capture.
+
+## 2026-10-20 04:48 C3 -- fused MoE launches measured, 2-submit kept
+
+CONFIG: card 1, cpu-run --quiet, container b70-lowbit-launch, memory
+32g. .so /mnt/vm_8tb/b70/build/vllm-flashnext/b70_lowbit_xpu/libb70_lowbit_xpu.so
+1442856 bytes (rebuilt 04:05; 4-submit path plus GateUpSilu+DownReduce
+and one-work-group MoeTokenKernel). Ornith decode shape T=1 topk=8
+E=256 H=2048 I=512 int4 random b70lb1 planes. Times are torch.xpu.Event
+around the host op. Match gate is max abs 0.05 versus the 4-submit op.
+Then tests/bench_lowbit.py with B70_LOWBIT_MOE_LAUNCHES unset, so the
+regression stays on the 4-submit default. Same container, so the card
+was not released between them.
+COMMAND: B70_AGENT=C3 B70_GPU_LOCK_TIMEOUT=30 B70_CPU_LOCK_TIMEOUT=20
+bin/cpu-run --quiet harness/xpu-run.sh --card 1 --memory 32g
+--name b70-lowbit-launch -- bash
+plugins/b70_lowbit_xpu/tests/run_gpu_window.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/b70_lowbit_xpu/launch_bench_c3.log
+RESULT: 2-submit vs 4-submit max abs 0.000000 on the small shape and
+on the Ornith shape. TIME 4-submit 143.7 us, 2-submit 128.9 us.
+1-submit max abs 0.000000 on both shapes. TIME 1-submit 3099.6 us
+against a 4-submit repeat of 207.4 us in that process. bench_lowbit.py
+PASS on pack, gemv, moe, prefill wna16, wxa8, quant config, linear
+apply, and MoE decode/prefill (int2/int3/int4). WINDOW_LAUNCH_RC 0,
+WINDOW_BENCH_RC 0, GPU_WINDOW_RC 0, wall 122 s. One int4 MoE case
+reports max_abs 16 with rel_l2 3.64e-4 and cosine 1.0 and still passes
+the B2 rel/cos gate. Container exited. Card 1 was then taken again by
+vllm-fn-ornith-c1 (started 04:48:30). Card 0 stayed with C4.
+VERDICT: Serve path is B70_LOWBIT_MOE_LAUNCHES=2. It matches the
+4-submit numerics on this shape and is about 15 us faster per MoE
+call, about 0.6 ms per token across 40 layers. The 1-submit kernel is
+correct and about 15x slower, so it is not used. Int3 checkpoint
+serve is next, on the next card whose fuser is empty and which has no
+XPU_RUN_CARD container. The 04:02 int4 note still owes a card-0
+post-health; this window was card 1 and both cards were held again
+before a health probe.
+
+## 2026-10-20 04:55 D1 -- eager decode step is host-bound
+
+CONFIG: card 1, Ornith GPTQ int4 mixedcal-v2, TP=1, dtype float16,
+language-model-only, enforce-eager, gpu-memory-utilization 0.90,
+max-model-len 33792, max-num-seqs 4, port 18081, no MTP, no graph.
+Container vllm-fn-ornith-c1. XPUExpertsWNA16, FlashAttention, SYCL GDN.
+In-process timer on GPUModelRunner.execute_model and sample_tokens
+(harness/patches/d1_step_timer.py, B70_STEP_TIMER=1). Dispatch leaf
+events on step 50, cProfile on step 58, torch.profiler CPU+XPU on
+step 70. py-spy not installed and ptrace_scope=1, so it was not used.
+COMMAND: B70_AGENT=d1-eager-profile CARD=1 PORT=18081 GRAPH=0 MTP=0
+bash vllm/flashnext/harness/serve_ornith_gptq.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-serve-eager-profile.log
+Timer: .../logs/d1-step-timer.log
+Bench: harness/bench_latency.py --tag eager-profile --decode-tokens 64
+--skip-prefill --out .../logs/d1-bench-eager-profile.json
+RESULT: identity ok, coherence ok (Paris, both texts identical).
+C1 ITL p50/p90/p99 71.85/73.46/350.30 ms (p99 is the instrumented
+step), 12.17 tok/s, TTFT 153.14 ms, n=64. C2 ITL p50 70.94 and
+70.94 ms, 14.08 and 14.31 tok/s. Steady execute_model for tokens=1,
+excluding steps 50/58/70: n=98, p50 68.86 ms, p90 70.81, min 65.43,
+max 76.29. sample_tokens p50 1.37 ms. execute+sample p50 70.28 ms.
+tokens=2 steps (n=62) p50 68.82 ms. A 24-token step was 75.88 ms and
+a 30-token step was 85.32 ms, so the step does not scale with token
+count. cProfile of step 58 (tokens=1): 25017 calls in 0.085 s, matching
+the 83 ms wall of that step. Cumulative: model forward 80 ms, MoE
+runner 44 ms across 40 layers, moe_forward_shared 41 ms, linear.apply
+22 ms across 270 calls, GDN forward_xpu 21 ms across 30 layers,
+Parameter.__torch_function__ 20 ms exclusive across 360 calls (largest
+exclusive bucket). Kernel launch exclusive time is small: grouped GEMM
+4 ms / 80 calls, torch.empty 3 ms / 424, SYCL gdn_attention 2 ms / 30,
+Triton launch 2 ms / 52, FA varlen_fwd 1 ms / 10. No synchronize sits
+in the top 30 exclusive. Dispatch step 50 is not a device budget: the
+timer itself stretched that step to execute 421 ms + sample 316 ms and
+reported device_ms 539, including aten.to.dtype_layout 306 ms for 5
+calls. Leaf counts from that step are usable: 1000 leaves, 40
+moe_forward_shared, 110 linear, 80 fused RMSNorm, 30 GDN, 10 full
+attention, 10 KV updates, 4 aten.item. Kineto XPU profiler failed:
+PTI_ERROR_INTERNAL, failed to enable Kineto Profiler on XPU. The
+EngineCore.step hook logged nothing; the 70 ms is inside execute_model.
+Sampler is 1.4 ms. docker stop after the bench. Card 1 lock released.
+VERDICT: the ~70 ms eager decode step is Python and dispatcher work
+around ~1000 leaf launches, not device time and not the sampler. A
+24-token step costs about the same as one token. Graph replay is the
+lever that removes that host walk. Next: FULL_DECODE_ONLY with
+TRITON_ATTN, GDN triton, and B70_XPU_CG_RECLAIM=500. The dispatch
+device_ms figure is not used as a device budget.
+
+
+## 2026-10-20 05:07 D1 -- FULL_DECODE_ONLY XPU graph, C1 ITL 13.2 ms
+
+CONFIG: card 1, Ornith GPTQ int4 mixedcal-v2, TP=1, dtype float16,
+language-model-only, max-model-len 33792, gpu-memory-utilization 0.90,
+max-num-seqs 4, port 18081, no MTP. compilation mode NONE,
+cudagraph_mode FULL_DECODE_ONLY, capture sizes 1,2,3,4,8.
+Attention TRITON_ATTN. GDN backend triton (skips SYCL gdn_attention).
+B70_XPU_CG_RECLAIM=500 (keep_graph=True, re-instantiate every 500
+replays). No xpugraph_submit_without_event rebuild. Container
+vllm-fn-ornith-c1. Served names hotschmoe-dev then the GPTQ alias.
+COMMAND: B70_AGENT=d1-graph-fdo B70_XPU_CG_RECLAIM=500 CARD=1
+PORT=18081 GRAPH=1 GRAPH_MODE=FULL_DECODE_ONLY ATTN=TRITON_ATTN
+GDN_BACKEND=triton MTP=0 bash vllm/flashnext/harness/serve_ornith_gptq.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-serve-graph-fdo.log
+Bench: harness/bench_latency.py --tag graph-fdo-triton --decode-tokens 64
+--out .../logs/d1-bench-graph-fdo.json
+RESULT: identity ok. Coherence ok, both texts identical and name Paris.
+Capture: memory-profile pass 2 FULL graphs in 9 s; then 4 FULL graphs
+in 2 s (uniform decode sizes 1, 2, 3, 4; size 8 is above
+max_num_seqs * decode_query_len). Worker reports CUDAGraph memory
+0.0 GiB on the second pass (pool already reserved; accounting does not
+see a new delta). init engine took 484 s, almost all of it before the
+9 s capture (cold Triton kernels during the profile forward). No
+traceback. C1 ITL p50/p90/p99 13.20/14.82/15.93 ms, 76.02 tok/s, TTFT
+216.30 ms, n=64. C2 ITL p50 14.38 and 14.40 ms, 70.26 and 69.76 tok/s,
+TTFT 394.80 and 402.83 ms. Prefill 1017/8185/32762 tok TTFT
+292.46/2460.29/19697.80 ms (3477/3327/1663 tok/s). Eager no-MTP
+reference on the same card was C1 ITL p50 71.85 ms (12.17 tok/s) and
+prefill about 6000/7800/6100 tok/s with FlashAttention plus SYCL GDN.
+VERDICT: FULL_DECODE_ONLY replay is on the hot path. C1 ITL p50 is
+under the 15 ms milestone (p99 is 15.93). Decode is about 5x the eager
+step. Prefill got slower because the eager prefill path is now Triton
+attention plus Triton GDN. Next: same graph with MTP, then PIECEWISE
+(breakable, no inductor) and FULL, and a replay host-vs-device sample
+to see what is left of the 13 ms.
+
+
+## 2026-10-20 05:13 D1 -- FULL_DECODE_ONLY plus MTP
+
+CONFIG: same as the 05:07 FULL_DECODE_ONLY Triton run, plus MTP
+num_speculative_tokens=2. B70_XPU_CG_RECLAIM=500, B70_REPLAY_LOG=1,
+B70_STEP_TIMER=1 (dispatch/cprofile/profiler steps set to 99999 so only
+wall times). Async scheduling left at the vLLM default (on).
+COMMAND: B70_AGENT=d1-graph-fdo-mtp CARD=1 PORT=18081 GRAPH=1
+GRAPH_MODE=FULL_DECODE_ONLY ATTN=TRITON_ATTN GDN_BACKEND=triton MTP=1
+bash vllm/flashnext/harness/serve_ornith_gptq.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-serve-graph-mtp.log
+Bench: harness/bench_latency.py --tag graph-fdo-mtp --decode-tokens 64
+--out .../logs/d1-bench-graph-mtp.json
+Timer: .../logs/d1-step-timer-mtp.log
+RESULT: identity ok, coherence ok (Paris, both texts identical).
+Capture: 2 FULL graphs in 4 s (profile) then 2 FULL graphs in 1 s.
+Warm Triton cache. Reported CUDAGraph memory 0.03 GiB. C1 ITL
+p50/p90/p99 20.40/20.73/20.88 ms, 84.31 tok/s, TTFT 170.34 ms, n=64,
+n_chunks=38. C2 ITL p50 22.88 and 22.88 ms, 82.93 and 79.79 tok/s.
+MTP acceptance during bench 0.395 (87/220); after counters
+97 accepted / 264 drafted (0.367). Prefill TTFT 273.69 / 2693.92 /
+28532.66 ms (3716 / 3038 / 1148 tok/s). Steady tokens=3 execute_model
+submit p50 is 3.74 ms (n=65) and sample submit p50 is 2.07 ms. One XPU
+event around a single replay measured 2.275 ms device. Host time
+inside replay() p50 is 0.028 ms, so replay returns without waiting.
+VERDICT: MTP raises tok/s from 76 to 84 and raises chunk ITL from
+13.2 ms to 20.4 ms. The graph replay is about 2.3 ms of device work
+and is not the chunk. Async scheduling is the default and the engine
+waits on the future outside execute_model, which this timer did not
+cover. Next: the same graph with --no-async-scheduling, and time
+EngineCore.step.
+
+## 2026-10-20 05:17 C3 -- int3 serve coherent, decode faster, prefill not
+
+CONFIG: card 0, B1 checkpoint
+/mnt/cache/b70/devmodel/quant/qwen36-w3a16-g128-experts-w4a16-trunk
+(routed experts int3 group 128, trunk linears int4, skips bf16).
+TP=1, dtype bfloat16, language-model-only, enforce-eager,
+max-model-len 33792, gpu-memory-utilization 0.90, max-num-seqs 4,
+port 18083, --quantization b70_lowbit. Served names hotschmoe-dev
+then qwen36-w3a16-b70-lowbit. Container vllm-fn-lowbit-c0.
+B70_LOWBIT_MOE_LAUNCHES=2 (GateUpSilu + DownReduce). .so 1442856
+bytes. This is not the Ornith experts-only int4 checkpoint: the
+trunk (qkv, o_proj, GDN in_proj, shared expert) is GPTQ int4.
+COMMAND: B70_AGENT=C3 B70_GPU_LOCK_TIMEOUT=20 B70_LOWBIT_MOE_LAUNCHES=2
+MODEL=<that dir> ALIAS=qwen36-w3a16-b70-lowbit CARD=0 PORT=18083
+plugins/b70_lowbit_xpu/serve_lowbit.sh
+Bench: B70_AGENT=C3 cpu-run --quiet python3 harness/bench_latency.py
+--base-url http://127.0.0.1:18083 --model hotschmoe-dev
+--alias qwen36-w3a16-b70-lowbit --tag b70-lowbit-int3-eager
+--decode-tokens 64
+--out /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c3-int3-bench.json
+Serve log: .../logs/c3-int3-serve.log
+RESULT: identity first_ok and alias_ok. Two temp-0 completions
+identical and both name Paris. Load 14.38 GiB in 867 s. KV cache
+478,423 tokens, max concurrency 14.16x at 33792. init engine 15.07 s.
+All 40 layers repacked bits=3: w13 qweight (256, 192, 1024) to
+plane2 (256, 1024, 512); w2 (256, 48, 2048) to (256, 2048, 128).
+C1 ITL p50/p90/p99 51.73/52.55/53.82 ms, 19.67 tok/s, n=57
+(EOS before 64), prompt_tokens=24, TTFT 2412 ms. C2 ITL p50
+52.19 and 52.18 ms, 19.37 and 19.38 tok/s, TTFT 5268 and 5320 ms,
+n=46 and 47, prompt 29. Prefill 1017/8185/32762 tok TTFT
+10275/72614/282846 ms (99/113/116 tok/s). BENCH_RC 0, wall 385 s.
+A3 eager fp16 experts-only reference was C1 74.78/75.36/76.40 ms
+(13.57 tok/s) and prefill 169/1038/5121 ms. The C3 int4 control on
+that same Ornith checkpoint was C1 79.55 ms (12.98 tok/s). docker
+stop removed vllm-fn-lowbit-c0 and port 18083 closed. Card 0 was
+then taken by C4 prefill_gpu.sh (pid 2910396), which started its
+own xpu-health, so this run did not probe health.
+VERDICT: int3 wiring is coherent. Decode ITL is about 52 ms, faster
+than the eager experts-only int4 baseline, because the trunk is
+int4 as well as the experts being int3. That is not a same-checkpoint
+win over XPUExpertsWNA16. Prefill is still the per-expert WNA16
+loop and is slower than the int4 control. Next is a grouped prefill
+kernel, and bin/xpu-health --card 0 when fuser shows gpu.lock.0 empty.
+
+
+## 2026-10-20 05:17 D1 -- no-async graph is slower; replay device is 11.4 ms
+
+CONFIG: FULL_DECODE_ONLY, TRITON_ATTN, GDN triton, B70_XPU_CG_RECLAIM=500,
+no MTP, --no-async-scheduling. Same model and capture sizes as the
+05:07 run. Step timer on, dispatch/cprofile/profiler disarmed.
+COMMAND: B70_AGENT=d1-graph-fdo-sync ASYNC=0 CARD=1 PORT=18081 GRAPH=1
+GRAPH_MODE=FULL_DECODE_ONLY ATTN=TRITON_ATTN GDN_BACKEND=triton MTP=0
+bash vllm/flashnext/harness/serve_ornith_gptq.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-serve-graph-sync.log
+Bench: harness/bench_latency.py --tag graph-fdo-sync --decode-tokens 64
+--skip-prefill --out .../logs/d1-bench-graph-sync.json
+Timer: .../logs/d1-step-timer-sync.log
+RESULT: async_scheduling False is in the startup args. Identity ok,
+coherence ok. Capture 1 s + 1 s. C1 ITL p50/p90/p99 15.79/16.14/16.92 ms,
+63.14 tok/s, TTFT 141.21 ms, n=64. C2 ITL p50 17.10 and 17.10 ms,
+52.28 and 58.27 tok/s (stream0 p99 65.75 is one spike). EngineCore.step
+p50 15.98 ms (n=169, min 15.57), matching the client ITL. execute_model
+submit for tokens=1 p50 2.48 ms (n=99). sample p50 1.11 ms. replay()
+host p50 0.05 ms. One XPU-event replay, synchronized before and after,
+is 11.436 ms of device time.
+VERDICT: turning async scheduling off made C1 ITL worse than the 13.20 ms
+async result. The engine step is the chunk, and most of the step is the
+captured graph on the device (11.4 ms), not Python inside replay().
+Async hides about 2 ms of host beside that device time. Keep async
+scheduling. Next: FULL_DECODE_ONLY with FlashAttention and SYCL GDN,
+to see if those kernels capture and beat the 11.4 ms Triton graph.
+
+
+## 2026-10-20 05:20 D1 -- FlashAttention FULL_DECODE_ONLY captures and is the best C1
+
+CONFIG: FULL_DECODE_ONLY, capture sizes 1,2,3,4,8, ATTN=FLASH_ATTN,
+GDN backend default (SYCL gdn_attention on XPU), async scheduling on,
+no MTP, B70_XPU_CG_RECLAIM=500. Same Ornith GPTQ int4 serve shape.
+COMMAND: B70_AGENT=d1-graph-fdo-fa CARD=1 PORT=18081 GRAPH=1
+GRAPH_MODE=FULL_DECODE_ONLY ATTN=FLASH_ATTN MTP=0
+bash vllm/flashnext/harness/serve_ornith_gptq.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-serve-graph-fa.log
+Bench: harness/bench_latency.py --tag graph-fdo-fa --decode-tokens 64
+--out .../logs/d1-bench-graph-fa.json
+RESULT: Using Flash Attention version 2. Capture finished: profile
+2 FULL graphs in 1 s, then 4 FULL graphs in 1 s. No traceback.
+Identity ok, coherence ok (Paris, both texts identical). C1 ITL
+p50/p90/p99 12.81/12.99/13.12 ms, 78.23 tok/s, TTFT 88.59 ms, n=64.
+C2 ITL p50 13.75 and 13.75 ms, 73.40 and 72.96 tok/s, TTFT 170.37
+and 176.99 ms. Prefill 1017/8185/32762 tok TTFT 168.67/1037.62/5107.54
+ms (6030/7888/6414 tok/s), matching the eager FlashAttention prefill
+from A3. Triton-graph C1 was 13.20 ms p50 with 32k prefill at 1663
+tok/s.
+VERDICT: On this torch 2.14 / vLLM main stack, FlashAttention and
+SYCL GDN both captured into FULL_DECODE_ONLY. The June note that
+FlashAttention SYCL scratch cannot capture did not reproduce here.
+This is the best C1 so far: p99 13.12 ms, under the 15 ms milestone,
+and prefill stays at the eager rate. Next: MTP on this graph, then
+PIECEWISE (breakable) and FULL.
+
+
+## 2026-10-20 05:23 D1 -- FlashAttention FULL_DECODE_ONLY plus MTP
+
+CONFIG: same FlashAttention FULL_DECODE_ONLY graph as 05:20, plus MTP
+num_speculative_tokens=2. Async scheduling on. SYCL GDN. Reclaim 500.
+COMMAND: B70_AGENT=d1-graph-fa-mtp CARD=1 PORT=18081 GRAPH=1
+GRAPH_MODE=FULL_DECODE_ONLY ATTN=FLASH_ATTN MTP=1
+bash vllm/flashnext/harness/serve_ornith_gptq.sh
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-serve-graph-fa-mtp.log
+Bench: harness/bench_latency.py --tag graph-fa-mtp --decode-tokens 64
+--out .../logs/d1-bench-graph-fa-mtp.json
+RESULT: FlashAttention v2. Capture 2 FULL graphs then 2 FULL graphs,
+1 s each (MTP decode query length rounds the capture list down to two
+shapes). Identity ok, coherence ok. C1 ITL p50/p90/p99
+18.81/19.17/19.37 ms, 93.88 tok/s, TTFT 106.35 ms, n=64. C2 ITL p50
+20.94 and 20.98 ms, 84.90 and 87.35 tok/s. Acceptance during bench
+0.383 (85/222); after counters 95/266 (0.357). Prefill
+165.61/1050.08/5380.98 ms (6141/7795/6088 tok/s).
+VERDICT: MTP on the FlashAttention graph is the highest tok/s so far
+(94 vs 78 without MTP) and the chunk ITL rises to 18.8 ms, above the
+15 ms milestone. The no-MTP FlashAttention graph remains the latency
+config (C1 p50 12.81 ms). Next: PIECEWISE with breakable cudagraphs,
+FlashAttention, no inductor.
+

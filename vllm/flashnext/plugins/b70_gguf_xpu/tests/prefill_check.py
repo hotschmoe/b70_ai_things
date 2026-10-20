@@ -425,17 +425,25 @@ def run_bench(smoke: bool) -> int:
             )
             del x, ids, router
             torch.xpu.empty_cache()
-        if not smoke:
-            # bf16 and int8 at T=512 only, same weights.
+        if not smoke and context_alive():
+            # bf16 and int8 at T=512 only, same weights. One rejected mode
+            # must not erase the fp16 numbers already printed.
             t = 512
             ids = torch.randint(0, e, (t, topk), device="xpu", dtype=torch.int32)
             xb = torch.randn(t, h, device="xpu", dtype=torch.bfloat16)
             x16 = xb.to(torch.float16)
             router = torch.rand(t, topk, device="xpu", dtype=torch.float32)
             for mode, xm, tag in ((1, xb, "bf16"), (2, x16, "int8")):
-                fn = lambda xm=xm, mode=mode: prefill_moe_layer(xm, ids, gq, uq, dq, router, gu_t, dn_t, h, f, mode)
-                line = bench_one(f"layer_{tag}\tIQ3_XXS+Q2_0\tT={t} E={e} H={h} F={f}", fn, nbytes, warmup=1, iters=4)
-                print(line)
+                try:
+                    fn = lambda xm=xm, mode=mode: prefill_moe_layer(xm, ids, gq, uq, dq, router, gu_t, dn_t, h, f, mode)
+                    line = bench_one(f"layer_{tag}\tIQ3_XXS+Q2_0\tT={t} E={e} H={h} F={f}", fn, nbytes, warmup=1, iters=4)
+                    print(line)
+                except RuntimeError as exc:
+                    failures += 1
+                    print(f"FAIL layer_{tag} {exc}")
+                    if not context_alive():
+                        print(f"CONTEXT dead after layer_{tag}")
+                        break
     except RuntimeError as exc:
         failures += 1
         print(f"FAIL layer bench {exc}")

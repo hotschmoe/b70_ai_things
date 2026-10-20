@@ -46,6 +46,9 @@ ARGS=(
   --quantization b70_gguf
   --trust-remote-code
 )
+if [[ -n "${GDN_BACKEND:-}" ]]; then
+  ARGS+=(--gdn-prefill-backend "$GDN_BACKEND")
+fi
 
 echo "serve_qwen36_gguf: card=$CARD port=$PORT max_len=$MAX_LEN name=$NAME"
 echo "serve_qwen36_gguf: ${ARGS[*]}"

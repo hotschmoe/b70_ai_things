@@ -93,14 +93,23 @@ def main() -> int:
         print("FAIL ornith 2-submit mismatch", flush=True)
         return 3
 
+    times: dict[str, float] = {}
+
     def bench(label: str) -> None:
         ms = time_ms(
             lambda: run_once(x, ids, router, w13, w2, bits, label), 5, 20
         )
+        times[label] = ms
         print(f"TIME launches={label} ms={ms:.4f} us={ms * 1000:.1f}", flush=True)
 
     bench("4")
     bench("2")
+    winner = "2" if times["2"] < times["4"] else "4"
+    print(
+        f"WINNER_2VS4={winner} us4={times['4'] * 1000:.1f} "
+        f"us2={times['2'] * 1000:.1f}",
+        flush=True,
+    )
     print("LAUNCH_BENCH_OK", flush=True)
     return 0
 

@@ -12,6 +12,34 @@ import os
 # there. site.py swallows sitecustomize errors, so a failed register in
 # the real interpreter would also be silent; re-raise only when torch
 # imported and registration itself failed.
+
+# D1: eager-step timer. The finder does not import torch or vLLM.
+if os.environ.get("B70_STEP_TIMER") == "1":
+    try:
+        from d1_step_timer import install as _d1_timer_install
+
+        _d1_timer_install()
+    except Exception:
+        import traceback
+
+        traceback.print_exc()
+
+# D1: XPUGraph replay reclaim. Off unless B70_XPU_CG_RECLAIM>0.
+if os.environ.get("B70_XPU_CG_RECLAIM", "0") not in ("", "0"):
+    try:
+        import torch  # noqa: F401
+    except ImportError:
+        torch = None
+    if torch is not None:
+        try:
+            from d1_graph import install_reclaim
+
+            install_reclaim()
+        except Exception:
+            import traceback
+
+            traceback.print_exc()
+            raise
 if os.environ.get("B70_GGUF") == "1":
     try:
         import torch  # noqa: F401

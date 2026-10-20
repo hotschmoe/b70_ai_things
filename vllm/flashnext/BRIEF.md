@@ -79,3 +79,7 @@ updated as you go (CONFIG -> COMMAND -> RESULT -> VERDICT).
 Journal: append your milestone entries to vllm/flashnext/JOURNAL.md (format at
 its top). Do NOT git commit/push yourself; the orchestrator commits at
 milestones. Keep large artifacts (weights, builds, raw traces) out of the repo.
+
+Motto (user): "make it work, make it right, make it fast" -- in that order.
+Getting something to run end to end is a win that unlocks the next two;
+do not block a first working path on optimization.
