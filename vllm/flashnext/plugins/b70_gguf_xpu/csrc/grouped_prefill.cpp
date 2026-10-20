@@ -834,6 +834,12 @@ at::Tensor b70_prefill_moe_layer_op(at::Tensor x, at::Tensor ids, at::Tensor q_g
     return y;
 }
 
+at::Tensor b70_prefill_wide_sgn_op() {
+    auto t = at::empty({1}, at::TensorOptions().dtype(at::kInt));
+    t.fill_(40);
+    return t;
+}
+
 at::Tensor b70_prefill_split_us_op() {
     auto t = at::empty({8}, at::TensorOptions().dtype(at::kFloat));
     float* p = t.data_ptr<float>();

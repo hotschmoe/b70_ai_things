@@ -2298,3 +2298,304 @@ eager oracle 64/65 (first-use sample only: stale push, spin timeout);
 graph samples pass; health clean after.
 VERDICT: transport beats Strata's own 3-5 us handshake. First-use warm-up
 is the only M0 gap; H1c (with --max-turns) continues to M1-M3.
+
+## 2026-10-20 09:38 H1c -- M0 warmup rebuild, two-card window
+
+CONFIG: b70_ep_xpu/_C.so sha256
+bd4f4aa010c718daa6a2c983e8a93670acdd2e4df1f094c0819ed68517c39594
+(476912 bytes). _C.ep.so unchanged, sha256
+55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0.
+Init warmup touches one word per peer page in both directions, does an
+uncached flag store, resets epochs, runs one full dummy push/return
+(a second try if the first spin times out), then resets epochs again.
+Scored samples start after that. Both cards, no oneCCL, spin 200000.
+Container vllm-fn-h1c-m0, memory 8g. Host alarm 900s. Oracle is still
+65 eager and 65 graph. The same warmup is in ep_init for M1.
+COMMAND: B70_AGENT=H1 B70_CPU_LOCK_TIMEOUT=1800 B70_EP_SKIP_GGUF=1
+MAX_JOBS=4 bin/cpu-run plugins/b70_ep_xpu/scripts/build.sh (exit 0,
+39s). Then nohup env B70_AGENT=H1 B70_GPU_LOCK_TIMEOUT=7200 bash
+/tmp/h1c-m0-window.sh. Logs h1c-m0-window.out and h1c-m0-probe.log.
+RESULT: rebuild ok. Window requested after this entry. Card 0 was free.
+Card 1 was D3 (vllm-fn-d3-shisa) since 09:28.
+VERDICT: window open.
+
+## 2026-10-20 09:36 G2b -- audit pass 5
+
+CONFIG: CPU only. No GPU, no lease, no systemd, no commit. Cursor is
+the journal through the 09:35 orchestrator heading. Findings F36-F47
+appended to reports/1G2_audit.md. Pass 4 was left as written.
+COMMAND: read new JOURNAL headings and reports/1C10_prefill_dq.md and
+reports/1G5_qsa.md; recompute c7-bench-ep-dp.json, c7-coll-ok.log,
+c7-ep-dp-serve-ok.log, g4-cli-parse.txt, h1-m0-window.out,
+h1b-m0-probe.log, h1b-m0-window.out, c10b-dq-bench.log,
+d3-probe-gdn.json, d3-probe.json, d3-serve-gdn.log, d3-serve-gdn2.log,
+d3-serve-gdn3.log, d3-bench-gdn.json; sha256 the new _C.so and
+libb70_qsa_xpu.so; read prefill_dq.py, m0_probe.py, probe.cpp
+preflight, qsa_kernels.cpp f32_to_f16, gdn_decode.cpp contig checks,
+and the lowbit GateUp/Down brace diff; git status and git diff --cached
+in /mnt/vm_8tb/github/b70_ai_things and the fork.
+RESULT: C7 DP identity, short Paris coherence, C1/C2 ITLs, and the
+159-step collective medians (15.01 / 5.62 / 20.61 / 119.06 ms) match
+the raw files. Health before that serve passed; post-health was not
+run, as the entry says. G4's saved log says cpu-run 18s exit 0 and
+does not contain PARK_ON. H1's first window matches the 09:05 writeup,
+including DEVICE_LOST and a later HEALTHY line in the window log.
+C7 TP=2 is SERVE_RC 124, C9 pid 3152937, RAISE 0. H1b _C.so sha matches
+22481243... and is 445392 bytes. M0 flag and push times match, eager
+is 64/65, GRAPH fails=0, and health after is in h1b-m0-window.out.
+The same probe log has MIRROR fails=3, so "only gap is first use" does
+not hold. C10b bench lines, health rcs, and the prefill_dq.py cuts
+match; 4256 ms is the report's projected GEMM sum. G5's .so is 369040
+bytes at 09:07; QSA_XPU_OK is not in a saved log. D3 microbench numbers
+match d3-probe-gdn.json. The first serve traceback is a missing
+kv_cache attribute. d3-bench-gdn.json at 09:26 has identity and
+coherence and C1 ITL 12.60 ms and is not claimed by any heading yet.
+Fork tip still e442b4b53f, index empty, no new staged binary.
+VERDICT: Pass 5 recorded. Latency numbers checked this pass match the
+cited logs. Open items: G4 parse stdout, G5 run stdout, the M0 mirror
+misses, and the unjournaled D3 bench.
+
+## 2026-10-20 09:42 C9 -- grouped MoE schedule measured, whole-layer table
+
+CONFIG: card 0 only (card 1 held by D3). Decode schedule in
+plugins/b70_gguf_xpu/csrc/sched_moe.hpp, behind the existing moe_layer
+op. B70_MOE_SCHED unset selects it; B70_MOE_SCHED=0 keeps the C1
+kernels. Launch is reqd_sub_group_size(16), STRATA_EXPERT_LANES 8,
+two rows per rib (row and row+32), chunks 4/2/1, gate+up in one pass
+over a 36-byte Q8 block (float scale, int8 qs[32], qs at offset 4).
+Subgroup 32 is the slower one-row Strata fallback and is not this
+launch. Fast path: T<=8, topk<=16, I and K multiples of 32 up to 8192,
+every used type DP4A (16/17/18/20/21/22/42), including the shared
+expert. Device plan, so a captured graph sees new expert ids.
+Library under test: b70_gguf_xpu/_C.c9.so sha256 8a76f559e65981fe
+(7574840 bytes, 07:39). C8's later full link installed the same
+schedule into the default _C.so sha256 086595a01babbc36 (same size,
+07:40). That file was left in place. Prefill sources were not edited.
+Fair Strata side relinks C5's iq_strata_jit.o (not recompiled) inside
+strata-sycl-dev:020, image e41d59c0, IGC 2.36.3. Compile of
+fair_strata.cpp uses -fp-model=precise and subgroup default 32; the
+link line does not. Shape K=2560 I=640 topk=10, one card runs every
+routed entry plus the shared expert. Gate and up share one ggml type
+because native_expert_grouped requires that. Pairs: IQ3_S/Q2_0 and
+IQ2_XS/IQ4_NL. Live groups: T=1 10x1; T=2 6x2+8x1; T=3 4x3+6x2+6x1;
+T=4 2x3+8x2+18x1 (published card0+card1 combined) plus one shared
+group of T entries. Router weight 0.1, shared weight 1.
+COMMAND: bin/gpu-run --card 0. Strata cases: FAIR_MODE=cases on
+c9/fair_strata, log c9/fair_all5.log (FAIR_DONE rc=0). Control graph:
+c9/fair_ctrl.log. C5 anchor: c9/c5_anchor.log. Plugin graphs:
+B70_GGUF_SO=_C.c9.so tests/c9_fair.py, logs c9/ours6_sched1.log and
+ours6_sched0.log, outer c9/run_ours7.outer.log (44s, exit 0). Eager
+A/B: c9/moe_bench_sched1c.log and sched0c.log. Gates earlier today on
+the same _C.c9.so: gpu_check.log, moe_layer_bench.log,
+compare_cpu.log, graph_probe.log.
+RESULT: Health HEALTHY before and after the plugin graphs
+(health_pre_rc=0, health_post_rc=0). No xe-reset. Control graph
+(IQ3_S/Q2_0, T=4, 10 groups, 20 entries, cap 40, no shared, Q8
+outside) is phase1 60.14 us, base 105.06 us, R2 92.39 us. C5's binary
+on this card today is R2 92.55 us, IQR2 69.69 us, gu 60.03 us, all
+103.24 us. Strata whole-layer is the sum of three synced-eager
+medians (q8, grouped, reduce), 48 launches, q.wait after each launch.
+Printed groups=40 and entries=43/54/65/76 are the padded caps. A
+48-layer command graph of the full plan (shared included) resets the
+device on replay; the per-launch wait is the measured path. T=1
+grouped piece is 92.22 us (IQ3) and 91.05 us (IQ2), next to that
+control. Whole-layer R2 us, per token in parentheses:
+IQ3_S/Q2_0 T=1/2/3/4: 112.89 (112.89), 148.10 (74.05), 202.93 (67.64),
+261.64 (65.41). IQR2 whole: 87.80, 116.62, 156.15, 206.20.
+IQ2_XS/IQ4_NL R2: 110.79 (110.79), 168.87 (84.43), 231.10 (77.03),
+310.50 (77.62). IQR2: 99.98, 132.26, 179.39, 236.45.
+r2_iqr2_diff=0 on all eight rows (same floats, IQR2 is the faster
+schedule). Plugin XPUGraph, 48 calls, median of 5, per call, sched=1:
+IQ3 186.32 / 278.53 / 400.90 / 534.72; IQ2 196.31 / 289.93 / 417.92 /
+571.06. sched=0: IQ3 192.80 / 351.71 / 494.24 / 660.14; IQ2 239.78 /
+422.77 / 584.28 / 807.23. Cosine vs the Strata R2 dump is 0.999992 to
+0.999999. Mean abs error is 0.13 to 3.89. Both plugin schedules print
+the same error against Strata. Bulk max relative error reaches 1.15,
+so this is not an 8e-2 match against Strata. Gates vs the plugin's own
+reference: gpu_check atol/rtol 5e-2 failures=0, moe_layer_bench 8e-2
+failures=0, compare_cpu 13/13 mismatches=0, GRAPH_PROBE_OK. Clean
+eager A/B (E=32, IQ2_XS/IQ2_XXS/IQ4_NL, shared, top-10) sched1
+230.7/289.9/492.7/877.3 vs sched0 234.7/397.6/735.6/1426.8 at
+T=1/2/4/8, failures=0. T=1 stays on the new kernel. UD-IQ3_XXS header
+scan: 753 tensors; shared experts Q6_K 120 and Q8_0 3; routed also
+has IQ4_XS, Q3_K, Q2_K. The fast path requires DP4A on the shared
+expert, so it does not run on that GGUF. C7's FULL_DECODE_ONLY serve
+uses _C.graph.so. No 35B serve this stage.
+VERDICT: Schedule is in the plugin and faster than the C1 fused
+kernels from T=2 up (about 1.23x to 1.46x on the fair graphs, up to
+1.63x eager at T=8). It does not reach Strata's whole-layer time
+(about 1.65x to 2.04x slower than R2). Report:
+reports/1C9_moe_sched.md.
+
+
+## 2026-10-20 09:42 E2 -- one expert layer, bmm vs the 256-launch loop
+
+CONFIG: card 0. Card 1 was D3 (vllm-fn-d3-shisa) from 09:28. Library
+libb70_lowbit_xpu_e1mm.so (unpack + vendor GEMM). B70_LOWBIT_MOE_LAUNCHES=2.
+Random int3 planes, E=256 H=2048 I=512 topk=8. Not a serve and not a
+tok/s. The first probe overlapped the niced e2.so compile, so that
+run's span sums include JIT. The second probe is one call after warmup.
+e1mm.so was not overwritten. New binaries, not yet served:
+libb70_lowbit_xpu_e2.so 3305936 bytes (09:35, multi-row GEMV, old
+unpack) and libb70_lowbit_xpu_e2u.so 3380088 bytes (09:40, ESIMD
+unpack via dequant_group). cpu-run 80s and 74s, both compile rc=0.
+C10 coordination: same plan as plugins/b70_gguf_xpu prefill_dq.py
+_project_bmm. Unpack b70lb1 to bf16, pad each expert to a multiple of
+8, one torch.bmm per projection. No dependency on C10's .so. grouped_mm
+is on this torch and accepts an empty expert (offs plateau). It is
+slower here than bmm, so the serve path stays bmm.
+COMMAND: xpu-run.sh --card 0 --memory 24g tests/e2_bmm_probe.py then
+tests/e2_grouped_probe.py. Logs
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/e2-bmm-probe.log and
+e2-grouped-probe.log.
+RESULT: small bmm rel 0 vs the per-expert F.linear loop. T=2048 rel
+1.36e-4, loop 115.1 ms, bmm 33.5 ms (first probe, spans polluted by
+warmup). T=8192 rel 1.77e-4, loop 119.2 ms, bmm 54.1 ms. Clean second
+call after warmup: T=2048 full bmm 39.28 ms (unpack_w13 17.27,
+unpack_w2 8.11, bmm_w13 3.08, bmm_w2 2.25, reduce 1.87). T=8192 full
+bmm 54.44 ms: unpack_w13 12.88, unpack_w2 6.47, group 2.10, pad_x
+2.68, bmm_w13 8.83, silu 2.61, pad_hid 0.44, bmm_w2 6.09, reduce
+10.13. grouped_mm w13 12.21 ms plus a 4.01 ms weight transpose.
+Uniform-M bmm of the same w13 FLOPs is 2.71 ms, about 100 TFLOPS
+(2*65536*1024*2048 / 2.71 ms). The 8.83 ms span is that GEMM plus the
+output transpose and gather. Eager moe_gemv T=1 on the old kernel:
+int4 0.0724 ms, int3 0.0973 ms, int2 0.0663 ms. The int3-int4 gap is
+0.025 ms/layer, 1.0 ms over 40 layers, the same size as E1's served
+ITL gap (11.29 vs 10.23 ms).
+VERDICT: The served 22.3 s is not 16 s of attention beside one 8k
+expert pass. serve_lowbit.sh left max_num_batched_tokens at the vLLM
+default 2048, so an 8k prompt is four forwards. The per-expert loop is
+launch-bound (115 ms at T=2048, 119 ms at T=8192, unpack extra). Four
+chunks of unpack-plus-loop is about 4*40*140 ms = 22 s. One 8k bmm
+layer is 54 ms, 40 layers 2.16 s of experts before GDN and attention.
+5000 tok/s at 8185 tokens needs the whole forward under 1.64 s, so
+2.16 s of experts misses it until unpack (19 ms) and the bmm copies
+plus index_add (about 15 ms) shrink. Next: layout probe, then one
+real 8k forward with max batched tokens 8192.
+
+
+## 2026-10-20 09:50 C11 -- wide-SGN expert prefill build started
+
+CONFIG -> Card 0 is leased (E2 layout/fast probes, then H1c). No GPU this step. Slim library only: grouped_prefill.cpp + dequant_fast.cpp + csrc/c11_bind.cpp, -DB70_PREFILL_SMOKE=1, out b70_gguf_xpu/_C.c11.so. Does not replace _C.so or _C.c10.so and does not link kernels.cpp. IQ3_XXS and Q2_0 s64 instantiates SGN 4/8/16/40 (WG 64/128/256/640) behind B70_PREFILL_SGN; unset stays 4. Other types stay SGN=4.
+
+COMMAND -> B70_AGENT=C11 B70_CPU_LOCK_TIMEOUT=7200 bin/cpu-run -- bash vllm/flashnext/plugins/b70_gguf_xpu/scripts/c11_build.sh. Log /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c11-build.log.
+
+RESULT -> Shared-file diff, not yet measured. csrc/bind.cpp gained prefill_wide_sgn() -> Tensor (def + CompositeExplicitAutograd impl of b70_prefill_wide_sgn_op, which fills int32 40). grouped_api.hpp declares it; grouped_prefill.cpp defines it. c11_bind.cpp is the slim twin and is not linked with bind.cpp. prefill_sched.inl launch_s64 is now template <TYPE, MT, SGN>. Dispatch (prefill_dq.py moe_wants_dq) is unchanged until the bench.
+
+VERDICT -> Build in flight. GPU bench is scripts/c11_run.sh via bin/gpu-run --card 0 after C11_BUILD_OK.
+
+## 2026-10-20 09:49 C11 -- _C.c11.so built, card 0 bench queued
+
+CONFIG -> icpx 2026.1, -DB70_PREFILL_SMOKE=1, sources grouped_prefill.cpp dequant_fast.cpp c11_bind.cpp. Out plugins/b70_gguf_xpu/b70_gguf_xpu/_C.c11.so. _C.so and _C.c10.so untouched. Card 0 held by E2 (vllm-fn-e2-layer) at queue time. Bench waits on the lease.
+
+COMMAND -> B70_AGENT=C11 B70_CPU_LOCK_TIMEOUT=7200 bin/cpu-run -- bash plugins/b70_gguf_xpu/scripts/c11_build.sh. Then B70_AGENT=C11 B70_GPU_LOCK_TIMEOUT=21600 B70_CPU_LOCK_TIMEOUT=180 bin/gpu-run --card 0 plugins/b70_gguf_xpu/scripts/c11_run.sh. Logs logs/c11-build.log and logs/c11-bench.log.
+
+RESULT -> Build rc=0 in 60s, 48 warnings (existing deprecated parallel_for), 0 errors. _C.c11.so 1591952 bytes, 09:48. C11_BUILD_OK. CPU lease released before the GPU queue. Bench not measured yet.
+
+VERDICT -> Device time is still ahead. Dispatch stays on the C10 bmm-at-T>=12288 policy until the bench prints a winner.
+
+## 2026-10-20 09:50 D3 -- fused GDN decode, attention left on FA
+
+CONFIG -> Card 1. Ornith-35B GPTQ int4, FULL_DECODE_ONLY, FLASH_ATTN,
+async, B70_XPU_CG_RECLAIM=500, max-model-len 33792. Plugin
+plugins/b70_gdn_xpu, .so rebuilt 09:23 (322256 bytes, compile rc=0)
+so strided mamba pages pass. Wrapper harness/patches/d3_gdn.py, default
+off. B70_D3_ATTN off. Claude fable-5.1 and claude-5.5:
+unrecognized_model / not logged in, exit 1, not retried.
+COMMAND -> d3_probe.py (logs/d3-probe.json attention, logs/d3-probe-gdn.json
+GDN). Then bench_latency.py. No-MTP: B70_D3_GDN=1, logs/d3-serve-gdn3.log,
+logs/d3-bench-gdn.json. Shisa spec=2: B70_D2_SHISA_MTP=1 MTP=1
+MTP_TOKENS=2 B70_D3_GDN=1 B70_D3_GDN_SPEC=1, logs/d3-serve-shisa.log,
+logs/d3-bench-shisa.json. Servers stopped. xpu-health --card 1 HEALTHY.
+RESULT -> SSM state fp32 [32,128,128] = 2 MiB/layer. T=1 traffic 4.40 MB,
+roof 7.24 us. Fused conv+delta+RMSNorm graph 0.0411 ms vs stock 0.0640 ms.
+Core max_abs 7.63e-6, cosine 1. T=3 fused 0.0144 vs 0.0170. Spec T=3
+0.0161 vs 0.0178, cosine 1. No-MTP e2e: identity and coherence pass.
+C1 ITL p50/p90/p99 12.60/12.83/13.07 ms, 79.39 tok/s (D1 12.81/12.99/13.12,
+78.23). C2 p50 13.50/13.48 (D1 13.75). Prefill 1k/8k/32k 6076/7883/6415
+vs D1 6030/7888/6414. Shisa spec=2: C1 18.67/19.15/19.41, 121.67 tok/s,
+acceptance 113/170. D2 was 18.72/18.97/19.26, 121.73, same 113/170.
+Attention: FA auto split-k at S=200000 is 1.127 ms (363 GB/s); forced
+splits=1 is 7.68 ms. Custom paged kernel matches cosine 1 and is slower
+(20.5 ms at 200k). Short-context 143 us/layer is qkv+o GEMVs plus a 12 us
+FA core at block 1088. First Shisa attempt lost the device on a ragged
+spec warmup (slot width 3, fewer query tokens). Guard falls back. Second
+attempt captured uniform spec batches and benched clean.
+VERDICT -> B70_D3_GDN=1 is a real 0.20 ms C1 ITL win and stays opt-in.
+B70_D3_GDN_SPEC and B70_D3_ATTN stay off. MoE not touched. Report
+reports/1D3_gdn_attn.md.
+
+## 2026-10-20 09:51 E2 -- ESIMD unpack and NT bmm, one layer 34 ms
+
+CONFIG: card 0, after H1's both-card window. libb70_lowbit_xpu_e2u.so
+(3380088 bytes, ESIMD unpack, multi-row GEMV compiled but not selected).
+B70_LOWBIT_MOE_LAUNCHES=2, B70_LOWBIT_GEMV_ROWS unset. Random int3,
+E=256 H=2048 I=512 topk=8. Not a serve tok/s. e1mm.so and e2.so were
+not overwritten. Layout timings used e1mm (scalar unpack).
+COMMAND: tests/e2_layout_probe.py, tests/e2_fast_probe.py,
+tests/e2_layer_probe.py via xpu-run.sh --card 0. Logs
+e2-layout-probe.log, e2-fast-probe.log, e2-layer-probe.log under
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/.
+RESULT: ESIMD unpack matches format.dequant at bits 2/3/4, max_abs 0,
+and matches the scalar kernel. w13 unpack 3.78 ms vs scalar 12.94 ms.
+w2 unpack 1.99 ms vs 6.53 ms. bmm(X, W^T) view is 2.94 ms and the row
+gather is 0.52 ms. bmm(W, X^T) with a forced contiguous transpose is
+7.38 ms, and the output transpose is 0.95 ms. index_add fp32 7.03 ms,
+bf16 7.66 ms. The serve path is now bmm(X, W^T) plus index_select.
+One 8k layer after warmup: 34.22 ms, rel 1.77e-4 vs the per-expert
+loop. small rel 0. Spans: unpack_w13 3.84, unpack_w2 1.90, group 4.68,
+pad_x 2.68, bmm_w13 3.37, silu 2.61, pad_hid 0.45, bmm_w2 2.79, reduce
+10.14. Forty layers of that is 1.37 s of experts before GDN and
+attention. Multi-row GEMV rows=2 at int4 is wrong (max_abs 1.0) and
+slower (0.0748 vs 0.0645 ms) so B70_LOWBIT_GEMV_ROWS stays unset.
+The fast probe exited 1 on that check. Decode keeps the 1-row kernel.
+VERDICT: Expert prefill math matches and the layer dropped from 54 ms
+to 34 ms. 5000 tok/s still depends on the non-expert part of a real
+forward. Next serve is this library, max batched tokens 8192, one 8k
+forward instrumented, then the bench with the diagnostic sync off.
+
+
+## 2026-10-20 09:51 H1c -- M0 warmup passes 65/65
+
+CONFIG: _C.so sha256 bd4f4aa010c718daa6a2c983e8a93670acdd2e4df1f094c0819ed68517c39594 (476912 bytes, built 09:38). _C.ep.so unchanged sha256 55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0. Both cards, path 2 (same-context peer pointer), no oneCCL, spin 200000. Container vllm-fn-h1c-m0, memory 8g. Init warmup touches every peer page both ways, sys-stores the flag pages, runs one dummy push/return, then resets flag epochs before the scored oracle. Host alarm 900s.
+COMMAND: nohup env B70_AGENT=H1 B70_GPU_LOCK_TIMEOUT=7200 bash /tmp/h1c-m0-window.sh. The script calls bin/gpu-run bin/xpu-health, then harness/xpu-run.sh --card both --name vllm-fn-h1c-m0, then health again. It is not wrapped in an outer gpu-run. Logs /mnt/vm_8tb/b70/build/vllm-flashnext/logs/h1c-m0-window.out and h1c-m0-probe.log.
+RESULT: Queued 09:39:11 while D3 held card 1. Health before HEALTHY (cards 0 and 1) rc 0 at 09:46:03. PROBE5: zeMemOpenIpcHandle failed 2013265924, same_ctx=1, peer access both ways, atomics 0, ipc_store=0, same_store=1, path=2, bdf 0000:0b:00.0 and 0000:44:00.0. Preflight ok for 64 B, 4 KB, 17520 B, 64 KB (0 to 1) and 614400 B (1 to 0). WARMUP touch inbox=1 parts=1 flag1=1 flag0=1, flag saw1=1 saw0=1, exchange attempt=1 err0=0 err1=0, reset epochs ok=1. Eager sample s=0 first_use push_bad=0 ret_bad=0 guard_bad=0 err0=0 err1=0. EAGER fails=0 across s=0..64. Graph capture of s=0 does not execute (capture_executed=0, poison counts stay push_bad=4380 ret_bad=153600). Replay of s=0 is push_bad=0. GRAPH fails=0. Mirror arm is not a gate: fails=3, partial push_bad 1700/1596/1566, err=0. PROBE1 both directions n=200 one_way_us min 1.667 p50 1.771 max 1.980. PROBE2 65536 B groups=64 us_p50 5.834 GBps 11.233. PROBE3 card0 5.834 us, card1 5.833 us, host wall 26.631 us. PROBE4 plain_bad=0 uncached_bad=0. Process line: PASS eager 65/65 graph 65/65. PROBE_RC=0 at 09:49:45. Health after HEALTHY rc 0 at 09:50:40. No xe-reset.
+VERDICT: M0 gate met. The init exchange removed the first-use spin timeout. Flag handshake is 1.8 us each way. A 64 KB push is 5.8 us (11.2 GB/s). M1 is next.
+
+## 2026-10-20 09:52 H1c -- M1 window open
+
+CONFIG: same _C.so bd4f4aa0 and _C.ep.so 55c154ee. Both cards. Container vllm-fn-h1c-m1, memory 32g. blk.0 of the 35B UD-IQ3_XXS GGUF, linear split 128/128, T=1,2,4,8,4096. Transport warmup runs inside ep_init; compute warmup runs on the first fully registered layer.
+COMMAND: nohup env B70_AGENT=H1 B70_GPU_LOCK_TIMEOUT=7200 bash /tmp/h1c-m1-window.sh. Log /mnt/vm_8tb/b70/build/vllm-flashnext/logs/h1c-m1-window.out and h1c-m1-layer.log.
+RESULT: requested 09:52:44. Card 0 free. Card 1 held by G4 (vllm-fn-g4-kv-c1) since 09:50:40. The window waits.
+VERDICT: window open.
+
+## 2026-10-20 09:55 G4 -- T2 died on a slots attribute
+
+CONFIG: card 1, Ornith GPTQ int4, port 18111, ParkingOffloadConnector,
+--park-finished-tail, 45 GPU blocks, cpu_bytes 34359738368, shm 40g,
+memory 80g, PIECEWISE mode 0. Copy path is swap_blocks_batch.
+Fork e442b4b53f. Identity hotschmoe-dev then the research alias.
+COMMAND: CARD=1 vllm/flashnext/kvoffload/run_t2.sh
+Logs: g4-t2-driver-c1-r2.txt and g4-t2-serve-c1-r1.txt.
+Health before and after via bin/xpu-health --card 1.
+RESULT: Health before OK. Ready 09:53:38. G4 parking: slots=4
+chunks=1542 block=1088 exact_tail=True groups=[(0, gdn), (1, gdn),
+(2, gdn), (3, full_attention)] offload_prompt_only=False. Host mmap
+34.36 GB. Queued tails: turn1 end=3063 tail=887 full_keys=2; control
+end=3144; B and C end=30464 tail=0 full_keys=28. Turn1 ttft 0.531s
+computed 3000. Control ttft 0.443s computed 3081. B 5.032s. C 5.023s.
+The restore lookup found a host HIT, then EngineCore aborted:
+RequestOffloadState is a slots dataclass and has no _g4_tail_key
+(parking.py:578). The restored completion was empty. The cold filler
+then got HTTP 500 because the engine was dead. Health after:
+xpu-health HEALTHY card 1. No T2_RESULT json.
+VERDICT: the tail was stored and the exact-end lookup hit. The hit
+cannot be hung off RequestOffloadState. Not a pass. Next run keeps
+the choice on the scheduler.
+
+## 2026-10-20 09:59 H1c -- M1 r1 bitwise, T=4096 elem-rel
+
+CONFIG: _C.so bd4f4aa0, _C.ep.so 55c154ee. Both cards, path 2, container vllm-fn-h1c-m1, memory 32g. blk.0 IQ3_XXS, E=256 split 128/128, qtypes gate/up 22 (IQ2_S) down 21 (IQ3_S). T=1,2,4,8,4096 topk=8. Spin 200000.
+COMMAND: bash /tmp/h1c-m1-window.sh. Logs preserved as h1c-m1-layer-r1.log and h1c-m1-window-r1.out.
+RESULT: Health before HEALTHY. Transport warmup touch all 1. Exchange attempt 1 err1=11 (first ep_dispatch/ep_wait in this process), attempt 2 err0=0 err1=0. Compute warmup prejit T=1 and T=16, moe attempt 1 err=0. Own experts bitwise at every T (own_max=0). Versus one-card moe_layer: T=1 full_max 3.7e-9 elem_rel 8.7e-6 cos 1; T=2 7.5e-9 / 4.3e-4; T=4 and T=8 1.5e-8 / 4.5e-4; T=4096 full_max 3.0e-8 elem_rel 7.5e-2 cos 1.000000. The per-element ratio uses max(|ref|, 1e-8), so a few near-zero outputs at T=4096 miss 1e-2 while the absolute gap stays at a few ulp. TIME T=1 ep 580 us vs one-card 411 us. TIME T=8 ep 591 us vs one-card 816 us. M1_RC=1. The window then xe-reset on any nonzero rc (rebind, RECOVERED, collective health OK). Health after HEALTHY rc 0 at 09:58:47. No device-lost in the probe.
+VERDICT: transport and the split are exact against y0+y1. The T=4096 miss is the per-element relative definition, not a wrong sum. The rerun scores max|a-b| / max|b| and still prints elem_rel. xe-reset on a numeric miss will not run again.

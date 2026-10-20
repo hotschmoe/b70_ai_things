@@ -7,10 +7,13 @@
 // shares one M tile's X in L2. E>1 is one group per expert (N fast) and
 // loops row tiles inside that group.
 //
-// s64: Strata night_grouped_expert.inc:235 with SGN=4 (64 columns). Each
-// subgroup owns 16 columns, preloads the next 32-wide block (inc:275),
-// and loads X from global. One group per expert; row tiles above MT*8
-// walk serially inside that group.
+// s64: Strata night_grouped_expert.inc:235. SGN subgroups own 16 columns
+// each (SGN=4 is 64 columns). Each subgroup preloads the next 32-wide
+// block and loads X from global. One group per expert per N-strip; row
+// tiles above MT*8 walk serially inside that group.
+// B70_PREFILL_SGN=8|16|40 widens the strip for IQ3_XXS and Q2_0 when N
+// divides the strip and the device accepts the work-group. Wider strips
+// cut X re-reads (GU N=1280 is 20 strips at SGN=4 and 2 at SGN=40).
 //
 // B70_PREFILL_SCHED=reuse|s64 overrides the auto pick. Dense (E<=1)
 // uses reuse rm64. Experts use s64 (reuse was slower at T=512/4096/12288).
@@ -66,17 +69,19 @@ inline void store_h32(sycl::half* dst, const float* v) {
     }
 }
 
-template <int TYPE, int MT>
+template <int TYPE, int MT, int SGN>
 class b70_pf_s64;
 
-// Strata SGN=4. MT is the number of 8-row DPAS accumulators (4 or 16).
-template <int TYPE, int MT>
+// MT is the number of 8-row DPAS accumulators (4 or 16). SGN is the
+// subgroup count; the N strip is SGN*16 columns.
+template <int TYPE, int MT, int SGN>
 void launch_s64(sycl::queue& q, const GemmArgs& a) {
-    constexpr int SGN = 4;
     constexpr int WG = SGN * kSg;
     constexpr int LDB = 32 + 8;
     constexpr int TILE = MT * 8;
     const int ntiles = a.N / WG;
+    if (ntiles < 1 || a.N != ntiles * WG) return;
+    g_split.cols = WG;
     const int E = a.E;
     const int N = a.N, K = a.K, rb = a.rb, n_wrow = a.n_wrow, gu = a.gu;
     const uint16_t* X = a.X;
@@ -87,7 +92,7 @@ void launch_s64(sycl::queue& q, const GemmArgs& a) {
     auto props = sycl::ext::oneapi::experimental::properties{sycl::ext::intel::experimental::grf_size<(MT > 4 ? 256 : 128)>};
     q.submit([&](sycl::handler& h) {
         sycl::local_accessor<uint8_t, 1> slm(SGN * kSg * LDB * sizeof(sycl::half) + 128, h);
-        h.parallel_for<b70_pf_s64<TYPE, MT>>(
+        h.parallel_for<b70_pf_s64<TYPE, MT, SGN>>(
             sycl::nd_range<2>({(size_t)E, (size_t)ntiles * WG}, {1, (size_t)WG}), props,
             [=](sycl::nd_item<2> it) [[sycl::reqd_sub_group_size(kSg)]] {
                 auto sg = it.get_sub_group();
@@ -311,11 +316,49 @@ void launch_reuse(sycl::queue& q, const GemmArgs& a) {
     });
 }
 
+int prefill_sgn_req() {
+    const char* e = std::getenv("B70_PREFILL_SGN");
+    if (!e || !e[0]) return 4;
+    const int v = std::atoi(e);
+    if (v == 8 || v == 16 || v == 40) return v;
+    return 4;
+}
+
+int device_max_wg(sycl::queue& q) {
+    static int v = -1;
+    if (v < 0) v = (int)q.get_device().get_info<sycl::info::device::max_work_group_size>();
+    return v;
+}
+
+// Wide strips are built only for the expert types the layer bench runs.
+// Other types stay on SGN=4 so a full instantiation does not multiply.
+template <int TYPE, int MT>
+void launch_s64_wide(sycl::queue& q, const GemmArgs& a, int sgn) {
+    const int maxwg = device_max_wg(q);
+    if (sgn * kSg > maxwg || a.N % (sgn * kSg) != 0) sgn = 4;
+    static int seen = -1;
+    if (seen != sgn) {
+        seen = sgn;
+        std::fprintf(stderr, "C11_SGN %d maxwg=%d N=%d mt=%d\n", sgn, maxwg, a.N, MT);
+    }
+    if (sgn == 40) launch_s64<TYPE, MT, 40>(q, a);
+    else if (sgn == 16) launch_s64<TYPE, MT, 16>(q, a);
+    else if (sgn == 8) launch_s64<TYPE, MT, 8>(q, a);
+    else launch_s64<TYPE, MT, 4>(q, a);
+}
+
 template <int TYPE>
 void launch_mode0(sycl::queue& q, const GemmArgs& a, int kind, int mt, int rm) {
     if (kind == 1) {
-        if (mt == 4) launch_s64<TYPE, 4>(q, a);
-        else launch_s64<TYPE, 16>(q, a);
+        if constexpr (TYPE == B70_IQ3_XXS || TYPE == B70_Q2_0) {
+            const int sgn = prefill_sgn_req();
+            if (mt == 4) launch_s64_wide<TYPE, 4>(q, a, sgn);
+            else launch_s64_wide<TYPE, 16>(q, a, sgn);
+        } else if (mt == 4) {
+            launch_s64<TYPE, 4, 4>(q, a);
+        } else {
+            launch_s64<TYPE, 16, 4>(q, a);
+        }
     } else if (rm == 32) {
         launch_reuse<TYPE, 32>(q, a);
     } else {

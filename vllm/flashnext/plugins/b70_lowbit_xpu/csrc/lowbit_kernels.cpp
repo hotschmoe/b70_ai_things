@@ -1113,9 +1113,7 @@ struct GateUpRowsKernel {
 #pragma unroll
         for (int r = 0; r < ROWS; ++r) {
           const int row = row0 + r * kGemvWg;
-          if (row >= I) {
-            continue;
-          }
+          if (row < I) {
           const size_t gate_row = (size_t)e * (size_t)n13 + (size_t)row;
           const size_t up_row = gate_row + (size_t)I;
           gacc[r] += dot_cached_bits(
@@ -1134,19 +1132,19 @@ struct GateUpRowsKernel {
               scale + up_row * (size_t)groups,
               g,
               xf);
+          }
         }
       }
     }
 #pragma unroll
     for (int r = 0; r < ROWS; ++r) {
       const int row = row0 + r * kGemvWg;
-      if (row >= I) {
-        continue;
+      if (row < I) {
+        float gv = bf16_roundtrip(gacc[r]);
+        float uv = bf16_roundtrip(uacc[r]);
+        float h = live ? gv / (1.f + sycl::exp(-gv)) * uv : 0.f;
+        hid[(size_t)slot * (size_t)I + row] = f32_to_bf16_u16(h);
       }
-      float gv = bf16_roundtrip(gacc[r]);
-      float uv = bf16_roundtrip(uacc[r]);
-      float h = live ? gv / (1.f + sycl::exp(-gv)) * uv : 0.f;
-      hid[(size_t)slot * (size_t)I + row] = f32_to_bf16_u16(h);
     }
   }
 };
@@ -1203,19 +1201,18 @@ struct DownRowsKernel {
 #pragma unroll
             for (int r = 0; r < ROWS; ++r) {
               const int row = row0 + r * kGemvWg;
-              if (row >= H) {
-                continue;
+              if (row < H) {
+                const size_t wrow = (size_t)e * (size_t)H + (size_t)row;
+                float d = dot_cached_bits(
+                    use_bits,
+                    plane2 + wrow * (size_t)stride2,
+                    plane_hi ? plane_hi + wrow * (size_t)stride_hi
+                              : plane2 + wrow * (size_t)stride2,
+                    scale + wrow * (size_t)groups,
+                    g,
+                    xf);
+                acc[r] += w * bf16_roundtrip(d);
               }
-              const size_t wrow = (size_t)e * (size_t)H + (size_t)row;
-              float d = dot_cached_bits(
-                  use_bits,
-                  plane2 + wrow * (size_t)stride2,
-                  plane_hi ? plane_hi + wrow * (size_t)stride_hi
-                            : plane2 + wrow * (size_t)stride2,
-                  scale + wrow * (size_t)groups,
-                  g,
-                  xf);
-              acc[r] += w * bf16_roundtrip(d);
             }
           }
         }
@@ -1956,9 +1953,45 @@ static torch::Tensor moe_gemv_mixed(
       w2_plane_hi, w2_scale, bits, /*which=*/2, expert_bits.data_ptr<int32_t>());
 }
 
-// One work-item unpacks one group of 128 codes into bf16. The vendor
-// GEMM then does the prefill multiply. This is the measured gap: the
-// ESIMD 8x16 tile is ~10x slower than torch.matmul on the same shape.
+// One work-item unpacks one group of 128 codes into bf16 with the same
+// dequant_group path as decode. The scalar kernel below is the reference
+// the first matmul serves used; it tops out near 80 GB/s.
+template <int BITS>
+struct UnpackEsimdKernel {
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int rows;
+  int groups;
+  int stride2;
+  int stride_hi;
+
+  void operator()(sycl::nd_item<1> it) const SYCL_ESIMD_KERNEL {
+    const int mg = (int)it.get_global_id(0);
+    const int limit = rows * groups;
+    if (mg >= limit) {
+      return;
+    }
+    const int row = mg / groups;
+    const int g = mg - row * groups;
+    const uint8_t* row2 = plane2 + (size_t)row * (size_t)stride2;
+    const uint8_t* rowhi =
+        plane_hi ? plane_hi + (size_t)row * (size_t)stride_hi : row2;
+    const float sc = bf16_u16_to_f32(scale[(size_t)row * (size_t)groups + g]);
+    esimd::simd<float, 128> wf = dequant_group<BITS>(row2, rowhi, g, sc);
+    uint16_t* dst = y + ((size_t)row * (size_t)(groups << 7) + (size_t)g * 128);
+#pragma unroll
+    for (int s = 0; s < 4; ++s) {
+      esimd::simd<uint16_t, 32> hb =
+          f32_to_bf16_u16v<32>(wf.template select<32, 1>(s * 32));
+      esimd::block_store<uint16_t, 32>(
+          dst + s * 32, hb, esimd::overaligned<64>);
+    }
+  }
+};
+
+// Scalar reference. One work-item, one group, 128 scalar converts.
 struct UnpackBf16Kernel {
   const uint8_t* plane2;
   const uint8_t* plane_hi;
@@ -2014,16 +2047,37 @@ static torch::Tensor unpack_bf16(
   record_use(scale);
   record_use(y);
   auto& q = c10::xpu::getCurrentXPUStream().queue();
-  UnpackBf16Kernel kern{
-      plane2.data_ptr<uint8_t>(),
-      hi_ptr(plane_hi),
-      reinterpret_cast<const uint16_t*>(scale.data_ptr()),
-      reinterpret_cast<uint16_t*>(y.data_ptr()),
-      (int)(k / 128),
-      (int)plane2.size(1),
-      bits == 2 ? 0 : (int)plane_hi.size(1),
-      (int)bits};
-  q.parallel_for(sycl::range<1>((size_t)n * (size_t)(k / 128)), kern);
+  const int groups = (int)(k / 128);
+  const int rows = (int)n;
+  const uint8_t* p2 = plane2.data_ptr<uint8_t>();
+  const uint8_t* ph = hi_ptr(plane_hi);
+  const uint16_t* sc = reinterpret_cast<const uint16_t*>(scale.data_ptr());
+  uint16_t* yp = reinterpret_cast<uint16_t*>(y.data_ptr());
+  const int stride2 = (int)plane2.size(1);
+  const int stride_hi = bits == 2 ? 0 : (int)plane_hi.size(1);
+  // Scalar path stays available for a numeric diff. Default is the
+  // vector kernel. B70_LOWBIT_UNPACK=scalar selects the old loop.
+  const char* which = std::getenv("B70_LOWBIT_UNPACK");
+  const bool scalar = which != nullptr && which[0] == 's';
+  if (scalar) {
+    UnpackBf16Kernel kern{p2, ph, sc, yp, groups, stride2, stride_hi, (int)bits};
+    q.parallel_for(sycl::range<1>((size_t)rows * (size_t)groups), kern);
+    return y;
+  }
+  constexpr int wg = 16;
+  const size_t ngrp = (size_t)rows * (size_t)groups;
+  const size_t gN = (ngrp + wg - 1) / wg * wg;
+  const auto nd = sycl::nd_range<1>(sycl::range<1>(gN), sycl::range<1>(wg));
+  if (bits == 2) {
+    q.parallel_for(
+        nd, UnpackEsimdKernel<2>{p2, ph, sc, yp, rows, groups, stride2, stride_hi});
+  } else if (bits == 3) {
+    q.parallel_for(
+        nd, UnpackEsimdKernel<3>{p2, ph, sc, yp, rows, groups, stride2, stride_hi});
+  } else {
+    q.parallel_for(
+        nd, UnpackEsimdKernel<4>{p2, ph, sc, yp, rows, groups, stride2, stride_hi});
+  }
   return y;
 }
 

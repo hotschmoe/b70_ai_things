@@ -144,6 +144,9 @@ class ParkingScheduler(OffloadingConnectorScheduler):
         self._pin_holds: dict[int, tuple[object, ...]] = {}
         self._running: dict[bytes, int] = {}
         self._req_conv: dict[str, bytes] = {}
+        # RequestOffloadState is a slots dataclass, so the chosen tail
+        # cannot be stored on it.
+        self._tail_choice: dict[str, tuple[object, int]] = {}
         kinds = [
             (
                 group.group_idx,
@@ -190,10 +193,18 @@ class ParkingScheduler(OffloadingConnectorScheduler):
         self._note_running(conv_id, 1)
 
     def request_finished(self, request: Request):
+        choice = self._tail_choice.pop(request.request_id, None)
+        if choice is not None:
+            self._release_tail_pin(choice[0])
         conv_id = self._req_conv.pop(request.request_id, None)
         if conv_id is not None:
             self._note_running(conv_id, -1)
         return super().request_finished(request)
+
+    def _release_tail_pin(self, key: object) -> None:
+        record = self.park.by_tail.get(key)
+        if record is not None and record.pinned > 0:
+            self.park.unpin(record)
 
     def has_pending_push_work(self) -> bool:
         if self._pending:
@@ -575,11 +586,14 @@ class ParkingScheduler(OffloadingConnectorScheduler):
         if status != "hit":
             return hit, async_load
         req_status = self._req_status[request.request_id]
-        req_status._g4_tail_key = record.key
-        req_status._g4_tail_end = record.end
         req_status.partial_tail_boundary = None
         req_status.update_num_hit_chunks(record.end)
-        self.park.pin(record)
+        prev = self._tail_choice.get(request.request_id)
+        if prev is None or prev[0] != record.key:
+            if prev is not None:
+                self._release_tail_pin(prev[0])
+            self.park.pin(record)
+        self._tail_choice[request.request_id] = (record.key, record.end)
         return record.end - num_computed_tokens, True
 
     def _waiting_on_pending(self, ids: list[int], prompt_len: int) -> bool:
@@ -617,24 +631,27 @@ class ParkingScheduler(OffloadingConnectorScheduler):
             self._current_batch_allocated_block_ids.update(
                 block.block_id for block in group_blocks if block.block_id != 0
             )
+        choice = self._tail_choice.pop(request.request_id, None)
         if num_external_tokens == 0:
+            if choice is not None:
+                self._release_tail_pin(choice[0])
             return
         req_status = self._req_status[request.request_id]
-        end = getattr(req_status, "_g4_tail_end", None)
-        key = getattr(req_status, "_g4_tail_key", None)
         local = req_status.num_locally_computed_tokens
-        if end is None or key is None or local + num_external_tokens != end:
+        if (
+            choice is None
+            or local + num_external_tokens != choice[1]
+        ):
+            if choice is not None:
+                self._release_tail_pin(choice[0])
             return super().update_state_after_alloc(
                 request, blocks, num_external_tokens
             )
+        key, end = choice
         try:
             self._load_tail(request, blocks, req_status, end, key, local)
         finally:
-            record = self.park.by_tail.get(key)
-            if record is not None and record.pinned:
-                self.park.unpin(record)
-            req_status._g4_tail_end = None
-            req_status._g4_tail_key = None
+            self._release_tail_pin(key)
 
     def _load_tail(self, request, blocks, req_status, end: int, key, local: int) -> None:
         plans = self._plans.get(key)
@@ -677,27 +694,41 @@ class ParkingScheduler(OffloadingConnectorScheduler):
                     if begin < stop:
                         req_status.load_key_ranges.append((begin, stop, off_key))
                 continue
+            # The worker reads the state at (num_computed - 1) // block
+            # after the load, which is the block-end index. External
+            # allocation fills earlier slots with real blocks too, so the
+            # first unhashed block is not the state.
+            expected = max(0, (end - 1) // block)
             state = None
             index = -1
-            limit = min(cdiv(end, block), len(table))
-            for cursor in range(start, limit):
-                candidate = table[cursor]
-                if candidate.is_null or candidate.block_hash is not None:
-                    continue
-                state = candidate
-                index = cursor
-                break
+            if expected < len(table) and not table[expected].is_null:
+                state = table[expected]
+                index = expected
+            else:
+                limit = min(cdiv(end, block), len(table))
+                for cursor in range(start, limit):
+                    candidate = table[cursor]
+                    if candidate.is_null:
+                        continue
+                    state = candidate
+                    index = cursor
+                    break
+                if index != expected:
+                    logger.warning(
+                        "G4 state group %s dest index %s, block-end index %s",
+                        plan.group_idx,
+                        index,
+                        expected,
+                    )
             if state is None or len(plan.keys) != 1:
                 raise RuntimeError(
                     f"G4 state group {plan.group_idx} has no fresh block"
                 )
-            expected = max(0, (end - 1) // block)
-            if index != expected:
+            if state.block_hash is not None:
                 logger.warning(
-                    "G4 state group %s dest index %s, block-end index %s",
+                    "G4 state group %s dest block %s is already hashed",
                     plan.group_idx,
-                    index,
-                    expected,
+                    state.block_id,
                 )
             keys.append(plan.keys[0])
             dst_ids.append(state.block_id)

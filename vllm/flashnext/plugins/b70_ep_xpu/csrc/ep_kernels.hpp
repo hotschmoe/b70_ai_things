@@ -41,4 +41,13 @@ template <bool Scoped>
 void ep_push_probe(sycl::queue& q, const int32_t* ids, int n_ids, const uint8_t* xq, size_t xq_bytes,
                    int32_t* peer_ids, uint8_t* peer_xq, uint32_t* peer_flag, const uint32_t* ctr);
 
+// One scalar store per 4 KiB page through the peer pointer, then the owner
+// reads the first and last words. Host-waits. Returns 1 on a match.
+// A dense peer parallel_for of a tight allocation lost the device (H1b);
+// this touches pages only, and the allocation is padded by one page.
+int ep_touch_pages(sycl::queue& writer, void* remote, sycl::queue& owner, void* local, size_t bytes);
+
+// Uncached store of one flag word per 4 KiB page. Host-waits.
+void ep_store_flag_pages(sycl::queue& writer, uint32_t* remote, int pages, uint32_t value);
+
 }  // namespace b70ep

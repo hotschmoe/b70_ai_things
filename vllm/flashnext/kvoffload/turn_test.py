@@ -149,7 +149,12 @@ def main() -> int:
     before = metrics()
     restored = run("restored", turn2, "park", args.reply_tokens)
     after = metrics()
-    cold = run("cold-ttft", fillers["cold"], "cold", 1)
+    cold_ttft = None
+    try:
+        cold = run("cold-ttft", fillers["cold"], "cold", 1)
+        cold_ttft = cold["ttft_s"]
+    except Exception as exc:
+        print(f"turn_test: cold-ttft failed: {exc}", flush=True)
 
     host = counter_delta(
         before, after, "vllm:prompt_tokens_cached_by_source", 'source="host"'
@@ -191,7 +196,7 @@ def main() -> int:
         "ttft_ok": ttft_ok,
         "control_ttft_s": control["ttft_s"],
         "restored_ttft_s": restored["ttft_s"],
-        "cold_ttft_s": cold["ttft_s"],
+        "cold_ttft_s": cold_ttft,
         "turn1": _public(turn1),
         "control": _public(control),
         "restored": _public(restored),

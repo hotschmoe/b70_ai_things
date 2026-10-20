@@ -196,4 +196,35 @@ template void ep_push_probe<false>(sycl::queue&, const int32_t*, int, const uint
 template void ep_push_probe<true>(sycl::queue&, const int32_t*, int, const uint8_t*, size_t, int32_t*, uint8_t*,
                                   uint32_t*, const uint32_t*);
 
+int ep_touch_pages(sycl::queue& writer, void* remote, sycl::queue& owner, void* local, size_t bytes) {
+    if (remote == nullptr || local == nullptr || bytes < 4) return 0;
+    const size_t pages = (bytes + 4095u) / 4096u;
+    auto* dst = static_cast<uint32_t*>(remote);
+    constexpr size_t WG = 256;
+    writer
+        .parallel_for<class b70_ep_touch_pages_k>(sycl::nd_range<1>(WG, WG),
+                                                 [=](sycl::nd_item<1> it) {
+                                                     for (size_t i = it.get_local_id(0); i < pages; i += WG) {
+                                                         const size_t word = i * 1024u;
+                                                         if ((word + 1u) * 4u <= bytes)
+                                                             dst[word] = 0xA5A50000u + (uint32_t)i;
+                                                     }
+                                                 })
+        .wait();
+    const size_t last_word = (pages - 1u) * 1024u;
+    if ((last_word + 1u) * 4u > bytes) return 0;
+    uint32_t first = 0, last = 0;
+    owner.memcpy(&first, local, 4).wait();
+    owner.memcpy(&last, static_cast<uint32_t*>(local) + last_word, 4).wait();
+    const uint32_t want_last = 0xA5A50000u + (uint32_t)(pages - 1u);
+    return first == 0xA5A50000u && last == want_last;
+}
+
+void ep_store_flag_pages(sycl::queue& writer, uint32_t* remote, int pages, uint32_t value) {
+    if (remote == nullptr || pages < 1) return;
+    writer.single_task<class b70_ep_flag_pages_k>([=]() {
+        for (int i = 0; i < pages; ++i) sys_store(remote + (size_t)i * 1024u, value);
+    }).wait();
+}
+
 }  // namespace b70ep

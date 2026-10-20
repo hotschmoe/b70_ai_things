@@ -1,9 +1,10 @@
 """M0: S28 flag oracle in torch's XPU context, eager then graph, plus probes 1-5.
 
-Exit 0 only when eager and graph are 65/65 (first use + 64 reps) with
-push_bad = ret_bad = guard_bad = err = 0. The mirror arm is a sensitivity
-control. Probe 1 prints one-way flag latency; a value above 5 us is reported
-and does not by itself fail this process.
+m0_setup faults in every peer page, runs one dummy push/return, and resets
+flag epochs before this process scores a sample. Exit 0 only when eager and
+graph are 65/65 (first use + 64 reps) with push_bad = ret_bad = guard_bad =
+err = 0. The mirror arm is a sensitivity control. Probe 1 prints one-way
+flag latency; a value above 5 us is reported and does not by itself fail.
 """
 
 from __future__ import annotations

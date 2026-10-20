@@ -179,6 +179,7 @@ TORCH_LIBRARY_FRAGMENT(b70_gguf, m) {
         "prefill_moe_layer(Tensor x, Tensor ids, Tensor q_gate, Tensor q_up, Tensor q_down, Tensor router, "
         "int type_gu, int type_down, int H, int F, int mode) -> Tensor");
     m.def("prefill_split_us() -> Tensor");
+    m.def("prefill_wide_sgn() -> Tensor");
 }
 
 TORCH_LIBRARY_IMPL(b70_gguf, XPU, m) {
@@ -195,6 +196,7 @@ TORCH_LIBRARY_FRAGMENT(b70_gguf, m) {
 
 TORCH_LIBRARY_IMPL(b70_gguf, CompositeExplicitAutograd, m) {
     m.impl("prefill_split_us", b70_prefill_split_us_op);
+    m.impl("prefill_wide_sgn", b70_prefill_wide_sgn_op);
     m.impl("reserve_decode", reserve_decode);
 }
 

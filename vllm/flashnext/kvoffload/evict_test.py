@@ -150,6 +150,8 @@ def complete(
             if blob == "[DONE]":
                 break
             event = json.loads(blob)
+            if event.get("error"):
+                raise RuntimeError(str(event["error"]))
             if event.get("usage"):
                 usage = event["usage"]
             for choice in event.get("choices") or []:

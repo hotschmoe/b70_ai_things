@@ -123,10 +123,21 @@ def run_one(d: dict, reps: int) -> None:
     y = call()
     torch.xpu.synchronize()
     got = y.float().cpu().numpy()
-    ref = d["y"]
-    abs_err = np.max(np.abs(got - ref))
+    ref = d["y"].reshape(T, K)
+    err = np.abs(got - ref)
+    abs_err = float(np.max(err))
+    mean_abs = float(np.mean(err))
+    rms = float(np.sqrt(np.mean(err * err)))
     denom = np.maximum(np.abs(ref), 1e-8)
-    rel = float(np.max(np.abs(got - ref) / denom))
+    rel_all = err / denom
+    # Near-zero refs make max_rel meaningless. Bulk uses |ref| >= 1% of mean |ref|.
+    floor = max(0.01 * float(np.mean(np.abs(ref))), 1e-3)
+    bulk = np.abs(ref) >= floor
+    rel_bulk = float(np.max(rel_all[bulk])) if np.any(bulk) else float("nan")
+    frac = float(np.mean(rel_all[bulk] > 0.08)) if np.any(bulk) else float("nan")
+    gn = float(np.linalg.norm(got))
+    rn = float(np.linalg.norm(ref))
+    cos = float(np.dot(got.ravel(), ref.ravel()) / (gn * rn + 1e-12))
     step["i"] = 0
     held: list = []
 
@@ -137,7 +148,9 @@ def run_one(d: dict, reps: int) -> None:
     sched = os.environ.get("B70_MOE_SCHED", "1")
     print(
         f"OURS T={T} gu={d['gu']} dt={d['dt']} sched={sched} us_graph={us:.2f} us_per_tok={us / T:.2f} "
-        f"max_abs_vs_strata={abs_err:.4e} max_rel={rel:.4e}",
+        f"max_abs={abs_err:.4e} mean_abs={mean_abs:.4e} rms={rms:.4e} cos={cos:.6f} "
+        f"max_rel={float(np.max(rel_all)):.4e} max_rel_bulk={rel_bulk:.4e} frac_bulk_gt_8e-2={frac:.4e} "
+        f"y_norm={rn:.4e}",
         flush=True,
     )
 

@@ -68,7 +68,12 @@ def _config_lines(runner) -> list[str]:
         lines.append(f"attention_backend {backend}")
     extra = getattr(vc, "additional_config", None)
     lines.append(f"additional_config {extra}")
-    lines.append(f"prefill_flag {os.environ.get('B70_LOWBIT_PREFILL', '')}")
+    try:
+        from b70_lowbit_xpu.moe import _prefill_flag
+
+        lines.append(f"prefill_flag {_prefill_flag()}")
+    except Exception as exc:
+        lines.append(f"prefill_flag env {os.environ.get('B70_LOWBIT_PREFILL', '')} ({exc})")
     lines.append(f"gemv_rows {os.environ.get('B70_LOWBIT_GEMV_ROWS', '')}")
     return lines
 
@@ -207,7 +212,9 @@ def install() -> None:
     def wrapped(self, scheduler_output, *args, **kwargs):
         global _STEP
         ntok = int(getattr(scheduler_output, "total_num_scheduled_tokens", 0) or 0)
-        if ntok < _MIN_TOKENS:
+        from b70_lowbit_xpu.moe import _split_enabled
+
+        if ntok < _MIN_TOKENS or not _split_enabled():
             return orig(self, scheduler_output, *args, **kwargs)
         _STEP += 1
         step = _STEP

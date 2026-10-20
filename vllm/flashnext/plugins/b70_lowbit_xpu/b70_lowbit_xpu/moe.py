@@ -61,10 +61,24 @@ def _prefill_flag() -> str:
     return os.environ.get("B70_LOWBIT_PREFILL", "")
 
 
+def _split_enabled() -> bool:
+    """Event brackets. A present off-file disables them without a reload.
+
+    The bench must not pay the diagnostic synchronize, and the flag is
+    fixed in the worker environment, so the file is the switch.
+    """
+    if os.environ.get("B70_LOWBIT_FWD_SPLIT") != "1":
+        return False
+    off = os.environ.get("B70_LOWBIT_FWD_OFF_FILE", "")
+    if off and os.path.exists(off):
+        return False
+    return True
+
+
 def _span(name: str):
     class _Bracket:
         def __enter__(self):
-            self.on = os.environ.get("B70_LOWBIT_FWD_SPLIT") == "1"
+            self.on = _split_enabled()
             if self.on:
                 import torch
 
@@ -211,10 +225,12 @@ def expert_prefill_bmm(
         gathered = x.index_select(0, tok_v)
         xpad = _scatter_rows(gathered, expert, local_v, num_experts, mmax_pad, hidden)
     with _span("bmm_w13"):
-        # w13 is [E, N, K]. bmm(W, X^T) keeps the large weight contiguous.
-        gu_nm = torch.bmm(w13, xpad.transpose(1, 2).contiguous())
-        gu = gu_nm.transpose(1, 2).contiguous().view(num_experts * mmax_pad, n13)
-        gu = gu.index_select(0, flat_i)
+        # xpad is [E, M, K], w13 is [E, N, K]. bmm(X, W^T) writes
+        # [E, M, N] directly. Forcing the X transpose contiguous, then
+        # transposing [E, N, M], was 7.4 ms plus 0.95 ms. The view is
+        # 2.94 ms and the following row gather is 0.52 ms (T=8192).
+        gu = torch.bmm(xpad, w13.transpose(1, 2))
+        gu = gu.reshape(num_experts * mmax_pad, n13).index_select(0, flat_i)
     with _span("silu"):
         gate = gu[:, :intermediate]
         up = gu[:, intermediate:]
@@ -222,9 +238,8 @@ def expert_prefill_bmm(
     with _span("pad_hid"):
         hpad = _scatter_rows(hid, expert, local_v, num_experts, mmax_pad, intermediate)
     with _span("bmm_w2"):
-        down_nm = torch.bmm(w2, hpad.transpose(1, 2).contiguous())
-        down = down_nm.transpose(1, 2).contiguous().view(num_experts * mmax_pad, hidden)
-        down = down.index_select(0, flat_i)
+        down = torch.bmm(hpad, w2.transpose(1, 2))
+        down = down.reshape(num_experts * mmax_pad, hidden).index_select(0, flat_i)
     with _span("reduce"):
         weight = topk_weights.reshape(-1).to(torch.float32)[order[valid]].unsqueeze(-1)
         y.index_add_(0, tok_v.to(torch.int64), down.float() * weight)

@@ -83,6 +83,10 @@ struct State {
     GraphSlot* active = nullptr;
     std::map<int, std::unique_ptr<GraphSlot>> graphs;
     int calls = 0;
+    size_t inbox_b = 0;
+    size_t psum_b = 0;
+    size_t flag_b = 0;
+    bool compute_warm = false;
 };
 
 State& S() {
@@ -166,6 +170,9 @@ void* inbox_remote(size_t off) { return static_cast<uint8_t*>(S().inbox.remote) 
 
 }  // namespace
 
+void ep_transport_warmup();
+void ep_compute_warmup(int layer);
+
 void ep_init(int max_t, int max_k, int max_topk, int nlayers) {
     State& s = S();
     if (s.up) return;
@@ -191,9 +198,12 @@ void ep_init(int max_t, int max_k, int max_topk, int nlayers) {
     s.off_ids = 0;
     s.off_w = align256((size_t)max_t * (size_t)max_topk * 4);
     s.off_x = s.off_w + align256((size_t)max_t * (size_t)max_topk * 4);
-    const size_t inbox_b = s.off_x + align256((size_t)max_t * (size_t)max_k * 2);
-    const size_t y_b = align256((size_t)max_t * (size_t)max_k * sizeof(float));
-    const size_t flag_b = (size_t)nlayers * 4096u;
+    s.inbox_b = s.off_x + align256((size_t)max_t * (size_t)max_k * 2);
+    s.psum_b = align256((size_t)max_t * (size_t)max_k * sizeof(float));
+    s.flag_b = (size_t)nlayers * 4096u;
+    const size_t inbox_b = s.inbox_b;
+    const size_t y_b = s.psum_b;
+    const size_t flag_b = s.flag_b;
     std::string err;
     if (!region_alloc(*s.q1, stream0, inbox_b, s.path, s.inbox, err)) throw std::runtime_error("inbox " + err);
     if (!region_alloc(stream0, *s.q1, y_b, s.path, s.psum, err)) throw std::runtime_error("psum " + err);
@@ -234,6 +244,7 @@ void ep_init(int max_t, int max_k, int max_topk, int nlayers) {
     std::printf("EP init max_t=%d max_k=%d max_topk=%d nlayers=%d spin=%u path=%d reclaim=%d inbox_b=%zu\n", max_t,
                 max_k, max_topk, nlayers, s.spin, s.path, s.reclaim, inbox_b);
     std::fflush(stdout);
+    ep_transport_warmup();
 }
 
 void ep_reserve() {
@@ -272,6 +283,7 @@ void ep_register1(int layer, const uint8_t* gate, const uint8_t* up, const uint8
     L.d1 = down;
     L.e1 = e;
     L.ready1 = true;
+    if (L.ready0 && !s.compute_warm) ep_compute_warmup(layer);
 }
 
 void ep_capture_begin(int key) {
@@ -337,19 +349,9 @@ std::vector<int64_t> ep_read_errors() {
     return out;
 }
 
-void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer) {
+void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer) {
     State& s = S();
-    if (!s.up) throw std::runtime_error("moe_ep before init");
-    if (layer < 0 || layer >= s.nlayers) throw std::runtime_error("moe_ep layer");
     Layer& L = s.layers[layer];
-    if (!L.ready0 || !L.ready1) throw std::runtime_error("moe_ep layer not registered");
-    if (T < 1 || T > s.max_t || topk < 1 || topk > s.max_topk || K != L.K || (K % 4) != 0)
-        throw std::runtime_error("moe_ep shape exceeds the preallocated exchange");
-    if (!s.cap_on && (s.err0[layer] || s.err1[layer])) {
-        std::printf("EP previous error layer=%d err0=%u err1=%u\n", layer, s.err0[layer], s.err1[layer]);
-        std::fflush(stdout);
-        throw std::runtime_error("ep flag timeout on a previous call");
-    }
     if (s.cap_on && !s.cap_started) {
         auto slot = std::make_unique<GraphSlot>(*s.q1);
         GraphSlot* raw = slot.get();
@@ -393,6 +395,186 @@ void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int
     ep_wait(a, flag_ret, ctr0, s.spin, s.err0 + layer, 12);
     ep_add_uncached(a, y, s.y0, static_cast<float*>(s.psum.local), n4);
     s.calls += 1;
+}
+
+void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer) {
+    State& s = S();
+    if (!s.up) throw std::runtime_error("moe_ep before init");
+    if (layer < 0 || layer >= s.nlayers) throw std::runtime_error("moe_ep layer");
+    Layer& L = s.layers[layer];
+    if (!L.ready0 || !L.ready1) throw std::runtime_error("moe_ep layer not registered");
+    if (T < 1 || T > s.max_t || topk < 1 || topk > s.max_topk || K != L.K || (K % 4) != 0)
+        throw std::runtime_error("moe_ep shape exceeds the preallocated exchange");
+    if (!s.cap_on && (s.err0[layer] || s.err1[layer])) {
+        std::printf("EP previous error layer=%d err0=%u err1=%u\n", layer, s.err0[layer], s.err1[layer]);
+        std::fflush(stdout);
+        throw std::runtime_error("ep flag timeout on a previous call");
+    }
+    enqueue_moe(x, w, ids, y, T, topk, K, layer);
+}
+
+namespace {
+
+int touch_twice(sycl::queue& writer, void* remote, sycl::queue& owner, void* local, size_t bytes) {
+    int ok = ep_touch_pages(writer, remote, owner, local, bytes);
+    if (!ok) ok = ep_touch_pages(writer, remote, owner, local, bytes);
+    return ok;
+}
+
+void reset_epochs() {
+    State& s = S();
+    sycl::queue& a = q0();
+    a.memset(s.ctr0, 0, (size_t)s.nlayers * 4);
+    a.memset(s.done0, 0, 4);
+    a.memset(s.flag_ret.local, 0, s.flag_b);
+    s.q1->memset(s.ctr1, 0, (size_t)s.nlayers * 4);
+    s.q1->memset(s.done1, 0, 4);
+    s.q1->memset(s.flag_in.local, 0, s.flag_b);
+    std::memset(s.err0, 0, (size_t)s.nlayers * 4);
+    std::memset(s.err1, 0, (size_t)s.nlayers * 4);
+    a.wait();
+    s.q1->wait();
+}
+
+void prejit_moe(sycl::queue& q, const uint16_t* x, const int32_t* ids, const float* w, float* y, const Layer& L,
+                const uint8_t* g, const uint8_t* u, const uint8_t* d, int T, int E) {
+    State& s = S();
+    q.memset(y, 0, (size_t)T * (size_t)L.K * sizeof(float));
+    s.moe(&q, x, g, L.gt, u, L.ut, d, L.dt, ids, w, nullptr, 0, nullptr, 0, nullptr, 0, y, T, 1, E, L.I, L.K);
+    q.wait();
+}
+
+}  // namespace
+
+void ep_transport_warmup() {
+    State& s = S();
+    if (!s.up) throw std::runtime_error("transport warmup before init");
+    sycl::queue& a = q0();
+    const int pages = (int)(s.flag_b / 4096u);
+    const int ti = touch_twice(a, s.inbox.remote, *s.q1, s.inbox.local, s.inbox_b);
+    const int tp = touch_twice(*s.q1, s.psum.remote, a, s.psum.local, s.psum_b);
+    const int tf1 = touch_twice(a, s.flag_in.remote, *s.q1, s.flag_in.local, s.flag_b);
+    const int tf0 = touch_twice(*s.q1, s.flag_ret.remote, a, s.flag_ret.local, s.flag_b);
+    std::printf("EP WARMUP touch inbox=%d psum=%d flag_in=%d flag_ret=%d pages=%d\n", ti, tp, tf1, tf0, pages);
+    std::fflush(stdout);
+    if (!(ti && tp && tf1 && tf0)) throw std::runtime_error("ep warmup peer-page touch failed");
+    ep_store_flag_pages(a, static_cast<uint32_t*>(s.flag_in.remote), pages, 1u);
+    ep_store_flag_pages(*s.q1, static_cast<uint32_t*>(s.flag_ret.remote), pages, 1u);
+    reset_epochs();
+
+    int32_t* ids = sycl::malloc_device<int32_t>(1, a);
+    float* w = sycl::malloc_device<float>(1, a);
+    uint16_t* x = sycl::malloc_device<uint16_t>(64, a);
+    if (!ids || !w || !x) throw std::runtime_error("ep warmup alloc failed");
+    a.memset(ids, 0, 4);
+    a.memset(w, 0, 4);
+    a.memset(x, 0, 128);
+    a.memset(s.y0, 0, 16);
+    s.q1->memset(s.y1, 0, 16);
+    a.wait();
+    s.q1->wait();
+
+    uint32_t* flag_in = static_cast<uint32_t*>(s.flag_in.local);
+    uint32_t* flag_in_r = static_cast<uint32_t*>(s.flag_in.remote);
+    uint32_t* flag_ret = static_cast<uint32_t*>(s.flag_ret.local);
+    uint32_t* flag_ret_r = static_cast<uint32_t*>(s.flag_ret.remote);
+    auto* peer_ids = reinterpret_cast<int32_t*>(inbox_remote(s.off_ids));
+    auto* peer_w = reinterpret_cast<float*>(inbox_remote(s.off_w));
+    auto* peer_x = reinterpret_cast<uint16_t*>(inbox_remote(s.off_x));
+    int ok = 0;
+    for (int attempt = 1; attempt <= 2; ++attempt) {
+        s.err0[0] = 0;
+        s.err1[0] = 0;
+        a.memset(s.done0, 0, 4);
+        s.q1->memset(s.done1, 0, 4);
+        a.wait();
+        s.q1->wait();
+        ep_bump(*s.q1, s.ctr1);
+        ep_wait(*s.q1, flag_in, s.ctr1, s.spin, s.err1, 11);
+        ep_push_ctr(*s.q1, s.psum.remote, s.y1, 1, s.done1, flag_ret_r, s.ctr1);
+        ep_bump(a, s.ctr0);
+        ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, 1, 64, 1, 1, s.done0, flag_in_r, s.ctr0);
+        ep_wait(a, flag_ret, s.ctr0, s.spin, s.err0, 12);
+        s.q1->wait();
+        a.wait();
+        std::printf("EP WARMUP exchange attempt=%d err0=%u err1=%u\n", attempt, s.err0[0], s.err1[0]);
+        std::fflush(stdout);
+        if (s.err0[0] == 0 && s.err1[0] == 0) {
+            ok = 1;
+            break;
+        }
+    }
+    sycl::free(ids, a);
+    sycl::free(w, a);
+    sycl::free(x, a);
+    reset_epochs();
+    std::printf("EP WARMUP reset epochs ok=%d\n", ok);
+    std::fflush(stdout);
+    if (!ok) throw std::runtime_error("ep warmup exchange failed");
+}
+
+void ep_compute_warmup(int layer) {
+    State& s = S();
+    if (s.compute_warm) return;
+    if (!s.up) throw std::runtime_error("compute warmup before init");
+    Layer& L = s.layers[layer];
+    if (!L.ready0 || !L.ready1 || L.K < 32) throw std::runtime_error("compute warmup layer is not ready");
+    sycl::queue& a = q0();
+    const int Tpre = s.max_t >= 16 ? 16 : 1;
+    const int Talloc = Tpre;
+    int32_t* ids = sycl::malloc_device<int32_t>(Talloc, a);
+    float* w = sycl::malloc_device<float>(Talloc, a);
+    uint16_t* x = sycl::malloc_device<uint16_t>((size_t)Talloc * (size_t)L.K, a);
+    float* y = sycl::malloc_device<float>((size_t)Talloc * (size_t)L.K, a);
+    if (!ids || !w || !x || !y) throw std::runtime_error("compute warmup alloc failed");
+    a.memset(ids, 0, (size_t)Talloc * 4);
+    a.memset(w, 0, (size_t)Talloc * 4);
+    a.memset(x, 0, (size_t)Talloc * (size_t)L.K * 2);
+    s.q1->memset(s.stage_ids, 0, (size_t)Talloc * 4);
+    s.q1->memset(s.stage_w, 0, (size_t)Talloc * 4);
+    s.q1->memset(s.stage_x, 0, (size_t)Talloc * (size_t)L.K * 2);
+    a.wait();
+    s.q1->wait();
+    // JIT each card's expert kernel on its own queue, outside the flag spin.
+    std::printf("EP WARMUP prejit layer=%d T=%d\n", layer, 1);
+    std::fflush(stdout);
+    prejit_moe(*s.q1, s.stage_x, s.stage_ids, s.stage_w, s.y1, L, L.g1, L.u1, L.d1, 1, L.e1);
+    prejit_moe(a, x, ids, w, y, L, L.g0, L.u0, L.d0, 1, L.e0);
+    if (Tpre > 1) {
+        std::printf("EP WARMUP prejit layer=%d T=%d\n", layer, Tpre);
+        std::fflush(stdout);
+        prejit_moe(*s.q1, s.stage_x, s.stage_ids, s.stage_w, s.y1, L, L.g1, L.u1, L.d1, Tpre, L.e1);
+        prejit_moe(a, x, ids, w, y, L, L.g0, L.u0, L.d0, Tpre, L.e0);
+    }
+    reset_epochs();
+    int ok = 0;
+    for (int attempt = 1; attempt <= 2; ++attempt) {
+        s.err0[layer] = 0;
+        s.err1[layer] = 0;
+        a.memset(s.done0, 0, 4);
+        s.q1->memset(s.done1, 0, 4);
+        a.wait();
+        s.q1->wait();
+        enqueue_moe(x, w, ids, y, 1, 1, L.K, layer);
+        s.q1->wait();
+        a.wait();
+        std::printf("EP WARMUP moe attempt=%d layer=%d err0=%u err1=%u\n", attempt, layer, s.err0[layer],
+                    s.err1[layer]);
+        std::fflush(stdout);
+        if (s.err0[layer] == 0 && s.err1[layer] == 0) {
+            ok = 1;
+            break;
+        }
+    }
+    sycl::free(ids, a);
+    sycl::free(w, a);
+    sycl::free(x, a);
+    sycl::free(y, a);
+    reset_epochs();
+    std::printf("EP WARMUP moe reset ok=%d\n", ok);
+    std::fflush(stdout);
+    if (!ok) throw std::runtime_error("ep compute warmup exchange failed");
+    s.compute_warm = true;
 }
 
 }  // namespace b70ep

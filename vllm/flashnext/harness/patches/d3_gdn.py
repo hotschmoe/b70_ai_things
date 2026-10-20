@@ -183,6 +183,26 @@ def _forward(self, hidden_states, orig):
             return orig(self, hidden_states)
         if has_initial is None:
             has_initial = _has_ones(self, slot)
+    if use_spec:
+        # The spec kernel indexes token_indx[seq * width + t] into qkvz
+        # and into core/out, which are sized to the real token count.
+        # Eager warmup can be ragged (slot width 3, fewer query tokens).
+        # That launch writes off the end of core and loses the device.
+        # Uniform capture batches have ntok == nseq * width and stay here.
+        nseq = int(slot.shape[0])
+        nwidth = int(slot.shape[-1])
+        if (
+            slot.dim() != 2
+            or ntok != nseq * nwidth
+            or token_indx.numel() < nseq * nwidth
+        ):
+            _once(
+                "specragged",
+                "b70_d3 gdn skip spec ragged "
+                f"ntok={ntok} slot={tuple(slot.shape)} "
+                f"indx={tuple(token_indx.shape)}",
+            )
+            return orig(self, hidden_states)
     conv_state = cache[0]
     ssm_state = cache[1]
     # bind_kv_cache slices conv and ssm out of one padded int8 page, so
@@ -267,7 +287,13 @@ def _forward(self, hidden_states, orig):
         cap = bool(torch.xpu.is_current_stream_capturing())
     except Exception:
         cap = False
-    seen = (int(cap), int(ntok), tuple(slot.shape), int(use_spec))
+    seen = (
+        int(cap),
+        int(ntok),
+        tuple(slot.shape),
+        int(use_spec),
+        int(conv_state.shape[0]),
+    )
     if seen not in _FUSED_SEEN:
         _FUSED_SEEN.add(seen)
         _log(

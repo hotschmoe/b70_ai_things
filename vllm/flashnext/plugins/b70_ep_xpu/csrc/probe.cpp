@@ -193,6 +193,9 @@ void free_all() {
 
 }  // namespace
 
+// Defined below m0_submit_*. Runs before any scored sample.
+void m0_warmup();
+
 std::vector<int64_t> m0_setup(int spin) {
     State& s = S();
     if (s.up) free_all();
@@ -326,6 +329,11 @@ std::vector<int64_t> m0_setup(int spin) {
     std::printf("PREFLIGHT pass\n");
     std::fflush(stdout);
 
+    // First eager sample of the previous window timed out on the card-1
+    // flag (push_bad=4380, err1=11) and every later sample matched. Fault
+    // the peer pages and run the real push/return once before sample 0.
+    m0_warmup();
+
     return { (int64_t)same_ctx, (int64_t)in0, (int64_t)in1, peer01, peer10, atom01, atom10, ipc_ok, same_ok, s.path,
              (int64_t)s.spin };
 }
@@ -373,6 +381,84 @@ void m0_submit_card1() {
     ep_copy_uncached(*s.q1, s.stage1, s.inbox.local, kPB);
     ep_send_rows(*s.q1, static_cast<float*>(s.parts.remote), reinterpret_cast<const float*>(s.rows1), push_ids, s.res0,
                  kEntries, kN, s.done1, static_cast<uint32_t*>(s.flag0.remote), s.ctr1);
+}
+
+namespace {
+
+int touch_twice(sycl::queue& writer, void* remote, sycl::queue& owner, void* local, size_t bytes) {
+    int ok = ep_touch_pages(writer, remote, owner, local, bytes);
+    if (!ok) ok = ep_touch_pages(writer, remote, owner, local, bytes);
+    return ok;
+}
+
+void m0_reset_epochs() {
+    State& s = S();
+    sycl::queue& a = q0();
+    a.memset(s.ctr0, 0, 4);
+    a.memset(static_cast<uint32_t*>(s.flag0.local), 0, 4096);
+    s.q1->memset(s.ctr1, 0, 4);
+    s.q1->memset(s.done1, 0, 4);
+    s.q1->memset(static_cast<uint32_t*>(s.flag1.local), 0, 4096);
+    *s.err0 = 0;
+    *s.err1 = 0;
+    a.wait();
+    s.q1->wait();
+}
+
+}  // namespace
+
+void m0_submit_card0(int mirror);
+
+void m0_warmup() {
+    State& s = S();
+    if (!s.up) throw std::runtime_error("warmup before setup");
+    sycl::queue& a = q0();
+    const int ti = touch_twice(a, s.inbox.remote, *s.q1, s.inbox.local, kPB);
+    const int tp = touch_twice(*s.q1, s.parts.remote, a, s.parts.local, kRB);
+    const int tf1 = touch_twice(a, s.flag1.remote, *s.q1, s.flag1.local, 4096);
+    const int tf0 = touch_twice(*s.q1, s.flag0.remote, a, s.flag0.local, 4096);
+    std::printf("WARMUP touch inbox=%d parts=%d flag1=%d flag0=%d\n", ti, tp, tf1, tf0);
+    std::fflush(stdout);
+    if (!(ti && tp && tf1 && tf0)) throw std::runtime_error("warmup peer-page touch failed");
+
+    ep_store_flag_pages(a, static_cast<uint32_t*>(s.flag1.remote), 1, 1u);
+    ep_store_flag_pages(*s.q1, static_cast<uint32_t*>(s.flag0.remote), 1, 1u);
+    uint32_t saw1 = 0, saw0 = 0;
+    s.q1->memcpy(&saw1, s.flag1.local, 4).wait();
+    a.memcpy(&saw0, s.flag0.local, 4).wait();
+    std::printf("WARMUP flag sys_store saw1=%u saw0=%u\n", saw1, saw0);
+    std::fflush(stdout);
+
+    // Touch and the sys_store leave a non-zero flag. A wait would succeed
+    // before the dummy push. Zero both epochs, then exchange.
+    m0_reset_epochs();
+    // Id 0 is in range and res0[] is -1, so a timeout copy still sends the row.
+    s.q1->memset(s.inbox.local, 0, kPB);
+    s.q1->memset(s.rows1, 0, kRetB);
+    a.memset(s.push_src, 0, kPushB);
+    a.wait();
+    s.q1->wait();
+
+    int ok = 0;
+    for (int attempt = 1; attempt <= 2; ++attempt) {
+        *s.err0 = 0;
+        *s.err1 = 0;
+        s.q1->memset(s.done1, 0, 4).wait();
+        m0_submit_card1();
+        m0_submit_card0(0);
+        s.q1->wait();
+        a.wait();
+        std::printf("WARMUP exchange attempt=%d err0=%u err1=%u\n", attempt, *s.err0, *s.err1);
+        std::fflush(stdout);
+        if (*s.err0 == 0 && *s.err1 == 0) {
+            ok = 1;
+            break;
+        }
+    }
+    m0_reset_epochs();
+    std::printf("WARMUP reset epochs ok=%d\n", ok);
+    std::fflush(stdout);
+    if (!ok) throw std::runtime_error("warmup exchange failed");
 }
 
 void m0_submit_card0(int mirror) {
