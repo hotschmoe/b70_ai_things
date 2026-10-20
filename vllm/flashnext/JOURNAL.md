@@ -2201,3 +2201,59 @@ CONFIG: continuing C10. _C.c10.so sha256 55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e
 COMMAND: B70_AGENT=C10b B70_GPU_LOCK_TIMEOUT=21600 bin/gpu-run --card 0 scripts/c10_run.sh. Log /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c10b-dq-bench.log. CPU quiet lock is taken only after card 0, with a 90s cap so a CPU-then-GPU holder is not deadlocked.
 RESULT: queued. Card 0 was C9 at 09:06. CPU quiet was D3 at 09:07.
 VERDICT: run open.
+
+## 2026-10-20 09:10 G5 -- QSA XPU decode matches the CPU layer
+
+CONFIG: card 1, image vllm-flashnext-xpu:py312, harness/xpu-run.sh
+(inner bin/gpu-run, host UMD libze 1.28.2 / IGC 2.36.3). Plugin
+libb70_qsa_xpu.so 369040 bytes, icpx 2026.1, intel_gpu_bmg_g31, built
+09:07 under cpu-run. Test tests/test_qsa_xpu.py vs flashnext_ref
+QsaState, seed 2. B70_QSA default off. Fork model.py hook is
+uncommitted (docstring line 17, qsa_runner 566-572, forward 613-614).
+C7: please keep that as its own commit. I did not commit.
+COMMAND: CARD=1 B70_AGENT=G5 B70_GPU_LOCK_TIMEOUT=7200
+vllm/flashnext/plugins/b70_qsa_xpu/tests/run_gpu.sh
+Do not wrap that script in a second gpu-run.
+RESULT: Earlier sycl::half scale path, same card, exited 1 in 23s.
+K matched. Device scales were raw amax/127 (bits 1015215198 and
+1018736225). CPU float16 scales were 1015218176 and 1018732544.
+k_codes[0,0,0,20] was -103 vs -102. Health after HEALTHY.
+Rebuild uses f32_to_f16/f16_to_f32 (RTNE, numpy-matched). Rerun:
+QSA_XPU_OK, gpu-run done in 16s, exit 0. xpu-health --card 1 HEALTHY.
+Passed: topk n=2100 width=2051, zero group, small T=8, page perm,
+pos_base 100, mrope, head_dim 256 T=10, graph replay at pos 4/5/7
+bitwise vs eager (attn and gated max_abs 0; state exact). Codes and
+scales max_abs 0. Worst head_dim-256 residuals: pooled 2.384e-07,
+scores 9.537e-07, attn 7.153e-07, gated 2.441e-04, all inside atol.
+No wedge. No xe-reset.
+VERDICT: decode QSA on one card matches the CPU reference on these
+shapes, including a block-completing cell under graph replay. Not a
+latency number. Greedy >4K vs strata_reference.json is still unmeasured
+(short refs sit under the 2051 identity bound). XMX union prefill is
+still size L. Hook was not served. Report: reports/1G5_qsa.md.
+
+## 2026-10-20 09:16 C10b -- dq prefill measured, gate is bf16 matmul
+
+CONFIG: card 0, _C.c10.so sha256 55c154ee... (08:28, not rebuilt).
+Pass bit is dense_dq vs oneDNN bf16 torch.mm within 1 ulp, plus an
+fp32 matmul of those bf16 weights within 8 ulps. The 5e-2 check vs
+the fp32 dequant is logged only. Non-finite outputs fail.
+COMMAND: bin/gpu-run --card 0 scripts/c10_run.sh. Log
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/c10b-dq-bench.log.
+RESULT: gpu-run exit 0 in 43s (python quiet window 12s, SYCL cache
+warm). HEALTH_BEFORE 0, HEALTH_AFTER 0. Dequant 0 mismatches, 13
+types. dense mm_max_abs=0 and bf16w ulps bad=0, while vs_f32_max_rel
+is 23.5 (the failure C10 stopped on). MoE bmm and loop match (max
+abs 0) and sit within 8 ulps of the bf16 reference. Q4/IQ4 K=2560 dq
+wins at every M from 512 to 12288 (M=12288: 7.93 ms / 97.5 TFLOPS vs
+fused 30.6 ms / 25.3). K=640 fused wins at M=512 (238 vs 356 us wall)
+and dq wins at 4096 and 12288. Experts: fused at T=512 (10.82 ms) and
+T=4096 (26.76 ms); bmm at T=12288 (66.97 vs 74.34 ms). Dispatch:
+dense_wants_dq M>=4096 or (M>=512 and K>640); moe_wants_dq T>=12288;
+grouped GEMM stays fused. GEMM-only budget at T=12288 is 4256 ms,
+2887 tok/s, vs C8 7265 ms / 1691. 1.89 s of the 6.14 s 2000-tok/s
+budget is left for attention and GDN recurrence. Report
+reports/1C10_prefill_dq.md.
+VERDICT: CORRECT_AND_WIRED. End-to-end 2000 tok/s is not claimed.
+Recommend max_num_batched_tokens=12288.
+

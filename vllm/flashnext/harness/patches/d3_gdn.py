@@ -12,6 +12,7 @@ import sys
 import traceback
 
 _LOGGED = False
+_FUSED_SEEN = set()
 _FALLBACK = set()
 
 
@@ -43,8 +44,9 @@ def install() -> None:
     def forward_xpu(self, hidden_states):
         try:
             return _forward(self, hidden_states, orig)
-        except Exception:
-            _once("exc", "b70_d3 gdn fallback:\n" + traceback.format_exc())
+        except Exception as exc:
+            key = "exc:" + type(exc).__name__ + ":" + str(exc).split("\n", 1)[0][:160]
+            _once(key, "b70_d3 gdn fallback:\n" + traceback.format_exc())
             return orig(self, hidden_states)
 
     QwenGatedDeltaNetAttention.forward_xpu = forward_xpu
@@ -89,6 +91,33 @@ def _dt(self, dtype):
     return cached
 
 
+def _has_ones(self, ref):
+    # Pure decode sets has_initial_state to None. Stock treats that as
+    # "every row has state". A stable all-true buffer keeps the pointer
+    # fixed across CUDA-graph capture sizes.
+    import torch
+
+    cached = getattr(self, "_b70_has_init", None)
+    if (
+        cached is None
+        or cached.device != ref.device
+        or cached.numel() < 64
+    ):
+        cached = torch.ones(64, dtype=torch.bool, device=ref.device)
+        self._b70_has_init = cached
+    return cached
+
+
+def _warm(self, hidden_states):
+    # Casts must exist before capture. The GDN warmup prefill is the
+    # last eager call, so build them on every path once the cache exists.
+    _norm_w(self)
+    _dt(self, hidden_states.dtype)
+    cache = getattr(self, "kv_cache", None)
+    if cache is not None and len(cache) >= 1:
+        _has_ones(self, cache[0])
+
+
 def _forward(self, hidden_states, orig):
     import torch
 
@@ -103,8 +132,10 @@ def _forward(self, hidden_states, orig):
     ):
         _once("geom", "b70_d3 gdn skip: geometry")
         return orig(self, hidden_states)
-    if self.kv_cache is None or len(self.kv_cache) < 2:
+    cache = getattr(self, "kv_cache", None)
+    if cache is None or len(cache) < 2:
         return orig(self, hidden_states)
+    _warm(self, hidden_states)
     md = _meta(self)
     if md is None:
         return orig(self, hidden_states)
@@ -120,6 +151,8 @@ def _forward(self, hidden_states, orig):
 
     qkvz, _ = self.in_proj_qkvz(hidden_states)
     ba, _ = self.in_proj_ba(hidden_states)
+    qkvz = qkvz.contiguous()
+    ba = ba.contiguous()
     ntok = qkvz.shape[0]
     core = torch.zeros(
         (ntok, 32, 128), dtype=hidden_states.dtype, device=hidden_states.device
@@ -141,20 +174,91 @@ def _forward(self, hidden_states, orig):
         has_initial = md.has_initial_state
         token_indx = None
         num_accepted = None
-        if cu is None or slot is None or has_initial is None:
+        # Pure decode leaves has_initial_state as None. That means load
+        # every row, which is what the SYCL kernel does with a null mask.
+        if cu is None or slot is None:
             _once("decmeta", "b70_d3 gdn skip: decode metadata missing")
             return orig(self, hidden_states)
+        if has_initial is None:
+            has_initial = _has_ones(self, slot)
+    conv_state = cache[0]
+    ssm_state = cache[1]
+    if (
+        not conv_state.is_contiguous()
+        or not ssm_state.is_contiguous()
+        or conv_state.dtype != torch.float16
+        or ssm_state.dtype != torch.float32
+        or conv_state.dim() < 3
+        or conv_state.size(2) != 8192
+        or conv_state.size(1) < 3
+        or slot.dtype != torch.int32
+        or cu.dtype != torch.int32
+        or (not use_spec and (slot.dim() != 1 or cu.shape[0] != slot.shape[0] + 1))
+        or conv_w.shape[0] != 8192
+        or conv_w.shape[1] != 4
+    ):
+        _once(
+            "layout",
+            "b70_d3 gdn skip layout "
+            f"conv={tuple(conv_state.shape)}:{conv_state.dtype} "
+            f"ssm={tuple(ssm_state.shape)}:{ssm_state.dtype} "
+            f"cu={None if cu is None else tuple(cu.shape)} "
+            f"slot={None if slot is None else tuple(slot.shape)} "
+            f"w={tuple(conv_w.shape)}",
+        )
+        return orig(self, hidden_states)
+    dt = _dt(self, hidden_states.dtype)
+    nw = _norm_w(self)
+    if (
+        qkvz.dtype != torch.float16
+        or qkvz.shape[-1] != 12288
+        or ba.shape[-1] != 64
+        or self.A_log.dtype != torch.float32
+        or self.A_log.numel() != 32
+        or not self.A_log.is_contiguous()
+        or dt.dtype != torch.float16
+        or dt.numel() != 32
+        or not dt.is_contiguous()
+        or nw.dtype != torch.float32
+        or nw.numel() != 128
+        or not nw.is_contiguous()
+        or not conv_w.is_contiguous()
+    ):
+        _once(
+            "weights",
+            "b70_d3 gdn skip weights "
+            f"qkvz={tuple(qkvz.shape)}:{qkvz.dtype} "
+            f"ba={tuple(ba.shape)}:{ba.dtype} "
+            f"A={tuple(self.A_log.shape)}:{self.A_log.dtype} "
+            f"dt={tuple(dt.shape)}:{dt.dtype} "
+            f"nw={tuple(nw.shape)}:{nw.dtype}",
+        )
+        return orig(self, hidden_states)
+    cap = False
+    try:
+        cap = bool(torch.xpu.is_current_stream_capturing())
+    except Exception:
+        cap = False
+    seen = (int(cap), int(ntok), tuple(slot.shape), int(use_spec))
+    if seen not in _FUSED_SEEN:
+        _FUSED_SEEN.add(seen)
+        _log(
+            "b70_d3 gdn fused call "
+            f"ntok={ntok} capturing={int(cap)} spec={int(use_spec)} "
+            f"conv={tuple(conv_state.shape)} ssm={tuple(ssm_state.shape)} "
+            f"cu={tuple(cu.shape)} slot={tuple(slot.shape)}"
+        )
     torch.ops.b70_gdn.decode_fused(
         core,
         out,
         qkvz,
         ba,
-        self.kv_cache[0],
-        self.kv_cache[1],
+        conv_state,
+        ssm_state,
         conv_w,
         self.A_log,
-        _dt(self, hidden_states.dtype),
-        _norm_w(self),
+        dt,
+        nw,
         cu,
         slot,
         has_initial,

@@ -376,32 +376,64 @@ its own commit when you rebase. I did not commit.
 
 ## XPU measurement
 
-Not run in the revision that added this section.
-
-Plan, single card, foreground:
+Card 1, 2026-10-20. Library
+`/mnt/vm_8tb/b70/build/vllm-flashnext/b70_qsa_xpu/libb70_qsa_xpu.so`
+is 369040 bytes, built 09:07 with icpx 2026.1 for `intel_gpu_bmg_g31`.
+Image `vllm-flashnext-xpu:py312`. Host UMD via `harness/xpu-run.sh`
+(libze 1.28.2, IGC 2.36.3). `xpu-run.sh` already takes the `bin/gpu-run`
+lease. Do not wrap this script in a second `gpu-run`.
 
 ```
-bin/gpu-run --card N -- \
-  env B70_GPU_LOCK_TIMEOUT=7200 CARD=N \
+CARD=1 B70_AGENT=G5 B70_GPU_LOCK_TIMEOUT=7200 \
   vllm/flashnext/plugins/b70_qsa_xpu/tests/run_gpu.sh
 ```
 
-`tests/test_qsa_xpu.py` checks, against `QsaState`:
+CONFIG: one card, `tests/test_qsa_xpu.py` against `QsaState`, seed 2.
+Small geom is n_head=4, n_kv=2, head_dim=64, n_rot=8, indexer 2x32,
+block=4, top_k=4. Wide geom is head_dim=256, n_rot=64, indexer 4x128,
+top_k=4, T=10. Tolerances: ids, codes, scales, tail, block_pos exact;
+dead/pooled 1e-5; scores 1e-4; attn/gated 2e-3; gathered K/V fp16 1e-3.
 
-- top-k ids exact, including n=2100 width=2051
-- zero group: codes 0, scales 0
-- T=8 small geom: ids exact, int8 codes exact, pooled/dead within 1e-5,
-  attention within 2e-3, one token of all-zero K/V
-- page-table permutation, `pos_base=100`, split mRoPE triples
-- head dim 256, indexer dim 128, T=10 (past the small top-k)
-- XPU graph captured at a non-completing cell, replayed at the next
-  cell and at a later block completion, bitwise against the eager GPU run
+An earlier card-1 run of the `sycl::half` scale path exited 1 in 23s.
+K input matched (max_abs 0). Device scales were the raw f32
+`amax/127` (bits 1015215198, 1018736225 =
+0.01598566398, 0.02254408784). CPU numpy float16 scales were bits
+1015218176, 1018732544 = 0.0159912109375, 0.0225372314453125.
+`k_codes[0,0,0,20]` was -103 against the reference -102. One fp16 step
+down of that scale also flips index 24, so the device value sat between
+the two bins. Health after that fail was HEALTHY. The rebuild stores
+the scale with the explicit RTNE bit round trip above.
+
+RESULT of the rebuilt library, same command, card 1 acquired with no
+wait: `QSA_XPU_OK`, `gpu-run` done in 16s, exit 0. `xpu-health --card 1`
+after: HEALTHY, rc 0. No wedge, no `xe-reset`.
+
+Passed, all ids exact:
+
+- top-k, including n=2100 width=2051
+- zero group (codes 0, scales 0)
+- small T=8, including the all-zero K/V token
+- reversed page table, `pos_base=100`, split mRoPE triples
+- head_dim 256, T=10
+- graph captured while executing pos 4, replayed at pos 4, pos 5, and
+  pos 7 (slot 3, a completing cell). Replay ids, tail, dead, pooled,
+  block_pos, codes, and scales exact versus the eager GPU run. Replay
+  attn and gated max_abs 0.
+
+Codes and scales max_abs 0 on every checked position, including
+head_dim 256 pos 9. Gathered fp16 K/V max_abs 0. Largest residuals
+inside the stated atols, head_dim 256: pooled 2.384e-07, scores
+9.537e-07 (pos 8), attn 7.153e-07 (pos 9), gated 2.441e-04 (pos 8).
+This is a correctness run. It is not a latency number.
 
 Greedy agreement with `harness/strata_reference.json` on prompts longer
 than 4K is blocked until C7/H1 can serve Flash-Next. The short greedy
 rows already collected (17*19->323, 23*29->667, thinking 23*17->391)
 are below the 2051 bound, so dense GQA would match them. They do not
-exercise QSA. Do not start `hotschmoe-dd` for this.
+exercise QSA. Do not start `hotschmoe-dd` for this. The hook in
+`vllm/models/qwen4_exp/xpu/model.py` (docstring line 17, `qsa_runner`
+at 566-572, forward at 613-614) is uncommitted and was not exercised
+by this unit test.
 
 ## Work left
 
@@ -413,4 +445,3 @@ exercise QSA. Do not start `hotschmoe-dd` for this.
 | MTP draft QSA | M | no indexer module on the draft layer yet |
 | greedy >4K vs `strata_reference.json` | S once a serve exists | not a kernel gap |
 | park/restore of tail, dead, pooled, block_pos, int8 pages | M | G4, layout above |
-| bit-exact fp16 scale vs Strata `f16_from_f32` | S | plugin uses `sycl::half` RTNE; confirm on device |

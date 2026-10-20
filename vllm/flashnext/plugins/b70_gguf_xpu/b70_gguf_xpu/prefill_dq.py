@@ -18,12 +18,21 @@ from b70_gguf_xpu.types import row_bytes
 # Filled by each grouped call so a bench can print mv/mmax outside the timer.
 LAST = {}
 
-# Thresholds are the C10 measured crossover. Env overrides:
-#   B70_PREFILL_DQ_M=off  never,  0 always,  N uses dq when M >= N
+# Card 0, 2026-10-20, log c10b-dq-bench.log. Env overrides:
+#   B70_PREFILL_DQ_M=off never, 0 always, N uses dq when M >= N
 #   B70_PREFILL_DQ_T same for the MoE layer token count.
-# Defaults stay on the fused kernel until the bench writes the crossover.
-DQ_M_MIN = 10**9
-DQ_T_MIN = 10**9
+#   B70_PREFILL_DQ_GROUP_M same for one grouped GEMM (not the full layer).
+# Default policy, wall time, dq versus the fused kernel:
+#   K=2560 (Q4_K and IQ4_XS, N=12288): dq wins at every M from 512 to 12288.
+#   K=640 (Q2_0, N=2560): fused wins at M=512 (238 vs 356 us); dq wins at 4096 and 12288.
+#   Full expert layer: fused wins at T=512 and T=4096; bmm wins at T=12288.
+# A single grouped GEMM was not faster than fused at those expert sizes, so
+# that wrapper stays on the fused kernel unless the group env is set.
+DQ_M_MIN = 512
+DQ_M_SHORT = 4096
+DQ_K_SHORT = 640
+DQ_T_MIN = 12288
+DQ_GROUP_M_MIN = 10**9
 
 _SCRATCH: dict = {}
 
@@ -56,6 +65,40 @@ def _i32(name, n, device):
 
 def _devkey_dev(device):
     return (device.type, device.index)
+
+
+def _env_threshold(env: str):
+    """None = caller default. 'off' disables. 'on' or 0 enables for every size."""
+    raw = os.environ.get(env, "").strip().lower()
+    if raw == "":
+        return None
+    if raw in ("off", "none", "-1"):
+        return "off"
+    if raw in ("on", "0"):
+        return 0
+    return int(raw)
+
+
+def dense_wants_dq(m: int, k: int) -> bool:
+    """True when dequant + torch.mm beat the fused dense kernel on this shape."""
+    forced = _env_threshold("B70_PREFILL_DQ_M")
+    if forced == "off":
+        return False
+    if forced is not None:
+        return m >= forced
+    if m >= DQ_M_SHORT:
+        return True
+    return m >= DQ_M_MIN and k > DQ_K_SHORT
+
+
+def moe_wants_dq(t: int) -> bool:
+    """True when dequant + batched GEMM beat the fused expert layer."""
+    forced = _env_threshold("B70_PREFILL_DQ_T")
+    if forced == "off":
+        return False
+    if forced is not None:
+        return t >= forced
+    return t >= DQ_T_MIN
 
 
 def dequant(q, ggml_type: int, rows: int, cols: int, dtype=None):
