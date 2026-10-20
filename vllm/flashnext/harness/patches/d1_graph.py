@@ -28,6 +28,7 @@ def install_reclaim() -> None:
     # waits on the submit event, so this is the step's device-plus-submit
     # cost, not a pure launch. One sample also records an XPU event.
     log_replay = os.environ.get("B70_REPLAY_LOG", "0") not in ("", "0")
+    trace_reclaim = os.environ.get("B70_RECLAIM_TRACE", "0") == "1"
     log_path = os.environ.get(
         "B70_STEP_LOG",
         "/mnt/vm_8tb/b70/build/vllm-flashnext/logs/d1-replay.log",
@@ -62,7 +63,11 @@ def install_reclaim() -> None:
             counts[k] = seen
             if seen % n == 0:
                 try:
+                    if trace_reclaim:
+                        _replay_line(f"instantiate_begin graph={k} replays={seen}")
                     self.instantiate()
+                    if trace_reclaim:
+                        _replay_line(f"instantiate_done graph={k} replays={seen}")
                 except Exception as exc:
                     sys.stderr.write(
                         f"[d1-graph] instantiate failed: {exc!r}\n"

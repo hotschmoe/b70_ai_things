@@ -1,0 +1,75 @@
+--- a/vllm/flashnext/plugins/b70_gguf_xpu/csrc/sched_moe.hpp
++++ b/vllm/flashnext/plugins/b70_gguf_xpu/csrc/sched_moe.hpp
+@@ -124,6 +124,8 @@
+     int start[kSchedMaxGrp + 1];
+     int tok[kSchedMaxEnt];
+     int slot[kSchedMaxEnt];
++    // Stable per-token reduction order, independent of grouped batch peers.
++    int entry_by_slot[kSchedMaxEnt];
+     int expert[kSchedMaxGrp];
+     int gtype[kSchedMaxGrp];
+     int utype[kSchedMaxGrp];
+@@ -454,6 +456,9 @@
+             plan->start[g] = cursor;
+             plan->ng = g;
+             plan->nent = cursor;
++            for (int i = 0; i < kSchedMaxEnt; ++i) plan->entry_by_slot[i] = -1;
++            for (int e = 0; e < cursor; ++e)
++                plan->entry_by_slot[plan->tok[e] * (kSchedMaxTopk + 1) + plan->slot[e]] = e;
+         });
+     });
+ }
+@@ -550,6 +555,7 @@
+                 if (wg == 0) {
+                     const int nslot = T * topk;
+                     const int i = lid;
++                    if (i < kSchedMaxEnt) plan->entry_by_slot[i] = -1;
+                     const int id = i < nslot ? ids[i] : -1;
+                     const bool valid = i < nslot && id >= 0 && id < E;
+                     if (i < nslot) sid[i] = id;
+@@ -577,6 +583,7 @@
+                         const int pos = st + rank;
+                         plan->tok[pos] = i / topk;
+                         plan->slot[pos] = i - (i / topk) * topk;
++                        plan->entry_by_slot[(i / topk) * (kSchedMaxTopk + 1) + i % topk] = pos;
+                         if (lead) {
+                             plan->start[g] = st;
+                             plan->expert[g] = id;
+@@ -594,6 +601,7 @@
+                         if (lid < T) {
+                             plan->tok[ner + lid] = lid;
+                             plan->slot[ner + lid] = topk;
++                            plan->entry_by_slot[lid * (kSchedMaxTopk + 1) + topk] = ner + lid;
+                         }
+                         if (lid == 0) {
+                             plan->start[ngr] = ner;
+@@ -1066,13 +1074,12 @@
+             if (i >= n) return;
+             const int t = i / K;
+             const int k = i - t * K;
+-            const int nent = plan->nent;
+             const float shw = has_sg ? plan->sw[t] : 1.f;
+             if (out_mode == 0) {
+                 float s = 0.f;
+-                for (int e = 0; e < nent; ++e) {
+-                    if (plan->tok[e] != t) continue;
+-                    const int slot = plan->slot[e];
++                for (int slot = 0; slot <= topk; ++slot) {
++                    const int e = plan->entry_by_slot[t * (kSchedMaxTopk + 1) + slot];
++                    if (e < 0) continue;
+                     const float w = slot < topk ? router[(size_t)t * (size_t)topk + slot] : shw;
+                     s = sycl::fma(partial[(size_t)e * (size_t)K + k], w, s);
+                 }
+@@ -1080,9 +1087,9 @@
+             } else {
+                 float s = 0.f;
+                 float sh = 0.f;
+-                for (int e = 0; e < nent; ++e) {
+-                    if (plan->tok[e] != t) continue;
+-                    const int slot = plan->slot[e];
++                for (int slot = 0; slot <= topk; ++slot) {
++                    const int e = plan->entry_by_slot[t * (kSchedMaxTopk + 1) + slot];
++                    if (e < 0) continue;
+                     const float pv = partial[(size_t)e * (size_t)K + k];
+                     if (slot < topk) s = sycl::fma(pv, router[(size_t)t * (size_t)topk + slot], s);
+                     else sh = sycl::fma(pv, shw, sh);

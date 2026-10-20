@@ -83,7 +83,7 @@ def prefill_dense(x, q, ggml_type: int, n: int, k: int, mode: int = 0):
     return torch.ops.b70_gguf.prefill_dense(x, q, int(ggml_type), int(n), int(k), int(mode))
 
 
-def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, mode: int = 0):
+def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, mode: int = 0, group=None):
     """One prefill MoE layer. x [T, H] -> fp32 [T, H].
 
     ids int32 [T, topk]. router fp32 [T, topk], or an empty fp32 tensor for ones.
@@ -106,10 +106,10 @@ def prefill_moe_layer(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_d
 
         if prefill_fast.wants_fast():
             return prefill_fast.moe_fast(
-                x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f)
+                x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f), group=group
             )
         return prefill_dq.moe_dq(
-            x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f)
+            x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f), group=group
         )
     return torch.ops.b70_gguf.prefill_moe_layer(
         x, ids, q_gate, q_up, q_down, router, int(type_gu), int(type_down), int(h), int(f), int(mode)

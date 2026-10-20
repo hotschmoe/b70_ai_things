@@ -5244,3 +5244,703 @@ Suggested fix: print (389-1-2*6)*1600/2 beside 300800 so the six
 GDN blocks stay visible. Keep the collective line as health, not
 as decode latency.
 
+
+
+## Pass 18 -- 2026-10-20 18:16 UTC
+
+Cursor: JOURNAL.md after the 17:42 G2b close, through the 18:15 X3
+load note. CPU only. No GPU, no commit, no DD action.
+No heading after the 18:15 X3 load note was present at this append.
+
+### F177 -- O3 shared-expert fusion microbench
+
+Claim: gates_e failures=0, card 0 healthy, and shared fusion cuts
+about 45 us. T=1 times 115.2 to 68.5 us and 124.9 to 81.4 us. T=4
+times 217.0 to 171.9 and 254.5 to 210.7. Sign table 66.3/174.8 is
+slower. Stage-2 microbench and a 510 GB/s floor are also stated.
+
+Evidence: o3/gates_e.log TIME rows: gu=21 dt=42 T=1 115.22 to 68.46
+us, T=4 216.99 to 171.88 us. gu=17 dt=20 T=1 124.89 to 81.38 us, T=4
+254.50 to 210.74 us. Saved column is 46.76, 45.11, 43.51, and 43.76 us.
+Sign-table graph rows are 66.31 and 174.81 us, slower than 61.55 and
+163.11 on the paired mb_s3 rows. failures=0 occurs 5 times. xpu-health
+HEALTHY (cards 0) before and after. gpu-run exit 0 in 246s. Cosines on
+the OK rows are at least 0.999998. Graph bench max_abs on one row is
+1.4664e+01, so the cosine gate is not bit-exact. The strings 70.3,
+189.9, 43.9, 510, 528, and 361 do not occur in this log.
+
+Verdict: OK on the TIME before/after rows, the sign-table graph times,
+failures=0, and card-0 health. UNVERIFIED on the stage-2 70.3/189.9
+pair, the 30.4-vs-43.9 load split, the 510 GB/s floor, and the ISA
+528-to-361 count. No serving ITL. The quant names IQ3_S/Q2_0 are not
+printed on the TIME rows; the log keys are gu and dt.
+
+Suggested fix: cite gu/dt beside the quant names, and point the
+stage-2 and bandwidth sentences at the log lines that contain them.
+
+### F178 -- X3 35B matched prefill arm
+
+Claim: same 35B checkpoint, flag 0 to flag 1, 1024 TTFT 6025.851 to
+675.427 ms and 169.93 to 1516.08 tok/s. At 8181 tokens, 45445.784 to
+2388.216 ms and 180.02 to 3425.57 tok/s (19.03x). Warm 12277 is
+2456.050 ms / 4998.68 tok/s. The first 12277 is 52254.904 ms and is
+a JIT spike, with expert span 50304.7 ms. Identity passes. Post-health
+is HEALTHY.
+
+Evidence: x3/serve-ab.json identity ids are hotschmoe-dd then
+qwen3.6-35b-a3b-ud-iq3-xxs. expect_first is hotschmoe-dd and first_ok
+is true. Both arms have coherence OK/OK. matched_long_prompt_equal is
+true. Arm 0: 1024 tokens, ttft 6025.851431, prefill_tok_s 169.934492;
+8181 tokens, ttft 45445.784428, prefill_tok_s 180.016697. Arm 1: 1024,
+ttft 675.427260, prefill_tok_s 1516.077394; 8181, ttft 2388.216451,
+prefill_tok_s 3425.568900; then 12277 ttft 52254.904232 / 234.944455,
+then 12277 ttft 2456.049912 / 4998.676916.
+45445.784/2388.216 = 19.029. x3/proxy-spans.jsonl contains
+ep_compute 50304.732871 once. The string _pad_tokens is absent there.
+x3/serve-window-r2.log has two card-1 HEALTHY probes and
+X3_SERVE_DONE_RC=0. This alias is the 35B proxy, not Flash-Next.
+The E2 1961 reference was not re-opened.
+
+Verdict: OK on the prefill numbers and on card-1 health in the window.
+WRONG on the campaign served name: the first id is hotschmoe-dd.
+The cold 52254 ms row is in the JSON before the 2456 ms row. The
+50304.7 ms span exists. UNVERIFIED that the span is the _pad_tokens
+JIT and UNVERIFIED the E2 1961 comparison. No decode ITL.
+
+Suggested fix: serve hotschmoe-dev first on this proxy too. Keep the
+52254 ms row out of the warm-speed sentence, as the journal already does.
+
+### F179 -- X1 primitive shape probes
+
+Claim: row comparisons and native GDN, packed Q8, and FA probes are
+bit-identical. The two logs exit 0 after 21 s and 16 s.
+
+Evidence: x1/shape-probe.log and shape-probe-r2.log. Every printed op
+has unequal 0 and max_abs 0.0, including gdn_final_ssm, packed_q8_gemv
+rows 2/3/6, and fa_spec_vs_sequential at past 16/64/128/512/1536.
+gpu-run exit 0 in 21 s and 16 s. Neither log contains HEALTHY.
+
+Verdict: OK on zero mismatches and the two exit times. These logs do
+not record health. No ITL.
+
+Suggested fix: none on the numeric rows. Keep them separate from the
+later expert-row probe, which does not match exactly.
+
+### F180 -- X2 DP BF16 200K capacity and collective close
+
+Claim: eager DP BF16, max_len 200000, READY 17:50:28, owned
+25600975000 bytes per card, KV budgets 5365490811 / 5387383931,
+136 / 137 blocks of 39321600 bytes, ceilings 206400 / 208000,
+greedy 323/667, embedding exact, prefills pass. Post-health HEALTHY
+17:53:11. Collective OK and WINDOW_DONE 17:58:02. Storage falls
+1055262720 bytes per card. Not a 200K quality or speed result.
+
+Evidence: x2/target-auto/423-budget.json available_kv_bytes
+5365490811 and blocks 136. 405-budget.json available_kv_bytes
+5387383931 and blocks 137. Both weight files contain unique_bytes
+25600975000. kv-spec page_bytes is 3276800 and block_size is 1600.
+39321600 does not occur in the target-auto json/log set. 206400 occurs
+only inside an address fragment 18446720640015663104. 208000 does not
+occur. (136-1-6)*1600 = 206400 and (137-1-6)*1600 = 208000, using the
+same null-plus-six reserve as F176. Profile original_transient and
+torch_peak_increase are 336241664. transient_peak_headroom is 2097152.
+models.json first id hotschmoe-dd, root hf-flashnext, max_model_len
+200000. greedy.json match true for 323 and 667. Both embedding checks
+are bad 0, values 20480. prefill.json has two 2047+1 rows.
+bf16-window.log READY=1 17:50:28Z, RUN_DONE target-auto 17:53:11Z,
+WINDOW_DONE 17:58:02Z. health-after.txt is HEALTHY cards 0 and 1,
+exit 0. The 17:53:11 stamp is RUN_DONE, not a clock inside the health
+file. target-auto/collective-after.txt has COLLECTIVE_HEALTH_OK
+world_size=2 shape=4x5120 compiled_iterations=10 p2p=0, HEALTHY,
+exit 0. x2/collective-after.txt is now byte-identical to that file
+(6330 bytes). The 1946-byte sidecar file cited by F176 is no longer
+at that path. window.log still has WINDOW_DONE 17:40:05Z for the
+sidecar. 26656237720 - 25600975000 = 1055262720. The subtrahend is
+the F158 current-arm figure. 1055262720 is not stored in target-auto.
+
+Verdict: OK on unique_bytes, the two KV budgets, block counts 136 and
+137, greedy, embedding, prefills, READY, both-card health, and the
+collective line. WRONG first id hotschmoe-dd. WRONG to call 39321600
+the spec page size. UNVERIFIED 206400/208000 as stored fields; they
+match the null-plus-six derivation. The 1055262720 drop is that
+subtraction, not a new counter. No 200K generation and no latency.
+F176's sidecar bytes are preserved in the 17:40:05 window line, not
+in the replaced collective-after.txt.
+
+Suggested fix: store page_bytes 3276800 and the ceiling formula in
+the result JSON. Keep per-arm collective logs, as the 17:58 note
+already says. First served id hotschmoe-dev.
+
+### F181 -- X3 collective R1 timeout and R2 timings
+
+Claim: R1 produced no transfer timings and the wrapper exited 124.
+R2 measured uneven RS about 93.25/93.50 ms versus balanced RS about
+3.08 ms, and projects 4.49 s across 48 layers. Health passed around
+R2. No ITL.
+
+Evidence: x3/r1-collective-budget.log has no X3_COLLECTIVE timing
+row, ends in SignalException signal 15, and gpu-run exit 124 in 191s.
+x3/collective-budget.log R2 rows, event_ms: dispatch sizes [12288, 1]
+7.665677 and 7.746823; reduce-scatter 93.250572 and 93.496406.
+Balanced sizes [6144, 6144] dispatch 3.209844 and 3.215000;
+reduce-scatter 3.082552 and 3.067292. 93.496406*48/1000 = 4.488 s.
+X3_COLLECTIVE_HEALTH_OK before and after, compiled_iterations=10.
+gpu-run exit 0 in 28s. The word HEALTHY is absent from that log.
+
+Verdict: OK on the R2 event_ms values, the 4.49 s projection from the
+slower rank, the R1 exit 124, and the compiled health tokens. The
+per-card HEALTHY line is not in collective-budget.log. These are
+collective probes, not decode latency.
+
+Suggested fix: keep the 93 ms uneven RS separate from any serve ITL.
+Print the rank event_ms rather than only the rounded pair.
+
+### F182 -- X1 no-MTP repeat gates fail
+
+Claim: two exact gates in one load both fail. Pass 1 mismatches at
+tokens 4 and 72. Pass 2 versus pass 1 mismatches at 4, and the
+concurrent rows differ at 2 and 72. GREEDY rc is 3. No latency rerun.
+READY 18:06:10. Server stopped 18:07:15.
+
+Evidence: x1/flash-repeat-pass1.json first_mismatch [4, 72, None, None]
+in prompt order Paris, Fibonacci, count, hash. identical false.
+x1/flash-repeat-pass2.json first_mismatch [4, None, None, None].
+Token compare of pass 2 against pass 1: Paris first diff index 4,
+and the other three C1 prompts have zero diffs. Concurrent Paris
+first diff index 2. Concurrent Fibonacci first diff index 72.
+x1/window-flash-repeat.out has REPEAT_PASS_1_RC=3 and
+REPEAT_PASS_2_RC=3, and the dumped identity id is hotschmoe-dd.
+x1/flash-repeat.log contains 18:07:15 ten times, Graph capturing
+finished 4 times, error 44 count 0, and PLE width=1 twice.
+18:06:10 and the word READY do not occur in that log or the window.
+The window's last lines show post-health waiting on an O3 container.
+hotschmoe-dev count in the serve log is 0.
+
+Verdict: OK that both gates exit 3 and that the recorded mismatch
+indexes match the token lists above. WRONG served name hotschmoe-dd.
+UNVERIFIED the READY 18:06:10 clock. The 18:07:15 stop stamp is in
+the serve log. No latency number was claimed and none is taken from
+this window. MTP is off on this repeat, so the mismatch is not only
+an MTP2 effect.
+
+Suggested fix: journal the first_mismatch arrays. Serve hotschmoe-dev
+first. Record post-health when the wait finishes.
+
+### F183 -- X1 packed expert probe and the reduction-order note
+
+Claim: dense rows are bit-identical. Eight expert layers differ in
+FP32 by at most 7.45e-9 to 1.49e-8. Graph replay matches eager.
+Card 1 health passed. A later CPU note says the grouped reduction
+order can change with other tokens in the batch.
+
+Evidence: x1/packed-shape-probe.log dense target rows have max_abs
+0.0 for qtypes 21, 23, 14, 12, and 13. Expert layers 0, 1, 3, 8, 12,
+24, 36, and 47 have max_abs from 7.450581e-09 to 1.490116e-08, with
+unequal counts in the thousands. Every target_moe_graph_two_calls
+replay has unequal 0. gpu-run exit 0 in 34s. The probe log does not
+contain HEALTHY. Fork moe.py has zero .cpu(, .item(, .tolist(, and
+synchronize hits. sched_moe.hpp line 1057 was not opened this pass.
+
+Verdict: OK on the dense zeros, the expert max_abs range, the graph
+replays, and exit 0. UNVERIFIED on card-1 health and on the
+reduction-order mechanism. The journal already refuses full-model
+causal attribution. No ITL.
+
+Suggested fix: attach the health log to the probe. Review the plan
+walk before changing FMA order.
+
+### F184 -- X3 full load dies on a missing embedding reference
+
+Claim: both DP ranks loaded 23.92 GiB and then exited because
+x3/embedding-reference.npz was missing. No request ran. No OOM and
+no device loss.
+
+Evidence: x3/load1-flashnext-serve.log. Both workers log
+"Model loading took 23.92 GiB" at about 155 s. Both then raise
+FileNotFoundError for
+/mnt/vm_8tb/b70/build/vllm-flashnext/x3/embedding-reference.npz.
+READY count 0. error 44 count 0. OutOfMemory count 0. DEVICE_LOST
+count 0. Traceback count 7. hotschmoe-dev count 0. hotschmoe-dd
+count 4. No bench JSON is cited for this load.
+
+Verdict: OK that the load reached 23.92 GiB and then failed on the
+missing npz, with no ready and no device-loss string. No ITL. The
+served-name string in the log is hotschmoe-dd.
+
+Suggested fix: the journal already says the harness should check the
+reference before GPU load. Keep hotschmoe-dev first on the retry.
+
+### F185 -- O3 fuse1 35B bench file, no journal RESULT yet
+
+Claim: no journal RESULT yet claims this file. The file itself is a
+finished card-0 35B bench.
+
+Evidence: o3/bench_35b_o3f_fuse1.json tag o3f-fuse1. identity ids
+hotschmoe-dev then qwen3.6-35b-a3b-ud-iq3-xxs. expect_first
+hotschmoe-dev. first id is hotschmoe-dev. coherence OK/OK.
+mtp.enabled false. C1 ttft 168.271, prompt 24, completion 63,
+n_chunks 62, p50 9.256293, mean 9.263198, decode_tok_s 109.723819.
+C2 p50 11.792350 and 11.800019, decode_tok_s 88.322085 and
+87.087215, completions 46 and 40, n_chunks 45 and 39.
+1000/9.256293 = 108.035, so decode_tok_s is not 1000/p50.
+o3/serve_driver_o3f_fuse1.log has HEALTHY (cards 0) twice and
+BENCH_RC=0. o3/serves_f.log is 0 bytes. The 18:01 O3 journal entry
+says the serve result belongs in the next O3 entry. This alias is
+the 35B proxy.
+
+Verdict: OK on the bench fields and on card-0 health in the driver
+log. The campaign first id is hotschmoe-dev here. There is no
+journal sentence yet to match. This is not a Flash-Next ITL and not
+a closed promotion. Launch flags beyond the tag were not re-read.
+
+Suggested fix: journal this bench with the 35B alias visible, and
+do not mix 9.256 ms with Flash-Next decode numbers.
+
+### F186 -- hygiene and still-queued windows
+
+Claim: no new staged secret or binary. O4 and the QSA batch note are
+queues. The fork remains uncommitted.
+
+Evidence: repo HEAD 5c6edd0a. git diff --cached is empty. Porcelain
+is 20 paths. The only binary-suffix porcelain path is
+vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so.
+Fork HEAD is still ahead 18, with 11 files changed, 384 insertions,
+43 deletions. moe.py has no .cpu(, .item(, or .tolist(. The 18:14 O4
+entry and the 18:12 QSA-batch entry say their results are pending.
+No heading after the 18:15 X3 load note was present at this append.
+
+Verdict: OK on an empty index and no new staged binary. HEAD moved
+since pass 17; this pass did not review that commit. Queued windows
+have no ITL.
+
+Suggested fix: leave the push-allreduce so unstaged. Review the new
+fork insertions before a fork commit.
+
+
+## Pass 19 -- 2026-10-20 18:57 UTC
+
+CPU-only. Headings after the 18:17 pass-18 milestone through the 18:53
+O4 profile and the 18:52 X3 capture note. No GPU, no commit.
+
+### F187 -- X1 sched probes and slot-order numeric gate
+
+Claim: sched1 has 10 of 50 BF16 differences (11 unequal entries).
+sched0 is exact in FP32 and BF16. The slot-order kernel's 63 rows are
+exact. The slot library sha is bd22ebbd. The CPU build finished in
+128s. Card 1 was HEALTHY before and after the slot probe. The 18:18
+note said schedule post-health was still queued.
+
+Evidence: x1/packed-shape-sched1.log has 50 JSON rows. bf16_unequal
+sums to 11 and is nonzero on 10 rows. FP32 unequal is nonzero on 16
+rows. x1/packed-shape-sched0.log has 50 rows and every unequal and
+bf16_unequal is 0. x1/slot-probe.log has 63 rows; unequal,
+bf16_unequal, max_abs, and bf16_max_abs are all 0. The built file
+x1/slot-reduce/b70_gguf_xpu/_C.slot.so is 10298592 bytes and sha256
+bd22ebbd40c4c6c4b0e2513be99306fe8927834e6ecdf9beeccdfd52bcda6426.
+That sha is not printed in slot-probe.log. x1/slot-reduce-build.log
+ends "cpu-run: [X1] done in 128s (exit 0)". slot-health-before.log
+and slot-health-after.log are HEALTHY on card 1, gpu-run exit 0 in
+12s and 15s. packed-shape-schedule-health-after.log is now HEALTHY
+on card 1, gpu-run exit 0 in 14s, after waiting on O4.
+
+Verdict: OK for the numeric gate and for card-1 health around those
+probes. The schedule post-health file has since completed. This is
+not a serving ITL. The sched_moe.hpp reduction-order mechanism stays
+UNVERIFIED (F183).
+
+Suggested fix: print the library sha in the probe log. Do not treat
+the 63 exact rows as a Flash-Next decode result.
+
+### F188 -- X1 slot-control cancel and the 18:46 watcher
+
+Claim: per-card health passed at 18:38:44, the wrapper exited 143,
+and no model loaded. The 18:46 restart is only a watcher.
+
+Evidence: x1/window-slot-before-x3-health.out contains
+"xpu-health: HEALTHY (cards 0 1)" and gpu-run exit 0. It does not
+contain the clock 18:38:44. x1/slot-queue-before-x3-health.log says
+card 0 was busy, held by O4 since 2026-10-20 18:38:44 running
+bin/xpu-health, then "Terminated" on flock and "gpu-run: timed out
+after 7200s on card 0". The string 143 is absent from the x1 slot
+logs under 200 KB. The wall gap from 18:38 to the 18:41 cancel is
+minutes, so the 7200s line is not a measured wait. x1/window-slot-mtp0.out
+is 58 bytes: "Tue Oct 20 18:48:06 UTC 2026" and
+"REUSING_RECORDED_POST_HEALTH". No tokens and no latency.
+
+Verdict: OK that the both-card window is healthy and that no slot
+serve result exists. UNVERIFIED for exit 143. UNVERIFIED that
+18:38:44 is X1's health-pass clock; that stamp is O4's lease.
+No MTP2 and no speed.
+
+Suggested fix: write the wrapper exit code into the preserved queue
+log, and cite the HEALTHY line's own clock.
+
+### F189 -- X3 QSA query-batch timings
+
+Claim: the chunk median 5352.194 ms falls to 397.849 / 293.954 /
+269.644 ms at batch 256 / 1024 / 4096, and the 1024 path keeps a
+0.492 GiB peak delta.
+
+Evidence: x3/qsa-batch.json event_ms and peak_allocated-base_allocated:
+token loop 2086.939584 ms and 1024 bytes; prefill chunk 5352.194323 ms
+and 528482304 bytes (0.492188 GiB); batch256 397.849271 ms and the
+same 0.492188 GiB; batch1024 293.953959 ms and the same 0.492188 GiB;
+batch4096 269.643750 ms and 838991872 bytes (0.781372 GiB).
+
+Verdict: OK on those timings and bytes. Exact token match for this
+micro is UNVERIFIED from the JSON, which has no EXACT line. Not a
+serving ITL.
+
+Suggested fix: keep the EXACT_OK lines in the same artifact as these
+rows. The 4096 peak is the larger one.
+
+### F190 -- X3 QSA append, aligned path, and stage split
+
+Claim: native append drops 2065.480 ms to 4.318 ms. The aligned path
+drops append 1991.643 ms to 26.698 ms and the query chunk 5337.157 ms
+to 252.253 ms, with exact prefixes, a 256 MiB scratch cap, stage
+microseconds through 283.858, and about 3.36 s across 12 layers.
+That projection is not real-model TTFT. Post-health is HEALTHY.
+
+Evidence: x3/qsa-append.json: token loop 2065.479583 ms; native
+batches 4.318386 ms with peak delta 264316416 bytes (0.246164 GiB).
+x3/qsa-aligned.json: token loop 1991.643281 ms; native batches
+26.698386 ms with peak delta 268708352 bytes (0.250254 GiB); prefill
+chunk 5337.156875 ms and batch1024 252.252604 ms, each with peak
+delta 528482304 bytes (0.492188 GiB). x3/qsa-stage-events.json:
+index_scores_batch 47.702345, topk_batch 48.056512, union_build
+0.596405, union_attend_xmx 151.963646, gate_batch 3.975573,
+write_step_batch 1.420001, whole_event_ms 283.857552, glue_event_ms
+30.143070. qsa-append.log and qsa-aligned.log each contain EXACT_OK
+five times and HEALTHY twice. 12 * (26.698386 + 252.252604) / 1000
+is 3.347 s. 12 * 283.857552 / 1000 is 3.406 s. Neither stored field
+is 3.36. The 256 MiB cap is not a JSON field; the native delta is
+0.250 GiB.
+
+Verdict: OK on the medians, the stage split, the exact-prefix
+strings, and the journal's own statement that this is a component
+budget rather than TTFT. The ~3.36 s figure is an approximate
+projection, not a measured serve timer. The 18:30 sentence that
+post-health was still waiting is older than the HEALTHY lines now
+in the logs. Not a Flash-Next ITL.
+
+Suggested fix: store the 12-layer sum in the JSON if it will be
+cited, and label it as a projection.
+
+### F191 -- X3 R3 startup stall and the health that followed
+
+Claim: R3 made no API readiness and no device-loss. Embedding
+reference passes on both ranks. The saved rank0 stack is
+"_Group starts.cpu()". Rank1 is in all_gather. At 18:46 and 18:47
+the compiled post-health was still queued. The 18:52 note is capture
+preparation only.
+
+Evidence: x3/flashnext-serve-r3.log is 50539 bytes. READY count 0,
+OutOfMemory count 0, DEVICE_LOST count 0, "23.92" count 2,
+hotschmoe-dev count 1, hotschmoe-dd count 3. There is no /v1/models
+body. x3/flashnext-memory-r3/490-embedding-check.json and
+493-embedding-check.json are each bad 0, rows 8, values 20480.
+x3/r3-stack-rank0.txt has no "cpu" substring. The frame is
+b70_gguf_xpu/prefill_dq.py:162 via serve_prefill.py, inside
+x3_prefill_profile.py during the memory profile. Rank1's stack
+contains all_gather_into_tensor (distributed_c10d.py:5195) via
+xpu_communicator.py:218 all_gather, and also has no "cpu"
+substring. x3/flashnext-health-after-r3.log waited on O3, then
+HEALTHY cards 0 and 1, gpu-run exit 0 in 27s.
+x3/flashnext-collective-after-r3.log contains
+"COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120 compiled_iterations=10 p2p=None"
+and gpu-run exit 0 in 27s. HEALTHY count in that collective log is
+0. No file matching qsareal exists under the build tree. No R4
+bench JSON was opened.
+
+Verdict: OK that startup did not reach READY, that both embedding
+checks are bad 0, that rank1 is in all_gather, and that native
+post-health is HEALTHY on both cards. WRONG for the saved rank0
+location: the dump does not show _Group starts.cpu(). The compiled
+collective file is now OK with p2p=None; the 18:46 and 18:47
+"still queued" sentences predate that line. Identity is
+UNVERIFIED because READY is 0. Both name strings appear, and the
+first id was not established. No request and no ITL.
+
+Suggested fix: attach the stack sample that actually contains
+.cpu() if that frame is the claimed stall, and do not treat this
+startup log as an identity check.
+
+### F192 -- O4 base versus ringmlock PLE profile
+
+Claim: sidecar Flash-Next, FULL_DECODE_ONLY, max_len 2048, no MTP,
+B70_QSA=0. Base C1 step p50 is 80.39 ms, made of PLE gather 53.3 ms,
+graph device 24.11 ms, and about 3 ms host, with input-id D2H at
+20 ms. C2 base same_text is false. ringmlock mlocks 26.82 GiB in
+22.9 s, MemAvailable 61.8 to 33.7 GB, C1 step p50 26.72 ms (gather
+0.18, graph 23.81, host about 2.9), C2 step 32.14 ms, same_text
+true. Gates 323/667 pass on both and health is HEALTHY around.
+PLE faults were about 2/3 of the H1e C1 ITL.
+
+Evidence: o4/_C.o4pin-o3f.so sha256 starts 7389c1333c7f0512.
+plugins/b70_ep_xpu/b70_ep_xpu/_C.so sha256 starts 2e22f57ea997a5c2.
+Both run windows print those prefixes. Both run logs contain
+B70_QSA=0 and speculative_config=None. The ring log contains
+B70_PLE_MLOCK=1 and B70_MTP_RT set to the strata-ab mtp-bf16 tree.
+Both arms load hf-flashnext and the IQ3_XXS GGUF, tp 1, max_model_len
+2048, FULL_DECODE_ONLY, FLASH_ATTN. Served-name kwargs list
+hotschmoe-dev first. port=none, so there is no /v1/models body.
+Profiler SUMMARY n_graph_steps is 94 on each series. Base C1 p50:
+step_ms 80.391, ple_gather_ms 53.295, replay_dev_ms 24.113,
+ple_d2h_ids_ms 20.205, prep_ms 3.124. Gather min 0.183, max 85.863.
+Ring C1 p50: step_ms 26.72, gather_ms 0.179, replay_dev_ms 23.81.
+Ring C2 step_ms p50 32.139. Base c2 same_text=False. Ring
+c2 same_text=True. gates.json match true for 323 and 667 on both,
+and both profile logs say gates_ok=True. The ring log line is
+"PLE mlock: 26.82 GiB resident in 22.9 s; MemAvailable 61823904 ->
+33723224 kB", which is 61.824 -> 33.723 decimal GB. Base window:
+HEALTHY cards 0 and 1 before (28s, exit 0) and after (27s, exit 0),
+RUN_RC 0. Ring health-after.txt is only "card 0 busy (held by: O3
+... since=2026-10-20 18:51:38 cmd: .../bin/xpu-health --card 0)".
+The ring window has no HEALTHY line and no HEALTH_AFTER. Ring
+kwargs also set enable_prefix_caching False and mamba_cache_mode
+align; the base kwargs omit both. No majflt counter is in the run
+log. 53.295/80.391 = 0.663. 26.72 - 23.81 - 0.179 = 2.731, and
+that residual is not a stored field.
+
+Verdict: OK on the library hashes, the checkpoint, B70_QSA=0, MTP
+off, the SUMMARY percentiles, the gates, the mlock line, and base
+health before and after. The configured first name is hotschmoe-dev.
+HTTP identity did not run. WRONG as written for "health HEALTHY
+around" on the ringmlock arm: post-health has not produced a
+HEALTHY line. UNVERIFIED for a major-fault count and for the causal
+claim that D2H waits on the previous graph; the 20.205 ms p50 is
+real. The arms are not a single-flag A/B because ring also changes
+prefix caching and mamba cache mode. The gather drop 53.295 -> 0.179
+is still specific to that bucket. These step_ms figures are an
+in-process profiler, not the harness ITL. They do not replace the
+closed H1e 60.156 ms or C7b 81.754 ms results. The two-thirds ratio
+matches this profile's own step p50, not the closed H1e harness ITL.
+
+Suggested fix: finish ring post-health and record it in the window.
+Note the extra engine kwargs. Keep 26.72 ms labeled as profiler
+step_ms.
+
+### F193 -- pin_host_table is load-time mlock
+
+Claim: B70_PLE_MLOCK=1 mlocks the IQ4_NL memmap via pin_host_table.
+
+Evidence: fork vllm/models/qwen4_exp/gguf/ple.py pin_host_table
+(about lines 161-203), called from install_host_table only when
+B70_PLE_MLOCK is 1. It returns false on a zero-byte table and when
+MemAvailable minus the table would fall under the 8 GiB floor. It
+page-aligns the start downward, calls madvise WILLNEED, then mlock.
+The function has no .cpu(), .item(), or synchronize. The ring log
+prints the mlock line at 18:50:16, before the EP graph-finalize
+lines. HostPackedTable.data is a uint8 CPU tensor of shape
+[n_rows, row_bytes] built without a copy. pin_host_table does not
+check is_contiguous(). The madvise return code is ignored.
+
+Verdict: OK that this path is opt-in and runs at install time, so
+it is not a host sync inside a captured graph op. UNVERIFIED that
+every table tensor is contiguous; a gapped view would mlock the
+wrong span. No race inside the decode graph was shown from this
+function.
+
+Suggested fix: reject a non-contiguous table before mlock, and check
+the madvise return the same way as mlock.
+
+### F194 -- hygiene, and windows that are still open
+
+Claim: the repo index has no new secret or binary. R4, the real
+activation capture, and the full X1 slot serve have no result yet.
+
+Evidence: HEAD 5c6edd0a. git diff --cached is empty. Porcelain
+is 28 paths. Binary-suffix porcelain rows:  M vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so.
+vllm/flashnext/.gitignore still lists *.so. No qsareal artifact
+exists. x1/window-slot-mtp0.out has no serve. Ring post-health is
+the wait in F192. gates_f.log was not parsed. Fork diff stat tail:
+ 12 files changed, 511 insertions(+), 45 deletions(-). This pass read pin_host_table only; moe.py's earlier
+zero .cpu/.item/.tolist count was not re-opened.
+
+Verdict: OK on an empty index and no new staged binary beyond the
+already-known push-allreduce .so. The 18:52 X3 entry is preparation
+and has no measurement to check. No O4 or QSA number above is a
+Flash-Next harness promotion.
+
+Suggested fix: leave the push-allreduce so unstaged. Finish ring
+post-health before citing that arm as closed.
+
+## Pass 20 -- 2026-10-20 19:31 UTC
+
+CPU-only. Headings after the 18:57 pass-19 milestone through the
+19:25 X3 note. No GPU, no commit.
+
+### F195 -- X1 slot serve stalls after greedy
+
+Claim: the slot-order no-MTP serve reached READY at 18:55:33, recorded
+six exact token sequences with GREEDY_RC 0, then stalled on the first
+benchmark coherence request. Rank0 blocked in mtp_ple.py line 60 token
+D2H. Rank1 was at the next CPU DP padding sync. No latency JSON.
+Post-health was queued. Fresh R3 health passed before acquisition
+at 18:51:56.
+
+Evidence: x1/slot/flash-models-mtp0.json mtime is 18:55:33 UTC and the
+serve log READY count is 0. The saved /v1/models body lists
+hotschmoe-dd first, then the IQ3_XXS alias, max_model_len 2048.
+flash-greedy-mtp0.json has 4 rows plus 2 concurrent rows and no match
+field. The window records GREEDY_RC=0. bench_latency.py raises
+ConnectionResetError and the window records BENCH_RC=1. No bench JSON
+is in x1/slot/. CONTROL_REPEAT_RC=1. x1/slot-hang-rank0.txt active
+frame is mtp_ple.py:60 stage(), and the current source line 60 is
+ids.detach().to(device="cpu"). Rank1's active frame is cpu_all_reduce_
+inside sync_cudagraph_and_dp_padding, called from _dummy_run /
+execute_dummy_batch. The string 18:51:56 is not in the window. The
+window now also contains HEALTHY cards 0 and 1, gpu-run exit 0 in
+28s, and X1_FLASH_WINDOW_DONE. Graph capturing finished on both ranks.
+speculative_config=None. error 44, DEVICE_LOST, and OutOfMemory are 0.
+
+Verdict: OK that greedy was record-only, the bench died with no
+latency JSON, and rank0's saved frame is the token D2H. WRONG for the
+campaign name: the first id is hotschmoe-dd. UNVERIFIED for a harness
+READY line and for the 18:51:56 clock. Rank1 is in the DP padding
+sync, and that sample is a dummy run rather than a proven later real
+step. The 19:01 "post-health queues" sentence is older than the
+HEALTHY line now in the window. Not an ITL. The arm stays rejected.
+
+Suggested fix: serve hotschmoe-dev first. Write the API-ready clock
+from a READY line, not only the models-file mtime.
+
+### F196 -- PLE CPU barrier is outside graph replay
+
+Claim: after optional PLE staging, every DP rank enters a CPU barrier
+before model submission. The barrier is outside graph replay. The next
+fenced control was prepared, not measured.
+
+Evidence: vllm/v1/worker/gpu/model_runner.py calls prepare_mtp_ple only
+when it is not a dummy run, then, if the attribute exists and the DP
+world is larger than 1, calls torch.distributed.barrier on
+dp_group.cpu_group. That barrier is before run_fullgraph. Dummy ranks
+skip the D2H and still enter the barrier. stage() still does the
+.host .to(cpu) and .tolist() work before the barrier. x1/window-slot-fenced-mtp0.out
+starts 19:16:51 UTC, reuses recorded post-health, records GREEDY_RC=0,
+and stops on the bench_latency.py launch. First id is again
+hotschmoe-dd. flash-bench-mtp0.json does not exist. The window is
+2055 bytes.
+
+Verdict: OK that the new barrier is a CPU collective outside captured
+replay and that idle ranks are included. The D2H host sync remains in
+stage() on the real rank. UNVERIFIED that the fence makes the serve
+finish: the fenced bench has no JSON yet, so this pass does not call
+it a second stall or a pass. Name is WRONG on the fenced greedy body.
+No ITL.
+
+Suggested fix: do not claim the fence fixed serving until the bench
+JSON and the repeat gate exist. Keep hotschmoe-dev first.
+
+### F197 -- X3 R4 inner-group stall and post-health
+
+Claim: R4 rank0 is in inner _Group(E5, M245760) after outer E256.
+Rank1 waits in Gloo before RS8. Gate/up type is 16 and down is 42.
+No API result and no device loss. Native and compiled post-health pass.
+
+Evidence: x3/r4-stack-rank0.txt active frame is prefill_dq.py:162
+_Group.__init__ with locals e=5 and m=245760. The caller moe_fast frame
+has type_gu=16 and type_down=42. A caller _bucketed frame has locals
+gt=16, dt=42, and e=256. The dump has no "Gloo" string and no literal
+"E5". Rank1's active frame is distributed_c10d.py barrier inside
+_prefill_ready with op "RS", seq 8, rows 24576, sizes [12288, 12288].
+flashnext-serve-r4.log READY count is 0, DEVICE_LOST 0, OutOfMemory 0,
+hotschmoe-dd count 3, hotschmoe-dev count 0. Embedding checks 422 and
+423 are bad 0, rows 8, values 20480. flashnext-health-after-r4.log is
+HEALTHY cards 0 and 1, gpu-run exit 0 in 27s. The collective log is
+COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120 compiled_iterations=10
+p2p=None, gpu-run exit 0 in 31s. The R4 window file is the line
+READY_TIMEOUT.
+
+Verdict: OK on the inner-group frame, the type 16/42 locals, rank1's
+RS sequence-8 CPU barrier, both embedding checks, and both post-health
+results. UNVERIFIED that the barrier backend string is Gloo and that
+the outer E256 group "already completed"; e=256 is a caller local, not
+a completion timer. Identity did not run. No benchmark and no ITL.
+
+Suggested fix: quote the py-spy locals rather than a Gloo label the
+dump does not print.
+
+### F198 -- X3 packed-gather reuse oracle exits on contiguity
+
+Claim: GU stride 844800 and down stride 460800 are byte-exact for
+torch and Triton. Torch medians are .144 / .183 / .163 ms and Triton
+.208 / .204 / .210 ms. Grouping is .295 ms and the subset is .226 ms.
+The first oracle then exits 1 on a q-contiguous assertion, before
+candidate comparison. Final health was still queued.
+
+Evidence: x3/reuse.log PACKED_GATHER_EXACT 0 and 1 record stride
+(844800, 1); row 2 records (460800, 1). event_ms medians are torch
+0.143854, 0.183072, 0.163073 and Triton 0.207917, 0.203594, 0.209948.
+native_inner_E5_M245760 event_ms is 0.295364. subset_E5_M245760 is
+0.225625. REUSE_FULL_SHAPE_EXACT prints 245760 5. The log then raises
+RuntimeError: q must be contiguous. gpu-run and cpu-run both exit 1.
+A HEALTHY card 1 line is before the probe. No post-health line follows
+the exit. x3/reuse-r2.log is 0 bytes.
+
+Verdict: OK on the strides, the rounded medians, the exact-gather
+lines, and exit 1 at that RuntimeError. Those gathers are a card-1
+microbench, not a serving ITL. Post-health for this failed probe is
+not in reuse.log. The 19:32 "RESULT: pending" sentence is older than
+this log; the later 19:25 note matches the file.
+
+Suggested fix: make the reference tensor contiguous in the probe and
+record post-health even when the process exits 1.
+
+### F199 -- O3 gates_g has not started its kernels
+
+Claim: card-0 gates for _C.o3g.so sha 38f7176a were queued. The result
+belongs in the next O3 entry.
+
+Evidence: o3/gates_g.log is one wait line: card 0 busy, held by O4
+since 19:15:33, command the ut2 unitrace docker. No TIME row and no
+sha string. No _C.o3g.so was found under the flashnext build tree.
+
+Verdict: OK that the gates run had not produced kernel results at this
+read. UNVERIFIED for sha 38f7176a. No ITL.
+
+Suggested fix: print the library sha on the first line of gates_g.log
+once the run starts.
+
+### F200 -- ringmlock post-health landed; ut2 profile has no journal
+
+Claim: none in the journal for these two file updates. The 18:53 entry
+left ring post-health without a HEALTHY line (F192) and queued a
+unitrace breakdown.
+
+Evidence: o4/run-ringmlock/health-after.txt now ends HEALTHY cards 0
+and 1, gpu-run exit 0 in 34s, after the O3 wait. o4/run-ut2/profile.log
+has no matching journal RESULT. Served-name kwargs list hotschmoe-dev
+first. Gates 323/667 match and gates_ok=True. c2 same_text=True.
+SUMMARY n_graph_steps 30: C1 step_ms p50 39.174, replay_dev_ms 36.156,
+gather_ms 0.193, ring_d2h_ms 34.477. C2 step_ms p50 44.041, replay
+40.423. A traced series has step p50 52.561 and replay 40.513
+(n_graph_steps 22). RUN_RC 0 at 19:21:23. The ut2 window has no
+HEALTHY line. This is an in-process profiler under unitrace, 32
+tokens, not the 94-step ringmlock window.
+
+Verdict: OK that ringmlock post-health is now HEALTHY on both cards.
+The ut2 numbers match that profile.log and were not in a journal
+sentence at this append. They are not a harness ITL and do not replace
+the ringmlock C1 step p50 26.72 ms. replay_dev 36.156 is slower than
+that run's 23.81 ms, and ring_d2h 34.477 is still a large host bucket.
+ut2 post-health is UNVERIFIED from the window.
+
+Suggested fix: journal the ut2 summary as a unitrace window, separate
+from the 26.72 ms step, and attach its health result.
+
+### F201 -- hygiene
+
+Claim: no new staged secret or binary.
+
+Evidence: HEAD 5c6edd0a. Cached diff is empty. Porcelain is 40
+paths. Binary-suffix porcelain rows: [' M vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so']. Fork shortstat: 12 files changed, 521 insertions(+), 45 deletions(-).
+vllm/flashnext/.gitignore still lists *.so.
+
+Verdict: OK on an empty index. The only binary porcelain path is the
+known push-allreduce .so. The fork grew past the pass-19 511-line
+stat; this pass reviewed the model_runner barrier and not the rest
+of that diff.
+
+Suggested fix: leave the .so unstaged.

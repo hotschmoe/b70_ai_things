@@ -21,6 +21,8 @@ void ep_register0(int layer, const uint8_t* gate, int gate_type, const uint8_t* 
 void ep_register1(int layer, const uint8_t* gate, const uint8_t* up, const uint8_t* down, int e);
 void ep_register_map(int layer, const int32_t* map0, const int32_t* map1, int nexp);
 void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer);
+void ep_moe_begin(const uint16_t* x, const float* w, const int32_t* ids, int T, int topk, int K, int layer);
+void ep_moe_end(float* y, int T, int K, int layer);
 void ep_capture_begin(int key);
 void ep_capture_end(int key);
 void ep_replay_prepare(int key);

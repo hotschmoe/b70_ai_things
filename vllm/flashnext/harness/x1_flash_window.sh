@@ -15,7 +15,11 @@ if [[ -e "$LOG" ]]; then
   exit 2
 fi
 date -u
-"$REPO/bin/gpu-run" "$REPO/bin/xpu-health"
+if [[ "${X1_REUSE_POST_HEALTH:-0}" != 1 ]]; then
+  "$REPO/bin/gpu-run" "$REPO/bin/xpu-health"
+else
+  echo REUSING_RECORDED_POST_HEALTH
+fi
 "$REPO/vllm/flashnext/harness/x1_serve_flashnext.sh" > "$LOG" 2>&1 &
 serve_pid=$!
 cleanup() {
@@ -24,6 +28,7 @@ cleanup() {
 }
 trap cleanup EXIT
 ready=0
+failed=0
 started=0
 for ((i=0;i<2800;i++)); do
   if [[ "$started" = 0 ]] && grep -Fq 'gpu-run: [X1] acquired card(s)' "$LOG"; then
@@ -45,14 +50,27 @@ if ((ready)); then
     "$REPO/vllm/flashnext/harness/x1_compare_greedy.py" --respect-eos \
     --url "http://127.0.0.1:$PORT" --out "$OUT/flash-greedy-mtp${MTP_TOKENS}.json" \
     "${extra[@]}"
-  echo GREEDY_RC=$?
+  greedy_rc=$?
+  echo GREEDY_RC=$greedy_rc
+  if ((greedy_rc)); then failed=1; fi
   "$REPO/bin/cpu-run" --quiet "${RUN[@]}" \
     "$REPO/vllm/flashnext/harness/bench_latency.py" \
     --base-url "http://127.0.0.1:$PORT" --model hotschmoe-dd \
     --alias "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-vllm-rt-mtp${MTP_TOKENS}" \
     --out "$OUT/flash-bench-mtp${MTP_TOKENS}.json" --decode-tokens 96 \
     --skip-prefill --tag "X1-flashnext-full-mtp${MTP_TOKENS}"
-  echo BENCH_RC=$?
+  bench_rc=$?
+  echo BENCH_RC=$bench_rc
+  if ((bench_rc)); then failed=1; fi
+  if [[ "$MTP_TOKENS" = 0 ]]; then
+    "$REPO/bin/cpu-run" --quiet "${RUN[@]}" \
+      "$REPO/vllm/flashnext/harness/x1_compare_greedy.py" --respect-eos \
+      --url "http://127.0.0.1:$PORT" --out "$OUT/flash-repeat-mtp0.json" \
+      --baseline "$OUT/flash-greedy-mtp0.json"
+    repeat_rc=$?
+    echo CONTROL_REPEAT_RC=$repeat_rc
+    if ((repeat_rc)); then failed=1; fi
+  fi
   set -e
 else
   echo SERVE_NOT_READY
@@ -63,3 +81,4 @@ trap - EXIT
 "$REPO/bin/gpu-run" "$REPO/bin/xpu-health"
 echo "X1_FLASH_WINDOW_DONE ready=$ready"
 test "$ready" = 1
+test "$failed" = 0

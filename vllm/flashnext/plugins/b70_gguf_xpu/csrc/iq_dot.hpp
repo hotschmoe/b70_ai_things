@@ -50,9 +50,19 @@ inline uint64_t b70_ld8_a2(const uint8_t* p) {
     const uintptr_t a = reinterpret_cast<uintptr_t>(p);
     const uint32_t* q = reinterpret_cast<const uint32_t*>(a & ~uintptr_t(3));
     const uint32_t w0 = q[0], w1 = q[1];
+#if !defined(B70_LOAD_BF) || B70_LOAD_BF == 0  // branch-free form measured slower on the IQ types
     if (!(a & 2)) return (uint64_t)w0 | ((uint64_t)w1 << 32);
     const uint32_t w2 = q[2];
     return (uint64_t)((w0 >> 16) | (w1 << 16)) | ((uint64_t)((w1 >> 16) | (w2 << 16)) << 32);
+#else
+    // branch-free: the third word is clamped back onto w1 when aligned
+    const uint32_t a2 = (uint32_t)(a & 2u);
+    const uint32_t sh = a2 * 8u;
+    const uint32_t w2 = q[1 + (a2 >> 1)];
+    const uint32_t lo = (w0 >> sh) | ((w1 << 16) << (16u - sh));
+    const uint32_t hi = (w1 >> sh) | ((w2 << 16) << (16u - sh));
+    return (uint64_t)lo | ((uint64_t)hi << 32);
+#endif
 #else
     return b70_loadu64(p);
 #endif
@@ -62,12 +72,55 @@ inline uint32_t b70_ld4_a2(const uint8_t* p) {
     const uintptr_t a = reinterpret_cast<uintptr_t>(p);
     const uint32_t* q = reinterpret_cast<const uint32_t*>(a & ~uintptr_t(3));
     const uint32_t w0 = q[0];
+#if !defined(B70_LOAD_BF) || B70_LOAD_BF == 0  // branch-free form measured slower on the IQ types
     if (!(a & 2)) return w0;
     return (w0 >> 16) | (q[1] << 16);
+#else
+    const uint32_t a2 = (uint32_t)(a & 2u);
+    const uint32_t sh = a2 * 8u;
+    const uint32_t w1 = q[a2 >> 1];
+    return (w0 >> sh) | ((w1 << 16) << (16u - sh));
+#endif
 #else
     return b70_loadu32(p);
 #endif
 }
+// O3 stage 3: N consecutive dwords at a 2-aligned address without a branch.
+// Loads N+1 aligned words (the last address is clamped back when aligned, so
+// nothing past the run is read) and funnel-shifts by 0 or 16 bits.
+#ifndef B70_LOAD_RUN
+#define B70_LOAD_RUN 1
+#endif
+template <int N>
+inline void b70_ldrun_a2(const uint8_t* p, uint32_t (&out)[N]) {
+    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+    const uint32_t* q = reinterpret_cast<const uint32_t*>(a & ~uintptr_t(3));
+    const uint32_t a2 = (uint32_t)(a & 2u);
+    const uint32_t sh = a2 * 8u;  // 0 or 16
+    uint32_t w[N + 1];
+#pragma unroll
+    for (int k = 0; k < N; ++k) w[k] = q[k];
+    w[N] = q[N - 1 + (a2 >> 1)];
+#pragma unroll
+    for (int k = 0; k < N; ++k) out[k] = (w[k] >> sh) | ((w[k + 1] << 16) << (16u - sh));
+}
+// Dword-aligned run (block size and offsets multiples of 4).
+template <int N>
+inline void b70_ldrun_a4(const uint8_t* p, uint32_t (&out)[N]) {
+    const uint32_t* q = reinterpret_cast<const uint32_t*>(p);
+#pragma unroll
+    for (int k = 0; k < N; ++k) out[k] = q[k];
+}
+
+// Statically dword-aligned load (block size and offset multiples of 4).
+inline uint32_t b70_ld4_al(const uint8_t* p) {
+#if B70_LOAD_RUN
+    return *reinterpret_cast<const uint32_t*>(p);
+#else
+    return b70_ld4_a2(p);
+#endif
+}
+
 inline float b70_h2f(const uint8_t* p) {
 #if B70_HW_HALF
     const uint16_t h = *reinterpret_cast<const uint16_t*>(p);
@@ -408,13 +461,13 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m, const G& grid = G{}
         // 136-byte block: d, scales_h (u16), scales_l[4], qs[128]. Part ib = qs[16 ib..16 ib+15].
         const int ib = gi & 7;
         const uint8_t* b = row + (size_t)(gi >> 3) * 136;
-        const uint32_t hdr = b70_ld4_a2(b);           // d | scales_h
-        const uint32_t sl = b70_ld4_a2(b + 4);        // scales_l
+        const uint32_t hdr = b70_ld4_al(b);           // d | scales_h
+        const uint32_t sl = b70_ld4_al(b + 4);        // scales_l
         const int ls = (int)((sl >> (4 * ib)) & 0xfu) | (int)(((hdr >> (16 + 2 * ib)) & 3u) << 4);
         const uint8_t* qs = b + 8 + 16 * ib;
 #pragma unroll
         for (int i = 0; i < 4; ++i) {
-            const uint32_t q = b70_ld4_a2(qs + 4 * i);
+            const uint32_t q = b70_ld4_al(qs + 4 * i);
             m.w[i] = (int)b70_iq4nl_mux4(q & 0x0f0f0f0fu);
             m.w[4 + i] = (int)b70_iq4nl_mux4((q >> 4) & 0x0f0f0f0fu);
         }
@@ -428,13 +481,13 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m, const G& grid = G{}
         const uint8_t* b = row + (size_t)(gi >> 3) * 84;
         const uint8_t* qs = b + 16 + half * 32;
 #pragma unroll
-        for (int i = 0; i < 8; ++i) m.w[i] = (int)((b70_ld4_a2(qs + 4 * i) >> (2 * j)) & 0x03030303u);
+        for (int i = 0; i < 8; ++i) m.w[i] = (int)((b70_ld4_al(qs + 4 * i) >> (2 * j)) & 0x03030303u);  // see B70_LOAD_RUN note
         const uint32_t sc = b70_ld4_a2(b + half * 8 + 2 * j) & 0xffffu;
         m.sc0 = (int)(sc & 0xfu);
         m.mn0 = (int)((sc >> 4) & 0xfu);
         m.sc1 = (int)((sc >> 8) & 0xfu);
         m.mn1 = (int)((sc >> 12) & 0xfu);
-        const uint32_t dd = b70_ld4_a2(b + 80);
+        const uint32_t dd = b70_ld4_al(b + 80);
         m.d = (float)sycl::bit_cast<sycl::half>((uint16_t)(dd & 0xffffu));
         m.dm = (float)sycl::bit_cast<sycl::half>((uint16_t)(dd >> 16));
         m.fin = 5;
@@ -445,12 +498,24 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m, const G& grid = G{}
         const int j = gi8 & 3;
         const uint8_t* b = row + (size_t)(gi >> 3) * 110;
         const uint8_t* qs = b + 32 + half * 32;
+#if B70_LOAD_RUN
+        uint32_t qsw[8], hmw[8];
+        b70_ldrun_a2<8>(qs, qsw);
+        b70_ldrun_a2<8>(b, hmw);
+#pragma unroll
+        for (int i = 0; i < 8; ++i) {
+            const uint32_t q = (qsw[i] >> (2 * j)) & 0x03030303u;
+            const uint32_t h = ((hmw[i] >> (half * 4 + j)) & 0x01010101u) << 2;
+            m.w[i] = (int)(((q | h) + 0x7C7C7C7Cu) ^ 0x80808080u);
+        }
+#else
 #pragma unroll
         for (int i = 0; i < 8; ++i) {
             const uint32_t q = (b70_ld4_a2(qs + 4 * i) >> (2 * j)) & 0x03030303u;
             const uint32_t h = ((b70_ld4_a2(b + 4 * i) >> (half * 4 + j)) & 0x01010101u) << 2;
             m.w[i] = (int)(((q | h) + 0x7C7C7C7Cu) ^ 0x80808080u);
         }
+#endif
         // b70_q3_scale with aligned word loads (scales at b+96, 2-aligned).
         const uint32_t a0 = b70_ld4_a2(b + 96);
         const uint32_t a1 = b70_ld4_a2(b + 100);
@@ -476,14 +541,14 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m, const G& grid = G{}
         const uint8_t* q = b + QO + 32 * j64;
 #pragma unroll
         for (int i = 0; i < 8; ++i) {
-            uint32_t w = (b70_ld4_a2(q + 4 * i) >> (4 * hi)) & 0x0f0f0f0fu;
-            if constexpr (TYPE == B70_Q5_K) w |= ((b70_ld4_a2(b + 16 + 4 * i) >> gi8) & 0x01010101u) << 4;
+            uint32_t w = (b70_ld4_al(q + 4 * i) >> (4 * hi)) & 0x0f0f0f0fu;
+            if constexpr (TYPE == B70_Q5_K) w |= ((b70_ld4_al(b + 16 + 4 * i) >> gi8) & 0x01010101u) << 4;
             m.w[i] = (int)w;
         }
         // get_scale_min_k4 on scales[12] at b+4.
-        const uint32_t s0 = b70_ld4_a2(b + 4);
-        const uint32_t s1 = b70_ld4_a2(b + 8);
-        const uint32_t s2 = b70_ld4_a2(b + 12);
+        const uint32_t s0 = b70_ld4_al(b + 4);
+        const uint32_t s1 = b70_ld4_al(b + 8);
+        const uint32_t s2 = b70_ld4_al(b + 12);
         auto byte = [](uint32_t w, int k) { return (int)((w >> (8 * k)) & 0xffu); };
         int sc, mn;
         if (gi8 < 4) {
@@ -497,7 +562,7 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m, const G& grid = G{}
         m.sc1 = sc;
         m.mn0 = mn;
         m.mn1 = mn;
-        const uint32_t dd = b70_ld4_a2(b);
+        const uint32_t dd = b70_ld4_al(b);
         m.d = (float)sycl::bit_cast<sycl::half>((uint16_t)(dd & 0xffffu));
         m.dm = (float)sycl::bit_cast<sycl::half>((uint16_t)(dd >> 16));
         m.fin = 5;
@@ -509,12 +574,24 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m, const G& grid = G{}
         const uint8_t* b = row + (size_t)(gi >> 3) * 210;
         const uint8_t* ql = b + 64 * n + ((qu & 1) ? 32 : 0);
         const uint8_t* qh = b + 128 + 32 * n;
+#if B70_LOAD_RUN
+        uint32_t qlw[8], qhw[8];
+        b70_ldrun_a2<8>(ql, qlw);
+        b70_ldrun_a2<8>(qh, qhw);
+#pragma unroll
+        for (int i = 0; i < 8; ++i) {
+            const uint32_t lo = (qlw[i] >> ((qu >> 1) * 4)) & 0x0f0f0f0fu;
+            const uint32_t h2 = ((qhw[i] >> (2 * qu)) & 0x03030303u) << 4;
+            m.w[i] = (int)(((lo | h2) + 0x60606060u) ^ 0x80808080u);
+        }
+#else
 #pragma unroll
         for (int i = 0; i < 8; ++i) {
             const uint32_t lo = (b70_ld4_a2(ql + 4 * i) >> ((qu >> 1) * 4)) & 0x0f0f0f0fu;
             const uint32_t h2 = ((b70_ld4_a2(qh + 4 * i) >> (2 * qu)) & 0x03030303u) << 4;
             m.w[i] = (int)(((lo | h2) + 0x60606060u) ^ 0x80808080u);
         }
+#endif
         const uint32_t sc = b70_ld4_a2(b + 192 + 8 * n + 2 * qu) & 0xffffu;
         m.sc0 = (int)(int8_t)(sc & 0xffu);
         m.sc1 = (int)(int8_t)(sc >> 8);

@@ -11,6 +11,7 @@ Export keys match flashnext_ref.qsa_cache.QsaPaged.export_seq.
 from __future__ import annotations
 
 import numpy as np
+import os
 import torch
 
 from b70_qsa_xpu import ops
@@ -332,11 +333,12 @@ class QsaBatch:
         Host read of the launch flag: eager prefill only.
         """
         n_q = int(q.shape[0])
-        if n_q < 1 or n_q > 8:
+        if n_q < 1 or (n_q > 8 and os.environ.get('B70_PREFILL_QSA') != '1'):
             raise RuntimeError("B70_QSA union tile is 1..8 queries of one sequence")
         cap = int(ids.shape[1])
-        ulist = torch.empty(1, 8 * cap, dtype=torch.int32, device=self.device)
-        ucount = torch.empty(1, dtype=torch.int32, device=self.device)
+        tiles = (n_q + 7) // 8
+        ulist = torch.empty(tiles, 8 * cap, dtype=torch.int32, device=self.device)
+        ucount = torch.empty(tiles, dtype=torch.int32, device=self.device)
         ops.union_build(ids, step, ulist, ucount)
         g = self.geom
         pooled = 1 if self.pooled else 0
@@ -399,8 +401,13 @@ class QsaBatch:
         gated = torch.empty(n, g.n_head, g.head_dim, dtype=torch.float16, device=dev)
         self.union_xmx = False
         seq_i = int(seq)
-        for tile in range(0, n, 8):
-            stop = min(tile + 8, n)
+        tile_queries=8
+        if os.environ.get('B70_PREFILL_QSA') == '1':
+            tile_queries=int(os.environ.get('B70_PREFILL_QSA_BATCH','1024'))
+            if tile_queries<8 or tile_queries%8:
+                raise ValueError('QSA prefill batch must be a multiple of 8')
+        for tile in range(0, n, tile_queries):
+            stop = min(tile + tile_queries, n)
             nt = stop - tile
             scores = torch.empty(nt, self.max_cells, dtype=torch.float32, device=dev)
             ids = torch.empty(nt, cap, dtype=torch.int32, device=dev)

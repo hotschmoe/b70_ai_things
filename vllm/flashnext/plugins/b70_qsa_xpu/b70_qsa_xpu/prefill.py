@@ -1,4 +1,5 @@
 """Opt-in eager QSA prefill: avoid unused query and side-state work."""
+import os
 import torch
 
 
@@ -16,6 +17,10 @@ def rope_rows(runner,x,positions,token0,n):
 
 
 def append_request(runner,s,t0,t1,k,v,raw,positions,pos_cpu,nreq):
+    if os.environ.get('B70_PREFILL_QSA_APPEND')=='batch':
+        from .prefill_append import append_batch
+        if append_batch(runner,s,t0,t1,k,v,raw,positions,pos_cpu,nreq):
+            return
     if t1<=t0:
         return
     b=runner.batch

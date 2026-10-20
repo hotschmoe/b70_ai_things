@@ -11,6 +11,10 @@ PORT=${PORT:-18121}
 MTP_TOKENS=${MTP_TOKENS:-2}
 NAME=${NAME:-vllm-fn-x1-flashnext-mtp${MTP_TOKENS}}
 SPEC_ARGS=()
+LAUNCH=(vllm)
+if [[ "${X1_PRE_COLLECTIVE:-0}" = 1 ]]; then
+  LAUNCH=("$HERE/x1_health_then_serve.sh" vllm)
+fi
 if [[ "$MTP_TOKENS" != 0 ]]; then
   SPEC_ARGS=(--speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":$MTP_TOKENS}")
 fi
@@ -30,10 +34,12 @@ if ((available < 8388608)); then echo "ABORT MemAvailable=$available"; exit 4; f
   --env B70_GGUF_REF=0 --env B70_EAGER_QK=0 --env B70_PREFILL=0 \
   --env B70_FUSE_SHARED=0 \
   --env B70_XPU_CG_RECLAIM=500 \
+  --env B70_RECLAIM_TRACE=1 \
+  --env B70_STEP_LOG="$BUILD/x1/reclaim.log" \
   --env SYCL_CACHE_PERSISTENT=0 \
   --env SYCL_CACHE_DIR="$BUILD/cache/sycl-x1-flashnext" \
   --env HF_HUB_OFFLINE=1 --env TRANSFORMERS_OFFLINE=1 \
-  -- vllm serve /mnt/vm_8tb/b70/build/backend-decision/hf-flashnext \
+  -- "${LAUNCH[@]}" serve /mnt/vm_8tb/b70/build/backend-decision/hf-flashnext \
   --host 0.0.0.0 --port "$PORT" \
   --served-model-name hotschmoe-dd "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-vllm-rt-mtp${MTP_TOKENS}" \
   --tensor-parallel-size 1 --data-parallel-size 2 --api-server-count 1 \
@@ -59,7 +65,6 @@ cleanup() {
     if ((available < 8388608)); then
       echo "ABORT MemAvailable=$available"
       docker stop -t 10 "$NAME" >/dev/null 2>&1 || true
-      break
     fi
     sleep 2
   done

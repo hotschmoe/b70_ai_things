@@ -38,6 +38,8 @@ def _bucketed(x,ids,gate,up,down,weights,gt,ut,dt,h,f,e,tile):
 
     flat=prefill_dq._sanitize(ids,e)
     group=prefill_dq._Group(flat,e)
+    # Own the order: native grouping uses shared scratch storage.
+    group.order = group.order[:group.mv].clone()
     counts=[group.starts_cpu[i+1]-group.starts_cpu[i] for i in range(e)]
     buckets={}
     for expert,n in enumerate(counts):
@@ -53,12 +55,15 @@ def _bucketed(x,ids,gate,up,down,weights,gt,ut,dt,h,f,e,tile):
     for width,experts in sorted(buckets.items()):
         step=tile if tile>0 else len(experts)
         for start in range(0,len(experts),step):
-            selected=torch.tensor(experts[start:start+step],device=x.device,dtype=torch.long)
+            chosen = experts[start:start+step]
+            selected=torch.tensor(chosen,device=x.device,dtype=torch.long)
             mapping=torch.full((e,),-1,device=x.device,dtype=torch.int32)
             mapping[selected]=torch.arange(selected.numel(),device=x.device,dtype=torch.int32)
             local=torch.where(valid,mapping[index],-1)
-            g,u,d=[q.index_select(0,selected) for q in packs]
-            out.add_(_moe_once(x,local,g,u,d,weights,gt,ut,dt,h,f))
+            from .prefill_gather import gather_packed
+            g,u,d=[gather_packed(q,selected) for q in packs]
+            subset = group.subset(chosen)
+            out.add_(_moe_once(x,local,g,u,d,weights,gt,ut,dt,h,f,group=subset))
             if os.environ.get("B70_PREFILL_DQ_PROFILE") == "1" and gt == ut:
                 from .prefill_fast import LAST as inner
                 for name,ms in inner.get("profile_ms",{}).items():
@@ -71,7 +76,7 @@ def _bucketed(x,ids,gate,up,down,weights,gt,ut,dt,h,f,e,tile):
     return out
 
 
-def _moe_once(x, ids, gate, up, down, weights, gt, ut, dt, h, f):
+def _moe_once(x, ids, gate, up, down, weights, gt, ut, dt, h, f, group=None):
     import torch
 
     from . import prefill, prefill_dq
@@ -80,11 +85,11 @@ def _moe_once(x, ids, gate, up, down, weights, gt, ut, dt, h, f):
     # decode each pack with its own type instead of reinterpreting up bytes.
     if gt == ut:
         return prefill.prefill_moe_layer(
-            x, ids, gate, up, down, weights, gt, dt, h, f
+            x, ids, gate, up, down, weights, gt, dt, h, f, group=group
         )
     if any(typ in (8, 10, 11) for typ in (gt, ut, dt)) or prefill_dq.moe_wants_dq(int(x.shape[0])):
         return prefill_dq.moe_dq(
-            x, ids, gate, up, down, weights, gt, dt, h, f, type_up=ut
+            x, ids, gate, up, down, weights, gt, dt, h, f, type_up=ut, group=group
         )
     t, topk = ids.shape
     # Invalid/nonlocal IDs are handled by prefill_grouped itself.

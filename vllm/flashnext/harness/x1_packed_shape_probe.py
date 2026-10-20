@@ -1,6 +1,7 @@
 """Actual target packed weights: row-count and graph replay equivalence."""
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -10,7 +11,10 @@ from gguf import GGUFReader
 
 def difference(a, b):
     return dict(
-        unequal=int((a != b).sum()), max_abs=float((a.float() - b.float()).abs().max())
+        unequal=int((a != b).sum()),
+        max_abs=float((a.float() - b.float()).abs().max()),
+        bf16_unequal=int((a.bfloat16() != b.bfloat16()).sum()),
+        bf16_max_abs=float((a.bfloat16().float() - b.bfloat16().float()).abs().max()),
     )
 
 
@@ -19,8 +23,11 @@ def emit(op, a, b, **extra):
 
 
 torch.ops.load_library(
-    "/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/plugins/"
-    "b70_gguf_xpu/b70_gguf_xpu/_C.o3.so"
+    os.environ.get(
+        "B70_GGUF_SO",
+        "/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/plugins/"
+        "b70_gguf_xpu/b70_gguf_xpu/_C.o3.so",
+    )
 )
 torch.manual_seed(31)
 directory = Path("/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS")
@@ -39,7 +46,7 @@ for tensor in tensors.values():
     w = torch.from_numpy(np.array(tensor.data, copy=True)).view(torch.uint8).to(device)
     x = torch.randn(6, k, device=device, dtype=torch.bfloat16)
     one = torch.cat([torch.ops.b70_gguf.gemv(row[None], w, kind, n, k) for row in x])
-    for m in (3, 6):
+    for m in (2, 3, 6):
         batch = torch.ops.b70_gguf.gemv(x[:m], w, kind, n, k)
         emit("target_dense", batch, one[:m], tensor=tensor.name, qtype=kind, rows=m)
     del w, x, one
@@ -85,7 +92,7 @@ for layer in (0, 1, 3, 8, 12, 24, 36, 47):
     one = torch.cat(
         [moe(x[j : j + 1], ids[j : j + 1], router[j : j + 1]) for j in range(6)]
     )
-    for m in (3, 6):
+    for m in (2, 3, 6):
         batch = moe(x[:m], ids[:m], router[:m])
         emit("target_moe", batch, one[:m], layer=layer, qtypes=types, rows=m)
     expected = moe(moe(x, ids, router).bfloat16(), ids, router)

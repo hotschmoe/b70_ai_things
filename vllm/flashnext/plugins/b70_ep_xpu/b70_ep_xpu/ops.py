@@ -21,6 +21,13 @@ def _register_fakes() -> None:
         del w, ids, layer
         return torch.empty(x.shape, dtype=torch.float32, device=x.device)
 
+    if hasattr(torch.ops.b70_ep, "moe_ep_begin"):
+
+        @register_fake("b70_ep::moe_ep_begin")
+        def _moe_ep_begin_fake(x, w, ids, layer):
+            del w, ids, layer
+            return torch.empty(x.shape, dtype=torch.float32, device=x.device)
+
     _FAKES = True
 
 
@@ -30,7 +37,8 @@ def load() -> None:
         return
     import torch
 
-    so = Path(__file__).resolve().parent / "_C.so"
+    # B70_EP_SO selects a side build (O4: _C.o4.so with moe_ep_begin/end).
+    so = Path(os.environ.get("B70_EP_SO") or (Path(__file__).resolve().parent / "_C.so"))
     if not so.is_file():
         raise FileNotFoundError(f"missing {so}; run scripts/build.sh")
     torch.ops.load_library(str(so))

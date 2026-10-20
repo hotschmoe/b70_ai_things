@@ -2,7 +2,11 @@
 
 Status: full Flash-Next target and MTP graphs run, with 77.03% bench draft
 acceptance and a diagnostic C1 rate of 33.04 versus 23.98 tok/s. The
-full-model exact-token gate FAILED; this is not a qualified speedup.
+initial full-model exact-token gate FAILED; the no-MTP control also
+fails exact repeatability within one load. A batched expert reduction
+fix built and passed all 63 numeric checks. Its first full-model control
+stalled at PLE D2H after six completions; an all-rank CPU readiness fence
+is prepared for retry. This is not yet a qualified speedup.
 Proxy outputs match through configured EOS; forced post-EOS continuation
 has a divergence described below. Numeric/state diagnosis is ongoing.
 No promotion, commit, or daily-driver service change.
@@ -216,8 +220,67 @@ The first repeat attempt passed its own pre-health but acquired the serve
 lease after X3's separate collective diagnostic timed out. X1 read the
 new X3 warning during startup and stopped the load before READY, releasing
 both cards. No repeat token requests ran. X2 subsequently passed compiled
-two-rank health; X1 per-card post-health is pending. Preserve this attempt
-as a scheduling abort, not a model crash or repeatability result.
+two-rank health; X1 post-health passed on both cards. Preserved logs:
+flash-repeat-health-abort.log and window-flash-repeat-health-abort.out.
+This is a scheduling abort, not a model crash or repeatability result.
+
+The immutable repeat retry reused that fresh post-health. X3's intervening
+corrected oracle also passed final compiled health. No-MTP server ready
+18:06:10; two exact gates in one load both exit 3. Pass 1 versus the
+original baseline differs at C1 tokens 4/72 (Paris/Fibonacci), and C2
+Paris token 2. Pass 2 versus pass 1 differs at C1 Paris token 4 and C2
+tokens 2/72. Other C1 outputs match. Both-card post-health passed; clean
+teardown. This establishes a repeatability failure with MTP disabled
+under the new PLE-ring configuration; it does not establish that the
+legacy PLE path has the same failure. Raw flash-repeat-pass1/2.json and
+flash-repeat.log; exact variant clusters in greedy-output-clusters.json.
+
+Actual target mixed-quant probes (16 real experts from eight layers)
+locate a shape-dependent candidate. All sampled dense projections match
+exactly. Scheduled expert FP32 outputs differ by up to 1.49e-8 at rows
+1 versus 3/6; 10 of 50 records also differ after the actual BF16 cast,
+11 entries total. The existing B70_MOE_SCHED=0 fallback is bit-identical
+in all 50 records. Two-call captured scratch reuse matches eager exactly
+in both modes. Card-1 health before/after passed. Raw
+packed-shape-probe.log and packed-shape-sched1/0.log; the exact original
+script is preserved as packed-shape-original.py.
+
+Source candidate: sched_moe.hpp:b70_sched_red sums in grouped-expert
+plan order, which depends on other batch tokens. The new source patch
+harness/patches/x1_slot_reduce.patch adds an inverse (token, router-slot)
+entry map in both plan builders and reduces in slot order, shared last,
+for both output modes. It preserves batching, skips invalid slots, and
+adds no GPU launch. The separate x1/slot-reduce source/build snapshot
+leaves O3's source and pinned library untouched. CPU-only icpx build
+passed in 128 seconds under cpu-run MAX_JOBS=4. Compiler oneAPI
+2026.1.1 (2026.1.1.20260724), PyTorch 2.14.0+xpu. New library:
+`x1/slot-reduce/b70_gguf_xpu/_C.slot.so`, SHA256
+bd22ebbd40c4c6c4b0e2513be99306fe8927834e6ecdf9beeccdfd52bcda6426.
+The build source manifest records 36 files.
+
+The new scheduled kernel passes all 63 numeric records: five actual
+target dense types and eight expert-layer mixes at rows 2/3/6, plus
+three two-call captured replays per expert layer. Every comparison is
+bit-identical in FP32 and BF16. Card-1 health before/after HEALTHY;
+probe exit 0 in 36 seconds. This covers the unfused shared-expert
+configuration used by X1; shared fusion is not qualified by this probe.
+Full-model causality and qualification remain pending serving gates.
+The queued control repeats C1/C2 token checks in the same load after
+the latency benchmark, avoiding another full reload for repeatability.
+Raw slot-probe.log, slot-health-before/after.log, window-slot-mtp0.out;
+serving artifacts use the separate x1/slot directory.
+
+The slot-order control acquired 18:51:56 after fresh native and compiled
+R3 health. It reached READY18:55:33, captured full graphs and saved six
+completion sequences. The following benchmark stalled before any valid
+latency JSON or repeat gate. Python stacks show rank 0 waiting at
+mtp_ple.py:60 (input-token D2H), while rank 1 is already in the next CPU
+DP scheduling sync. X1 stopped the container; benchmark/repeat failed
+and post-health is queued. Raw slot-hang-rank0/1.txt and x1/slot logs.
+The runner now puts all DP ranks, including idle/dummy ranks, through
+their CPU-group barrier after optional PLE staging and before model
+submission. This fence is outside capture/replay. It awaits serving
+validation; no stability claim follows from the six completions.
 
 Final CPU sidecar audit also passes after splitting the fused MTP expert
 gate/up on CPU, avoiding the generic post-load hook's redundant fused GPU
@@ -236,6 +299,6 @@ shared changes and is not a standalone clean upstream patch.
 Both requested Claude CLI consultations (fable-5.1 and claude-5.5)
 returned unrecognized_model and Not logged in. No actual responding model
 ID or review advice was received. Evidence: x1/fable51.txt, claude55.txt.
-No extension kernels were rebuilt for X1. The compiled collective-health
-JIT used MAX_JOBS=4 and TORCHINDUCTOR_COMPILE_THREADS=4. Existing GGUF
+The compiled collective-health JIT used MAX_JOBS=4 and
+TORCHINDUCTOR_COMPILE_THREADS=4. Initial GGUF
 library is pinned to _C.o3.so, sha256 be76661bd120aa2f6c7523ae3c08813ba56d6114660f3d7f31183c32e5e861eb.

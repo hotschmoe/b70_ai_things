@@ -45,7 +45,7 @@ def _overlap_on() -> bool:
     return raw not in ("0", "off", "no")
 
 
-def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int):
+def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, group=None):
     """x [T, H] -> fp32 [T, H]. ids int32 [T, topk]. router fp32 [T, topk] or empty.
 
     Gate and up are dequantized into one [E, 2F, H] bf16 buffer and multiplied
@@ -84,8 +84,8 @@ def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int,
 
     stamp("start")
     LAST.pop("fallback", None)
-    flat = prefill_dq._sanitize(ids, e)
-    group = prefill_dq._Group(flat, e)
+    if group is None:
+        group = prefill_dq._Group(prefill_dq._sanitize(ids, e), e)
     stamp("group")
     LAST["mv"] = group.mv
     LAST["mmax"] = group.mmax
@@ -101,7 +101,7 @@ def moe_fast(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int,
     if (cap > 8 and e * cap > max_ratio * group.mv) or e * cap * h * 2 > 8_000_000_000:
         LAST["fallback"] = "loop_skew"
         return prefill_dq.moe_dq(
-            x, ids, q_gate, q_up, q_down, router, type_gu, type_down, h, f, how="loop"
+            x, ids, q_gate, q_up, q_down, router, type_gu, type_down, h, f, how="loop", group=group
         )
     xb = x if x.dtype == torch.bfloat16 else x.to(torch.bfloat16)
     direct = os.environ.get("B70_PREFILL_REDUCE") == "grouped"

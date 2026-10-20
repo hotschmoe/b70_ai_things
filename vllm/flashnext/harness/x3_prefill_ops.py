@@ -34,6 +34,8 @@ P = argparse.ArgumentParser()
 P.add_argument('--tokens', type=int, default=12288)
 P.add_argument('--part', default='gdn,attention,hc,ple,dense,expert,qsa')
 P.add_argument('--out', default='ops.json')
+P.add_argument('--qsa-block', type=int, default=64)
+P.add_argument('--capture', default='/mnt/cache/b70/x3-captures/flashnext-first-attention.pt')
 A = P.parse_args()
 T = A.tokens
 D = 'xpu'
@@ -470,6 +472,129 @@ if 'skew' in PARTS:
         del x, packs, w, logits, weights, ids
         cleanup()
 
+if 'pagedfa' in PARTS:
+    import triton
+    from vllm_xpu_kernels.flash_attn_interface import flash_attn_varlen_func
+    from vllm.v1.attention.backends.fa_utils import reshape_and_cache_flash
+    q=torch.randn(T,24,256,device=D,dtype=torch.bfloat16)*.1
+    key=torch.randn(T,2,256,device=D,dtype=torch.bfloat16)*.1
+    value=torch.randn_like(key)
+    cu=torch.tensor([0,T],device=D,dtype=torch.int32)
+    lens=torch.tensor([T],device=D,dtype=torch.int32)
+    scale=torch.ones((),device=D,dtype=torch.float32)
+    slot=torch.arange(T,device=D,dtype=torch.int64)
+    layout_reference=None
+    for block in (64,1600):
+        pages=torch.empty((triton.cdiv(T,block),2,block,512),device=D,dtype=torch.bfloat16)
+        kc,vc=pages.transpose(1,2).split(256,dim=-1)
+        reshape_and_cache_flash(key,value,kc,vc,slot,'auto',scale,scale)
+        table=torch.arange(pages.shape[0],device=D,dtype=torch.int32)[None,:]
+        out=torch.empty_like(q)
+        got=bench(f'flashnext.fa_paged.block{block}',lambda:flash_attn_varlen_func(
+            q,kc,vc,cu_seqlens_q=cu,max_seqlen_q=T,seqused_k=lens,
+            max_seqlen_k=T,block_table=table,causal=True,out=out,
+            k_descale=scale.expand(1,2),v_descale=scale.expand(1,2)),12)
+        kk=key.transpose(0,1).repeat_interleave(12,dim=0)[None,:]
+        vv=value.transpose(0,1).repeat_interleave(12,dim=0)[None,:]
+        for first in (0,T//2,T-64):
+            qq=q[first:first+64].transpose(0,1)[None,:]
+            mask=torch.arange(T,device=D)[None,:]<=torch.arange(first,first+64,device=D)[:,None]
+            scores=(qq.float()@kk.float().transpose(-1,-2))*(256**-.5)
+            scores.masked_fill_(~mask,float('-inf'))
+            ref=(scores.softmax(-1)@vv.float()).to(q.dtype)
+            expected=ref[0].transpose(0,1)
+            try:
+                torch.testing.assert_close(got[first:first+64],expected,atol=2e-3,rtol=2e-2)
+                tight=True
+            except AssertionError:
+                tight=False
+            diff=(got[first:first+64].float()-expected.float()).abs()
+            print('PAGED_FA_FP32_REFERENCE',block,first,'tight_pass',tight,
+                  'max_abs',float(diff.max()),'rms',float(diff.square().mean().sqrt()),flush=True)
+            ROWS[-1].setdefault('fp32_reference',[]).append(dict(first=first,tight_pass=tight,max_abs=float(diff.max()),rms=float(diff.square().mean().sqrt())))
+            del scores,diff,expected
+        if layout_reference is None:
+            layout_reference=got.clone()
+        else:
+            torch.testing.assert_close(got,layout_reference,atol=0,rtol=0)
+            print('PAGED_FA_LAYOUT_EXACT',block,flush=True)
+        (ROOT/A.out).write_text(json.dumps(ROWS,indent=2))
+        del pages,kc,vc,table,out,got,kk,vv,qq,mask,ref
+        cleanup()
+    del q,key,value,cu,lens,scale,slot,layout_reference
+    cleanup()
+
+if 'misc2' in PARTS:
+    import triton
+    wide=torch.randn(T,4,2560,device=D,dtype=torch.bfloat16)
+    bench('flashnext.layer_residual_mean',lambda:wide.mean(dim=1),48)
+    key=torch.randn(T,2,256,device=D,dtype=torch.bfloat16)
+    value=torch.randn_like(key)
+    pages=torch.empty((triton.cdiv(T,16),2,16,512),device=D,dtype=torch.bfloat16)
+    kc,vc=pages.transpose(1,2).split(256,dim=-1)
+    slot=torch.arange(T,device=D,dtype=torch.int64)
+    scale=torch.ones((),device=D,dtype=torch.float32)
+    from vllm.v1.attention.backends.fa_utils import reshape_and_cache_flash
+    bench('flashnext.fa_kv_write',lambda:reshape_and_cache_flash(key,value,kc,vc,slot,'auto',scale,scale),12)
+    torch.testing.assert_close(kc.reshape(-1,2,256)[:T],key,atol=0,rtol=0)
+    torch.testing.assert_close(vc.reshape(-1,2,256)[:T],value,atol=0,rtol=0)
+    print('FA_KV_WRITE_EXACT',flush=True)
+    del wide,key,value,pages,kc,vc,slot,scale
+    cleanup()
+
+if 'reuse' in PARTS:
+    from b70_gguf_xpu.prefill_gather import gather_packed
+    from b70_gguf_xpu import serve_prefill
+    e, h, f = 256, 2560, 640
+    chosen = [3, 8, 17, 41, 65]
+    selected = torch.tensor(chosen, device=D, dtype=torch.long)
+    gg = raw('blk.3.ffn_gate_exps.weight')[:e].reshape(e,-1)
+    uu = raw('blk.3.ffn_up_exps.weight')[:e].reshape(e,-1)
+    dd = raw('blk.3.ffn_down_exps.weight')[:e].reshape(e,-1)
+    fused = torch.empty((e, 2*gg.shape[1]), device=D, dtype=torch.uint8)
+    fused[:,:gg.shape[1]].copy_(gg)
+    fused[:,gg.shape[1]:].copy_(uu)
+    gg,uu = fused[:,:gg.shape[1]],fused[:,gg.shape[1]:]
+    packs = [gg,uu,dd]
+    for p, q in enumerate(packs):
+        reference = q.index_select(0,selected).cpu()
+        for mode in ('torch','triton'):
+            os.environ['B70_PREFILL_PACK_GATHER']=mode
+            got=bench(f'reuse.gather.{p}.{mode}',lambda:gather_packed(q,selected))
+            assert torch.equal(got.cpu(),reference)
+        print('PACKED_GATHER_EXACT',p,tuple(q.shape),tuple(q.stride()),flush=True)
+    ids=torch.full((24576,10),-1,device=D,dtype=torch.int32)
+    ids[:,:5]=selected.to(torch.int32)
+    outer=prefill_dq._Group(prefill_dq._sanitize(ids,e),e)
+    outer.order=outer.order[:outer.mv].clone()
+    subset=outer.subset(chosen)
+    expected=ids.cpu().flatten()
+    for i, expert in enumerate(chosen):
+        lo,hi=subset.starts_cpu[i:i+2]
+        actual=subset.order[lo:hi].cpu().long()
+        torch.testing.assert_close(actual.sort().values,(expected==expert).nonzero().flatten(),atol=0,rtol=0)
+    print('REUSE_FULL_SHAPE_EXACT',subset.M,subset.E,subset.mv,subset.mmax,flush=True)
+    # The exact repeated histogram geometry sampled in the loaded model.
+    local=torch.where(ids>=0,torch.arange(10,device=D,dtype=torch.int32)[None,:],-1)
+    bench('reuse.native_inner_E5_M245760',lambda:prefill_dq._Group(local.flatten(),5),warm=1,iters=3)
+    bench('reuse.subset_E5_M245760',lambda:outer.subset(chosen),warm=1,iters=3)
+    os.environ['B70_PREFILL_DQ_T']='0'
+    os.environ['B70_PREFILL_REDUCE']='grouped'
+    os.environ['B70_PREFILL_EXPERT_TILE']='64'
+    x=torch.randn(128,h,device=D,dtype=torch.bfloat16)
+    short_ids=ids[:128].contiguous()
+    weights=torch.rand(128,10,device=D)
+    os.environ['B70_PREFILL_BUCKET']='0'
+    ref=serve_prefill.moe_prefill(x,short_ids,*[q.contiguous() for q in packs],weights,16,16,42,h,f)
+    os.environ['B70_PREFILL_BUCKET']='1'
+    for mode in ('torch','triton'):
+        os.environ['B70_PREFILL_PACK_GATHER']=mode
+        got=serve_prefill.moe_prefill(x,short_ids,*packs,weights,16,16,42,h,f)
+        torch.testing.assert_close(got,ref,atol=5e-2,rtol=5e-2)
+        print('REUSE_NUMERIC_OK',mode,float((got-ref).abs().max()),flush=True)
+    del gg,uu,dd,packs,fused,ids,outer,subset,local,x,short_ids,weights,ref,got
+    cleanup()
+
 if 'bucket' in PARTS:
     from b70_gguf_xpu import serve_prefill
     os.environ['B70_PREFILL_REDUCE'] = 'grouped'
@@ -509,7 +634,7 @@ if 'bucket' in PARTS:
     os.environ.pop('B70_PREFILL_BUCKET',None)
     os.environ['B70_PREFILL_EXPERT_TILE']='0'
 
-if 'qsa' in PARTS:
+if 'qsa' in PARTS or 'qsabatch' in PARTS or 'qsaappend' in PARTS or 'qsastage' in PARTS or 'qsareal' in PARTS:
     from b70_qsa_xpu import ops as qsops
     from b70_qsa_xpu.batch import QsaBatch
     from b70_qsa_xpu.state import Geom
@@ -517,7 +642,7 @@ if 'qsa' in PARTS:
     geom = Geom(n_head=24, n_kv=2, head_dim=256, n_rot=64, idx_n_head=4,
                 idx_dim=128, idx_block=4, idx_top_k=2048, rope_base=1e7,
                 eps=1e-6, page_size=64)
-    batch = QsaBatch(geom, np.arange((T+63)//64, dtype=np.int32)[None], 64, torch.device(D))
+    batch = QsaBatch(geom, np.arange((T+A.qsa_block-1)//A.qsa_block, dtype=np.int32)[None], A.qsa_block, torch.device(D))
     batch.k_norm.copy_(dense('blk.3.indexer.k_norm.weight').float())
     pos = torch.arange(T, device=D, dtype=torch.int32)
     q = torch.randn(T, 24, 256, device=D) * .1
@@ -525,7 +650,35 @@ if 'qsa' in PARTS:
     keys = torch.randn(T,2,256,device=D) * .1
     values = torch.randn_like(keys)
     raw_keys = torch.randn(T,128,device=D) * .1
-    qfull = torch.cat((q, torch.zeros_like(q)), -1)
+    gate=torch.zeros_like(q)
+    if 'qsareal' in PARTS:
+        payload=torch.load(A.capture,map_location='cpu',weights_only=True)
+        x=payload['hidden'][:T].to(D)
+        q=payload['q'][:T].reshape(T,24,256).to(D).float().contiguous()
+        keys=payload['k'][:T].reshape(T,2,256).to(D).float().contiguous()
+        values=payload['v'][:T].reshape(T,2,256).to(D).float().contiguous()
+        gate=payload['gate'][:T].reshape(T,24,256).to(D).float().contiguous()
+        cp=payload['positions']
+        positions=(cp[:,:T] if cp.ndim==2 else cp[:T]).to(D)
+        pos=(positions[0] if positions.ndim==2 else positions).to(torch.int32).contiguous()
+        assert torch.equal(pos,torch.arange(T,device=D,dtype=torch.int32))
+        wq=dense('blk.3.indexer.q_proj.weight')
+        wk=dense('blk.3.indexer.k_proj.weight')
+        iq=bench('real.indexer_q_projection',lambda:torch.nn.functional.linear(x,wq),12)
+        raw_keys=bench('real.indexer_k_projection',lambda:torch.nn.functional.linear(x,wk),12).float().contiguous()
+        from b70_qsa_xpu.model_hook import QsaRunner
+        query_runner=QsaRunner.__new__(QsaRunner)
+        query_runner.batch=batch
+        gamma=dense('blk.3.indexer.q_norm.weight')
+        query_runner._q_gamma=(gamma.float()-1).to(torch.bfloat16).float()+1
+        gamma=dense('blk.3.indexer.k_norm.weight')
+        batch.k_norm.copy_((gamma.float()-1).to(torch.bfloat16).float()+1)
+        os.environ['B70_PREFILL_QSA']='1'
+        qi=bench('real.indexer_query_norm_mrope',lambda:query_runner._indexer_queries(iq,positions,0,T),12)
+        os.environ.pop('B70_PREFILL_QSA')
+        print('REAL_ATTENTION_INPUT',A.capture,'T',T,'q',list(q.shape),flush=True)
+        del payload,x,wq,wk,iq,gamma
+    qfull = torch.cat((q, gate), -1)
     for t in range(min(T,16)):
         batch.pos.fill_(t)
         batch.append_cells()
@@ -533,6 +686,9 @@ if 'qsa' in PARTS:
     torch.xpu.synchronize()
     batch.zero_seq(0)
     torch.xpu.synchronize()
+    def snapshot():
+        return tuple(a.clone() for a in (batch.pages,batch.tail,batch.dead,batch.block_pos,batch.length,batch.pos,batch.step))
+    snapshots={}
     def append():
         for t in range(T):
             batch.pos.fill_(t)
@@ -540,49 +696,130 @@ if 'qsa' in PARTS:
             batch.v.copy_(values[t:t+1])
             batch.raw.copy_(raw_keys[t:t+1])
             batch.append_cells()
+            if 'qsaappend' in PARTS and t+1 in (17,33,81):
+                snapshots[t+1]=snapshot()
             if (t+1) % 2048 == 0:
                 print('QSA_APPEND_PROGRESS',t+1,flush=True)
         return batch.length
     bench('flashnext.qsa_append_token_loop', append, 12, warm=0, iters=1)
-    bench('flashnext.qsa_prefill_chunk', lambda: batch.prefill_chunk(0, q, qi, qfull, pos), 12, warm=0, iters=1)
-    # The serving wrapper also normalizes/rotates unused queries during
-    # append and round-trips side state each token. Time that exact path.
-    from b70_qsa_xpu.model_hook import QsaRunner
-    runner=QsaRunner.__new__(QsaRunner)
-    runner.batch=batch
-    runner.indexer=SimpleNamespace(index_kv_heads=1)
-    runner._q_gamma=dense('blk.3.indexer.q_norm.weight').float()
-    runner._row_sink=torch.ones(1,device=D,dtype=torch.int32)
-    runner._index=torch.zeros(1,device=D,dtype=torch.int32)
-    runner.side_tail=torch.zeros(2,3,128,device=D)
-    runner.side_dead=torch.zeros(2,128,device=D)
-    runner.side_block_pos=torch.zeros(2,device=D,dtype=torch.int32)
-    runner.side_length=torch.zeros(2,device=D,dtype=torch.int32)
-    batch.mrope=torch.zeros(1,T,3,device=D,dtype=torch.int32)
-    positions=pos.long().expand(3,-1).contiguous()
-    qb,kb,vb,ib,rb=[a.to(torch.bfloat16) for a in (q,keys,values,qi,raw_keys)]
-    gates=torch.zeros_like(qb)
-    pos_cpu=list(range(T))
-    batch.zero_seq(0)
-    torch.xpu.synchronize()
-    def actual_append():
-        for start in range(0,T,1024):
-            runner._append_request(0,start,min(start+1024,T),qb,kb,vb,gates,ib,rb,positions,pos_cpu,1)
-            print('QSA_MODEL_APPEND_PROGRESS',min(start+1024,T),flush=True)
-        return batch.length
-    bench('flashnext.qsa_model_hook_append',actual_append,12,warm=0,iters=1)
-    before=tuple(a.clone() for a in (batch.pages,batch.tail,batch.dead,batch.block_pos,batch.length))
-    iq_reference=bench('flashnext.qsa_model_indexer_norm_mrope',lambda:runner._indexer_queries(ib,positions,0,T),12,warm=0,iters=1)
-    batch.zero_seq(0)
-    for a in (runner.side_tail,runner.side_dead,runner.side_block_pos,runner.side_length):a.zero_()
-    os.environ['B70_PREFILL_QSA']='1'
-    bench('flashnext.qsa_model_hook_append_fast',actual_append,12,warm=0,iters=1)
-    for old,new in zip(before,(batch.pages,batch.tail,batch.dead,batch.block_pos,batch.length)):
-        torch.testing.assert_close(new,old,atol=0,rtol=0)
-    iq_fast=bench('flashnext.qsa_model_indexer_norm_mrope_fast',lambda:runner._indexer_queries(ib,positions,0,T),12,warm=1,iters=3)
-    torch.testing.assert_close(iq_fast,iq_reference,atol=1e-6,rtol=1e-6)
-    print('QSA_PREFILL_NUMERIC_OK','index_max_abs',float((iq_fast-iq_reference).abs().max()),flush=True)
-    os.environ.pop('B70_PREFILL_QSA')
+    if 'qsaappend' in PARTS:
+        snapshots[T]=snapshot()
+        from b70_qsa_xpu.model_hook import QsaRunner
+        from b70_qsa_xpu.prefill_append import append_batch
+        runner=QsaRunner.__new__(QsaRunner)
+        runner.batch=batch
+        runner.indexer=SimpleNamespace(index_kv_heads=1)
+        runner._row_sink=torch.ones(1,device=D,dtype=torch.int32)
+        runner._index=torch.zeros(1,device=D,dtype=torch.int32)
+        runner.side_tail=torch.zeros(2,3,128,device=D)
+        runner.side_dead=torch.zeros(2,128,device=D)
+        runner.side_block_pos=torch.zeros(2,device=D,dtype=torch.int32)
+        runner.side_length=torch.zeros(2,device=D,dtype=torch.int32)
+        positions=pos.long().expand(3,-1).contiguous()
+        pos_cpu=list(range(T))
+        def reset():
+            for a in (batch.pages,batch.tail,batch.dead,batch.block_pos,batch.length,batch.step,
+                      runner.side_tail,runner.side_dead,runner.side_block_pos,runner.side_length):a.zero_()
+            batch.pos.fill_(-1)
+        reset()
+        previous=0
+        for stop in sorted(set([min(17,T),min(33,T),min(81,T),T])):
+            assert append_batch(runner,0,previous,stop,keys,values,raw_keys,positions,pos_cpu,1)
+            actual=snapshot()
+            for got,want in zip(actual,snapshots[stop]):
+                torch.testing.assert_close(got,want,atol=0,rtol=0)
+            print('QSA_APPEND_BATCH_EXACT_OK',previous,stop,flush=True)
+            previous=stop
+        def batch_append():
+            reset()
+            assert append_batch(runner,0,0,T,keys,values,raw_keys,positions,pos_cpu,1)
+            return batch.length
+        bench('flashnext.qsa_append_native_batches',batch_append,12,warm=1,iters=3)
+        for got,want in zip(snapshot(),snapshots[T]):
+            torch.testing.assert_close(got,want,atol=0,rtol=0)
+        print('QSA_APPEND_FULL_EXACT_OK',T,flush=True)
+    else:
+        qsa_reference=bench('flashnext.qsa_prefill_chunk', lambda: batch.prefill_chunk(0, q, qi, qfull, pos), 12, warm=0, iters=1)
+        if 'qsabatch' in PARTS:
+            os.environ['B70_PREFILL_QSA']='1'
+            for query_batch in (256,1024,4096):
+                os.environ['B70_PREFILL_QSA_BATCH']=str(query_batch)
+                qsa_fast=bench(f'flashnext.qsa_prefill_batch{query_batch}',lambda:batch.prefill_chunk(0,q,qi,qfull,pos),12,warm=1,iters=3)
+                torch.testing.assert_close(qsa_fast,qsa_reference,atol=0,rtol=0)
+                print('QSA_BATCH_EXACT_OK',query_batch,flush=True)
+            os.environ.pop('B70_PREFILL_QSA')
+            os.environ.pop('B70_PREFILL_QSA_BATCH')
+    if 'qsastage' in PARTS or 'qsareal' in PARTS:
+        if 'qsaappend' in PARTS:
+            qsa_reference=bench('flashnext.qsa_prefill_chunk',lambda:batch.prefill_chunk(0,q,qi,qfull,pos),12,warm=0,iters=1)
+        os.environ['B70_PREFILL_QSA']='1'
+        os.environ['B70_PREFILL_QSA_BATCH']='1024'
+        bench('flashnext.qsa_prefill_batch1024',lambda:batch.prefill_chunk(0,q,qi,qfull,pos),12,warm=1,iters=3)
+        originals={}
+        marks=[]
+        for name in ('write_step_batch','index_scores_batch','topk_batch','union_build','union_attend_xmx','union_attend','gate_batch'):
+            fn=getattr(qsops,name)
+            originals[name]=fn
+            def timed(*args,_name=name,_fn=fn,**kwargs):
+                a,b=torch.xpu.Event(enable_timing=True),torch.xpu.Event(enable_timing=True)
+                a.record();result=_fn(*args,**kwargs);b.record()
+                marks.append((_name,a,b))
+                return result
+            setattr(qsops,name,timed)
+        a,b=torch.xpu.Event(enable_timing=True),torch.xpu.Event(enable_timing=True)
+        a.record()
+        try:result=batch.prefill_chunk(0,q,qi,qfull,pos)
+        finally:
+            for name,fn in originals.items():setattr(qsops,name,fn)
+        b.record();b.synchronize()
+        torch.testing.assert_close(result,qsa_reference,atol=0,rtol=0)
+        stages={}
+        for name,start,end in marks:stages[name]=stages.get(name,0)+start.elapsed_time(end)
+        stages['whole_event_ms']=a.elapsed_time(b)
+        stages['glue_event_ms']=stages['whole_event_ms']-sum(stages[k] for k in stages if k!='whole_event_ms')
+        stage_file='qsa-real-stage-events.json' if 'qsareal' in PARTS else 'qsa-stage-events.json'
+        (ROOT/stage_file).write_text(json.dumps(stages,indent=2))
+        print('QSA_NATIVE_STAGES',json.dumps(stages),flush=True)
+        os.environ.pop('B70_PREFILL_QSA');os.environ.pop('B70_PREFILL_QSA_BATCH')
+    if 'qsa' in PARTS:
+        # The serving wrapper also normalizes/rotates unused queries during
+        # append and round-trips side state each token. Time that exact path.
+        from b70_qsa_xpu.model_hook import QsaRunner
+        runner=QsaRunner.__new__(QsaRunner)
+        runner.batch=batch
+        runner.indexer=SimpleNamespace(index_kv_heads=1)
+        runner._q_gamma=dense('blk.3.indexer.q_norm.weight').float()
+        runner._row_sink=torch.ones(1,device=D,dtype=torch.int32)
+        runner._index=torch.zeros(1,device=D,dtype=torch.int32)
+        runner.side_tail=torch.zeros(2,3,128,device=D)
+        runner.side_dead=torch.zeros(2,128,device=D)
+        runner.side_block_pos=torch.zeros(2,device=D,dtype=torch.int32)
+        runner.side_length=torch.zeros(2,device=D,dtype=torch.int32)
+        batch.mrope=torch.zeros(1,T,3,device=D,dtype=torch.int32)
+        positions=pos.long().expand(3,-1).contiguous()
+        qb,kb,vb,ib,rb=[a.to(torch.bfloat16) for a in (q,keys,values,qi,raw_keys)]
+        gates=torch.zeros_like(qb)
+        pos_cpu=list(range(T))
+        batch.zero_seq(0)
+        torch.xpu.synchronize()
+        def actual_append():
+            for start in range(0,T,1024):
+                runner._append_request(0,start,min(start+1024,T),qb,kb,vb,gates,ib,rb,positions,pos_cpu,1)
+                print('QSA_MODEL_APPEND_PROGRESS',min(start+1024,T),flush=True)
+            return batch.length
+        bench('flashnext.qsa_model_hook_append',actual_append,12,warm=0,iters=1)
+        before=tuple(a.clone() for a in (batch.pages,batch.tail,batch.dead,batch.block_pos,batch.length))
+        iq_reference=bench('flashnext.qsa_model_indexer_norm_mrope',lambda:runner._indexer_queries(ib,positions,0,T),12,warm=0,iters=1)
+        batch.zero_seq(0)
+        for a in (runner.side_tail,runner.side_dead,runner.side_block_pos,runner.side_length):a.zero_()
+        os.environ['B70_PREFILL_QSA']='1'
+        bench('flashnext.qsa_model_hook_append_fast',actual_append,12,warm=0,iters=1)
+        for old,new in zip(before,(batch.pages,batch.tail,batch.dead,batch.block_pos,batch.length)):
+            torch.testing.assert_close(new,old,atol=0,rtol=0)
+        iq_fast=bench('flashnext.qsa_model_indexer_norm_mrope_fast',lambda:runner._indexer_queries(ib,positions,0,T),12,warm=1,iters=3)
+        torch.testing.assert_close(iq_fast,iq_reference,atol=1e-6,rtol=1e-6)
+        print('QSA_PREFILL_NUMERIC_OK','index_max_abs',float((iq_fast-iq_reference).abs().max()),flush=True)
+        os.environ.pop('B70_PREFILL_QSA')
 
 # QSA is also the last short window before the serving candidate. Recheck
 # mixed expert types with the bounded bucket dequant arena in that window.

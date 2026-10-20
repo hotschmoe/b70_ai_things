@@ -314,13 +314,204 @@ that needs a different load scheme, such as a cooperative subgroup block
 load of whole superblocks plus a shuffle. That is a larger change, not a
 cheap one, so it is left as a work item (estimate: 1-2 days).
 
+## Stage 3 (19:45): shared expert fused, gate/up ALU cut, batch-invariant reduce
+
+The coordinator committed stage 2 as 952f1971. Stage 3 work dir:
+`o3/src`. Logs are under `o3/`.
+
+### (a) Shared expert in the decode op
+
+Shared-expert types, from the GGUF headers:
+
+- 35B UD-IQ3_XXS: Q6_K gate/up/down on 40 layers and Q8_0 on one. Gate
+  input `ffn_gate_inp_shexp` is F32 (BF16 on one layer).
+- Flash-Next IQ3_XXS: mixed per layer. Gate is IQ3_S/IQ4_XS/Q4_K/Q5_K/Q6_K,
+  up is IQ3_S/IQ4_XS/Q4_K/Q5_K/Q6_K, down is IQ4_NL/Q2_0. Gate input is
+  BF16 [2560]. All of these are sched types.
+
+Plugin changes:
+
+- New op `b70_gguf::moe_layer_sh` (`bind.cpp`, `kernels.cpp`
+  `b70_moe_layer2`, `ops.py` wrapper and fake). It computes the routed
+  experts, the shared expert, and the per-token shared gate
+  sigmoid(x . w_sg) in one call. It returns bf16 [2, T, K]: [0] is the
+  routed sum, [1] is the gated shared output.
+- The plan launch gets T extra work-groups that compute the gate dot.
+  `moe_layer` is unchanged.
+
+Fork change (`vllm/models/qwen4_exp/gguf/moe.py`, A1's file; small and
+opt-in):
+
+- With `B70_FUSE_SHARED=1`, `mk_can_overlap_shared_experts` is True. The
+  runner then skips its own shared forward (MK_INTERNAL_OVERLAPPED order),
+  and `apply()` stores [1] as the shared output. The runner still adds the
+  two outputs.
+- Anything not fusable runs the shared module inside `apply()` instead:
+  prefill (T>8), an EP expert_map, a non-b70 shard, a ref path, or a shape
+  mismatch.
+- A one-line note per decision is printed (`b70_gguf: shared-expert
+  FUSED/separate`).
+- Default is off. EP (Flash-Next DP=2 EP) always takes the separate path,
+  because fusing there would add the shared expert on every rank.
+
+Correctness (`tests/o3_shared.py`): [0] vs moe_layer routed, and [1] vs
+sigmoid * (moe_layer with shared - routed), for bf16 and fp32 gate
+weights at T=1 and T=4 on both pairs. Cosine is >= 0.999998, relative max
+is <= 2.7e-3, 8/8 OK.
+
+Layer time, XPUGraph of 48 calls. "Before" is moe_layer + gemv shared MLP
++ F.linear gate + sigmoid + mul + add, the unfused shape.
+
+| pair | T=1 before | T=1 after | T=4 before | T=4 after |
+|---|---:|---:|---:|---:|
+| IQ3_S/Q2_0 | 110.2 | 63.4 | 205.4 | 158.6 |
+| IQ2_XS/IQ4_NL | 124.0 | 79.9 | 248.6 | 205.2 |
+
+### (b) Gate/up and down: measured steps
+
+ISA showed the gate/up loop is ALU-bound, not load-bound. The IQ3_S EC=1
+k-loop was 528 instructions per iteration for 2 rows, with 16 dp4a. The
+time adds up to about 385 instructions per 32-weight part. Steps, each
+bit-identical to the previous output unless noted:
+
+1. Sign masks: 4 sign bits become per-byte LSBs with one multiply
+   (shifts 0/7/14/21 cannot carry), and mask = lsb * 0xFF. This replaces
+   swar_ne4 (`B70_SIGN_MUL`). Loop: 528 -> 405.
+2. Codebook grid staged in SLM per work-group, giving 32-bit gather
+   addresses (`B70_GRID_SLM`). Loop: 405 -> 372.
+3. Block-pointer walk: one pointer add per iteration instead of 64-bit
+   (blk/P)*BB math (`B70_PTR_WALK`). Loop: 372 -> 361.
+4. K-quants and IQ4_XS: branch-free funnel loads for 2-aligned runs
+   (`b70_ldrun_a2`, Q6_K, Q3_K) and plain aligned loads where block and
+   offset are multiples of 4 (Q2_K, Q4_K, Q5_K, IQ4_XS). EC=1 loop: Q6_K
+   646 -> 391, Q4_K 504 -> 193, Q3_K 735 -> 509, IQ4_XS 900 -> 726.
+
+Tried and rejected, all measured:
+
+- SLM sign-mask table: fewer instructions (361 -> 320) but slower,
+  66.3 vs 61.6 us. Off by default (`B70_SIGN_TAB`).
+- Branch-free loads for the IQ types: 69.2 vs 61.6 us. Kept only for the
+  K-quant runs.
+- Down with 4 lanes per row: mixed results. Kept at 8.
+- Stage 2's RPL 4, unroll 2, and 16 lanes, from before.
+
+Load-only probe (`B70_PROBE_LOADONLY`, IQ3_S weight loads with almost no
+ALU). Gate/up drops from 43.9 us to 30.4 us at T=1. That is about 510
+GB/s, which is the floor of this per-lane access pattern. The full kernel
+is now about 40 us. Of the remaining gap to 608 GB/s, about 10 us is ALU
+and about 4 us is the access pattern (cooperative superblock loads). That
+step was not taken; it needs subgroup shuffles that add ALU back.
+
+Microbench graph us, T=1:
+
+| type | stage 2 | stage 3 |
+|---|---:|---:|
+| IQ3_S/Q2_0 | 70.3 | 61.1 |
+| IQ2_XS/IQ4_NL | 83.6 | 77.6 |
+| Q2_K | 49.6 | 38.8 |
+| Q3_K | 79.4 | 65.3 |
+| Q4_K | 59.2 | 51.9 |
+| Q5_K | 78.7 | 63.5 |
+| Q6_K | 88.4 | 78.1 |
+| IQ4_XS | 81.8 | 68.4 |
+
+At T=4: IQ3_S/Q2_0 189.9 -> 161.3, IQ2_XS/IQ4_NL 226.0 -> 207.2.
+
+### Batch-invariant reduce (coordinator add-on, X1 JOURNAL 18:12)
+
+The routing sum used to walk the entries in grouped first-occurrence
+order across all tokens. A token's float order therefore depended on the
+other tokens in the batch.
+
+The plan now records `emap[t*(topk+1)+j]`, the entry of (token, router
+slot) with the shared expert at slot topk and -1 for an invalid id or no
+shared expert. Both plan builders fill it: the parallel plan_q8 and the
+serial `B70_SCHED_FUSE=0` plan. `b70_sched_red` FMAs in ascending router
+slot order and adds the shared expert last. This applies to both out_mode
+0 (fp32 combined) and out_mode 1 (bf16 split).
+
+Every per-entry partial was already batch-independent: per-token Q8,
+per-entry k order, EC passes that do not mix entries, and per-entry SiLU
+and Q8(h).
+
+Gate `tests/o3_batchinv.py`: token 0 alone vs the same token as row 0 of
+T=2..8 batches whose other tokens reuse half of its experts in a different
+order. It covers both pairs, with and without an invalid slot, for
+moe_layer, moe_layer+shared, and both moe_layer_sh outputs. Result: 28/28
+OK, 0 differing elements.
+
+Cost is negative: the reduce at T=4 went from 6.55 to 3.90 us (unitrace).
+The B70_SCHED_FUSE=0 build (serial plan) also runs, with cos 0.999999 on
+the fair dumps.
+
+### Gates and installed library
+
+On `_C.o3g.so` (`o3/gates_g.log`), all failures=0, HEALTHY before and
+after:
+
+- gpu_check
+- moe_layer_bench, sched 1 and 0
+- c12_types (12 cases)
+- graph_probe
+- o3_shared
+- o3_batchinv
+
+compare_cpu is unaffected: the host dequant is untouched; it was last
+14/14 at stage 2. The c9_fair graph (not quiet) is below; it includes the
+weight-1 shared expert as before.
+
+| T | Strata R2 IQ3_S | stage 2 | stage 3 | / Strata | Strata R2 IQ2_XS | stage 3 | / Strata |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 112.89 | 68.38 | 60.04 | 0.53 | 110.79 | 76.39 | 0.69 |
+| 2 | 148.10 | 99.84 | 85.84 | 0.58 | 168.87 | 105.96 | 0.63 |
+| 3 | 202.93 | 141.43 | 117.04 | 0.58 | 231.10 | 150.12 | 0.65 |
+| 4 | 261.64 | 176.83 | 152.97 | 0.58 | 310.50 | 197.79 | 0.64 |
+
+`_C.so` and `_C.graph.so` are now `_C.o3g.so`, sha256
+`38f7176ac290cb264268185c864da2dea1fcc36d07535fff021fb636d6538dcc`.
+Revert copies:
+
+- `_C.o3.so` (be76661b, stage 1; X1 and H1e pin it)
+- `_C.o3b.so` (e9e5282d, stage 2)
+- `_C.c12.so` (b3c15e14)
+
+### 35B UD-IQ3_XXS graph serve
+
+Card 0, C12 recipe, prefill 1024 only. Identity `hotschmoe-dev` first, and
+coherence OK in every run.
+
+| binary | B70_FUSE_SHARED | C1 ITL p50 | C1 tok/s | C2 ITL p50 per stream |
+|---|---:|---:|---:|---:|
+| stage 1 o3 | - | 9.34 | 107.0 | 12.60 |
+| stage 2 o3b | - | 9.30 | 107.5 | 12.54 |
+| o3f (stage 3 without the K-quant loads) | 0 | 9.21 | 108.5 | 12.26 |
+| o3f | 1 | 9.26 / 9.27 | 109.7 / 109.9 | 11.79 / 11.78 |
+| o3g (installed) | 1 | 8.76 | 116.2 | 11.12 / 11.17 |
+
+The serve log confirms the fused path on every decode size: `FUSED T=1..8
+types=14,14,14 gate_inp=bf16`. One layer has no packed shared shards and
+runs separately.
+
+With o3f, fusing was neutral at C1 and gained 4 percent at C2. The fused
+Q6_K shared expert then ran at our slower Q6_K decode, against the
+runner's KREG Q6_K GEMV. The K-quant load fix (o3g) brings C1 from 9.27 to
+8.76 ms. Overall since C12 this is 11.02 -> 8.76 ms C1 (-20.5 percent) and
+16.61 -> 11.1 ms C2.
+
 ## Next levers (not done)
 
 - Gate/up runs at about 350 GB/s and down at about 310 GB/s; the card peak is
   about 608. Unroll-2 and 16 lanes did not help. Try RPL=4, or software
   prefetch of the next superblock.
 - Done in stage 2 (above): the K-quants and IQ4_XS on DP4A with aligned loads.
-- Fuse the shared Q6_K expert into `moe_layer` for the 35B. The runner applies
-  it separately today.
+- Done in stage 3: the shared expert is fused into the decode op
+  (opt-in B70_FUSE_SHARED=1, not under EP).
+- IQ4_NL / IQ4_XS: the codebook mux is still the fattest decode (about
+  780 instructions per EC=1 iteration). A table approach needs SLM gathers,
+  which measured slow for the sign table.
+- Cooperative superblock loads: about 4 us of gate/up per layer at T=1 by
+  the load-only probe.
+- Flash-Next shared under EP: fuse on the rank that owns the token's
+  output, or run it in the EP sidecar.
 - The reduce is 3.7 us vs Strata's 2.3 us. It could be fused into down for
   T=1.

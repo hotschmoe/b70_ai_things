@@ -174,6 +174,26 @@ class _Group:
         LAST["M"] = m
         LAST["E"] = e
 
+    def subset(self, experts):
+        """Reuse the outer expert ordering without another histogram or CPU wait."""
+        import torch
+
+        child = _Group.__new__(_Group)
+        child.M, child.E = self.M, len(experts)
+        starts = [0]
+        slices = []
+        for expert in experts:
+            lo, hi = self.starts_cpu[expert:expert + 2]
+            slices.append(self.order[lo:hi])
+            starts.append(starts[-1] + hi - lo)
+        child.order = torch.cat(slices)
+        child.starts = torch.tensor(starts, device=self.order.device, dtype=torch.int32)
+        child.starts_cpu = starts
+        child.mv = starts[-1]
+        raw = max((b - a for a, b in zip(starts, starts[1:])), default=0)
+        child.mmax = (raw + 7) & ~7
+        return child
+
 
 def _project_bmm(act, group: _Group, w, n: int, k: int):
     """act [M, K] bf16, w [E, N, K] bf16 (must stay live until this returns). y [M, N] bf16."""
@@ -254,7 +274,7 @@ def grouped_dq(x, q, expert_ids, ggml_type: int, n: int, k: int, how: str | None
     return _project(xb, group, w, n, k, how).float()
 
 
-def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, how: str | None = None, type_up: int | None = None):
+def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h: int, f: int, how: str | None = None, type_up: int | None = None, group=None):
     """One prefill MoE layer. x [T, H] -> fp32 [T, H].
 
     how=bmm|loop dequants every expert. how=hybrid keeps the fused grouped
@@ -268,12 +288,12 @@ def moe_dq(x, ids, q_gate, q_up, q_down, router, type_gu: int, type_down: int, h
     topk = int(ids.shape[1])
     rb = row_bytes(type_gu, h)
     e = int(q_gate.numel() // (f * rb))
-    if how == "hybrid" and type_up == int(type_gu):
+    if how == "hybrid" and type_up == int(type_gu) and group is None:
         return _moe_hybrid(x, ids, q_gate, q_up, q_down, router, type_gu, type_down, h, f, e, t, topk)
     if how == "hybrid":
         how = "bmm"
-    flat = _sanitize(ids, e)
-    group = _Group(flat, e)
+    if group is None:
+        group = _Group(_sanitize(ids, e), e)
     if how == "bmm" and ((group.mmax > 8 and e * group.mmax > float(os.environ.get("B70_PREFILL_PAD_RATIO", "2")) * group.mv)
                          or e * group.mmax * h * 2 > 8_000_000_000):
         how = "loop"

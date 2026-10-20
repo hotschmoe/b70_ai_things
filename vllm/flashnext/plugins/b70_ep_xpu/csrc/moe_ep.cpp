@@ -471,6 +471,20 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
     a.memset(s.y0, 0, (size_t)T * (size_t)K * sizeof(float));
     s.moe(&a, x, L.g0, L.gt, L.u0, L.ut, L.d0, L.dt, s.ids0, w, nullptr, 0, nullptr, 0, nullptr, 0, s.y0, T, topk,
           L.e0, L.I, L.K);
+    if (y == nullptr) return;  // O4 split: ep_moe_end enqueues the wait and the sum.
+    ep_wait(a, flag_ret, ctr0, spin, s.err0 + layer, 12);
+    ep_add_uncached(a, y, s.y0, static_cast<float*>(s.psum.local), n4);
+    s.calls += 1;
+}
+
+// O4: the second half of enqueue_moe. Card-0 work queued between the two
+// halves (the shared expert) runs while card 1 computes its experts.
+void enqueue_moe_end(float* y, int T, int K, int layer, uint32_t spin) {
+    State& s = S();
+    const int64_t n4 = ((int64_t)T * (int64_t)K) / 4;
+    uint32_t* ctr0 = s.ctr0 + layer;
+    uint32_t* flag_ret = reinterpret_cast<uint32_t*>(static_cast<uint8_t*>(s.flag_ret.local) + (size_t)layer * 4096);
+    sycl::queue& a = q0();
     ep_wait(a, flag_ret, ctr0, spin, s.err0 + layer, 12);
     ep_add_uncached(a, y, s.y0, static_cast<float*>(s.psum.local), n4);
     s.calls += 1;
@@ -479,6 +493,24 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
 bool stream_recording() {
     return q0().ext_oneapi_get_state() == expg::queue_state::recording;
 }
+
+namespace {
+void ep_moe_tail(int layer, bool recording) {
+    State& s = S();
+    if (s.cap_on && s.implicit_cap && layer == s.last_ep && s.cap_started) {
+        ep_capture_end(s.cap_key);
+        s.implicit_cap = false;
+    }
+    if (s.cap_on || recording) return;
+    s.q1->wait();
+    q0().wait();
+    if (s.err0[layer] || s.err1[layer]) {
+        std::printf("EP flag timeout layer=%d err0=%u err1=%u\n", layer, s.err0[layer], s.err1[layer]);
+        std::fflush(stdout);
+        throw std::runtime_error("ep flag timeout");
+    }
+}
+}  // namespace
 
 void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer) {
     State& s = S();
@@ -541,6 +573,49 @@ void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int
         std::fflush(stdout);
         throw std::runtime_error("ep flag timeout");
     }
+}
+
+// O4 split pair. ep_moe_begin queues everything up to card 0's own experts;
+// ep_moe_end queues the flag wait and the sum into y, then does what ep_moe
+// does after enqueue (implicit capture end, eager host wait). The caller
+// queues independent card-0 work (the shared expert) between them.
+void ep_moe_begin(const uint16_t* x, const float* w, const int32_t* ids, int T, int topk, int K, int layer) {
+    State& s = S();
+    if (!s.up) throw std::runtime_error("moe_ep before init");
+    if (layer < 0 || layer >= s.nlayers) throw std::runtime_error("moe_ep layer");
+    Layer& L = s.layers[layer];
+    if (!L.ready0 || !L.ready1) throw std::runtime_error("moe_ep layer not registered");
+    if (T < 1 || T > s.max_t || topk < 1 || topk > s.max_topk || K != L.K || (K % 4) != 0)
+        throw std::runtime_error("moe_ep shape exceeds the preallocated exchange");
+    const bool recording = stream_recording();
+    if (recording && !s.cap_on) {
+        s.cap_on = true;
+        s.cap_started = false;
+        s.cap_key = T;
+        s.implicit_cap = true;
+        std::printf("EP capture implicit key=%d\n", T);
+        std::fflush(stdout);
+    }
+    if (!s.cap_on && (s.err0[layer] || s.err1[layer])) {
+        std::printf("EP previous error layer=%d err0=%u err1=%u\n", layer, s.err0[layer], s.err1[layer]);
+        std::fflush(stdout);
+        throw std::runtime_error("ep flag timeout on a previous call");
+    }
+    if (!s.cap_on && !recording) eager_prejit_layer(L, layer, x, w, ids, T, topk);
+    uint32_t spin = s.spin;
+    if (!s.cap_on && !recording && spin < 10000000u) spin = 10000000u;
+    enqueue_moe(x, w, ids, nullptr, T, topk, K, layer, spin);
+}
+
+void ep_moe_end(float* y, int T, int K, int layer) {
+    State& s = S();
+    if (!s.up) throw std::runtime_error("moe_ep_end before init");
+    if (layer < 0 || layer >= s.nlayers) throw std::runtime_error("moe_ep_end layer");
+    const bool recording = stream_recording();
+    uint32_t spin = s.spin;
+    if (!s.cap_on && !recording && spin < 10000000u) spin = 10000000u;
+    enqueue_moe_end(y, T, K, layer, spin);
+    ep_moe_tail(layer, recording);
 }
 
 namespace {

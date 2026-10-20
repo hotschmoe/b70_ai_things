@@ -106,6 +106,25 @@ at::Tensor moe_ep_op(at::Tensor x, at::Tensor w, at::Tensor ids, int64_t layer) 
                   y.data_ptr<float>(), (int)x.size(0), (int)ids.size(1), (int)x.size(1), (int)layer);
     return y;
 }
+// O4 split: begin returns the fp32 output buffer; end fills it in place.
+at::Tensor moe_ep_begin_op(at::Tensor x, at::Tensor w, at::Tensor ids, int64_t layer) {
+    need_xpu(x, "x");
+    need_xpu(w, "w");
+    need_xpu(ids, "ids");
+    TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2, "x must be bf16 [T, K]");
+    TORCH_CHECK(w.scalar_type() == at::kFloat && w.dim() == 2, "w must be fp32 [T, topk]");
+    TORCH_CHECK(ids.scalar_type() == at::kInt && ids.sizes() == w.sizes(), "ids must be int32 [T, topk]");
+    TORCH_CHECK(ids.size(0) == x.size(0), "ids rows must match tokens");
+    auto y = at::empty({x.size(0), x.size(1)}, x.options().dtype(at::kFloat));
+    b70ep::ep_moe_begin(static_cast<const uint16_t*>(x.data_ptr()), w.data_ptr<float>(), ids.data_ptr<int32_t>(),
+                        (int)x.size(0), (int)ids.size(1), (int)x.size(1), (int)layer);
+    return y;
+}
+void moe_ep_end_op(at::Tensor y, int64_t layer) {
+    need_xpu(y, "y");
+    TORCH_CHECK(y.scalar_type() == at::kFloat && y.dim() == 2 && y.is_contiguous(), "y must be fp32 [T, K]");
+    b70ep::ep_moe_end(y.data_ptr<float>(), (int)y.size(0), (int)y.size(1), (int)layer);
+}
 at::Tensor ep_capture_begin_op(int64_t key) {
     b70ep::ep_capture_begin((int)key);
     return ok_i();
@@ -148,6 +167,8 @@ TORCH_LIBRARY(b70_ep, m) {
     m.def("ep_register1(int layer, Tensor gate, Tensor up, Tensor down, int e) -> Tensor");
     m.def("ep_register_map(int layer, Tensor map0, Tensor map1) -> Tensor");
     m.def("moe_ep(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
+    m.def("moe_ep_begin(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
+    m.def("moe_ep_end(Tensor(a!) y, int layer) -> ()");
     m.def("ep_capture_begin(int key) -> Tensor");
     m.def("ep_capture_end(int key) -> Tensor");
     m.def("ep_replay_prepare(int key) -> Tensor");
@@ -161,6 +182,8 @@ TORCH_LIBRARY_IMPL(b70_ep, XPU, m) {
     m.impl("ep_register1", ep_register1_op);
     m.impl("ep_register_map", ep_register_map_op);
     m.impl("moe_ep", moe_ep_op);
+    m.impl("moe_ep_begin", moe_ep_begin_op);
+    m.impl("moe_ep_end", moe_ep_end_op);
 }
 
 TORCH_LIBRARY_IMPL(b70_ep, CompositeExplicitAutograd, m) {

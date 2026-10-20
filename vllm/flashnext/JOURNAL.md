@@ -5733,3 +5733,525 @@ a new communication implementation. Full same-loaded-model probe will
 compare native then pad with identical12288 input IDs, then collect
 three plain TTFTs with profiling disabled and a long-context math gate.
 No source used by the running X1 process changes behavior (prefill0).
+
+## 2026-10-20 18:08 X1 -- no-MTP same-load repeatability also fails
+
+CONFIG: same frozen no-MTP Flash-Next FULL_DECODE_ONLY config as17:15,
+TP1/DP2/EP, rt PLE ring width1, two passes in one server load. X3 R2
+collective before acquisition passed final compiled10-iteration health.
+COMMAND: x1_flash_repeat_window.sh, x1/flash-repeat-pass1/2.json;
+first pass compared17:15 baseline, second pass comparedfirst pass.
+RESULT: READY18:06:10, both exact gates exit3. Pass1 C1 mismatches at
+4/72 for Paris/Fibonacci, other2x96 identical; C2 Paris differs at2,
+Fibonacci identical. Pass2 vs pass1 C1 Paris differs at4, other3x96
+identical; C2 Paris/Fibonacci differ at2/72. No MTP enabled. Server
+stopped18:07:15; post-health queues, no reset. No latency rerun.
+VERDICT: target repeatability is independently unqualified with MTP
+OFF, including within one load. Do not assign all MTP2 divergences to
+speculative state. Card1 packed quant/graph probe remains queued to
+localize target numerical shape differences; retain every raw gate.
+
+## 2026-10-20 18:10 X1 -- packed expert row-count differences found
+
+CONFIG: actual target weights, card1, _C.o3.so. Probe exit0,34s;
+card1 health before/after HEALTHY. Dense kernels sampled5 quant types.
+COMMAND: x1_packed_shape_probe.py; x1/packed-shape-probe.log.
+RESULT: dense projections bit-identical row1 vs3/6. All8 sampled expert
+layers differ in FP32, max7.45e-9 to1.49e-8. Captured two-call scratch
+reuse matches eager bit-exact across3 replays/layer.
+VERDICT: expert math is a shape-dependent candidate, not proven root
+cause. Next card1 only, <2min while O3 serves oncard0: add actual BF16
+cast comparisons and run B70_MOE_SCHED=1 then0 in separate processes.
+No build; no full reload before assessing this difference's relevance.
+
+
+## 2026-10-20 18:12 X3 -- card1 QSA query-batch micro queued
+
+CONFIG: card1 only, expected30-45s GPU plus health; use otherwise idle
+card1 during O3's card0 proxy serve. Full X3 serve remains queued on
+card0 and cannot load until both are free. C7b/H1e retain priority.
+COMMAND: run_ops.sh --part qsabatch --out qsa-batch.json under
+CPUquiet; existing native QSA binary, no build.
+RESULT: CPU audit shows union_build and union_attend_xmx already
+accept arbitrary multiples of8 queries. Python alone forced8/launch.
+VERDICT: test256/1024/4096 query batches, exact output versus the
+original12288-token8-query loop, and peak scratch. QSA-enabled model
+parity with Strata remains open; its DD explicitly enables QSA, unlike
+this campaign's current stock dense-GQA serving controls.
+
+## 2026-10-20 18:12 X1 -- source candidate for packed expert non-invariance
+
+CONFIG: CPU inspection only; no new kernel build. X1 scheduled/fallback
+BF16 probe still queues behind X3 serving. O3 source is preserved.
+COMMAND: read csrc/sched_moe.hpp:b70_sched_red (line1057 onward).
+RESULT: reduction iterates e=0..plan->nent in grouped-expert order,
+selecting plan->tok[e]==t. That plan is first-occurrence order across
+ALL tokens, so one token's float addition order can change with other
+batch tokens. The sampled real-MoE FP32 differences are consistent with
+this mechanism. This is not yet full-model causal attribution.
+VERDICT: candidate for O3/shared-kernel review: map (token,router-slot)
+to entry once during plan construction, then FMA in ascending router
+slot order, with shared last. This avoids serializing whole MoE calls.
+Preserve invalid expert slots and both plan builders / out_mode paths.
+Await BF16 survival and B70_MOE_SCHED=0 probe before a full reload.
+
+## 2026-10-20 18:14 O4 -- Flash-Next decode-latency owner: profile windows queued
+
+CONFIG: sidecar layout as H1e (world size 1, card 0 trunk + 138 experts,
+card 1 374 experts, b70_ep_xpu, FULL_DECODE_ONLY, FA, max_len 2048, no
+MTP, B70_QSA=0). MoE library pinned: o4/_C.o4pin-o3f.so (copy of O3
+_C.o3f.so, sha 7389c133). In-process profiler, no HTTP server.
+COMMAND: harness/o4_window.sh (health before/after, xpu-run --card both,
+harness/o4_decode_profile.py: per-step gap/prep/PLE d2h+hash+gather/
+replay host+device events/sample, gates 323/667). Unitrace smoke queued
+on card 1 (<1 min) to confirm kernel timing of XPUGraph replays in the
+container before a traced Flash-Next window.
+RESULT/VERDICT: pending. Both-card windows about 6-8 min each, queued
+with B70_GPU_LOCK_TIMEOUT=14400. No commit, no DD action.
+
+
+## 2026-10-20 18:15 X3 -- first full load exits on missing memory reference
+
+CONFIG: R2 full model loaded both DP ranks,23.92GiB each, C12+wide,
+but no request executed. Model storage cleanup is active.
+COMMAND: load1-flashnext-serve.log preserved; root exception from
+b70_memory observe load: missing x3/embedding-reference.npz.
+RESULT: both workers exited gracefully; post per-card/compiled health
+is queued by immutable R2. No OOM/device-loss/reset. X3 supplied the
+existing same-GGUF X2 embedding reference (41524 bytes), and the serving
+harness now checks it before any GPU load and forwards B70_EMBED_REF.
+VERDICT: immutable R3 is gated on R2 post-health success. It reuses that
+fresh pre-health (no redundant collective budget) and retries the same
+full candidate with separate serve/profile/memory logs. Expected5-6min
+after both cards are free. The card1 QSA batch helper micro remains
+queued and can use O3's otherwise unused card1 gap first. No commit.
+
+## 2026-10-20 18:17 G2b -- audit pass 18
+
+CONFIG: CPU read of JOURNAL.md after the 17:42 close and of the
+raw logs under /mnt/vm_8tb/b70/build/vllm-flashnext/{o3,x1,x2,x3}.
+No GPU.
+COMMAND: python field checks of gates_e.log, serve-ab.json,
+target-auto JSON, collective logs, repeat JSON, packed-shape log,
+load1 serve log, and o3/bench_35b_o3f_fuse1.json.
+RESULT: appended F177-F186. X3 35B warm 8k prefill is 3425.57 tok/s
+with first id hotschmoe-dd. X2 DP BF16 unique_bytes 25600975000,
+blocks 136/137, collective OK, first id hotschmoe-dd. X1 repeat
+gates both exit 3. X3 full load failed on a missing npz after
+23.92 GiB, no request. O3 fuse1 bench file has C1 p50 9.256 ms
+and first id hotschmoe-dev, with no journal RESULT yet. That bench
+is the 35B proxy.
+VERDICT: pass 18 is on disk. No Flash-Next speed promotion. No
+commit, no GPU, no DD action.
+
+## 2026-10-20 18:18 X1 -- BF16 survival confirmed; slot-order build queued/run
+
+CONFIG: card1 target-weight probe, _C.o3.so, sched1 then0. No other
+model/weight substitution. Both probe processes exit0 in37/40s;
+post-health queues behind O4/X3. Original script snapshot preserved.
+COMMAND: x1/packed-shape-sched1/0.log and packed-shape-original.py.
+RESULT: sched1:10 of50 sampled records have BF16 differences (11
+unequal entries total); sched0:zero FP32/BF16 differences in all50.
+Dense records remain exact; graph replay comparisons remain exact.
+VERDICT: build the small slot-order reduction fix, retain batching.
+Copy of csrc/scripts under x1/slot-reduce; tracked source patch is
+harness/patches/x1_slot_reduce.patch. Both plan builders populate an
+inverse slot map; both reduction output modes iterate router slots.
+CPU-only icpx build under cpu-run MAX_JOBS4; no GPU touched by build.
+Do not spend two full fallback reloads while this build can qualify.
+Next numeric gate adds row2, same existing row3/6 inputs and weights;
+then matched full controls only if the new kernel passes.
+
+## 2026-10-20 18:22 X1 -- slot-order kernel numeric gate passes; control queued
+
+CONFIG: new _C.slot.so sha256 bd22ebbd40c4c6c4b0e2513be99306fe8927834e6ecdf9beeccdfd52bcda6426,
+card1, scheduled path enabled. Existing source snapshot plus slot map.
+COMMAND: x1_packed_shape_probe.py, slot-probe.log. Build exit0 in128s.
+RESULT: all63 numeric records exact in FP32 and BF16: main dense types,
+8 mixed expert layers at rows2/3/6, and captured two-call replays.
+Card1 health before/after HEALTHY, numeric probe exit0 in36s.
+VERDICT: queue BOTH cards for matched full control, expected6min,
+X1_OUT=x1/slot, B70_GGUF_SO=<slot library>, MTP_TOKENS0. Same model,
+BF16 TP1/DP2/EP, FULL_DECODE_ONLY, batch512/seq2/maxlen2048. Control
+now repeats its exact C1/C2 gate in the SAME load after benchmarking.
+Window exit status enforces greedy, bench and repeat gates plus health.
+Then MTP2 only after this control passes; C7b/H1e retain priority.
+
+
+## 2026-10-20 18:23 X3 -- card1 batched QSA append candidate queued
+
+CONFIG: card1 only, expected20-40s GPU plus health, after any running
+X3 full serve. CPU preparation during the card0 queue. No native build.
+COMMAND: run_ops.sh --part qsaappend --out qsa-append.json; CPUquiet,
+existing QSA native batch KV and indexer kernels.
+RESULT: completed query-batch micro is exact. Selection/union5352.194
+->397.849/293.954/269.644ms at256/1024/4096 query batches. The larger
+batch needs more workspace; default1024 keeps peak delta.492GiB.
+VERDICT: append remains the top cost. A new opt-in batch helper uses
+existing native batch KV and independent private pooled scratch pages,
+then scatters only completed pooled rows to avoid sentinel-write races.
+Require exact KV pages and all durable state at prefixes17/33/81/12288,
+including continuation/page boundaries, before enabling this path.
+
+
+## 2026-10-20 18:30 X3 -- QSA native append batches pass, aligned-page probe queued
+
+CONFIG: T12288, card1, existing QSA binary. GPU body53s exit0; post
+health waits behind own full Flash-Next load. No native build.
+COMMAND: qsa-append.json/qsa-append.log; exact states at17/33/81/12288.
+RESULT: all KV bytes, tail, dead, block_pos, length, pos and step match
+exactly across first chunk, continuation and page boundaries. Native
+append2.065s ->4.318ms, peak temp~.246GiB. B70_PREFILL_QSA_APPEND=batch
+remains opt-in. Text-only contiguous positions/base0 use batches;
+other layouts fall back. Private pooled scratch is capped at256MiB.
+VERDICT: queue one final card1 helper window (~40-60s plus health)
+with qsa-block1600, matching hybrid alignment, combining append numeric
+gates and per-op score/topk/union event attribution. This is necessary
+to verify the large-page scratch bound before recommending the flag.
+Full R3 is loading now; no new full model will be loaded for this probe.
+
+
+## 2026-10-20 18:37 X3 -- startup prefill queue-handoff stall, stop for health
+
+CONFIG: R3 full model loaded; embedding reference passes both ranks.
+CPU samples locate rank0 in _Group starts.cpu() and rank1 in a later
+router-logit all_gather_into_tensor. This is not a JIT-only startup.
+COMMAND: py-spy Python dumps (native unwind failed); stopping only own
+vllm-fn-x3-prefill container. R3 wrapper performs native+compiled
+post-health; other paired loads should wait for these results.
+RESULT: no API readiness, no benchmark, no device-loss line. No reset
+without failed post-health. The micro's3-input dispatch was not the
+loaded model's router-logit dispatch; actual model gathers X+512 logits.
+VERDICT: add a prefill-only Gloo CPU readiness fence before each large
+AG/RS so a fast rank cannot enqueue a spinning collective ahead of the
+other rank's required GPU->CPU grouping synchronization. Decode stays
+on its current route. Retry only after fresh passing health, with
+matched per-rank entry/ready/return markers for the startup diagnostic.
+
+
+## 2026-10-20 18:39 X3 -- readiness fence prepared; immutable R4 health-gated
+
+CONFIG: R3 stopped on startup queue-handoff stall. Stack samples saved
+as r3-stack-rank0/1.txt; no latency/coherence result. Post native and
+compiled health pending. GPU body will not retry before both pass.
+COMMAND: immutable x3/flashnext_window_r4.sh; same model/flags as R3,
+plus prefill-only CPU Gloo readiness before large AG and RS, with
+rank/op/sequence enter/ready/return traces during profiled startup.
+RESULT: native QSA batch helpers are independently qualified at block64;
+block1600 helper now occupies only card1 for exact state and phase timing.
+VERDICT: fence prevents the fast rank from enqueuing the next spinning
+XCCL operation while its peer still needs a D2H grouping synchronization.
+Small/decode collectives are untouched; control is B70_PREFILL_EP_FENCE.
+R4 reuses fresh R3 post-health, performs one same-loaded native/pad RS
+comparison and plain timed requests, then per-card+compiled post-health.
+Expected5-6min after acquisition, C7b/H1e retain priority. No reset yet.
+
+## 2026-10-20 18:41 X1 -- slot-control queue cancelled for fresh compiled health
+
+CONFIG: queued BOTH-card slot-order control, no model acquired. X3 R3
+stopped after a startup AG/router-logit handoff stall;18:37/39 journal
+asks paired loads to await native plus compiled post-health.
+COMMAND: own window's per-card health passed at18:38:44. Terminated
+only X1 process group3523188 while its serve still queued behind O4;
+no Docker container had started. Wrapper exit143, descendants gone.
+RESULT: no model load, API readiness, tokens or latency measurement.
+Preserved slot-queue-before-x3-health.log and matching window out.
+X3 fresh compiled verdict is still pending; the visible18:19 pass
+predates R3 and is not accepted as its post-health.
+VERDICT: await the requested fresh native+compiled results, then reuse
+them to avoid repeating setup. Kernel/loader probes remain qualified;
+full-model slot control and MTP2 remain required. No reset, commit or DD.
+
+## 2026-10-20 18:46 X1 -- restart prepared behind current R3 health result
+
+CONFIG: slot-order no-MTP control, BOTH cards, expected6min, same18:22
+configuration. X3 native post-health HEALTHY; compiled post is now
+queued in flashnext-collective-after-r3.log (not the older generic log).
+COMMAND: short CPU log wait for COLLECTIVE_HEALTH_OK plus wrapper exit0,
+then X1_REUSE_POST_HEALTH=1 X1_OUT=x1/slot MTP_TOKENS=0
+B70_GGUF_SO=<slot library> harness/x1_flash_window.sh.
+RESULT: watcher prepared; it fails on a nonzero health-wrapper result
+and does not hold GPU leases. New window has a same-load repeat gate.
+VERDICT: use the requested fresh health without another identical
+setup; queue the actual serve only after that result. C7b/H1e retain
+priority. Slot source patch still cleanly applies; all63 numeric cases
+remain exact. The 8GiB watchdog now keeps monitoring while queued too.
+
+
+## 2026-10-20 18:47 X3 -- aligned QSA fast path verified; actual input capture prepared
+
+CONFIG: card1 T12288 block1600, same native QSA binary, CPUquiet.
+COMMAND: qsa-aligned.json, qsa-stage-events.json, qsa-aligned.log.
+RESULT: exact prefixes17/33/81/full; append1991.643 ->26.698ms with
+private scratch capped256MiB. Query batch1024:5337.157 ->252.253ms,
+exact output, incremental peak.492GiB. Instrumented full-chunk stages:
+index scores47.702, topk48.057, union build.596, XMX union151.964,
+gate3.976, step1.420ms; whole283.858 includes~30.143ms glue/event
+overhead and differs from the bare252.253ms median. Post-health HEALTHY.
+VERDICT: QSA helper work projects~3.36s across12 layers including new
+append and vector query prep; this is a component budget, not real-model
+TTFT. R4 will capture the first full-attention layer's actual hidden/Q/K/V
+and gate once on NVMe, after3 real GDN layers. This avoids substituting
+random union overlap for natural inputs. Capture occurs only during a
+profiled request; three plain TTFT requests have neither dump nor events.
+R3 post native health passed; compiled post-health remains queued.
+
+## 2026-10-20 18:53 O4 -- root cause 1: PLE memmap page faults (53 ms/token)
+
+CONFIG: sidecar as H1e, FULL_DECODE_ONLY, max_len 2048, no MTP, B70_QSA=0,
+MoE o4/_C.o4pin-o3f.so (sha 7389c133), EP _C.so sha 2e22f57e. In-process
+profiler harness/o4_decode_profile.py via harness/o4_window.sh.
+COMMAND: TAG=base (fork staged-PLE path); TAG=ringmlock adds
+B70_MTP_RT (X1 PLE ring, MTP 0) + new opt-in B70_PLE_MLOCK=1 (fork
+gguf/ple.py pin_host_table: madvise WILLNEED + mlock of the IQ4_NL
+table memmap). Raw: /mnt/vm_8tb/b70/build/vllm-flashnext/o4/run-*/.
+RESULT: base C1 step p50 80.39 ms = PLE host gather 53.3 ms (cold rows
+of the 26.8 GiB memmap: major faults, 0-86 ms, 0.18 ms when cached)
++ graph device 24.11 ms + ~3 ms host; the D2H of input_ids waits for
+the previous graph (20 ms). C2 base same_text=false (staged path bakes
+capture-time PLE conv slots). ringmlock: mlock 26.82 GiB in 22.9 s,
+MemAvailable 61.8 -> 33.7 GB at load. C1 step p50 26.72 ms (gather
+0.18 ms, graph device 23.81, host-serialized ~2.9), C2 step 32.14 ms,
+c2 same_text=true. Gates 323/667 pass on both; health HEALTHY around.
+VERDICT: PLE faults were ~2/3 of the H1e C1 ITL. Keep ring + mlock.
+Next: unitrace kernel breakdown of the 23.8 ms card-0 graph (queued).
+
+
+## 2026-10-20 18:52 X3 -- real-activation QSA event window prepared
+
+CONFIG: after atomic capture from R4, card1 only, expected45-60s plus
+health. It cannot run concurrently with the full serve on both cards.
+COMMAND: qsa_real_window.sh -> run_ops --part qsareal --qsa-block1600.
+RESULT: CPU preparation only. The first full-attention block3 input is
+a real prefix of3 GDN layers and the real PLE/expert path, before QSA
+can change any layer. Capture has hidden/Q/K/V/gate/positions; standalone
+probe loads the actual GGUF indexer projections/gamma and measures
+selection/union on natural query overlap instead of random inputs.
+VERDICT: capture overhead applies only to profiled requests and is
+excluded from the three plain TTFTs. No QSA-enabled serving/Strata parity
+claim follows from this one-layer budget. Native QSA fast helpers have
+exact random-input reference checks at both64 and1600 token pages.
+
+## 2026-10-20 18:57 G2b -- audit pass 19
+
+CONFIG: CPU-only audit of JOURNAL headings after the 18:17 pass-18
+milestone, through O4 18:53 and X3 18:52. No GPU, no commit, no edits
+outside reports/1G2_audit.md and this entry.
+COMMAND: compared x1 sched and slot logs, x3 QSA JSON plus R3 stacks,
+health, and the collective log, o4 run-base and run-ringmlock profiler
+summaries, fork ple.py pin_host_table, and git status.
+RESULT: F187-F194 appended. Slot kernel 63 rows exact on card 1
+(sha bd22ebbd). QSA stage microseconds match qsa-stage-events.json.
+Saved R3 rank0 stack is prefill_dq.py:162; compiled collective OK is
+on disk with p2p=None. O4 base C1 step p50 80.391 ms and ringmlock
+26.72 ms match the profiler summaries. Ring post-health has no HEALTHY
+line yet. Configured served name starts with hotschmoe-dev; no HTTP
+/v1/models body. Not a harness ITL promotion.
+VERDICT: pass 19 is on disk. Ringmlock post-health, R4, the real-input
+QSA capture, and the full X1 slot serve stay open.
+
+## 2026-10-20 19:01 X1 -- slot control stalls at PLE D2H; readiness fence added
+
+CONFIG: slot-order no-MTP FULL_DECODE_ONLY TP1/DP2/EP. Fresh R3
+per-card and compiled health passed before acquisition18:51:56.
+COMMAND: slot/flash-mtp0.log, window-slot-mtp0.out. py-spy Python
+stacks saved as x1/slot-hang-rank0/1.txt. Stop only own container.
+RESULT: READY18:55:33, six exact token sequences recorded, GREEDY_RC0
+(record-only). Benchmark stalled after its first coherence request;
+no valid latency JSON or same-load repeat. Rank0 blocks at mtp_ple.py
+line60 (token D2H); idle rank1 is already at next CPU DP padding sync.
+Intentional stop completed; bench/repeat fail, post-health queues.
+VERDICT: reject this serving arm. Small V2 runner fix: after optional
+PLE staging, ALL DP ranks (including dummy/idle) enter the CPU-group
+barrier before model submission. This is outside graph replay and
+scoped to models with prepare_mtp_ple. No GPU sync inside captured
+forward. No reset without failed health. Next full control must prove
+both repeated tokens and serving before MTP2; binary remains pinned.
+
+## 2026-10-20 19:15 X1 -- next control combines compiled health and serve lease
+
+CONFIG: slot-order binary unchanged, PLE CPU readiness fence added.
+Next BOTH-card control expected6min after acquisition, fresh output
+x1/slot-fenced. Old failed arm's post-health still queues behind X3/O4.
+COMMAND: X1_PRE_COLLECTIVE=1 uses x1_health_then_serve.sh inside the
+already leased xpu-run container: cached compiled health with4 jobs,
+then exec vllm only on exit0. It never sets the topology override.
+RESULT: shell syntax passes. Also add optional CPU-only reclaim begin/
+done lines (B70_RECLAIM_TRACE=1); no new device synchronization.
+VERDICT: close the repeated health->queue->intervening-experiment gap
+without another source/receipt system or DD restore. Preserve per-card
+health around serves; keep compiled health and actual load atomic under
+one gpu-run lease. Follow actual stack evidence, retain500-replay policy
+while logging its boundary rather than guessing it caused the stall.
+
+
+## 2026-10-20 19:17 X3 -- R4 localizes redundant inner group stall
+
+CONFIG: R4 CPU readiness trace progresses through AG/RS1..6 and AG7
+on both ranks, then rank1 waits in Gloo before RS8. Rank0 is in inner
+_Group(E5,M245760). Outer_Group(E256) already completed. Actual block3
+gate/up type16, down42. Dumps r4-stack-rank0/1.txt include locals.
+COMMAND: stopping own vllm-fn-x3-prefill for normal post native/compiled
+health. No API/benchmark result, no hardware-loss line, no reset.
+RESULT: the initial future-collective explanation is insufficient: the
+CPU fence did not close this inner-bucket path. Native grouping repeats
+work whose counts and ordering are already available from the outer pass.
+VERDICT: stop full reloads until short grouping-reuse/strided-packed
+gather checks pass. Reuse outer ordering/counts for each expert subset
+and test byte-exact packed gathers; one grouping per layer also removes
+redundant CPU copies. A full retry remains conditional on fresh health
+and those tests, with no2k/stability claim.
+
+## 2026-10-20 19:20 O3 -- card-0 gates window queued (about 8 minutes)
+CONFIG: card 0 only, behind the current pair window. _C.o3g.so (sha
+38f7176a): stage 3 kernels + K-quant run/aligned loads + batch-invariant
+reduce (per-token slot map, ascending router slot, shared last).
+COMMAND: gpu-run --card 0 o3/run_gates_g.sh (gates, o3_shared, o3_batchinv,
+microbench, unitrace)
+RESULT/VERDICT: next O3 entry.
+
+## 2026-10-20 19:32 X3 -- short grouping-reuse oracle queued
+CONFIG: card 1 only, about 1 minute plus health, timed under cpu-run --quiet;
+C12+wide binary, actual layer3 IQ2_XXS/IQ3_S packs, strided GU views,
+M=245760/E=5 repeated-group geometry, outer E=256.
+COMMAND: X3_CARD=1 bash x3/run_ops_reuse.sh --part reuse,check,bucket
+--out reuse.json (180s process bound; GPU lease timeout21600).
+RESULT: pending. Reuse outer counts/order for subsets; optional byte-only
+Triton gather, default torch. No new native build or full model reload.
+VERDICT: require byte-exact, original numeric tolerance, and post-health
+before trying another full model. Pair post-health from R4 remains queued.
+
+## 2026-10-20 19:25 X3 -- loaded-memory handoff oracle prepared
+CONFIG: prior X3 19:32 heading was a wall-clock transcription error; that
+entry was written around19:21 UTC. R4 native and compiled post-health pass.
+Short reuse probe: packed GU stride844800 and down stride460800 are
+byte-exact with torch and Triton. Torch .144/.183/.163ms, Triton
+.208/.204/.210ms; keep torch default. E5/M245760 grouping .295ms and
+subset .226ms pass isolated exact slot-membership checks.
+COMMAND: retry reuse,check,bucket,misc2 after its post-health; fixed
+reference-only contiguous requirement. Then both-card 22GiB/rank ballast
+AG(X,512 logits)->bucketed real layer3->RS,4 iterations each at
+12288/12288 and12288/1, with/without diagnostic GPU completion waits.
+Timed body cpu-run --quiet, lease timeout21600, process bound180s.
+RESULT: first numerical oracle exited1 at reference q-contiguous assertion,
+not a GPU fault. It is preserved in reuse.log/json; candidate output
+comparison had not yet run. Final health queued behind X1 full serve.
+VERDICT: no full weight reload until the short numeric and loaded-memory
+interop probes resolve. GPU-completion waits are opt-in diagnostic only.
+
+## 2026-10-20 19:31 G2b -- audit pass 20
+
+CONFIG: CPU-only audit of JOURNAL headings after the 18:57 pass-19
+milestone, through X3 19:25. No GPU, no commit.
+COMMAND: compared x1 slot and slot-fenced logs and stacks, the
+model_runner CPU barrier, x3 R4 stacks and health, x3/reuse.log,
+o3/gates_g.log, and o4 run-ringmlock plus run-ut2 profiles.
+RESULT: F195-F201 appended. Slot bench has no latency JSON and the
+first id is hotschmoe-dd. The new barrier is outside graph replay.
+R4 post-health is HEALTHY and the collective log is OK with p2p=None.
+Reuse gathers match the cited strides and exit 1 on "q must be
+contiguous". Ringmlock post-health is now HEALTHY. ut2 has profiler
+numbers and no journal RESULT. Not a harness ITL promotion.
+VERDICT: pass 20 is on disk. The fenced bench JSON, O3 gates_g, and
+reuse post-health stay open.
+
+## 2026-10-20 19:34 X3 -- grouping checks pass; exact paged FA queued
+CONFIG: reuse-r2 numeric/check/bucket/misc2 body exit0. Original .05
+reference checks pass, strided byte gathers exact, E5 subset maxabs
+.000923. Group reuse does not require a new native build.
+Residual mean .838073ms*48=40.2275ms; FA KVwrite .198125ms*12=2.3775ms
+at T12288, writeback exact. Pending card1 post-health.
+COMMAND: queued card1 ~1min paged FA, actual C7b serving overlay, BF16
+cache at blocks64/1600. Reuse just-completed reuse-r2 post-health
+(no repeated pre-health); timed cpu-run --quiet, native post-health.
+Check SDPA reference at first/middle/last64 queries, not full score cube.
+RESULT: pending exact paged timing. Current24.155ms attention budget
+uses unpaged normal-wheel first-chunk FA; do not label it paged serve.
+VERDICT: fill that dispatch difference while O3 holds card0, then the
+prepared loaded-memory pair probe. No full model reload yet.
+
+## 2026-10-20 19:36 X3 -- paged FA timing and tight-reference discrepancy
+CONFIG: actual C7b head256 paged-causal native library, T12288,24Q/2KV.
+COMMAND: card1 paged-fa probe under quiet CPU, blocks64 then1600 planned.
+RESULT: block64 event24.884844ms, wall25.621199ms. New tight SDPA gate
+atol.002/rtol.02 rejects32/393216 elements in one64-query slice;
+maxabs.0048828125. This is a reference assertion, not a GPU fault.
+R2 retains the tight check as a reported diagnostic against explicit
+FP32 score/softmax/value reference, and separately requires byte-exact
+attention outputs between64 and1600-token cache pages. Post-health then
+short card1 rerun, about1min; no changed tolerance or attention kernel.
+VERDICT: retain this discrepancy in report; no FA correctness claim from
+timing alone. Full-model deterministic coherence remains required.
+
+## 2026-10-20 19:38 X3 -- actual paged FA qualified against explicit FP32
+CONFIG: same C7b binary, T12288,24Q/2KV/256 BF16; no kernel/tolerance
+change from first paged probe. Explicit FP32 score/softmax/value reference.
+COMMAND: card1 paged-fa-r2 under cpu-run --quiet, blocks64 and1600.
+RESULT: block64 25.047500ms, actual aligned1600 24.564740ms/layer;
+full outputs byte-exact across cache layouts. All first/middle/last64
+query slices pass original atol.002/rtol.02 against FP32 reference.
+RMS errors.000494/.0000265/.0000188. Prior SDPA difference is retained,
+not hidden or gated away with a looser tolerance. Body exit0; native
+post-health currently runs. Group-reuse R2 already exit0/post HEALTHY.
+VERDICT: replace unpaged FA row in budget with measured paged294.777ms
+for12layers. Dense-GQA fixed-ops sum2344.349ms before experts/comm/glue.
+Prepared loaded EP pair oracle now waits for O3 card0 health teardown.
+
+## 2026-10-20 19:41 O4 -- kernel census of the 23.8 ms card-0 graph; fused HC
+
+CONFIG: ringmlock config under unitrace (o4/run-ut2, kernel timing only,
+trace inflates the graph to 36.8 ms; kernel sum 24.15 ms). Card 0 runs
+4827 kernels per C1 decode graph, card 1 576 (48 x 12).
+COMMAND: harness/o4_trace.py + o4/tr2-4.py on run-ut2/trace/python.7.json.
+RESULT: per step: oneDNN gemm_kernel 460 calls 5.23 ms (HC down/up/inject
+291, router 48, GDN a/b 72, shared gate 48); dense GGUF GEMV (kreg/dense)
+~6.4 ms; dtype-cast copies 757 calls 2.41 ms; HC elementwise/reduce
+~3.5 ms (~46 kernels/layer); ep_wait 48 x 26 us = 1.26 ms (card 0 waits
+for card 1); card-0 MoE ~1.5 ms; TopKGating 0.59 ms; q8 activation quant
+301 calls 0.53 ms; GDN core 0.71 ms; FA 0.27 ms; dead residual.mean per
+layer 0.17 ms. Fused decode HC (new fork file xpu/hc_decode.py, Triton
+norm/act/collapse/combine, inject rows appended to the down GEMM; opt-in
+B70_DECODE_HC=triton) checked on card 1 (harness/o4_hc_test.py): 0 ulp
+vs eager HC at T=1/2/4 (mix, inject, combine); XPUGraph of 97 mix + 96
+combine 7.876 -> 4.027 ms at T=1, 9.694 -> 4.171 ms at T=2.
+Also built: b70_ep_xpu moe_ep_begin/moe_ep_end split (o4/b70_ep_C.o4.so
+sha 4189799b, B70_EP_SO override, B70_EP_SHARED_OVERLAP=1 runs the
+shared expert between them so it overlaps card 1) and B70_DECODE_LEAN=1
+(drops the dead per-layer mean).
+VERDICT: window f1 (all three + ring + mlock) queued, both cards.
+
+## 2026-10-20 19:41 X3 -- loaded EP passes; full R5 conditional queue
+CONFIG: loaded-memory oracle22GiB/rank plus actual layer3 type16/16/42,
+AG(X,512 logits)->bucketed experts->FP32 RS. Both12288/12288 and12288/1,
+4iterations each, with and without device-completion waits.
+COMMAND: x3_loaded_ep.py, cpu-run --quiet, both GPU leases.
+RESULT: all16 per-rank iteration combinations per sync mode complete;
+RS first/last output rows match sum of actual rank partials. Eager and
+10compiled collective iterations pass before/after. Body exit0; separate
+native/compiled post-health is running. Paged FA R2 exit0/post HEALTHY.
+VERDICT: queue R5 full model after these health records pass; bothcards,
+about7min, long timeout21600. Group reuse on, torch byte gather, explicit
+EP GPU-completion waits for the first loaded control. Fresh cached
+compiled health runs inside the same serving GPU lease to close the
+queue/intervening-experiment gap. No rebuild; full weight load~155s.
+Do not claim full-model readiness or2000tok/s from this layer oracle.
+
+## 2026-10-20 19:46 O3 -- stage 3 done: fused shared, ALU cuts, batch-invariant reduce
+CONFIG: _C.o3g.so (sha 38f7176a) installed as _C.so and _C.graph.so
+(revert: _C.o3.so be76661b [X1/H1e pin], _C.o3b.so e9e5282d, _C.c12.so).
+Kernels: multiply-spread signs, SLM grid, pointer walk, K-quant run/aligned
+loads (IQ types keep branchy a2 loads; branch-free measured slower);
+batch-invariant reduce via per-token slot map (both plan builders,
+out_mode 0/1, invalid slots -1). Fork moe.py: opt-in B70_FUSE_SHARED=1.
+COMMAND: o3/run_gates_g.sh (19:28-19:33), o3/run_serves_g.sh (19:35-19:42).
+RESULT: gates (gpu_check, moe_layer_bench 1/0, c12_types 12, graph_probe,
+o3_shared 8/8, o3_batchinv 28/28 bit-identical T=1 vs T=2..8) failures=0,
+HEALTHY. Reduce T=4 6.55 -> 3.90 us. c9_fair IQ3_S/Q2_0 T=1..4
+60.0/85.8/117.0/153.0 us (0.53-0.58x Strata R2), IQ2_XS/IQ4_NL
+76.4/106.0/150.1/197.8. Microbench T=1 stage 2 -> 3: Q2_K 49.6->38.8,
+Q6_K 88.4->78.1, IQ4_XS 81.8->68.4, IQ3_S/Q2_0 70.3->61.1. 35B graph serve
+o3g fused: identity/coherence OK, C1 ITL p50 8.76 ms (116.2 tok/s), C2
+11.12/11.17 ms per stream (stage 2: 9.30 / 12.54; C12: 11.02 / 16.61).
+VERDICT: layer and serve both improved; reduction is batch-invariant at no
+cost. Gate/up now ~40 us vs 30 us load-only floor (IQ3_S T=1); remaining
+items in reports/2O3_moe_decode.md.

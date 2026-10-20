@@ -132,6 +132,10 @@ struct B70SchedPlan {
     int urb[kSchedMaxGrp];
     int drb[kSchedMaxGrp];
     float sw[kSchedMaxT]; // O3 stage 3: per-token shared weight sigmoid(x . w_sg)
+    // O3 stage 3: entry of (token t, router slot j) at emap[t * (topk + 1) + j]; slot topk is the
+    // shared expert; -1 = no entry (invalid id / no shared). The reduce walks slots in order, so a
+    // token's sum does not depend on the other tokens in the batch.
+    int emap[kSchedMaxT * (kSchedMaxTopk + 1)];
 };
 
 #define B70_SCHED_TYPES(M)                                                                                             \
@@ -409,6 +413,7 @@ inline sycl::event b70_sched_plan(sycl::queue& q, B70SchedPlan* plan, const int3
             for (int i = 0; i < nslot; ++i) taken[i] = 0;
             int cursor = 0;
             int g = 0;
+            for (int i = 0; i < T * (topk + 1); ++i) plan->emap[i] = -1;
             for (int i = 0; i < nslot; ++i) {
                 if (taken[i]) continue;
                 taken[i] = 1;
@@ -424,6 +429,7 @@ inline sycl::event b70_sched_plan(sycl::queue& q, B70SchedPlan* plan, const int3
                 plan->drb[g] = drb;
                 plan->tok[cursor] = i / topk;
                 plan->slot[cursor] = i - plan->tok[cursor] * topk;
+                plan->emap[i / topk * (topk + 1) + plan->slot[cursor]] = cursor;
                 cursor += 1;
                 for (int j = i + 1; j < nslot; ++j) {
                     if (taken[j]) continue;
@@ -431,6 +437,7 @@ inline sycl::event b70_sched_plan(sycl::queue& q, B70SchedPlan* plan, const int3
                     taken[j] = 1;
                     plan->tok[cursor] = j / topk;
                     plan->slot[cursor] = j - plan->tok[cursor] * topk;
+                    plan->emap[j / topk * (topk + 1) + plan->slot[cursor]] = cursor;
                     cursor += 1;
                 }
                 g += 1;
@@ -447,6 +454,7 @@ inline sycl::event b70_sched_plan(sycl::queue& q, B70SchedPlan* plan, const int3
                 for (int t = 0; t < T; ++t) {
                     plan->tok[cursor] = t;
                     plan->slot[cursor] = topk;
+                    plan->emap[t * (topk + 1) + topk] = cursor;
                     cursor += 1;
                 }
                 g += 1;
@@ -566,6 +574,7 @@ inline sycl::event b70_sched_plan_q8(sycl::queue& q, B70SchedPlan* plan, const i
                     }
                     const bool lead = valid && first == i;
                     if (i < nslot) scnt[i] = lead ? cnt : 0;
+                    if (i < nslot && !valid) plan->emap[(i / topk) * (topk + 1) + (i - (i / topk) * topk)] = -1;
                     sycl::group_barrier(it.get_group());
                     if (valid) {
                         int g = 0, st = 0;
@@ -577,6 +586,7 @@ inline sycl::event b70_sched_plan_q8(sycl::queue& q, B70SchedPlan* plan, const i
                         const int pos = st + rank;
                         plan->tok[pos] = i / topk;
                         plan->slot[pos] = i - (i / topk) * topk;
+                        plan->emap[(i / topk) * (topk + 1) + (i - (i / topk) * topk)] = pos;
                         if (lead) {
                             plan->start[g] = st;
                             plan->expert[g] = id;
@@ -590,6 +600,7 @@ inline sycl::event b70_sched_plan_q8(sycl::queue& q, B70SchedPlan* plan, const i
                     }
                     const int ngr = sycl::reduce_over_group(it.get_group(), lead ? 1 : 0, sycl::plus<int>());
                     const int ner = sycl::reduce_over_group(it.get_group(), valid ? 1 : 0, sycl::plus<int>());
+                    if (lid < T) plan->emap[lid * (topk + 1) + topk] = shared ? ner + lid : -1;
                     if (shared) {
                         if (lid < T) {
                             plan->tok[ner + lid] = lid;
@@ -1066,30 +1077,21 @@ inline sycl::event b70_sched_red(sycl::queue& q, const B70SchedPlan* plan, const
             if (i >= n) return;
             const int t = i / K;
             const int k = i - t * K;
-            const int nent = plan->nent;
             const float shw = has_sg ? plan->sw[t] : 1.f;
+            const int* em = plan->emap + (size_t)t * (size_t)(topk + 1);
+            float r = 0.f;
+            for (int j = 0; j < topk; ++j) {
+                const int e = em[j];
+                if (e >= 0) r = sycl::fma(partial[(size_t)e * (size_t)K + k], router[(size_t)t * (size_t)topk + j], r);
+            }
+            const int es = em[topk];
+            const float pv = es >= 0 ? partial[(size_t)es * (size_t)K + k] : 0.f;
             if (out_mode == 0) {
-                float s = 0.f;
-                for (int e = 0; e < nent; ++e) {
-                    if (plan->tok[e] != t) continue;
-                    const int slot = plan->slot[e];
-                    const float w = slot < topk ? router[(size_t)t * (size_t)topk + slot] : shw;
-                    s = sycl::fma(partial[(size_t)e * (size_t)K + k], w, s);
-                }
-                static_cast<float*>(yv)[i] = s;
+                static_cast<float*>(yv)[i] = es >= 0 ? sycl::fma(pv, shw, r) : r;
             } else {
-                float s = 0.f;
-                float sh = 0.f;
-                for (int e = 0; e < nent; ++e) {
-                    if (plan->tok[e] != t) continue;
-                    const int slot = plan->slot[e];
-                    const float pv = partial[(size_t)e * (size_t)K + k];
-                    if (slot < topk) s = sycl::fma(pv, router[(size_t)t * (size_t)topk + slot], s);
-                    else sh = sycl::fma(pv, shw, sh);
-                }
                 uint16_t* yb = static_cast<uint16_t*>(yv);
-                yb[i] = b70_fp32_to_bf16(s);
-                yb[(size_t)n + i] = b70_fp32_to_bf16(sh);
+                yb[i] = b70_fp32_to_bf16(r);
+                yb[(size_t)n + i] = b70_fp32_to_bf16(es >= 0 ? pv * shw : 0.f);
             }
         });
     });

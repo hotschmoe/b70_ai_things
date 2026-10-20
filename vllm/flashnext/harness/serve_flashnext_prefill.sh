@@ -12,7 +12,7 @@ PORT=${PORT:-18135}
 NAME=${NAME:-vllm-fn-x3-prefill}
 SO=${B70_GGUF_SO:-$PLUGIN/b70_gguf_xpu/_C.c12.so}
 WIDE=${B70_PREFILL_WIDE_SO:-$PLUGIN/b70_gguf_xpu/_C.x3wide.so}
-PYPATH=$BUILD/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$PLUGIN:$REPO/vllm/flashnext/plugins/b70_memory_xpu
+PYPATH=$BUILD/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$PLUGIN:$REPO/vllm/flashnext/plugins/b70_memory_xpu:$REPO/vllm/flashnext/plugins/b70_qsa_xpu
 if [[ -d "$BUILD/c7b-fa-overlay/vllm_xpu_kernels" ]]; then
   PYPATH=$BUILD/c7b-fa-overlay:$PYPATH
 fi
@@ -22,8 +22,18 @@ if (( $(awk '/MemAvailable:/ {print $2}' /proc/meminfo) < 8388608 )); then
   exit 4
 fi
 OPT=()
+PRE=()
+if [[ "${PREFILL_PRE_COLLECTIVE:-0}" == "1" ]]; then
+  PRE=(bash "$HERE/x3_health_then_serve.sh")
+fi
+if [[ "${B70_MEMORY_FIX:-0}" == "1" ]]; then
+  REF=${B70_EMBED_REF:-$BUILD/x3/embedding-reference.npz}
+  test -f "$REF"
+  OPT+=(--env "B70_EMBED_REF=$REF")
+fi
 if [[ -n "${B70_PREFILL_PROFILE:-}" ]]; then
   export B70_PREFILL_PROFILE_CONTROL=${B70_PREFILL_PROFILE_CONTROL:-$BUILD/x3/flashnext-profile-mode}
+  export B70_PREFILL_CAPTURE=${B70_PREFILL_CAPTURE:-/mnt/cache/b70/x3-captures/flashnext-first-attention.pt}
   echo 1 > "$B70_PREFILL_PROFILE_CONTROL"
 fi
 for key in ${!B70_PREFILL@}; do OPT+=(--env "$key=${!key}"); done
@@ -43,13 +53,13 @@ trap 'kill "$watchdog" 2>/dev/null || true; wait "$watchdog" 2>/dev/null || true
 "$HERE/xpu-run.sh" --card both --memory 100g --name "$NAME" --port "$PORT" \
   --env B70_GGUF=1 --env "B70_GGUF_PATH=$GGUF" --env "B70_GGUF_SO=$SO" \
   --env "PYTHONPATH=$PYPATH" --env B70_GGUF_REF=0 --env B70_EAGER_QK=0 \
-  --env B70_QSA=0 --env B70_EP=0 --env B70_FUSE_SHARED=0 --env MAX_JOBS=4 \
+  --env "B70_QSA=${B70_QSA:-0}" --env B70_EP=0 --env B70_FUSE_SHARED=0 --env MAX_JOBS=4 \
   --env B70_PREFILL=1 --env "B70_PREFILL_WIDE_SO=$WIDE" \
   --env B70_PREFILL_DQ_OVERLAP=0 --env B70_PREFILL_REDUCE=grouped \
   --env B70_PREFILL_EXPERT_TILE=64 --env SYCL_CACHE_PERSISTENT=0 \
   --env B70_PREFILL_PLE_HASH=numpy --env B70_XPU_CG_RECLAIM=500 \
   --env HF_HUB_OFFLINE=1 --env TRANSFORMERS_OFFLINE=1 --env VLLM_NO_USAGE_STATS=1 \
-  "${OPT[@]}" -- vllm serve "$HF" --host 0.0.0.0 --port "$PORT" \
+  "${OPT[@]}" -- "${PRE[@]}" vllm serve "$HF" --host 0.0.0.0 --port "$PORT" \
   --served-model-name hotschmoe-dd qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-x3-prefill \
   --tensor-parallel-size 1 --data-parallel-size 2 --api-server-count 1 --enable-expert-parallel \
   --dtype bfloat16 --load-format b70_gguf --quantization b70_gguf \

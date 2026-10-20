@@ -13,6 +13,7 @@ _INSTALLED = False
 _INIT = False
 _NEXT = 0
 _SHARED_LOGGED = False
+_SHARED_OVERLAP = os.environ.get("B70_EP_SHARED_OVERLAP") == "1"
 
 
 def install() -> None:
@@ -145,6 +146,13 @@ def _make_class():
             self._split = True
             object.__setattr__(layer, "_ep_split", True)
 
+        @property
+        def mk_can_overlap_shared_experts(self) -> bool:
+            # O4: B70_EP_SHARED_OVERLAP=1 runs the shared expert inside
+            # apply(), between moe_ep_begin and moe_ep_end, so it overlaps
+            # card 1's experts instead of preceding the dispatch.
+            return _SHARED_OVERLAP
+
         def apply(
             self,
             layer: torch.nn.Module,
@@ -155,6 +163,10 @@ def _make_class():
             shared_experts_input: torch.Tensor | None = None,
         ):
             global _SHARED_LOGGED
+            if _SHARED_OVERLAP and shared_experts is not None:
+                return self._apply_overlap(
+                    layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input
+                )
             # The runner owns the shared expert and adds it after this call.
             # moe_ep does not see those weights. They stay on card 0.
             if shared_experts is not None and not _SHARED_LOGGED:
@@ -180,6 +192,24 @@ def _make_class():
             if not ids.is_contiguous():
                 ids = ids.contiguous()
             y = torch.ops.b70_ep.moe_ep(xb, w, ids, int(self._layer_idx))
+            return y.to(dtype=x.dtype)
+
+        def _apply_overlap(self, layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input):
+            if getattr(layer, "expert_map", None) is not None:
+                raise RuntimeError("b70_ep: expert_map is set; sidecar expects world size 1")
+            xb = x if x.dtype == torch.bfloat16 else x.to(dtype=torch.bfloat16)
+            if not xb.is_contiguous():
+                xb = xb.contiguous()
+            w = topk_weights if topk_weights.dtype == torch.float32 else topk_weights.to(dtype=torch.float32)
+            if not w.is_contiguous():
+                w = w.contiguous()
+            ids = topk_ids if topk_ids.dtype == torch.int32 else topk_ids.to(dtype=torch.int32)
+            if not ids.is_contiguous():
+                ids = ids.contiguous()
+            y = torch.ops.b70_ep.moe_ep_begin(xb, w, ids, int(self._layer_idx))
+            src = shared_experts_input if shared_experts_input is not None else x
+            shared_experts._output[shared_experts._output_idx] = shared_experts._layer(src)
+            torch.ops.b70_ep.moe_ep_end(y, int(self._layer_idx))
             return y.to(dtype=x.dtype)
 
     def _halves(param: torch.Tensor, info: dict, row_bytes_fn) -> tuple[torch.Tensor, torch.Tensor]:

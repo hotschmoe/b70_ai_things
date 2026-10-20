@@ -14,7 +14,7 @@ def install():
         original = cls.execute_model
         if getattr(original, '_x3', False):
             return
-        state = {'active': False, 'hooks': False, 'events': [], 'enabled': True}
+        state = {'active': False, 'hooks': False, 'events': [], 'enabled': True, 'payloads': []}
         def measured(name, fn, *args, **kwargs):
             if not state['enabled']:
                 return fn(*args,**kwargs)
@@ -27,6 +27,11 @@ def install():
                 remote = value is not None and value.shape[0] >= 512
             if not state['active'] and not remote:
                 return fn(*args, **kwargs)
+            if name in ('ep_allgather','ep_reduce_scatter'):
+                values=args[1] if len(args)>1 else kwargs.get('input_')
+                values=values if isinstance(values,list) else [values]
+                state['payloads'].append(dict(op=name,sizes=sizes,
+                    shapes=[list(v.shape) for v in values],dtypes=[str(v.dtype) for v in values]))
             state['remote_prefill'] = state.get('remote_prefill',False) or remote
             import torch
             a,b = torch.xpu.Event(enable_timing=True),torch.xpu.Event(enable_timing=True)
@@ -42,6 +47,7 @@ def install():
                     state['enabled']=bool(mode) and mode[0]=='1'
                     if len(mode)>1:
                         os.environ['B70_PREFILL_EP_RS']=mode[1]
+                    state['capture_enabled']=len(mode)>1 and mode[0]=='1'
             control = os.environ.get('B70_PREFILL_CONTROL')
             if control:
                 with open(control) as f:
@@ -52,6 +58,29 @@ def install():
                             'in_proj_qkvz', 'in_proj_ba', 'out_proj', 'qkv_proj',
                             'o_proj', 'norm', 'gate_up_proj', 'down_proj', 'ple', 'embed_tokens'}
                 for name, sub in self.model.named_modules():
+                    if name.endswith('layers.3.self_attn') and hasattr(sub,'_project_qkv_gate'):
+                        project=sub._project_qkv_gate
+                        def capture(*a,_fn=project,**kw):
+                            result=_fn(*a,**kw)
+                            path=os.environ.get('B70_PREFILL_CAPTURE')
+                            if (path and state.get('capture_enabled') and not state.get('captured')
+                                    and result[0].shape[0]>=12288):
+                                from pathlib import Path
+                                state['captured']=True
+                                q,k,v,gate=result
+                                hidden=state.pop('capture_input',None)
+                                positions=kw.get('positions',a[1] if len(a)>1 else None)
+                                if hidden is None or positions is None:
+                                    print('X3_CAPTURE_SKIPPED missing inputs',flush=True)
+                                    return result
+                                payload=dict(hidden=hidden,q=q,k=k,v=v,gate=gate,positions=positions)
+                                payload={key:value.detach().cpu() for key,value in payload.items()}
+                                Path(path).parent.mkdir(parents=True,exist_ok=True)
+                                torch.save(payload,path+'.tmp')
+                                Path(path+'.tmp').replace(path)
+                                print('X3_CAPTURE',os.getpid(),path,tuple(q.shape),flush=True)
+                            return result
+                        sub._project_qkv_gate=capture
                     if sub.__class__.__name__ == 'HyperConnection':
                         for method in ('mix','combine'):
                             original_method = getattr(sub,method)
@@ -67,6 +96,8 @@ def install():
                     stack = []
                     def pre(mod, inp, name=name, stack=stack):
                         if state['active']:
+                            if name.endswith('layers.3.self_attn.qkv_proj') and state.get('capture_enabled') and not state.get('captured'):
+                                state['capture_input']=inp[0]
                             ev = torch.xpu.Event(enable_timing=True); ev.record()
                             stack.append(ev)
                     def post(mod, inp, out, name=name, stack=stack):
@@ -91,6 +122,7 @@ def install():
             t = scheduler_output.total_num_scheduled_tokens
             state['active'] = t >= 512 and state['enabled']
             state['events'] = []
+            state['payloads'] = []
             state['remote_prefill'] = False
             start = time.perf_counter()
             result = original(self, scheduler_output, *args, **kwargs)
@@ -102,7 +134,8 @@ def install():
                     key = row['name'].rsplit('.', 1)[-1]
                     groups[key] = groups.get(key, 0) + row['ms']
                 row = dict(T=t, pid=os.getpid(), remote_prefill=state['remote_prefill'],
-                           wall_ms=(time.perf_counter()-start)*1000, groups=groups, spans=spans)
+                           wall_ms=(time.perf_counter()-start)*1000, groups=groups, spans=spans,
+                           payloads=state['payloads'])
                 path = os.environ['B70_PREFILL_PROFILE']
                 if os.environ.get('B70_PREFILL_PROFILE_RANKED') == '1':
                     path += f'.{os.getpid()}.jsonl'
