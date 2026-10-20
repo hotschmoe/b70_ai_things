@@ -188,3 +188,24 @@ moe_layer(Tensor x, Tensor gate_q, int gate_type, Tensor up_q, int up_type,
   the shared expert, Q8(hidden), down, then the routing sum. No host sync
   between those submits.
 ```
+
+## C9 addition -- 2026-10-20
+
+`moe_layer` signature is unchanged. When `B70_MOE_SCHED` is unset, decode
+shapes with T<=8, topk<=16, I and K multiples of 32 and at most 8192, and
+DP4A types (IQ2_XXS, IQ2_XS, IQ2_S, IQ3_XXS, IQ3_S, IQ4_NL, Q2_0) take the
+grouped schedule in `csrc/sched_moe.hpp`. `B70_MOE_SCHED=0` keeps the C1
+fused kernels. Other types and larger T stay on those kernels too.
+
+The schedule follows Strata `rows_dot_multi_iq` / `native_gu_kernel_rows`
+(`STRATA_EXPERT_LANES` 8, two rows per lane, chunks of 4/2/1). The measured
+R2 launch is `reqd_sub_group_size(16)` (`launch_gu_rows_k`). Subgroup 32 is
+the slower one-row fallback and is not what this path launches. Gate and up
+share one activation load. A 36-byte Q8 block stores a float scale plus 32
+int8 values; the KREG 48-byte block is unchanged.
+
+Expert ids are grouped on device, including under a captured graph. Invalid
+ids contribute 0. The shared expert is one extra group with routing weight 1.
+`reserve_decode` also reserves this path's scratch (T=8, topk=16, K=I=8192).
+A grow while the queue is recording throws. Side library: set `B70_GGUF_SO`
+to `b70_gguf_xpu/_C.c9.so`. The default `_C.so` is not replaced by the C9 build.

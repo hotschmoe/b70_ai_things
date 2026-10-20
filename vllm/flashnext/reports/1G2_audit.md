@@ -203,3 +203,115 @@ Identity first id is hotschmoe-dev on every completed F1 JSON.
 Verdict: OK as a ledger. Not a speed claim by F1.
 Suggested fix: when F1 writes the journal entry, diff it against this
 table and against F3.
+
+## Pass 2 -- 2026-10-20 07:35 UTC
+
+Cursor: JOURNAL from the 07:08 C7 entry through the 07:29 G3 entry.
+New files: c7-bench-graph.json, c7-greedy.json, c7-serve-graph.log,
+c7-graph-probe.log, c7-cpu-mapping.log, f1-bench-2635-triton.json,
+e1-int4-graph-bench.json, e1-int4-ppl.json, e1-int4-serve.log,
+reports/1F1_umd.md, flashnext_ref/last_compare.json.
+
+### F11. F1 latency table matches; "all six coherent" does not
+
+Claim: JOURNAL 07:08 and reports/1F1_umd.md. All six serves coherent
+(Paris, both strings identical, hotschmoe-dev first). FlashAttention
+C1 ITL p50/p99 and TTFT: host 12.80/13.13 and 84.68; 26.27 12.77/13.25
+and 89.67; 26.35 12.60/13.00 and 92.07. Prefill 32k tok/s 6182/6171/6193.
+Triton C1 p50 13.13/13.18/12.97. Triton 32k 1224/1868/1705. GEMV Q4_K
+129.4/132.3/128.9 us, Q5_K 810.6/809.5/835.7 us. moe_layer T=8 behind
+1408.5/1424.8/1441 us. T=1 370/589/254 us.
+Evidence: those latency figures match f1-bench-*-fa.json,
+f1-bench-*-triton.json, f1-gguf-host.log, f1-gguf-2627.log, and
+f1-gguf-2635-retry.log, including the report's 1k/8k columns.
+Identity first id is hotschmoe-dev on all six JSON files.
+The four FlashAttention texts and the host Triton text are the
+capital-of-France continuation. f1-bench-2627-triton.json and
+f1-bench-2635-triton.json are both
+" Paris.\nA. True\nB. False\nThe capital of France is", identical
+within each arm, and coherence.ok is true only because the harness
+gate checks the word Paris. The report's FlashAttention section quotes
+the capital string and does not claim the Triton text. The journal
+sentence covers all six.
+Verdict: WRONG on "all six serves coherent" as a matched greedy
+result. Latency, identity, and the microbench numbers are OK.
+Suggested fix: split the sentence. FlashAttention arms and host
+Triton match the frozen string. 26.27 Triton and 26.35 Triton match
+each other and do not match the host. Do not rank those two arms as
+quality-neutral. The shared wrong string points at non-host IGC plus
+Triton, not at a one-off sample.
+
+### F12. C7 GGUF graph bench matches the JSON
+
+Claim: GRAPH_PROBE_OK, max_abs 0, 4 FULL graphs, capture 1 s, pool
+0.02 GiB, KV 8.92 GiB / 381493 tokens / 11.29x, placed 733, both
+greedy texts the C4 Paris string, C1 ITL 11.11/12.41/13.46 ms,
+90.16 tok/s, TTFT 174.36 ms, n=64. C2 16.51 ms / 61.34 tok/s / n=46
+and 16.65 ms / 62.01 tok/s / n=40. Prefill 177.01 / 175.58 / 173.23
+tok/s at TTFT 5746 / (8185) / 189124 ms. CPU suite ALL_DONE 0.
+Fork tip at that write was 2583e27239. _C.graph.so is 6987192 bytes.
+Evidence: c7-graph-probe.log lines 40-42. c7-serve-graph.log: placed
+733, reserve_decode on xpu, capture progress 2 then 4 FULL graphs,
+"finished in 1 secs, took 0.02 GiB", KV line 381,493 tokens, 11.29x.
+Serve command is host UMD (libze_loader.so.1.28.2, IGC 2.36.3),
+FULL_DECODE_ONLY, FLASH_ATTN, B70_GGUF_SO=_C.graph.so.
+c7-bench-graph.json and c7-greedy.json match the ITL, token counts,
+and both texts. c7-cpu-mapping.log: N 15, ALL_DONE 0, exit 0, 91 s.
+test_linear_and_moe_call_ops passed; that test asserts one moe_layer
+call and id -1 (fork test_b70_gguf_mapping.py:562). .so is gitignored
+and 6987192 bytes, mtime 06:59. Fork log shows 2583e27239 at 07:08:38.
+A later commit 4d73572e14 landed at 07:31:07, after this measurement.
+No c7 xpu-health log was found under logs/.
+Verdict: OK for the bench, capture, identity, and CPU suite.
+Post-health is UNVERIFIED. The measured serve is not the fork tip
+anymore.
+Suggested fix: cite the health command's log. Any later GGUF serve
+should name 4d73572e14 or say it is still on 2583e27239.
+
+### F13. E1 int4 graph and perplexity
+
+Claim: C1 ITL 10.23/10.37/10.48 ms, mean 10.229, 99.59 tok/s, TTFT
+2533.19 ms, n=56. C2 13.65 and 13.61 ms, 75.25 and 76.22 tok/s.
+Prefill 96.90/108.74/112.99 tok/s. Texts start " Paris, a city
+renowned for its rich history, art, and culture. Sit". Ppl 8.8582,
+nll 2.1813, windows 1.7888/2.4407/2.0974/2.3985, tokens 2044.
+Int4 expert bytes 519045120 vs int3 393216000 is 32 percent more,
+and the step is 1.06 ms faster than int3's 11.29 ms.
+Evidence: e1-int4-graph-bench.json matches p50/p90/p99, tok/s, TTFT,
+n, C2, prefill, and the text. first_ok true, alias
+qwen36-w4a16-b70-lowbit. itl_mean_ms prints as 10.227, not 10.229.
+e1-int4-ppl.json: ppl 8.85816, nll 2.18134, windows 1.78885/2.44069/
+2.09735/2.39847, tokens 2044. e1-int4-serve.log repack bits=4,
+plane shapes (256, 1024, 512) and (256, 2048, 128).
+519045120/393216000 = 1.320. 11.29-10.23 = 1.06. Byte/time is about
+51 and 35 GB/s. The absolute byte totals were not rebuilt from the
+checkpoint tensors this pass.
+Verdict: OK. The mean-ITL digit 10.229 is a 0.002 ms slip.
+Suggested fix: quote mean 10.227. Show the byte product (slots,
+layers, plane sizes) next to 519045120.
+
+### F14. G3 CPU compare file matches the journal
+
+Claim: vocab sum 320001446, eos 248044 differs from 248046 in 32 of
+400 rows, strata vs XPU at 248044 is 0 of 400, HC mix max_abs
+1.311e-6 against (1+w) and 1.278 against the raw gamma, PLE block
+max_abs 4.77e-7, a second +1 moves it by 1.46, IQ4_NL bit_mismatches
+0, wide vs eh_proj max_abs 3.97.
+Evidence: flashnext_ref/last_compare.json has those fields:
+vocab_sum 320001446, strata_vs_xpu_248044 n_diff 0 of 400,
+xpu_248044_vs_248046 n_diff 32, mix max_abs 1.311302e-6 and
+1.277879, PLE max_abs 4.76837e-7, stored-gamma delta 1.46408,
+bit_mismatches 0, eh_proj max_abs 3.97262.
+Verdict: OK.
+Suggested fix: none.
+
+### F15. G1 contract numbers are in the tests; the run log is not
+
+Claim: 16 tests OK. GDN page 2146304 bytes/layer, attention 20480
+bytes/token, scaled block 1088. A 28*1088 checkpoint keeps 27*1088.
+Evidence: kvoffload/tests has 16 test methods. test_layout_park.py
+asserts 2146304, 1088, 20480, and 28*1088 -> 27*1088. No unittest
+stdout was found under logs/ or b70/logs.
+Verdict: UNVERIFIED that the process exited 0. The expected numbers
+match the test source.
+Suggested fix: save the unittest transcript next to the journal entry.

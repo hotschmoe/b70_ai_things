@@ -249,6 +249,10 @@ void dispatch(int type, Fn fn) {
 
 }  // namespace
 
+// C9 grouped schedule. Header stays outside the anonymous namespace so it can
+// include the C library. b70_prep and b70_device_grow remain visible here.
+#include "sched_moe.hpp"
+
 void b70_dequant_bf16(void* queue, int type, const uint8_t* q, int64_t rows, int64_t cols, uint16_t* out) {
     const int rb = b70_row_bytes(type, (int)cols);
     if (rb <= 0 || rows <= 0) throw std::runtime_error("b70_gguf: bad dequant shape");
@@ -290,7 +294,10 @@ void b70_moe_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, co
     });
 }
 
-void b70_reserve_decode_queue(void* queue) { b70_reserve_decode(q_of(queue)); }
+void b70_reserve_decode_queue(void* queue) {
+    b70_reserve_decode(q_of(queue));
+    b70_sched_reserve(q_of(queue));
+}
 
 void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate_type, const uint8_t* up, int up_type,
                    const uint8_t* down, int down_type, const int32_t* expert_ids, const float* router,
@@ -309,8 +316,11 @@ void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate
         sdrb = b70_row_bytes(sd_type, I);
         if (sgrb <= 0 || surb <= 0 || sdrb <= 0) throw std::runtime_error("b70_gguf: bad shared expert");
     }
-    b70_moe_layer_launch(q_of(queue), x, gate, gate_type, grb, up, up_type, urb, down, down_type, drb, expert_ids, router,
-                         sgate, sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, y, T, topk, E, I, K);
+    sycl::queue& sq = q_of(queue);
+    if (!b70_sched_try(sq, x, gate, gate_type, grb, up, up_type, urb, down, down_type, drb, expert_ids, router, sgate,
+                       sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, y, T, topk, E, I, K))
+        b70_moe_layer_launch(sq, x, gate, gate_type, grb, up, up_type, urb, down, down_type, drb, expert_ids, router,
+                             sgate, sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, y, T, topk, E, I, K);
 }
 
 int b70_grouped_gemm(void* queue, int type, const uint16_t* x, const uint8_t* w, const int32_t* entries, float* y,

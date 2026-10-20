@@ -1441,3 +1441,47 @@ at 248044, the PLE cut. 248046 stays a stop id. Draft acceptance
 against the daily driver needs the wide fc in mtp-bf16/rt. Dense GQA
 matches QSA selection only through 2051 tokens. This is a CPU
 localization ladder for the first layers, not a GPU forward.
+
+## 2026-10-20 07:35 G2 -- audit pass 2
+
+CONFIG: CPU only. New JOURNAL entries C7, F1, G1, E1 int4, G3.
+Bench JSON and serve logs named above. No GPU.
+COMMAND: parse c7-bench-graph.json, f1-bench-2635-triton.json,
+e1-int4-graph-bench.json, e1-int4-ppl.json, last_compare.json, and
+the F1 microbench logs.
+RESULT: F1 latency table, C7 graph bench, E1 int4 bench, and G3
+compare file match the raw numbers. E1 mean ITL is 10.227 in the
+JSON, written as 10.229. F1's "all six serves coherent" does not
+hold as a matched greedy result: 26.27 Triton and 26.35 Triton both
+emit "A. True / B. False", while host Triton and all three
+FlashAttention arms keep the capital-of-France continuation. G1's
+16-test run has no stdout log. C7 health lines were not found; the
+serve log does show capture and KV. Fork tip is now 4d73572e14
+(07:31), after the measured C7 commit 2583e27239.
+VERDICT: Pass 2 recorded in reports/1G2_audit.md. One wrong coherence
+claim. Latency figures checked this pass are intact.
+
+## 2026-10-20 07:34 E1 -- moe_gemv_mixed matches prefill on int2/int3
+
+CONFIG: card 1, libb70_lowbit_xpu_e1mix.so (2280328 bytes, built 06:56).
+tests/mixed_probe.py. Uniform int3 must match templated moe_gemv.
+Mixed bits must match the per-expert prefill_wna16 loop, rel_l2 < 0.02
+and cos > 0.999. One id is -1. The full-K cases are H=2048 I=512, the
+35B shape. Storage width is the max bits. The 04:05 uniform .so and the
+06:35 grouped .so were not overwritten.
+COMMAND: B70_GPU_LOCK_TIMEOUT=7200 xpu-run.sh --card 1 --memory 24g
+--name b70-lowbit-mixed-probe --env B70_LOWBIT_SO=.../libb70_lowbit_xpu_e1mix.so
+-- python3 -u tests/mixed_probe.py
+Log: .../logs/e1-mixed-probe.log
+RESULT: probe_rc=0, gpu-run exit 0. PASS uniform3 vs templated moe_gemv
+rel_l2=0 max_abs=0. PASS uniform3 vs prefill rel_l2=4.2e-3. PASS
+mix-small int2/int3 rel_l2=1.6e-3. PASS mix-23 full K rel_l2=1.0e-3
+cos=0.999999 max_abs=1024. PASS mix-234 full K rel_l2=4.0e-3
+cos=0.999992 max_abs=2048. The large max_abs is on randn activations;
+the relative error stays inside the gate. The first full-K attempt
+failed in the reference: prefill_wna16 rejects an int3 hi row stored
+in a wider int4 stride. The kernel itself had already returned. The
+reference now slices to the native stride. This rerun is the one above.
+VERDICT: MIXED_PROBE_OK. Safe to serve the mixed checkpoint with
+B70_LOWBIT_SO pointing at e1mix.so. This kernel is not the templated
+moe_gemv used for the int4 vs int3 arm.
