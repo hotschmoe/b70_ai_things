@@ -10,6 +10,10 @@ export B70_AGENT=${B70_AGENT:-X1} B70_GPU_LOCK_TIMEOUT=${B70_GPU_LOCK_TIMEOUT:-7
 PORT=${PORT:-18121}
 MTP_TOKENS=${MTP_TOKENS:-2}
 NAME=${NAME:-vllm-fn-x1-flashnext-mtp${MTP_TOKENS}}
+if [[ -n "${X1_EVENTLESS_SHIM:-}" && "${X1_PRE_COLLECTIVE:-0}" != 1 ]]; then
+  echo "Eventless shim requires X1_PRE_COLLECTIVE=1 for scoped preload"
+  exit 2
+fi
 SPEC_ARGS=()
 LAUNCH=(vllm)
 if [[ "${X1_PRE_COLLECTIVE:-0}" = 1 ]]; then
@@ -33,7 +37,9 @@ if ((available < 8388608)); then echo "ABORT MemAvailable=$available"; exit 4; f
   --env PYTHONPATH="$PYPATH" \
   --env B70_GGUF_REF=0 --env B70_EAGER_QK=0 --env B70_PREFILL=0 \
   --env B70_FUSE_SHARED=0 \
-  --env B70_XPU_CG_RECLAIM=500 \
+  --env B70_XPU_CG_RECLAIM="${B70_XPU_CG_RECLAIM:-500}" \
+  --env B70_MTP_CANONICAL_MOE="${B70_MTP_CANONICAL_MOE:-0}" \
+  --env X1_EVENTLESS_SHIM="${X1_EVENTLESS_SHIM:-}" \
   --env B70_RECLAIM_TRACE=1 \
   --env B70_STEP_LOG="$BUILD/x1/reclaim.log" \
   --env SYCL_CACHE_PERSISTENT=0 \

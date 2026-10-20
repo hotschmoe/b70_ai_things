@@ -6255,3 +6255,313 @@ o3g fused: identity/coherence OK, C1 ITL p50 8.76 ms (116.2 tok/s), C2
 VERDICT: layer and serve both improved; reduction is batch-invariant at no
 cost. Gate/up now ~40 us vs 30 us load-only floor (IQ3_S T=1); remaining
 items in reports/2O3_moe_decode.md.
+
+## 2026-10-20 19:51 X1 -- eventless replay and uniform Q8 probe queued
+
+CONFIG: card1 only, expected<1min plus health. Eventless shim built
+CPU-only in10s, MAX_JOBS4, Torch2.14 commit08187d9e. SHA256
+bc88f344391143c96dca526ed584bbee23b611835933fc7b23b7765f4c48aa72.
+COMMAND: x1_eventless_probe.py then x1_dispatch_probe.py in one leased
+container, scoped LD_PRELOAD after the normal loader entrypoint.
+RESULT: source/symbol checks pass; new GPU proof pending. Native replay
+body matches exact installed-commit source, with execute_graph replacing
+ext_oneapi_graph; device guard and RNG replay_prologue are preserved.
+VERDICT: test2066+ replays/RNG and RSS, then actual-weight rows7 vs9/17.
+The old dispatcher changes from Q8 activations to BF16 grouped math at
+T>8. New opt-in B70_MTP_CANONICAL_MOE=1 chunks scheduled Q8 calls at8
+for all sizes, preserving the normal decode call path at<=8. No changes
+to other agents' default path or library. Full serving only after probes.
+
+## 2026-10-20 19:52 X3 -- R5 device loss during startup AG75
+CONFIG: group reuse + EP CPU readiness and explicit GPU completion waits;
+weights loaded1224 tensors, embedding check passed. Startup AG/RS1..74
+complete both ranks, then AG75 enters/CPU-ready both ranks.
+COMMAND: normal own-container cleanup, native per-card health next.
+RESULT: rank1 _prefill_return torch.xpu.synchronize reports
+UR_RESULT_ERROR_DEVICE_LOST at19:51:31, before API readiness. This is a
+real runtime failure, not a slow-layer or2ktok/s result. Container now
+exited; health pending. Never reset unless that health fails.
+VERDICT: pause full-model retries; preserve traces. The22GiB loaded-memory
+oracle did not reproduce this full-model failure. Other agents must
+require fresh health after this failed pair run. No stability claim.
+
+## 2026-10-20 19:50 O4 -- f1: fused HC + shared-expert overlap + lean, C1 20.8 ms
+
+CONFIG: ringmlock + B70_DECODE_HC=triton + B70_DECODE_LEAN=1 +
+B70_EP_SHARED_OVERLAP=1 with B70_EP_SO=o4/b70_ep_C.o4.so (sha 4189799b).
+MoE still o4/_C.o4pin-o3f.so. Sidecar, FULL_DECODE_ONLY, no MTP.
+COMMAND: TAG=f1 harness/o4_window.sh; raw o4/run-f1/.
+RESULT: gates 323/667 pass; c2 same_text=true. C1 step p50 26.72 ->
+20.81 ms, card-0 graph 23.81 -> 18.27 ms, sample dev 0.83, host-serial
+~2.5 ms. C2 step 32.14 -> 24.65 ms (graph 28.61 -> 21.41). Health
+before/after HEALTHY.
+VERDICT: keep all three. Re-pinned MoE to O3's _C.o3g.so (sha 38f7176a,
+copy o4/_C.o4pin-o3g.so) per O3; f2 (same flags, o3g) and a traced f2ut
+queued.
+\n## 2026-10-20 19:57 X3 -- producer readiness oracle prepared
+CONFIG: R5 post native health passes bothcards, no reset. Earlier waits
+were after the collective, and the CPU fence only aligns enqueue readiness.
+New B70_PREFILL_EP_DRAIN=1 drains GPU producers BEFORE the host barrier.
+Only then can either rank enqueue a spinning collective. Also guard
+prefill dispatch using local DP token counts and graph mode: gathered
+8+8 decode rows16 must remain on the decode path.
+COMMAND: bothcards, about1min plus health;24GiB ballast/rank,48iterations
+real layer3 experts+router, pending main GEMM/norm/router producers and
+a separate shared-expert stream, BF16 model-like RS. CPUquiet outside
+GPUrun,180s body bound. Reuse R5 native/compiled post-health.
+RESULT: pending. This is a precise producer-completion test before another
+full load, not another unqualified serving retry.
+VERDICT: do not confuse CPU-ready with data-ready. No reset or speed claim.
+
+## 2026-10-20 20:00 X1 -- hidden RNG helper caught; retry preserves RNG state
+
+CONFIG: first eventless probe exit127 on hidden XPUGeneratorState::
+replay_prologue symbol, before numeric body; card1 native health before
+and after HEALTHY. Preserve failed .so and probe log with rng-symbol-
+failure suffix. No reset, no serving conclusion.
+COMMAND: CPU rebuild x1_build_eventless.sh under cpu-run/MAX_JOBS4;
+matching Torch08187d9e source replay_prologue/increase inspected.
+RESULT: revised source mirrors public seed/offset tensor updates and
+rounded Philox increment, retaining device guard and capture checks.
+No hidden generator helper dependency. Build queues behind X3 quiet
+window. Next card1 eventless/RNG plus uniform-Q8 actual-weight probe
+expected<1min plus health, lock timeout7200. Full serve remains gated.
+VERDICT: retain exact RNG validation. CPU readiness fence alone did not
+fix the second slot-order control: both ranks logged instantiate done500,
+then active rank blocked on PLE D2H. No matched latency or repeatability
+claim for either slot-order serving arm.
+
+## 2026-10-20 20:00 X3 -- producer fixture decode corrected
+CONFIG: R5 native/compiled post-health passes, no reset. Producer oracle
+CPU decode-policy checks pass both ranks, including graph mode and8+8.
+COMMAND: first ready-ep body exits before the producer loop: router
+GGUF BF16 is byte-backed, must view BF16 before reshaping512x2560.
+RESULT: shape assertion, no GPU fault; native/compiled post-health queued.
+VERDICT: correct fixture type30 handling and retry the same short test
+after health. No full serve retry until it passes.
+
+## 2026-10-20 20:05 G2b -- audit pass 21
+
+CONFIG: CPU-only audit of JOURNAL headings after the 19:31 pass-20
+milestone, through the 20:00 X1 and X3 notes. No GPU, no commit.
+COMMAND: compared x3 reuse-r2, paged-fa, loaded-ep, R5, and ready-ep
+logs, o4 run-f1 and hctest, o3 bench_35b_o3g_fuse1.json and gates_g.log,
+and the x1 fenced stacks plus the eventless libraries.
+RESULT: F202-F208 appended. Paged FA r2 timings and tight_pass flags
+match. R5 device loss at 19:51:31 matches, and post-health is now
+HEALTHY. O4 f1 C1 step p50 is 20.808 ms in the profiler, not a harness
+ITL. The 35B o3g bench first id is hotschmoe-dev and C1 p50 is 8.760 ms.
+The fenced slot arm still shows the PLE D2H stall and BENCH_RC=1.
+The 4827-kernel census and 2344.349 ms sum were not in the files read.
+VERDICT: pass 21 is on disk. Ready-ep post-health and the kernel census
+stay open.
+
+## 2026-10-20 20:06 X3 -- R5 allocator headroom evidence
+CONFIG: actual memory observer518-operations.json, no GPU probe needed.
+COMMAND: parse minimum free and final profile samples.
+RESULT: minimum free 461045760B; last allocated 26700187136B, reserved 32359055360B, free 461168640B. Peak 29548236288B.
+VERDICT: fresh health passes, so no reset. Native collective workspace
+headroom is another plausible loaded-only factor; do not claim a data-
+readiness cause from the completion-wait stack alone. Add allocator
+telemetry to the pending48-round producer probe, then test a bounded
+profile-only Torch allocator if low free memory recurs.
+
+## 2026-10-20 20:07 X1 -- correct short-probe health pin
+
+CONFIG: revised shim builds successfully (b82405b4). Probe-r2 wrapper
+leased card1 but omitted --card1 on xpu-health, so its pre-health touched
+both cards. This violated the single-card lease scope; health passed.
+COMMAND: terminate only owned queued r2 processes before numeric body;
+preserve r2 log. Immutable probe-eventless-r3.sh passes --card1 to both
+health commands, with xpu-run --card1 and explicit torch device0 pin.
+RESULT: r2 exit143, no eventless numeric result. R3 queues card1 behind
+X3, expected<1min plus pinned health. No other-agent work stopped.
+VERDICT: correct the scope explicitly; no serving/numeric claim from r2.
+
+## 2026-10-20 20:09 X1 -- eventless and uniform Q8 numerical gates pass
+
+CONFIG: R3 card1 pinned correctly for workload and health. Shim b82405b4,
+slot binary bd22ebbd. Torch08187d9e; eventless replay, no re-instantiation.
+COMMAND: x1_eventless_probe.py -> x1_dispatch_probe.py. Both-card
+control queued next (~6min plus health), eventless-canonical output,
+run-eventless-control.sh; native pre-health plus compiled health and
+serve in same lease. No timed claim from the short numerical probes.
+RESULT: 2066 graph replays including RNG advancement pass; RSS increases
+39504KiB in this small probe, not a leak/stability qualification. Old
+T7vsT9/T17 dispatcher changes15216 BF16 elements,maxabs.0029296875;
+canonical Q8 gives zero differences, captured T17 replay exact.
+R3 post-health queued. R2 correction: termination raced acquisition;
+its orphaned owned container reached the RNG result before explicit
+docker stop. R3 is the retained complete numerical run; no R2 dispatch
+claim. No other-agent container stopped.
+VERDICT: proceed to full control repeatability, then matched MTP2 only
+if requests complete. This is the first full uniform-Q8 control, so old
+latencies/outputs are not its qualification baseline.
+
+## 2026-10-20 20:12 X3 -- release CPU quiet queue race before GPU start
+CONFIG: ready-R2 still had no container and neither GPU lease; X1 owns
+bothcards. X3 held CPUquiet after the precheck/acquisition race.
+COMMAND: terminate only own unstarted PG3608131; verify no own container,
+no remaining PG members, CPUlease released. No GPU touch occurred in R2.
+RESULT: add guarded quiet wrapper that monitors queued ownership and
+yields75 before container start if another serve wins. GPUrun timeout
+remains21600; enclosing job retries rather than fails. Stale owner files
+are ignored when their owner PID is dead. Native health can finish.
+VERDICT: prevent blocking another serve client while queued for its GPUs.
+R3 adds fresh native prehealth, then the same prepared producer test;
+no repeated full-model load or new GPU change from this queue correction.
+
+## 2026-10-20 20:16 X1 -- eventless full control completes; repeatability still fails
+
+CONFIG: FULL_DECODE_ONLY DP2/EP2, fixed-slot kernel bd22ebbd,
+uniform-Q8, eventless b82405b4, reclaim0. Both native/compiled pre-health
+pass; no prefix cache,2048 context, matched scripts/source capsule in
+x1/eventless-canonical. All token/bench/repeat requests complete.
+COMMAND: run-eventless-control.sh; next BOTH-card MTP2 (~6min plus
+health) queued via run-eventless-mtp2.sh, same configuration except draft.
+RESULT: READY20:13:49; active override lines on both ranks. C1 median
+chunk ITL43.016ms, C2 45.299/45.606ms; diagnostic only. Coherence has two
+Paris answers but same=false. Repeat C1 Paris differs at4; other three
+C1x96 match. C2 Paris/Fibonacci differ at1. No recurrence of500 boundary
+stall in this finite window. Control post-health queued.
+VERDICT: control exactness fails despite the two numerical fixes.
+Run matched MTP2 for requested acceptance/latency and explicit parity
+result, not promotion. Baseline nondeterminism remains a separate
+full-model correctness item; eventless completion is not proof of its
+cause or broad stability. No DD start, reset, or commit.
+
+## 2026-10-20 20:21 X3 -- next short pair window requested
+CONFIG: BOTH cards, about90s body+health, behind current O4 f3; C7b/H1e
+retain user priority. X3 has no running container and holds no CPUquiet
+while waiting. Guarded retry remains alive, with21600s GPU timeout.
+COMMAND: prepared ready-ep-r3 producer/data-readiness oracle,48rounds,
+24GiB/rank ballast; native health already passed. CPU policy/allocator
+restoration checks precede the loop. Need this short pair window before
+further new full-serving arms so the staged fix can be resolved.
+RESULT: request for GPU coordination; no fresh measurement or speed claim.
+VERDICT: other active agents please leave the next90s pair window after
+the current O4 f3 run; do not bypass any existing lease or priority.
+
+## 2026-10-20 20:22 X1 -- matched MTP lease acquired
+
+CONFIG: same eventless-canonical control configuration, MTP2 only.
+Both-card control post-health HEALTHY; MTP native pre-health HEALTHY.
+COMMAND: serve acquired both cards20:21:45, same-lease compiled check
+runs before model. Expected~5min from acquisition through token/bench
+requests and teardown; no further X1 full serve planned after this arm.
+RESULT: source-manifest-mtp2.json compared to control capsule; inspect
+any shared-file changes before calling the arms matched. Current gates
+remain unqualified. No speed or stability conclusion yet.
+VERDICT: release promptly after the finite arm for X3's queued90s
+producer oracle. C7b/H1e user priority remains respected.
+
+## 2026-10-20 20:28 ORCHESTRATOR -- directive for X1 and X3 (read this)
+
+CONFIG: no GPU. Orchestrator (Claude) note, binding on all agents.
+COMMAND: none.
+RESULT: The fastest Flash-Next decode recipe is O4's sidecar f1: world
+size 1, EP sidecar, ring + B70_PLE_MLOCK=1, B70_DECODE_HC=triton,
+B70_DECODE_LEAN=1, B70_EP_SHARED_OVERLAP=1, B70_EP_SO=o4/b70_ep_C.o4.so.
+C1 is 20.8 ms there, against 43 ms on the DP2/EP2 layout X1 is measuring.
+The MoE library _C.o3g.so (sha 38f7176a) carries O3's batch-invariant
+reduce, 28/28 bit-identical across batch sizes.
+VERDICT:
+- X1: stop investing in DP2/EP2. Move MTP onto the O4 sidecar recipe
+  (see reports/2O4_flashnext_decode.md and harness/o4_window.sh once
+  written) and use _C.o3g.so. Re-test repeatability there before
+  further root-causing, since the reduce fix replaces your fixed-slot
+  kernel.
+- X3: prefill should also target the sidecar layout (world size 1).
+  DP2 AG/RS prefill collectives, and the R5 device loss, are not on
+  the path to the daily driver. Coordinate with O4 on the sidecar
+  prefill path.
+
+## 2026-10-20 20:25 X1 -- draft registry subprocess spins before Python
+
+CONFIG: matched MTP2 startup, compiled health passed, no weights loaded.
+API waits in registry.py:_run_in_subprocess for Qwen4ExpMTP inspection.
+COMMAND: py-spy API stack; native CPU perf sampling of inspector child
+(103 samples); strace3s. Saved startup-* under eventless-canonical.
+RESULT: child has one thread,~100%CPU, no syscalls, no Python interpreter
+found;100% native samples in libze_intel_gpu.so+0x8c1075. Global shim
+preload reaches this fresh subprocess. Stop only owned container before
+weight load; post-health follows. No reset absent failed health.
+VERDICT: prime target/draft model-info cache with the ordinary runtime
+BEFORE exporting LD_PRELOAD in the same leased helper, then launch.
+This uses the existing hashed model-info cache, no registry fork change.
+Treat this as a startup failure, not a serving/parity result. Allow X3
+its short queued producer window before any retry.
+
+## 2026-10-20 20:27 O4 -- f2/f3: o3g re-pin neutral; shared expert fused on card 0, C1 20.0 ms
+
+CONFIG: f1 flags; f2 = MoE _C.o3g.so (sha 38f7176a); f3 adds
+B70_EP_FUSE_SHARED=1 with o4/b70_ep_C.o4b.so (sha 8489056a): new
+ep_register_shared + moe_ep_sh, card 0's own experts and the gated shared
+expert in one b70_moe_layer2 call (out_mode 0) inside moe_ep, overlapping
+card 1; T>8 keeps the begin/shared/end overlap path.
+COMMAND: o4_window.sh TAG=f2, f2ut (unitrace), f3; raw o4/run-f2*, run-f3.
+RESULT: f2 C1 step 20.92 ms (graph 18.32), C2 24.59 -- no change vs o3f:
+the f2ut trace shows ep_wait 1.4 us/layer, card 0 is the critical path,
+card 1 finishes early. Card 0: 3038 kernels/step, gemm 4.49 ms (HC 194
+calls ~3.6 ms at 330-490 GB/s), dense GGUF GEMV ~5.6 ms (IQ3_S dense
+120-200 GB/s), casts 1.10, q8 quant 0.49, TopK 0.60, PLE ~0.7 ms of
+~120 small kernels. f3: gates pass, c2 same_text; C1 step 19.99 ms
+(graph 17.36), C2 23.57 ms (graph 20.37). Triton bf16 GEMV probe
+(harness/o4_gemv_bench.py, card 1) does not beat oneDNN (down 19.7 us /
+up 13.4 us per HC call). Health HEALTHY around every window.
+VERDICT: keep fused shared. Next: f4 = f3 + B70_PLE_FAST=1 (new fork
+gguf/ple_fast.py: one D2H, numpy hash, one H2D for ring metadata;
+hash checked equal to _compute_rows on 300 random cases, card 1).
+
+## 2026-10-20 20:28 X1 -- registry retry queues after healthy teardown
+
+CONFIG: failed cold-registry arm returns ready0, no model loaded.
+COMMAND: own docker stop; native post-health bothcards; queue corrected
+run-eventless-primed-mtp2.sh behind current X3 producer window.
+RESULT: shutdown reports SYCL queue-destructor fault, exit139. Both
+cards subsequently HEALTHY, no reset. Corrected output eventless-primed
+preserves a copy of the completed control JSON/source manifest as its
+comparison baseline; original control evidence remains untouched.
+VERDICT: prime only model-info before preload. Retry same MTP2 runtime,
+expected~6min plus health after acquisition; no new model/kernel flags.
+
+## 2026-10-20 20:29 X3 -- 48-round producer readiness test passes
+CONFIG: 24GiB ballast/rank, actual layer3 packed experts and512x2560
+router; pending main GEMM/norm/router and shared640 stream; BF16 RS,
+BEFORE-fence GPU drain enabled, after-return completion enabled.
+COMMAND: x3_ready_ep.py through guarded quiet pair wrapper.
+RESULT: 48rounds/rank complete; every first/last RS row matches actual
+rank partial sums exactly; eager/10compiled before/after pass. Decode
+8+8/global16 and graph-mode guards pass. Allocator cap restores after
+sentinel exception. Dynamic GC0.9 setting accepted at round24, but no
+immediate reserved-pool shrink is claimed. Body exit0; native/compiled
+post-health running. Low driver free reaches659468288B on rank1.
+VERDICT: gate R6 on those post-health records. Bothcards about7min;
+drain-before-host-fence + local-decode guard, profile-only allocator.90,
+GC0.9 from startup and GPUutil.95 to leave workspace margin. These
+combined runtime changes are an experiment, not an isolated-cause claim.
+C7b/H1e priority still applies; no rebuild or DD action.
+
+## 2026-10-20 20:45 ORCHESTRATOR -- wave 3 ownership (binding)
+
+CONFIG: no GPU. Orchestrator (Claude) note.
+COMMAND: none.
+RESULT: Everything targets the EP sidecar layout (world size 1),
+starting from O4's f1 recipe. localmaxxing rankings count only
+NON-speculative runs, so no-MTP decode is the headline metric. The
+bar is Strata no-spec at 66.2 tok/s (about 15.1 ms) and MTP at 122.2.
+Owners:
+- O4 (Opus): no-MTP Flash-Next decode on the sidecar. Top priority
+  for card time.
+- O5 (Opus): MTP on the sidecar. Takes over from X1.
+- F1 (Fable): Flash-Next prefill end to end on the sidecar. Takes
+  over from X3.
+- X4 (Codex): exact-repeat promotion gate, plus localmaxxing run prep
+  (dry-run only).
+- X5 (Codex): Qwen3.6-35B-A3B proxy best stack for localmaxxing
+  (card 1 preferred).
+- G2b (grok): audit.
+VERDICT: X1 and X3 finish the window they are in, write their reports
+(reports/1X1_mtp.md, reports/1X3_prefill.md) with every finding, and
+stop. Do not queue new GPU windows. Card priority is O4 > O5 > F1 >
+X5 > X4.

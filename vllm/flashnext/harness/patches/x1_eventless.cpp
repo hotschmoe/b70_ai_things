@@ -2,6 +2,8 @@
 // Adapted from PyTorch XPUGraph.cpp at 08187d9e0fba026dc8217405802ab5381dc88d90.
 // Process-local interposition; rebuild against the installed Torch headers.
 #include <ATen/xpu/XPUGraph.h>
+#include <ATen/xpu/XPUGeneratorImpl.h>
+#include <ATen/xpu/XPUGraphsUtils.h>
 #include <c10/core/DeviceGuard.h>
 #include <atomic>
 #include <cstdio>
@@ -22,7 +24,18 @@ void XPUGraphImpl::replay() {
     }
     c10::OptionalDeviceGuard guard{capture_stream_.device()};
     for (auto& [state, increment] : captured_generator_states_) {
-        state->replay_prologue(increment);
+        // XPUGeneratorState helpers are hidden in this Torch build. Mirror
+        // replay_prologue/increase using their public state fields.
+        TORCH_CHECK(currentStreamCaptureStatus() == CaptureStatus::Executing,
+                    "Cannot prepare replay during capture");
+        if (increment) {
+            TORCH_INTERNAL_ASSERT(!state->capturing_);
+            TORCH_INTERNAL_ASSERT(state->philox_offset_per_thread_ % 4 == 0);
+            state->seed_extragraph_.fill_(int64_t(state->seed_));
+            state->offset_extragraph_.fill_(
+                int64_t(state->philox_offset_per_thread_));
+            state->philox_offset_per_thread_ += ((increment + 3) / 4) * 4;
+        }
     }
     auto& queue = at::xpu::getCurrentXPUStream().queue();
     sycl::ext::oneapi::experimental::execute_graph(queue, *graph_exec_);

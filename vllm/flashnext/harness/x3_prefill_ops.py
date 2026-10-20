@@ -85,14 +85,14 @@ def raw(name):
     return torch.from_numpy(np.array(TS[name].data, copy=True)).to(D)
 
 
-def dense(name):
+def dense(name, dtype=torch.bfloat16):
     tt = TS[name]
     arr = torch.from_numpy(np.array(tt.data, copy=True))
     if int(tt.tensor_type) == 30:
         arr = arr.view(torch.bfloat16)
     elif int(tt.tensor_type) not in (0, 1):
         raise RuntimeError('dense called on packed ' + name)
-    return arr.reshape(tuple(int(z) for z in reversed(tt.shape))).to(D, torch.bfloat16)
+    return arr.reshape(tuple(int(z) for z in reversed(tt.shape))).to(D, dtype)
 
 
 def proj(name, x):
@@ -669,9 +669,9 @@ if 'qsa' in PARTS or 'qsabatch' in PARTS or 'qsaappend' in PARTS or 'qsastage' i
         from b70_qsa_xpu.model_hook import QsaRunner
         query_runner=QsaRunner.__new__(QsaRunner)
         query_runner.batch=batch
-        gamma=dense('blk.3.indexer.q_norm.weight')
+        gamma=dense('blk.3.indexer.q_norm.weight', dtype=torch.float32)
         query_runner._q_gamma=(gamma.float()-1).to(torch.bfloat16).float()+1
-        gamma=dense('blk.3.indexer.k_norm.weight')
+        gamma=dense('blk.3.indexer.k_norm.weight', dtype=torch.float32)
         batch.k_norm.copy_((gamma.float()-1).to(torch.bfloat16).float()+1)
         os.environ['B70_PREFILL_QSA']='1'
         qi=bench('real.indexer_query_norm_mrope',lambda:query_runner._indexer_queries(iq,positions,0,T),12)
@@ -757,6 +757,7 @@ if 'qsa' in PARTS or 'qsabatch' in PARTS or 'qsaappend' in PARTS or 'qsastage' i
         bench('flashnext.qsa_prefill_batch1024',lambda:batch.prefill_chunk(0,q,qi,qfull,pos),12,warm=1,iters=3)
         originals={}
         marks=[]
+        union_counts=[]
         for name in ('write_step_batch','index_scores_batch','topk_batch','union_build','union_attend_xmx','union_attend','gate_batch'):
             fn=getattr(qsops,name)
             originals[name]=fn
@@ -764,6 +765,8 @@ if 'qsa' in PARTS or 'qsabatch' in PARTS or 'qsaappend' in PARTS or 'qsastage' i
                 a,b=torch.xpu.Event(enable_timing=True),torch.xpu.Event(enable_timing=True)
                 a.record();result=_fn(*args,**kwargs);b.record()
                 marks.append((_name,a,b))
+                if _name=='union_build':
+                    union_counts.append(args[3])
                 return result
             setattr(qsops,name,timed)
         a,b=torch.xpu.Event(enable_timing=True),torch.xpu.Event(enable_timing=True)
@@ -775,6 +778,10 @@ if 'qsa' in PARTS or 'qsabatch' in PARTS or 'qsaappend' in PARTS or 'qsastage' i
         torch.testing.assert_close(result,qsa_reference,atol=0,rtol=0)
         stages={}
         for name,start,end in marks:stages[name]=stages.get(name,0)+start.elapsed_time(end)
+        if union_counts:
+            counts=torch.cat(union_counts).cpu().float()
+            print('QSA_UNION_COUNTS','min',float(counts.min()),'mean',float(counts.mean()),'max',float(counts.max()),flush=True)
+            (ROOT/('qsa-real-union.json' if 'qsareal' in PARTS else 'qsa-union.json')).write_text(json.dumps(dict(min=float(counts.min()),mean=float(counts.mean()),max=float(counts.max()))))
         stages['whole_event_ms']=a.elapsed_time(b)
         stages['glue_event_ms']=stages['whole_event_ms']-sum(stages[k] for k in stages if k!='whole_event_ms')
         stage_file='qsa-real-stage-events.json' if 'qsareal' in PARTS else 'qsa-stage-events.json'
@@ -788,7 +795,7 @@ if 'qsa' in PARTS or 'qsabatch' in PARTS or 'qsaappend' in PARTS or 'qsastage' i
         runner=QsaRunner.__new__(QsaRunner)
         runner.batch=batch
         runner.indexer=SimpleNamespace(index_kv_heads=1)
-        runner._q_gamma=dense('blk.3.indexer.q_norm.weight').float()
+        runner._q_gamma=dense('blk.3.indexer.q_norm.weight', dtype=torch.float32).float()
         runner._row_sink=torch.ones(1,device=D,dtype=torch.int32)
         runner._index=torch.zeros(1,device=D,dtype=torch.int32)
         runner.side_tail=torch.zeros(2,3,128,device=D)

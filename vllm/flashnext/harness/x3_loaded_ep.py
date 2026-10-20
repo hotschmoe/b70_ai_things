@@ -87,7 +87,12 @@ for sync in ('1','0'):
             marks[3].record()
             torch.xpu.synchronize()
             assert torch.isfinite(z).all().item()
-            print('X3_LOADED_OK',rank,sync,sizes,iteration,(time.perf_counter()-begin)*1000,'event_ms',*[a.elapsed_time(b) for a,b in zip(marks,marks[1:])],flush=True)
+            row=dict(rank=rank,sync=sync,sizes=sizes,iteration=iteration,
+                     wall_ms=(time.perf_counter()-begin)*1000,
+                     event_ms=[a.elapsed_time(b) for a,b in zip(marks,marks[1:])])
+            with Path(f'/mnt/vm_8tb/b70/build/vllm-flashnext/x3/loaded-ep-rank{rank}.jsonl').open('a') as stream:
+                stream.write(json.dumps(row)+'\n')
+            print('X3_LOADED_OK',json.dumps(row),flush=True)
             samples=y[[0,sizes[0]]].cpu()
             refs=[None,None]
             dist.all_gather_object(refs,samples,group=comm.cpu_group)

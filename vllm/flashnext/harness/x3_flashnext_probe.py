@@ -17,9 +17,15 @@ def math(a,b,context=''):
     assert text==str(a*b),text
     return dict(a=a,b=b,text=text,usage=result.get('usage'))
 
-report['coherence_c1']=[math(17,19),math(23,29)]
+def checked_math(a,b,context=''):
+    try:
+        return math(a,b,context)
+    except AssertionError as exc:
+        return dict(a=a,b=b,error=str(exc))
+
+report['coherence_c1']=[checked_math(17,19),checked_math(23,29)]
 with ThreadPoolExecutor(2) as pool:
-    report['coherence_c2']=list(pool.map(lambda pair:math(*pair),[(17,19),(23,29)]))
+    report['coherence_c2']=list(pool.map(lambda pair:checked_math(*pair),[(17,19),(23,29)]))
 print('COHERENCE',json.dumps(report),flush=True)
 prompt,_=make_prompt(BASE,MODEL,12400,'x3-exact-fn')
 encoded=post_json(BASE+'/tokenize',{'model':MODEL,'prompt':prompt},300)
@@ -42,8 +48,11 @@ for i in range(5):
     report['prefill'].append(summary)
     print('FLASHNEXT_PREFILL',i,json.dumps(summary),flush=True)
     (ROOT/'flashnext-serve.json').write_text(json.dumps(report,indent=2))
-report['long_coherence']=math(17,19,prompt)
-assert report['long_coherence']['usage']['prompt_tokens']>=12288
+report['long_coherence']=checked_math(17,19,prompt)
+if 'error' not in report['long_coherence']:
+    assert report['long_coherence']['usage']['prompt_tokens']>=12288
+report['coherence_ok']=all('error' not in r for r in report['coherence_c1']+report['coherence_c2']+[report['long_coherence']])
 (ROOT/'flashnext-serve.json').write_text(json.dumps(report,indent=2))
 print('LONG_COHERENCE',json.dumps(report['long_coherence']),flush=True)
+assert report['coherence_ok'],report
 print('DONE_FLASHNEXT',flush=True)

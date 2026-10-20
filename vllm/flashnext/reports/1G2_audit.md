@@ -5944,3 +5944,201 @@ stat; this pass reviewed the model_runner barrier and not the rest
 of that diff.
 
 Suggested fix: leave the .so unstaged.
+
+## Pass 21 -- 2026-10-20 20:05 UTC
+
+CPU-only. Headings after the 19:31 pass-20 milestone through the two
+20:00 notes. No GPU, no commit.
+
+### F202 -- X3 reuse-r2 and the paged FA probes
+
+Claim: reuse-r2 exits 0, strided gathers are exact, the E5 subset
+max abs is .000923, residual mean .838073 ms times 48 is 40.2275 ms,
+and FA KV write .198125 ms times 12 is 2.3775 ms. Paged block64 is
+24.884844 ms and fails a tight SDPA gate on 32/393216 elements, max
+abs .0048828125. The r2 probe is 25.047500 and 24.564740 ms, byte-exact
+across page sizes, and passes the FP32 slices. Twelve layers are
+294.777 ms. The dense-GQA sum is 2344.349 ms.
+
+Evidence: x3/reuse-r2.json event_ms is 0.838073 (count 48) and
+0.198125 (count 12). 0.838073*48 = 40.227504. 0.198125*12 = 2.3775.
+The log has PACKED_GATHER_EXACT, REUSE_NUMERIC_OK torch and triton
+0.0009230077, gpu-run exit 0, and HEALTHY card 1 before and after.
+The ".05" hit in that log is "pad=0.05ms", not a tolerance. x3/ops-rest.log
+has flashnext.full_attention event_ms 24.155312. x3/paged-fa.json
+event_ms is 24.884844 and wall_ms 25.621199. paged-fa.log exits 1
+with "Mismatched elements: 32 / 393216" and greatest absolute
+difference 0.0048828125, then HEALTHY card 1. paged-fa-r2.json is
+25.0475 and 24.56474. All six PAGED_FA_FP32_REFERENCE lines are
+tight_pass True. RMS values are 0.000494094, 2.645e-05, and 1.878e-05.
+PAGED_FA_LAYOUT_EXACT 1600. Body exit 0 and HEALTHY card 1. The first
+slice max_abs is 0.015625, so that pass is not atol 0.002 alone.
+12*24.56474 = 294.77688. The string 2344.349 is not in these logs.
+
+Verdict: OK on the reuse medians, the exact-gather lines, the card-1
+health, the paged timings, the 32/393216 rejection, and the r2
+tight_pass flags. The 40.23 ms, 2.38 ms, and 294.777 ms figures are
+projections, not extra timers. UNVERIFIED for a 0.05 reference
+tolerance and for 2344.349. Not a serving ITL.
+
+Suggested fix: store the 12-layer and 48-layer products in the JSON,
+and cite the unpaged 24.155 ms row from ops-rest.log.
+
+### F203 -- loaded EP completes; R5 loses the device at AG 75
+
+Claim: the 22 GiB loaded-EP oracle finishes all 16 per-rank
+combinations, RS rows match, and collective health passes. R5 then
+hits UR_RESULT_ERROR_DEVICE_LOST at 19:51:31 in rank1
+_prefill_return during AG75, before API readiness. Weights were 1224
+tensors and the embedding check passed. Post-health was pending in
+the 19:52 note and is described as passed in the 20:00 note.
+
+Evidence: x3/loaded-ep.log has 32 X3_LOADED_BEGIN, 32 X3_LOADED_OK,
+and 32 X3_LOADED_RS_EXACT lines. X3_LOADED_READY prints 23958388736
+bytes (22.3125 GiB). Collective lines before and after use
+compiled_iterations=10. gpu-run exit 0. loaded-ep-health-after.log is
+HEALTHY cards 0 and 1, exit 0 in 27s. The separate collective log is
+COLLECTIVE_HEALTH_OK world_size=2 shape=4x5120 p2p=None, exit 0 in
+26s. loaded-ep-parsed.json has 24 rows, not 32, because some log
+lines are concatenated. flashnext-serve-r5.log loads 1224 tensors.
+Embedding checks 517 and 518 are bad 0. READY count is 0.
+hotschmoe-dd count is 3 and hotschmoe-dev count is 0. models json is
+0 bytes. AG seq=75 has enter 2 and ready 2 and return 0. The max seq
+is 75. Rank1's traceback contains _prefill_return and
+UR_RESULT_ERROR_DEVICE_LOST at 19:51:31. flashnext-health-after-r5.log
+is now HEALTHY cards 0 and 1, exit 0 in 27s. The R5 collective log is
+COLLECTIVE_HEALTH_OK with p2p=None, exit 0 in 31s.
+
+Verdict: OK that the loaded oracle exited 0 with RS_EXACT lines and
+that R5 died with device loss before READY. The 16-per-rank count
+matches 32 RS_EXACT lines, not the 24-row parsed JSON. Identity did
+not run. The dd strings are present with no dev id. No ITL and no
+2000 tok/s. The 19:52 "health pending" sentence is older than the
+HEALTHY files.
+
+Suggested fix: split concatenated X3_LOADED lines before parsing, and
+do not treat the startup log as an identity check.
+
+### F204 -- producer fixture exits on the router reshape
+
+Claim: the first ready-ep body exits before the producer loop because
+the byte-backed BF16 router cannot reshape to 512x2560. CPU
+decode-policy checks passed. Post-health was queued.
+
+Evidence: x3/ready-ep.log raises RuntimeError: shape '[512, 2560]' is
+invalid for input of size 2621440, on both ranks, at the reshape of
+blk.3.ffn_gate_inp.weight. 512*2560 = 1310720 and 2621440 is twice
+that, which matches a byte view of a BF16 tensor. gpu-run exit 1.
+ready-ep-health-after.log has HEALTHY count 0. This pass did not find
+an "8+8" string in that log.
+
+Verdict: OK that the failure is the reshape and not a device-loss
+line. UNVERIFIED for the CPU decode-policy pass from this log. The
+post-health file has not reached HEALTHY. No speed claim.
+
+Suggested fix: view the GGUF bytes as BF16 before reshape, and keep
+the policy check in the same log as the GPU body.
+
+### F205 -- O4 f1 profiler step and the HC microbench
+
+Claim: f1 C1 step p50 falls from 26.72 to 20.81 ms and the card-0
+graph from 23.81 to 18.27 ms. C2 step falls from 32.14 to 24.65 ms
+and the graph from 28.61 to 21.41. Gates pass, c2 same_text is true,
+and health is HEALTHY. The HC graph microbench is 0 ulp and
+7.876 to 4.027 ms at T=1. The unitrace census is 4827 kernels and a
+24.15 ms sum.
+
+Evidence: o4/run-f1/profile.log SUMMARY n_graph_steps 94: C1 step_ms
+p50 20.808, replay_dev_ms 18.267, sample_dev_ms 0.829; C2 step_ms
+24.653, replay_dev_ms 21.409. Gates 323/667 match, c2 same_text=True,
+gates_ok=True. hotschmoe-dev count 1 and hotschmoe-dd count 0 in that
+profile. The window HEALTHY count is 2. 20.808-18.267 = 2.541.
+o4/_C.o4pin-o3g.so sha256 starts 38f7176ac290cb26. o4/b70_ep_C.o4.so
+sha256 starts 4189799b340e8060. o4/hctest.log reports max_ulp=0 at
+T=1, T=2, and T=4, and graph times 7.876 to 4.027 ms at T=1 and
+9.694 to 4.171 ms at T=2. That log has no HEALTHY line. The string
+4827 in x3/ops-rest.log is not a kernel census; the kernel-sum claim
+was not in a saved census file this pass read.
+
+Verdict: OK on the f1 profiler percentiles, the gates, same_text, the
+two library hashes, and the HC ulp and graph times. The ~2.5 ms host
+figure is step minus replay. These step_ms values are an in-process
+profiler, not a harness ITL, and they do not replace C7b or H1e.
+UNVERIFIED for the 4827-kernel census and for a HEALTHY line around
+the HC microbench.
+
+Suggested fix: write the census totals to a small text file beside
+run-ut2, and keep 20.81 ms labeled as profiler step_ms.
+
+### F206 -- O3 stage-3 35B serve and a partial gates table
+
+Claim: _C.o3g.so sha 38f7176a, gates failures=0, and the 35B fused
+serve has C1 ITL p50 8.76 ms (116.2 tok/s) and C2 11.12/11.17 ms.
+Identity and coherence pass. Several microbench pairs are quoted,
+including IQ3_S/Q2_0 70.3 to 61.1 us and reduce T=4 6.55 to 3.90 us.
+
+Evidence: bench_35b_o3g_fuse1.json first id is hotschmoe-dev,
+expect_first hotschmoe-dev, first_ok true, alias
+qwen3.6-35b-a3b-ud-iq3-xxs. coherence ok true, same true,
+mentions_paris true. mtp.enabled false. C1 itl_p50_ms 8.760302,
+decode_tok_s 116.158972, n_chunks 62, completion 63. C2 itl_p50_ms
+11.117689 and 11.166312. gates_g.log contains failures=0 six times
+and HEALTHY three times. b70_sched_red_k avg_us 6.55 and 3.90 are
+present. The string 70.3 is absent. The o3g sha matches the o4 copy
+hashed in F205; gates_g.log does not print it. This pass did not
+read serve_driver_o3g_fuse1.log for an xpu-health line.
+
+Verdict: OK on the 35B bench identity, coherence, MTP off, and the
+ITL percentiles. This is the 35B proxy, not Flash-Next. OK that
+failures=0 is in the gates log. UNVERIFIED for the 70.3 us arm and
+for the serve's own health line. The 6.55 and 3.90 us values are in
+the log without the T=4 label on the extracted line.
+
+Suggested fix: keep the 8.76 ms result labeled 35B, and quote only
+microbench rows that the gates log prints in full.
+
+### F207 -- the second slot arm still stalls; eventless sha is the failed build
+
+Claim: the CPU barrier did not fix slot-order serving. Both ranks
+logged instantiate done 500, then the active rank blocked on PLE D2H.
+The eventless probe exits 127 on replay_prologue. Its sha256 is
+bc88f344. Card 1 health is HEALTHY around that probe. The build took
+10s.
+
+Evidence: x1/fenced-hang-rank0.txt is still mtp_ple.py:60 stage()
+inside execute_model. Rank1 is in distributed barrier at
+model_runner.py:2033, called from _dummy_run. The fenced serve log
+says "re-instantiate every 500 replays". The string "done 500" is
+absent. window-slot-fenced-mtp0.out now has BENCH_RC=1,
+CONTROL_REPEAT_RC=1, and HEALTHY cards 0 and 1. The preserved failed
+library libx1_eventless.so.rng-symbol-failure sha256 starts
+bc88f344391143c9. The current libx1_eventless.so sha256 starts
+b82405b40a13457c and does not match the journal sha.
+eventless-probe-rng-symbol-failure.log contains 127 and
+replay_prologue. Health before and after are HEALTHY card 1, exit 0
+in 20s and 14s. eventless-build.log ends X1_EVENTLESS_BUILD_OK and
+cpu-run exit 0 in 10s.
+
+Verdict: OK that the fenced arm's saved stacks are still D2H versus
+the new CPU barrier, and that the bench result is BENCH_RC=1. WRONG
+for the exact words "instantiate done 500"; the log line is the
+500-replay reclaim policy. OK that bc88f344 is the preserved failed
+library, not the rebuilt file. No matched latency. The served name
+on this arm remains hotschmoe-dd, as in F195.
+
+Suggested fix: quote the reclaim log line as written, and print the
+sha of the library the probe actually loaded.
+
+### F208 -- hygiene
+
+Claim: no new staged secret or binary.
+
+Evidence: HEAD 18a01296. Cached diff is empty. Porcelain is 25
+paths. Binary porcelain rows: ['M vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so']. Fork shortstat: 12 files changed, 629 insertions(+), 47 deletions(-).
+vllm/flashnext/.gitignore still lists *.so. HEAD moved from the
+pass-20 value 5c6edd0a; this pass did not review that commit.
+
+Verdict: OK on an empty index and the same push-allreduce .so. The
+fork diff grew again. This pass did not line-review hc_decode.py.
+
+Suggested fix: leave the .so unstaged.

@@ -25,6 +25,9 @@ controls use dense GQA (QSA0). These are different attention configurations.
   Additive `_C.x3wide.so` sha256
   98c87510c7e713c08b312f5527ba4cdb9868e16ea975e8eeb8a70d9ae76aad4c.
   C13 smoke-only is not a complete serving library.
+- QSA native library `/mnt/vm_8tb/b70/build/vllm-flashnext/b70_qsa_xpu/libb70_qsa_xpu.so`,
+  sha2562ee734458f9ed0ac0ebd827c409c3771ba315fab15dfdf004bd19da24f67bf71,
+  mtime10:57:30 UTC, before these probes.
 
 Raw artifacts are under `/mnt/vm_8tb/b70/build/vllm-flashnext/x3/`.
 The existing fork has other agents' changes; X3 made no commit/push and
@@ -54,7 +57,9 @@ All values below are measured events at T12288. Equal GGUF type/shape
 operations are represented by one real weight tensor and multiplied by
 actual layer occurrence counts. Ordinary rows use3 warmups/5 samples.
 Activations are synthetic unless explicitly identified otherwise.
-This is a component budget, not model TTFT. Parent/child rows do not add.
+Events enclose each operation and include host-launch/data-readiness
+gaps on the GPU timeline; wall samples are also stored. This is a
+component budget, not model TTFT. Parent/child rows do not add.
 
 | operation | model calls | ms/chunk |
 | --- | ---: | ---: |
@@ -250,6 +255,25 @@ Detailed stacks are r4-stack-rank0/1.txt; native post-health passes.
 A short oracle now tests reusing the outer ordering/counts and byte-exact
 strided packed-weight gathers before another full weight load.
 
+The loaded-memory oracle then passed:22GiB/rank ballast plus actual
+layer3 type16/16/42, AG(X,512 logits)->five-expert buckets->FP32 RS,
+four iterations each at12288/12288 and12288/1. Both completion-wait
+modes pass, expected rank partial sums match, eager/10compiled health
+passes before/after, and native/compiled teardown exits0. Residency
+was23,958,388,736B/rank; this approximates, rather than duplicates, the
+full model's23.92GiB. At C1/async,3 post-first samples give:
+
+| rank | AG ms | expert ms | padded FP32 RS ms | wall ms |
+| --- | ---: | ---: | ---: | ---: |
+|0|10.115|9.086|12.607|33.993|
+|1|10.153|9.126|12.317|33.015|
+
+Source loaded-ep.log and parsed clean lines loaded-ep-parsed.json.
+The five fixed routes are startup-like, not natural-text routing.
+Actual GGUF dispatch casts routed outputs back to BF16 before model RS;
+the FP32 oracle stresses twice that transfer size. It is a loaded
+operator check, not a full-model timing or C1 stability qualification.
+
 The raw EP sidecar is a separate path. At T12288/H2560/top10 it would
 transfer X BF16 62,914,560B, IDs491,520B, weights491,520B, partial FP32
 125,829,120B:189,726,720B/layer,9.107GB/48layers. This is device-peer
@@ -296,8 +320,23 @@ Dense-GQA serving results do not close native-QSA parity or200K serving.
 ## RESULT: real Flash-Next serving qualification
 
 R4 failed readiness during startup profiling, before any API or TTFT
-result. The next candidate is conditional on the short grouping/gather
-oracle and fresh health. The prepared probe compares native/padded RS on
+result. R5, after grouping reuse and post-collective GPU waits, completes
+AG/RS1..74 but reports DEVICE_LOST at the completion wait for AG75
+on rank1. Both fresh native and compiled post-health pass; no reset was
+needed. This is a real loaded-runtime failure and no2ktok/s result.
+The observer's final allocated/reserved/free values are
+26,700,187,136 /32,359,055,360 /461,168,640B, peak29,548,236,288B;
+free bottoms at461,045,760B. Cached allocator slack and native
+workspace headroom are plausible additional factors, not a proven cause.
+
+The next short oracle tests pending main/auxiliary GPU producers across
+48 collective rounds, with a GPU drain BEFORE the CPU readiness fence.
+A separate policy guard uses local DP token counts and graph mode so
+gathered8+8 decode rows16 never enter CPU-counting prefill paths. CPU
+policy cases pass on both ranks. The first producer fixture failed its
+byte-backed BF16 router reshape before the loop; corrected retry queued.
+
+The prepared real-model probe compares native/padded RS on
 identical12288 IDs, then3 unprofiled TTFT requests, C1/C2 math and a
 >12288-token math prompt. Profiled capture I/O is excluded from plain
 rates. Identity must be primary hotschmoe-dd plus its detailed X3 alias.
@@ -312,8 +351,8 @@ Real Flash-Next2000+ tok/s remains unclaimed until serving gates finish.
 Fast prefill switches: B70_PREFILL=1, DQ_T8192, REDUCE=grouped,
 BUCKET=1, EXPERT_TILE64, PLE_HASH=numpy, HC=triton, DQ_OVERLAP0,
 PREFILL_WIDE_SO=X3wide. Optional QSA helpers use B70_PREFILL_QSA=1,
-B70_PREFILL_QSA_BATCH1024, B70_PREFILL_QSA_APPEND=batch. Decode T<=8
-stays unchanged; MTP verification>8/general prefill capture are unqualified.
+B70_PREFILL_QSA_BATCH1024, B70_PREFILL_QSA_APPEND=batch. Local decode T<=8, including gathered DP=2 rows16, stays on the
+decode path and graph forwards skip prefill; MTP verification>8/general prefill capture are unqualified.
 The candidate harness accepts B70_QSA=1 to attach those helpers, with
 the QSA plugin import path present; that full-model mode remains unqualified.
 The serving harness preflights the same-checkpoint B70_EMBED_REF required
@@ -322,7 +361,8 @@ by memoryfix1 and watches the8GiB MemAvailable floor. No shelf promotion.
 Failure/setup evidence is retained: initial35B concentrated-router OOM
 (fixed by pad guard/buckets), R1 process-group reinit timeout and live-shell
 EOF cleanup mistake, first full load's missing embedding reference, R3
-startup handoff stall. Every retry is now an immutable shell script and
+startup handoff stall, R5 AG75 device loss (post-health passes), and
+producer-fixture router decode assertion. Every retry is now an immutable shell script and
 health-gated. All completed fresh native/compiled health checks pass;
 no xe-reset/reboot or DD action occurred. Full weight load is about155s,
 so remaining comparisons share one load and reuse just-completed health.

@@ -6,6 +6,8 @@ from pathlib import Path
 
 import torch
 
+torch.xpu.set_device(0)
+
 
 def rss_kb():
     return int(

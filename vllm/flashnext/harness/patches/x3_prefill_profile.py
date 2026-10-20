@@ -14,8 +14,21 @@ def install():
         original = cls.execute_model
         if getattr(original, '_x3', False):
             return
+        if os.environ.get('B70_PREFILL_ALLOC_FRACTION'):
+            profile = cls.profile_run
+            def limited_profile(self, *args, **kwargs):
+                from b70_gguf_xpu.prefill_memory import profile_allocator
+                with profile_allocator():
+                    return profile(self, *args, **kwargs)
+            cls.profile_run = limited_profile
         state = {'active': False, 'hooks': False, 'events': [], 'enabled': True, 'payloads': []}
         def measured(name, fn, *args, **kwargs):
+            if not state['active']:
+                control=os.environ.get('B70_PREFILL_PROFILE_CONTROL')
+                if control:
+                    with open(control) as stream:
+                        flags=stream.read().split()
+                    state['enabled']=bool(flags) and flags[0]=='1'
             if not state['enabled']:
                 return fn(*args,**kwargs)
             remote = False

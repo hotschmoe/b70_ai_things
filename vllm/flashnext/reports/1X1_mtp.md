@@ -1,304 +1,210 @@
 # X1 -- Flash-Next MTP on vLLM
 
-Status: full Flash-Next target and MTP graphs run, with 77.03% bench draft
-acceptance and a diagnostic C1 rate of 33.04 versus 23.98 tok/s. The
-initial full-model exact-token gate FAILED; the no-MTP control also
-fails exact repeatability within one load. A batched expert reduction
-fix built and passed all 63 numeric checks. Its first full-model control
-stalled at PLE D2H after six completions; an all-rank CPU readiness fence
-is prepared for retry. This is not yet a qualified speedup.
-Proxy outputs match through configured EOS; forced post-EOS continuation
-has a divergence described below. Numeric/state diagnosis is ongoing.
-No promotion, commit, or daily-driver service change.
+The qwen4_exp MTP drafter loads the Strata sidecar and runs under
+FULL_DECODE_ONLY graphs. It is NOT qualified: full Flash-Next greedy
+parity fails, and the no-MTP control itself fails exact repeatability.
+The latest eventless, fixed-slot, uniform-Q8 control completes all
+requests and its same-load repeat, then tears down with both cards
+HEALTHY. The matched MTP arm is pending below. No promotion or commit;
+no daily-driver start or GPU reset.
 
-## Strata findings
+## Weights and Strata behavior
 
-The main ISTA IQ3_XXS GGUF does not contain the daily-driver MTP head.
-`strata/flash-next/dd/hotschmoe-dd.json:43` selects
-`/mnt/vm_8tb/b70/build/strata-ab/mtp-bf16/rt`. This directory contains
-116099072-byte dense.bin, dense.txt (29 tensor records), and 707788800-byte
-experts.bin. Source pack: `mtp-bf16/mtp-q2_0.gguf` (889014272 tensor bytes).
-Its 31 tensors came from the original BF16 HF MTP checkpoint. The experts
-are pinned by mtp-inventory.json to Qwen/Qwen3.8-Flash-Next revision
-de4b8e4d43b917e7706784d8bb445c9af86a3540; mtp-manifest.json records
-individual extracted tensor hashes. The packed experts
-are Q2_0. Runtime dense projections are rounded to Q8_0; HC/router stay
-BF16 and norms are F32 folded gamma. `src-ep/tools/mtp_rt.py:3` documents
-the expert relayout and folded norms. The model-lock json pins the main
-ISTA model, not this separate MTP sidecar.
+The main ISTA IQ3_XXS GGUF has no MTP tensors. The DD selects a separate
+sidecar, `/mnt/vm_8tb/b70/build/strata-ab/mtp-bf16/rt`:
 
-Default solo verification is a four-row window (`--spec 4`,
-`--mtp-max-t 4`): one already sampled target token plus up to three
-drafts, not vLLM num_speculative_tokens=4. Batch MTP depth is two drafts
-for concurrent requests. See `src-ep/src/program/generate.cpp:4495` and
-`docs/20261016_night_lab.md:267`. One native MTP decoder layer is reused
-across draft steps. Pooled RMS is over all four HC streams, fc_hidden
-projects each stream independently, and fc_embedding is broadcast onto
-them (`src-ep/src/core/mtp.cpp:906`). Mean-collapse before this projection
-is a different computation. The Unsloth eh_proj sidecar is not the
-daily-driver draft graph (G3 report).
+| File | Bytes | Contents |
+| --- | ---: | --- |
+| dense.bin | 116099072 | Q8_0 dense projections, BF16 HC/router, F32 folded norms |
+| dense.txt | 29 records | Runtime tensor layout |
+| experts.bin | 707788800 | Relayout of Q2_0 expert codes/scales |
+| ../mtp-q2_0.gguf | 889014272 tensor bytes | 31 original-layout MTP tensors |
 
-Acceptance is prompt dependent. Historical engine.log lines 383554 and
-383614 report 12526/17457 (71.75%) and 108/159 (67.92%) accepted drafts;
-these are examples, not a matched benchmark or an average for the 141
-tok/s reference. Strata also uses a restricted draft vocabulary
-`src-ep/data/draft_vocab_en.bin`; vLLM currently uses the whole target head.
+The source inventory pins Qwen/Qwen3.8-Flash-Next revision
+`de4b8e4d43b917e7706784d8bb445c9af86a3540`; mtp-manifest.json records
+per-tensor hashes. The main model-lock json pins the target GGUF, not
+this sidecar. References: `strata/flash-next/dd/hotschmoe-dd.json:43`,
+Strata `src-ep/tools/mtp_rt.py:3`, mtp-inventory.json.
 
-## Implementation
+Strata `--spec 4 --mtp-max-t 4` means four verification rows: one known
+target token plus up to THREE drafts. Concurrent batch MTP depth is two.
+One decoder layer is reused across draft steps. Historical acceptance
+examples are 12526/17457 (71.75%) and108/159 (67.92%); they are not a
+matched average for the141 tok/s DD reference. References: Strata
+`src-ep/src/program/generate.cpp:4495`, engine.log:383554/383614, and
+`docs/20261016_night_lab.md:267`.
 
-Fork: `/mnt/vm_8tb/b70/build/vllm-flashnext/vllm`, branch b70/flashnext.
-Existing dirty changes from other agents are preserved.
+The FC stage uses pooled RMS over four HC streams, projects each stream
+through fc_hidden, and broadcasts fc_embedding onto them. Mean-collapse
+before projection is different math (`src-ep/src/core/mtp.cpp:906`).
+The Unsloth eh_proj head is not the DD draft graph (G3 report). Strata
+also restricts drafting to40525 vocabulary IDs in draft_vocab_en.bin;
+this vLLM path currently evaluates the full248320-token head.
 
-- New `vllm/models/qwen4_exp/gguf/mtp_loader.py` isolates draft placement
-  from target layers. The target loader dispatches to it for Qwen4ExpMTP
-  and Qwen3_5MoeMTP. Shape and payload audits reject incomplete loads.
-- Flash-Next selects `B70_MTP_RT=<rt>` plus
-  `B70_MTP_GGUF=<mtp-q2_0.gguf>`. Dense weights use the actual rounded rt
-  bytes; expert weights use the original GGUF bytes, avoiding the runtime
-  code/scale-plane relayout. They remain packed for b70_gguf_xpu.
-- `xpu/mtp.py` attaches quant methods to shared vocab and to the two fc
-  projections when loading the rt sidecar. It then uses the existing wide
-  fc path, bypassing eh_proj. Other quantization paths retain their former
-  unquantized vocab construction. No new host reads or synchronization
-  are introduced inside forward/capture.
-- Proxy nextn block 40 is loaded into the native Qwen3.5 MTP module,
-  including Q2_K/Q3_K experts supported by the current GGUF kernels.
-  Target blocks never load into draft layer zero.
-- `harness/x1_serve_proxy.sh`, `x1_proxy_window.sh`, and
-  `x1_compare_greedy.py` provide FULL_DECODE_ONLY on/off qualification,
-  exact token-ID comparison, acceptance, C1/C2 timing, health, RAM watchdog,
-  and teardown. Raw evidence is in build/vllm-flashnext/x1.
+## Implementation and scope
 
-## CPU evidence
+Fork: `/mnt/vm_8tb/b70/build/vllm-flashnext/vllm`, b70/flashnext.
+Other agents' dirty changes are preserved. Sources:
 
-CONFIG -> CPU-only torch, Gloo TP=1, meta model constructed from the real
-Flash-Next text config. B70_MTP_RT/GGUF as above. No GPU allocation.
+- `vllm/models/qwen4_exp/gguf/mtp_loader.py`: isolated Qwen4ExpMTP and
+  Qwen3_5MoeMTP load, shape/payload audit, rt dense bytes, GGUF Q2_0
+  experts, shared target vocab. Fused expert gate/up is split on CPU
+  before upload, avoiding a redundant225MiB per EP rank (derived).
+- `gguf/serve_loader.py`: early draft dispatch and PLE history install.
+- `xpu/mtp.py`: packed vocab/FC quant methods; native wide FC retained;
+  rt loading bypasses eh_proj. Folded norm gamma becomes deviation
+  gamma-1 for the native modules.
+- `gguf/mtp_ple.py`: position-indexed convolution/token history ring,
+  sized history+verification width. Rejected future rows cannot destroy
+  needed history. CPU preparation uses raw token IDs, explicit int64,
+  positions, slots and query boundaries; captured forward has no new
+  host reads. Long prefill, rejection, reorder and slot reuse are checked.
+- `v1/worker/gpu/model_runner.py`: prepare PLE outside capture/replay;
+  optional all-rank CPU readiness fence scoped to this PLE path.
+- `harness/x1_serve_{proxy,flashnext}.sh`, corresponding window scripts,
+  and x1_compare_greedy.py: identity, raw token gates, C1/C2, acceptance,
+  RAM watchdog, leased health and teardown.
 
-COMMAND -> `bin/cpu-run uv ... python harness/x1_check_sidecar.py`.
-Also invoked the existing test_mtp_sidecar_every_tensor_once and
-test_meta_qwen4exp_constructs directly because pytest is absent.
+The Flash-Next recipe is BF16 activations, TP1/DP2/native EP, maxlen2048,
+max2 sequences/rank, batch512, FA C7b overlay, no prefix caching,
+FULL_DECODE_ONLY capture sizes1/2/3/4/6/8. Prefix-cache state transfer,
+200K context and RAM eviction are not qualified here. Stable first served
+ID is hotschmoe-dd; model/method/scheme aliases are registered in
+`evals/configs/models.yaml`. Main target remains the DD ISTA IQ3_XXS.
 
-RESULT -> Existing checks pass (cpu-mapping.log). sidecar-cpu-r2.log:
-FLASHNEXT_PAYLOAD_AUDIT_OK and WIDE_FC_REFERENCE_OK [2,4,2560], exit 0,
-34 seconds after CPU lease. An initial CPU attempt failed because the
-test initialized parallel groups outside set_current_vllm_config; fixed.
-sidecar-cpu-r3.log also passes the actual _fc_stage forward against an
-independent pooled RMS and Q8 dequant matmul reference, exit 0 in 25 s.
+CPU sidecar load/payload/wide-FC checks pass. CPU PLE history/reference
+checks pass, including int32 input IDs. The real HC10240 convolution
+captured/reordered/rejected test passes50 replays, conv-only0.095748ms;
+this is not model ITL. Proxy block40 nextn weights load into the native
+Qwen3.5 MTP head, not target layer zero. Requested reports G3, D2 and
+Shisa overlay were inspected before implementation.
 
-VERDICT -> Correctly sized, complete Flash-Next draft payload placement
-is verified on CPU. This does not establish GPU graph or serving behavior.
+## Measured results
 
-## GPU evidence
+Raw evidence root: `/mnt/vm_8tb/b70/build/vllm-flashnext/x1`.
+All rates below are diagnostics until their associated gates pass.
+Effective latency is1000/decode_tok_s; MTP wire-chunk p50 is a separate
+quantity because one chunk can contain multiple accepted tokens.
 
-First proxy baseline: card 0 health passed, target GGUF loaded, full graphs
-captured, HTTP ready. X1 edited its active shell harness and caused a shell
-read-offset failure (line 42 leanup: command not found), followed by clean
-server teardown. No greedy or timing requests ran; this is not a baseline.
-Preserved as proxy-mtp0-harness-error.log and window-mtp0-harness-error.out.
-The frozen-harness baseline retry passed as recorded below.
+| Configuration | C1 effective ms/token | C2 effective ms/token per stream | Bench acceptance | Gate |
+| --- | ---: | --- | ---: | --- |
+| 35B proxy, MTP0 | 9.24 | 12.15 /13.35 | n/a | See EOS caveat |
+| 35B proxy, MTP2 | 6.99 | 10.94 /11.86 | 114/148=77.03% | See EOS caveat |
+| Original Flash-Next, MTP0 | 41.70 | 43.98 /43.98 | n/a | Exact repeat fails |
+| Original Flash-Next, MTP2 | 30.27 | 32.89 /32.01 | 171/222=77.03% | Parity fails |
+| Eventless uniform-Q8 Flash-Next, MTP0 | 43.24 | 45.78 /49.83 | n/a | Exact repeat fails |
 
-The harness checks `/v1/models` against diagnostic entries added to
-`evals/configs/models.yaml`. The stable first ID is hotschmoe-dd;
-secondary IDs encode the model, GGUF method, and MTP depth.
+Proxy: all367 compared tokens through configured EOS/96-token limit
+match. Three forced96-token streams match completely; the fourth differs
+at token82, after configured EOS248044 at token78. The forced continuation
+gate actually returned3; the EOS-truncated comparison is derived, not a
+fresh normal-EOS serving run. Identity/coherence/health/teardown passed.
+C1 wire-chunk p50 was9.27ms off,18.29ms with MTP2. Aggregate draft
+acceptance373/454=82.16%. Raw proxy logs/JSON and proxy EOS gate in root.
 
-Frozen baseline retry passed. Card-0 health before/after HEALTHY,
-clean teardown, identity/coherence pass, four 96-token completions saved.
-`bench-mtp0.json`: C1 p50 9.27 ms, 108.24 tok/s (9.24 effective ms/token);
-C2 p50 12.48/12.38 ms, 82.34/74.93 tok/s (12.15/13.35 effective
-ms/token, including a prefill transition in one stream). No MTP enabled.
-This is the 35B proxy, not Flash-Next.
+Original Flash-Next: target/draft FULL graphs captured; all30 draft
+parameter slots loaded per EP rank. C1 wire-chunk p50 was40.23ms off,
+85.20ms with MTP2; C2 was44.35/44.18ms off,83.37/83.53ms on. Aggregate
+acceptance528/700=75.43%. C1 Paris differs at17; other three96-token
+C1 outputs match. C2 Paris/Fibonacci differ at4/72, before EOS.
+Two subsequent same-load MTP0 gates also fail, including Paris at4 and
+C2 at2/72. Raw flash-*.json/log, flash-repeat-pass1/2.json.
 
-Matched proxy MTP depth2: identity and coherence pass, full graphs captured,
-health before/after HEALTHY, clean teardown. `bench-mtp2.json`:
+Latest control: all six token requests, latency benchmark, and six repeat
+requests complete in one load. Coherence mentions Paris but same=false.
+C1 repeat differs at4; other three C1x96 match. Concurrent repeats differ
+at1/1. Wire-chunk p50 is43.016ms C1,45.299/45.606ms C2. Both-card
+post-health HEALTHY. Raw eventless-canonical/flash-*.json/log,
+control-repeat-diff.json and window-eventless-control.out.
 
-| Proxy config | C1 chunk p50 ms | C1 effective ms/token | C2 chunk p50 ms | C2 effective ms/token |
-| --- | --- | --- | --- | --- |
-| MTP off | 9.27 | 9.24 | 12.48 / 12.38 | 12.15 / 13.35 |
-| MTP 2 | 18.29 | 6.99 | 28.66 / 28.42 | 10.94 / 11.86 |
+## Numerical and graph diagnosis
 
-Effective times are 1000 / reported token/s, not SSE chunk gaps. MTP emits
-several tokens per chunk. Token/s: C1 108.24 -> 143.12; C2
-82.34/74.93 -> 91.38/84.28. Bench acceptance 114/148 = 77.03%; aggregate
-metrics after greedy + bench 373/454 = 82.16%. This is one short matched
-run, not a stability claim, and not the two-card Flash-Next comparison.
+Actual rt HC/router BF16, packed Q8 dense, full-shape GDN three-row
+verification versus sequential decode, and FA speculative versus
+sequential at past16/64/128/512/1536 all pass sampled bit-exact checks.
+These primitive checks do not prove the full model batch invariant.
 
-Exact output evidence: three forced 96-token sequences are identical.
-The fourth differs first at token 82; both have configured EOS 248044 at
-token 78. Generation config eos_token_id is [248046,248044]. All four
-match through their first configured EOS / length limit (367 tokens
-including EOS). `greedy-eos-gate.json` derives this from the recorded
-IDs. The original forced-tail GREEDY_RC=3 is retained; no claim of
-identical generation after EOS is made.
+Two concrete MoE differences were located:
 
-## Flash-Next PLE correctness work
+1. Scheduled reduction summed grouped-expert plan order, which depends
+   on other tokens. Actual mixed-quant probes differed up to1.49e-8 FP32;
+   10/50 records also changed BF16 (11 elements). Unscheduled fallback
+   passed50/50 exactly. `patches/x1_slot_reduce.patch` adds an inverse
+   (token,router-slot) map to both builders and reduces slots in fixed
+   order, shared last, for both output modes. CPU-only build128s/MAX4;
+   separate `_C.slot.so` SHA256
+   bd22ebbd40c4c6c4b0e2513be99306fe8927834e6ecdf9beeccdfd52bcda6426.
+   All63 actual-weight numeric/captured-scratch checks pass exactly.
+2. Dispatcher T>8 changed Q8 activation math to BF16 grouped math.
+   New opt-in B70_MTP_CANONICAL_MOE=1 chunks scheduled Q8 at8 for every
+   size, leaving small decode unchanged. At T7 versus T9/T17, the old
+   dispatcher changes15216 BF16 elements,maxabs.0029296875; the new path
+   is bit-exact and passes captured T17. This is a slower-prefill
+   correctness baseline, not a prefill optimization.
 
-The existing PLE reads only non_spec metadata, skipping all-spec batches.
-Its rolling token/conv history also commits rejected candidates, and its
-graph convolution captures CPU slot indices. These prevent using the
-proxy result as Flash-Next proof.
+Both initial full fixed-slot controls completed six requests then stalled
+at PLE token D2H. The CPU readiness fence did not cure it. Both ranks
+logged begin/done of periodic re-instantiation at500 replays; this is
+correlation, not proof of cause. They were stopped, with both-card
+post-health HEALTHY and no valid benchmark/repeat result. Raw slot/,
+slot-fenced/, saved rank stacks and reclaim.log.
 
-New isolated `gguf/mtp_ple.py` uses a ring of history + verify width,
-indexed by logical position. Rejected future rows never overwrite past
-rows needed after rejection. Both speculative and ordinary metadata groups
-are staged outside the graph; live token positions and physical slots are
-device buffers read by graph replay. The small V2 runner hook executes
-preparation for both eager and graph steps. Enabled only with B70_MTP_RT;
-the no-MTP matched Flash-Next control uses the same ring with width one.
-Prefix caching is explicitly rejected until the PLE rings participate in
-cache state transfer; both X1 serving scripts disable prefix caching.
+The optional `patches/x1_eventless.cpp` interposes only Torch's
+XPUGraphImpl::replay using execute_graph. It preserves device guard,
+capture checks, RNG seed/offset writes and rounded Philox advancement
+from installed Torch08187d9e. Hidden RNG helpers required mirroring
+public state fields. CPU build17s/MAX4; SHA256
+b82405b40a13457c5d6e6b19c7a44d19988cf0b7e981cccb7ea181cb249a7cc3.
+It is ABI-specific and must be rebuilt after Torch updates.
 
-CPU fixture `x1_check_ple.py` passes exact BF16 comparisons after long
-prefill ring wrap, differing rejection lengths, slot reordering, and slot
-reuse (ple-cpu-r3.log). A real-width (10240) XPU capture/replay probe is
-passed: X1_PLE_XPU_GRAPH_REJECTION_REORDER_OK, conv-only graph
-0.095748 ms at real width 10240, 50 device-event replays. Per-card health
-before and after HEALTHY. This is a convolution-only graph measurement.
+Retained probe-r3 passes2066 replays/RNG, uniform-Q8 eager/captured
+checks, exit0 and pinned card1 health before/after. RSS grew39504KiB in
+this small probe; no leak/stability claim. The full eventless control
+completes beyond the earlier stall point, but exactness still fails.
+Periodic re-instantiation is disabled only for this opt-in recipe.
 
-First full Flash-Next control placed all weights (23.97 GiB/card) but
-segfaulted in SYCL PersistentDeviceCodeCache/getSortedImages during XCCL
-all-gather, before ready. Post-health on both cards HEALTHY; no reset.
-The passing C7b recipe had disabled persistent SYCL cache; the X1 control
-left it enabled. Prepared retry disables it and uses a private cache dir,
-after compiled XCCL health in the campaign runtime with the P2P override
-unset. Preserved raw evidence: flash-mtp0-sycl-cache-crash.log and
-window-flash-mtp0-sycl-cache-crash.out. The compiled collective retry
-passed world_size=2, shape=4x5120, ten compiled iterations; both-card
-health passed. The first collective diagnostic needed the already
-installed ocloc on PATH; no GPU reset was required.
+## Evidence, failures and next work
 
-The next control reached graph warmup but found an int32 token-ID versus
-int64 PLE history index_put mismatch. Host staging now converts IDs and
-positions explicitly to int64. The CPU fixture also exercises int32
-inputs (ple-cpu-int32.log, pass). That failed server's post-health passed
-on both cards. Preserved evidence: flash-mtp0-int32.log and matching out.
+Host: kernel7.1.0-070100, UMD26.22, loader1.28.2, Torch2.14.0+xpu
+commit08187d9e, compiler oneAPI2026.1.1. Initial fork HEAD
+0a6170da8ca9991972322fa1ca1d27674f0e75cd with shared dirty changes.
+Original library `_C.o3.so` SHA256
+be76661bd120aa2f6c7523ae3c08813ba56d6114660f3d7f31183c32e5e861eb
+is unchanged. Latest exact source copies/manifests/diff are under
+x1/eventless-canonical; shared diff is not a standalone upstream patch.
+The longer chronological report is preserved as
+x1/1X1_mtp-through-eventless-control.md. JOURNAL has stage records.
 
-The final no-MTP control reached ready, recorded four ordinary-EOS C1
-completions and two concurrent completions, and passed identity and
-coherence. Full decode graphs and the PLE position ring are active.
-Configuration: BF16, IQ3_XXS main GGUF, TP=1/DP=2/EP, max length 2048,
-batch limit 512, two sequences, no prefix cache, C7b FA overlay,
-SYCL persistent cache disabled, B70_PREFILL=0, B70_FUSE_SHARED=0,
-and pinned _C.o3.so. C1 p50 ITL 40.23 ms, 23.98 tok/s; C2 p50
-44.35/44.18 ms, 22.74/22.74 tok/s. No target speed or long-context
-qualification is claimed. Raw evidence: flash-mtp0.log,
-flash-greedy-mtp0.json, flash-bench-mtp0.json and window-flash-mtp0.out.
+Failures retained: persistent SYCL cache startup segfault (cache off
+fixed subsequent startup); int32 PLE history index error (fixed); first
+shim hidden symbol error (fixed); deliberate queue abort after another
+agent's failed collective; two stalled full controls above. Health
+passed after teardown. No hardware reset was used.
 
-Full Flash-Next MTP2 reached READY17:35:42. Both EP ranks completed the
-draft payload audit (30 slots); target graphs used 0.24/0.26 GiB and
-draft graphs 0.03 GiB/rank. Identity and deterministic short coherence
-passed, but GREEDY_RC=3: the first C1 prompt diverges at zero-based token
-17; the remaining three 96-token C1 outputs match. Concurrent prompts
-diverge at tokens 4 and 72; these divergences precede EOS. The original
-ordinary-EOS gate is retained in flash-greedy-mtp2.json. Post-health
-HEALTHY on both cards, clean teardown, no reset.
+A short-probe wrapper mistakenly leased card1 while invoking default
+both-card health. Its termination raced acquisition; the orphaned owned
+container was explicitly stopped. Retained R3 passes --card1 to health
+and workload, with explicit mapped device0. No other agent was stopped.
 
-| Flash-Next config | C1 chunk p50 ms | C1 effective ms/token | C2 chunk p50 ms | C2 effective ms/token |
-| --- | --- | --- | --- | --- |
-| MTP off | 40.23 | 41.70 | 44.35 / 44.18 | 43.98 / 43.98 |
-| MTP 2, unqualified | 85.20 | 30.27 | 83.37 / 83.53 | 32.89 / 32.01 |
+Claude Fable5.1/Claude5.5 CLI consultations failed with unrecognized_model
+and Not logged in. No responding model IDs/advice were obtained; raw
+fable51.txt/claude55.txt. No invented review was used.
 
-Effective time is 1000 / decode_tok_s. C1 token/s 23.98 -> 33.04;
-C2 22.74/22.74 -> 30.40/31.24. MTP benchmark acceptance 171/222 =
-77.03%; aggregate after the greedy and benchmark requests 528/700 =
-75.43%. Speed is diagnostic until the exact gate passes; these short
-2048-context runs establish neither 2x200K behavior nor stability.
-Raw: flash-mtp2.log, flash-bench-mtp2.json, window-flash-mtp2.out.
+Next correctness work is per-layer target-state/logit capture on repeated
+short prompts, comparing DP rank, prefill width, fresh/reused state and
+graph replay. Then fix the first differing operation and rerun exact
+C1/C2 on/off gates. Estimate1-2 engineering days including GPU windows;
+this is a work estimate, not an unsupported-kernel claim. Only after
+that gate: restricted-vocab drafting, batch draft depth and integration
+with the measured O3/O4 decode optimizations. The present recipe does
+not beat Strata's7.09ms C1 or10.9ms C2.
 
-The first card-0 primitive diagnosis (shape-probe.log) is bit-identical
-for sampled actual rt HC/router BF16 weights at rows 1 versus 2/3/6,
-and native full-shape GDN three-row verification versus three sequential
-decodes, including final FP32 SSM state. This narrows but does not locate
-the full-model divergence. The extension (shape-probe-r2.log) is also
-bit-identical for packed Q8 GEMV at rows 1 versus 2/3/6 and the C7b FA
-speculative path versus sequential decode at past lengths
-16/64/128/512/1536, full 24Q/2KV heads of width 256. Both probes exited
-zero in 21/16 seconds after the lease. These are sampled primitive
-checks, not proof that the entire model is batch invariant. A same-load
-no-MTP repeat gate is queued before another full-model workaround.
-
-The first repeat attempt passed its own pre-health but acquired the serve
-lease after X3's separate collective diagnostic timed out. X1 read the
-new X3 warning during startup and stopped the load before READY, releasing
-both cards. No repeat token requests ran. X2 subsequently passed compiled
-two-rank health; X1 post-health passed on both cards. Preserved logs:
-flash-repeat-health-abort.log and window-flash-repeat-health-abort.out.
-This is a scheduling abort, not a model crash or repeatability result.
-
-The immutable repeat retry reused that fresh post-health. X3's intervening
-corrected oracle also passed final compiled health. No-MTP server ready
-18:06:10; two exact gates in one load both exit 3. Pass 1 versus the
-original baseline differs at C1 tokens 4/72 (Paris/Fibonacci), and C2
-Paris token 2. Pass 2 versus pass 1 differs at C1 Paris token 4 and C2
-tokens 2/72. Other C1 outputs match. Both-card post-health passed; clean
-teardown. This establishes a repeatability failure with MTP disabled
-under the new PLE-ring configuration; it does not establish that the
-legacy PLE path has the same failure. Raw flash-repeat-pass1/2.json and
-flash-repeat.log; exact variant clusters in greedy-output-clusters.json.
-
-Actual target mixed-quant probes (16 real experts from eight layers)
-locate a shape-dependent candidate. All sampled dense projections match
-exactly. Scheduled expert FP32 outputs differ by up to 1.49e-8 at rows
-1 versus 3/6; 10 of 50 records also differ after the actual BF16 cast,
-11 entries total. The existing B70_MOE_SCHED=0 fallback is bit-identical
-in all 50 records. Two-call captured scratch reuse matches eager exactly
-in both modes. Card-1 health before/after passed. Raw
-packed-shape-probe.log and packed-shape-sched1/0.log; the exact original
-script is preserved as packed-shape-original.py.
-
-Source candidate: sched_moe.hpp:b70_sched_red sums in grouped-expert
-plan order, which depends on other batch tokens. The new source patch
-harness/patches/x1_slot_reduce.patch adds an inverse (token, router-slot)
-entry map in both plan builders and reduces in slot order, shared last,
-for both output modes. It preserves batching, skips invalid slots, and
-adds no GPU launch. The separate x1/slot-reduce source/build snapshot
-leaves O3's source and pinned library untouched. CPU-only icpx build
-passed in 128 seconds under cpu-run MAX_JOBS=4. Compiler oneAPI
-2026.1.1 (2026.1.1.20260724), PyTorch 2.14.0+xpu. New library:
-`x1/slot-reduce/b70_gguf_xpu/_C.slot.so`, SHA256
-bd22ebbd40c4c6c4b0e2513be99306fe8927834e6ecdf9beeccdfd52bcda6426.
-The build source manifest records 36 files.
-
-The new scheduled kernel passes all 63 numeric records: five actual
-target dense types and eight expert-layer mixes at rows 2/3/6, plus
-three two-call captured replays per expert layer. Every comparison is
-bit-identical in FP32 and BF16. Card-1 health before/after HEALTHY;
-probe exit 0 in 36 seconds. This covers the unfused shared-expert
-configuration used by X1; shared fusion is not qualified by this probe.
-Full-model causality and qualification remain pending serving gates.
-The queued control repeats C1/C2 token checks in the same load after
-the latency benchmark, avoiding another full reload for repeatability.
-Raw slot-probe.log, slot-health-before/after.log, window-slot-mtp0.out;
-serving artifacts use the separate x1/slot directory.
-
-The slot-order control acquired 18:51:56 after fresh native and compiled
-R3 health. It reached READY18:55:33, captured full graphs and saved six
-completion sequences. The following benchmark stalled before any valid
-latency JSON or repeat gate. Python stacks show rank 0 waiting at
-mtp_ple.py:60 (input-token D2H), while rank 1 is already in the next CPU
-DP scheduling sync. X1 stopped the container; benchmark/repeat failed
-and post-health is queued. Raw slot-hang-rank0/1.txt and x1/slot logs.
-The runner now puts all DP ranks, including idle/dummy ranks, through
-their CPU-group barrier after optional PLE staging and before model
-submission. This fence is outside capture/replay. It awaits serving
-validation; no stability claim follows from the six completions.
-
-Final CPU sidecar audit also passes after splitting the fused MTP expert
-gate/up on CPU, avoiding the generic post-load hook's redundant fused GPU
-copy (sidecar-cpu-final.log). This saves a derived 225 MiB per EP=2 rank;
-it is not yet a measured end-to-end VRAM saving.
-
-## Review and scope
-
-Host baseline is 7.1.0-070100-generic. Fork HEAD at measurement is
-0a6170da8ca9991972322fa1ca1d27674f0e75cd, with the shared campaign's dirty
-changes preserved; runtime version string is 0.32.1rc1.dev94+g5fd62688f.
-The X1 source capsule is x1/source-manifest.json, mtp_loader.py,
-mtp_ple.py and fork-tracked.patch. The tracked patch includes pre-existing
-shared changes and is not a standalone clean upstream patch.
-
-Both requested Claude CLI consultations (fable-5.1 and claude-5.5)
-returned unrecognized_model and Not logged in. No actual responding model
-ID or review advice was received. Evidence: x1/fable51.txt, claude55.txt.
-The compiled collective-health JIT used MAX_JOBS=4 and
-TORCHINDUCTOR_COMPILE_THREADS=4. Initial GGUF
-library is pinned to _C.o3.so, sha256 be76661bd120aa2f6c7523ae3c08813ba56d6114660f3d7f31183c32e5e861eb.
+The first matched eventless MTP retry stopped before weight load: the API
+waited on cold draft model-info inspection while its fresh subprocess
+spun entirely in libze_intel_gpu.so (103 CPU perf samples, no syscalls).
+The global preload reaches this CPU inspection child too. Shutdown then
+faulted in SYCL queue destruction (exit139); both-card post-health
+HEALTHY, no reset. The helper now primes hashed target/draft model-info
+with the ordinary runtime before exporting the preload. Corrected retry
+uses eventless-primed/ with the completed control JSON copied unchanged;
+startup-* evidence and failed arm remain in eventless-canonical/.

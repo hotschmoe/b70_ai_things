@@ -325,6 +325,8 @@ def main() -> None:
         STATE["record"] = False
         summ = finish_steps(tag, list(STEPS))
         txt = outs[0].outputs[0].text
+        with open(os.path.join(OUT, f"text-{tag}.json"), "w") as fh:
+            json.dump([o.outputs[0].token_ids and list(o.outputs[0].token_ids) for o in outs], fh)
         log(f"{tag} wall={wall:.3f}s tokens={ntok} text0={txt[:160]!r}")
         if n == 2:
             same = outs[0].outputs[0].text == outs[1].outputs[0].text

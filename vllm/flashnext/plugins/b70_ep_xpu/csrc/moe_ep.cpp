@@ -4,6 +4,7 @@
 #include "doorbell.hpp"
 #include "ep_kernels.hpp"
 #include "region.hpp"
+#include "ep_api.hpp"
 
 #include <sycl/ext/oneapi/experimental/graph.hpp>
 #include <c10/xpu/XPUStream.h>
@@ -32,6 +33,10 @@ using MoeFn = void (*)(void*, const uint16_t*, const uint8_t*, int, const uint8_
                        const int32_t*, const float*, const uint8_t*, int, const uint8_t*, int, const uint8_t*, int,
                        float*, int, int, int, int, int);
 using ReserveFn = void (*)(void*);
+// O4: b70_moe_layer2 (O3 stage 3): routed + shared expert + sigmoid gate.
+using Moe2Fn = void (*)(void*, const uint16_t*, const uint8_t*, int, const uint8_t*, int, const uint8_t*, int,
+                        const int32_t*, const float*, const uint8_t*, int, const uint8_t*, int, const uint8_t*, int,
+                        void*, int, int, int, int, int, const void*, int, int);
 
 struct GraphSlot {
     GraphMod mod;
@@ -56,6 +61,14 @@ struct Layer {
     // Last eager shape compiled outside the flag spin. 0 means none.
     int eager_T = 0;
     int eager_topk = 0;
+    // O4: card-0 shared expert for the fused call (ep_register_shared).
+    bool has_shared = false;
+    const uint8_t* sg = nullptr;
+    const uint8_t* su = nullptr;
+    const uint8_t* sd = nullptr;
+    int sgt = 0, sut = 0, sdt = 0;
+    const void* sgi = nullptr;
+    int sgi_dt = 0;
 };
 
 struct State {
@@ -66,6 +79,8 @@ struct State {
     int reclaim = 0;
     std::optional<sycl::queue> q1;
     MoeFn moe = nullptr;
+    Moe2Fn moe2 = nullptr;
+    bool with_shared = false;
     ReserveFn reserve = nullptr;
     void* so = nullptr;
     Region inbox, psum, flag_in, flag_ret;
@@ -170,6 +185,9 @@ void load_moe() {
     s.moe = reinterpret_cast<MoeFn>(dlsym(s.so, "_Z13b70_moe_layerPvPKtPKhiS3_iS3_iPKiPKfS3_iS3_iS3_iPfiiiii"));
     s.reserve = reinterpret_cast<ReserveFn>(dlsym(s.so, "_Z24b70_reserve_decode_queuePv"));
     if (!s.moe || !s.reserve) throw std::runtime_error("dlsym b70_moe_layer/b70_reserve_decode_queue failed");
+    s.moe2 = reinterpret_cast<Moe2Fn>(
+        dlsym(s.so, "_Z14b70_moe_layer2PvPKtPKhiS3_iS3_iPKiPKfS3_iS3_iS3_iS_iiiiiPKvii"));
+    std::printf("EP moe_layer2 %s\n", s.moe2 ? "found" : "absent");
     std::printf("EP moe_layer from %s\n", path);
 }
 
@@ -281,6 +299,36 @@ void ep_register0(int layer, const uint8_t* gate, int gate_type, const uint8_t* 
     L.I = intermediate;
     L.K = hidden;
     L.ready0 = true;
+}
+
+void ep_register_shared(int layer, const uint8_t* sg, int sgt, const uint8_t* su, int sut, const uint8_t* sd, int sdt,
+                        const void* sgi, int sgi_dt) {
+    State& s = S();
+    if (!s.up) throw std::runtime_error("ep_register_shared before init");
+    if (layer < 0 || layer >= s.nlayers) throw std::runtime_error("ep layer out of range");
+    Layer& L = s.layers[layer];
+    L.sg = sg;
+    L.su = su;
+    L.sd = sd;
+    L.sgt = sgt;
+    L.sut = sut;
+    L.sdt = sdt;
+    L.sgi = sgi;
+    L.sgi_dt = sgi_dt;
+    L.has_shared = sg != nullptr && su != nullptr && sd != nullptr;
+}
+
+void ep_moe_sh(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer) {
+    State& s = S();
+    if (!s.moe2) throw std::runtime_error("moe_ep_sh: the MoE library has no b70_moe_layer2");
+    s.with_shared = true;
+    try {
+        ep_moe(x, w, ids, y, T, topk, K, layer);
+    } catch (...) {
+        s.with_shared = false;
+        throw;
+    }
+    s.with_shared = false;
 }
 
 void ep_register_map(int layer, const int32_t* map0, const int32_t* map1, int nexp) {
@@ -469,8 +517,14 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
     ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, n_ids, x_b, L.e0, L.e1, L.map0, L.map1, L.nexp,
                 s.done0, flag_in_r, ctr0);
     a.memset(s.y0, 0, (size_t)T * (size_t)K * sizeof(float));
-    s.moe(&a, x, L.g0, L.gt, L.u0, L.ut, L.d0, L.dt, s.ids0, w, nullptr, 0, nullptr, 0, nullptr, 0, s.y0, T, topk,
-          L.e0, L.I, L.K);
+    if (s.with_shared && L.has_shared && s.moe2 != nullptr && T <= 8) {
+        // y0 = card-0 routed + sigmoid(x . sgi) * shared, fp32 (out_mode 0).
+        s.moe2(&a, x, L.g0, L.gt, L.u0, L.ut, L.d0, L.dt, s.ids0, w, L.sg, L.sgt, L.su, L.sut, L.sd, L.sdt,
+               static_cast<void*>(s.y0), T, topk, L.e0, L.I, L.K, L.sgi, L.sgi_dt, 0);
+    } else {
+        s.moe(&a, x, L.g0, L.gt, L.u0, L.ut, L.d0, L.dt, s.ids0, w, nullptr, 0, nullptr, 0, nullptr, 0, s.y0, T,
+              topk, L.e0, L.I, L.K);
+    }
     if (y == nullptr) return;  // O4 split: ep_moe_end enqueues the wait and the sum.
     ep_wait(a, flag_ret, ctr0, spin, s.err0 + layer, 12);
     ep_add_uncached(a, y, s.y0, static_cast<float*>(s.psum.local), n4);

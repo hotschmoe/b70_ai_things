@@ -14,6 +14,10 @@ _INIT = False
 _NEXT = 0
 _SHARED_LOGGED = False
 _SHARED_OVERLAP = os.environ.get("B70_EP_SHARED_OVERLAP") == "1"
+# O4: B70_EP_FUSE_SHARED=1 fuses the shared expert into card 0's expert call
+# (T <= 8; needs B70_EP_SO with moe_ep_sh); larger T takes the overlap path.
+_FUSE_SHARED = os.environ.get("B70_EP_FUSE_SHARED") == "1"
+_ZERO: dict = {}
 
 
 def install() -> None:
@@ -151,7 +155,7 @@ def _make_class():
             # O4: B70_EP_SHARED_OVERLAP=1 runs the shared expert inside
             # apply(), between moe_ep_begin and moe_ep_end, so it overlaps
             # card 1's experts instead of preceding the dispatch.
-            return _SHARED_OVERLAP
+            return _SHARED_OVERLAP or _FUSE_SHARED
 
         def apply(
             self,
@@ -163,7 +167,11 @@ def _make_class():
             shared_experts_input: torch.Tensor | None = None,
         ):
             global _SHARED_LOGGED
-            if _SHARED_OVERLAP and shared_experts is not None:
+            if _FUSE_SHARED and shared_experts is not None and 0 < x.shape[0] <= 8:
+                y = self._apply_fused_shared(layer, x, topk_weights, topk_ids, shared_experts)
+                if y is not None:
+                    return y
+            if (_SHARED_OVERLAP or _FUSE_SHARED) and shared_experts is not None:
                 return self._apply_overlap(
                     layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input
                 )
@@ -192,6 +200,47 @@ def _make_class():
             if not ids.is_contiguous():
                 ids = ids.contiguous()
             y = torch.ops.b70_ep.moe_ep(xb, w, ids, int(self._layer_idx))
+            return y.to(dtype=x.dtype)
+
+        def _apply_fused_shared(self, layer, x, topk_weights, topk_ids, shared_experts):
+            """O4: card 0 computes its routed experts + the gated shared expert in
+            one b70_moe_layer2 call inside moe_ep (overlapping card 1). The
+            runner's shared output is a cached zero."""
+            state = getattr(self, "_o4_shared", None)
+            if state is None:
+                from vllm.models.qwen4_exp.gguf.moe import _shared_pack
+
+                pack = _shared_pack(shared_experts)
+                if pack is None or getattr(layer, "expert_map", None) is not None:
+                    state = False
+                else:
+                    sg, sgt, su, sut, sd, sdt, gate_inp = pack
+                    gi = gate_inp if gate_inp is not None else torch.empty(0, dtype=torch.bfloat16, device=x.device)
+                    torch.ops.b70_ep.ep_register_shared(
+                        int(self._layer_idx), sg, int(sgt), su, int(sut), sd, int(sdt), gi
+                    )
+                    state = True
+                    print(f"b70_ep: layer {self._layer_idx} shared expert fused into moe_ep_sh", flush=True)
+                self._o4_shared = state
+                self._o4_zero = {}
+            if not state:
+                return None
+            xb = x if x.dtype == torch.bfloat16 else x.to(dtype=torch.bfloat16)
+            if not xb.is_contiguous():
+                xb = xb.contiguous()
+            w = topk_weights if topk_weights.dtype == torch.float32 else topk_weights.to(dtype=torch.float32)
+            if not w.is_contiguous():
+                w = w.contiguous()
+            ids = topk_ids if topk_ids.dtype == torch.int32 else topk_ids.to(dtype=torch.int32)
+            if not ids.is_contiguous():
+                ids = ids.contiguous()
+            y = torch.ops.b70_ep.moe_ep_sh(xb, w, ids, int(self._layer_idx))
+            key = (tuple(x.shape), x.dtype)
+            zero = _ZERO.get(key)
+            if zero is None:
+                zero = torch.zeros(x.shape, dtype=x.dtype, device=x.device)
+                _ZERO[key] = zero
+            shared_experts._output[shared_experts._output_idx] = zero
             return y.to(dtype=x.dtype)
 
         def _apply_overlap(self, layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input):

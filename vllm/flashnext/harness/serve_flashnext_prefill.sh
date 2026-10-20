@@ -22,6 +22,9 @@ if (( $(awk '/MemAvailable:/ {print $2}' /proc/meminfo) < 8388608 )); then
   exit 4
 fi
 OPT=()
+if [[ -n "${PREFILL_ALLOC_CONF:-}" ]]; then
+  OPT+=(--env "PYTORCH_ALLOC_CONF=$PREFILL_ALLOC_CONF")
+fi
 PRE=()
 if [[ "${PREFILL_PRE_COLLECTIVE:-0}" == "1" ]]; then
   PRE=(bash "$HERE/x3_health_then_serve.sh")

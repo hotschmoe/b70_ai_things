@@ -58,7 +58,7 @@ if ((ready)); then
     --base-url "http://127.0.0.1:$PORT" --model hotschmoe-dd \
     --alias "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-vllm-rt-mtp${MTP_TOKENS}" \
     --out "$OUT/flash-bench-mtp${MTP_TOKENS}.json" --decode-tokens 96 \
-    --skip-prefill --tag "X1-flashnext-full-mtp${MTP_TOKENS}"
+    --skip-prefill --timeout 120 --tag "X1-flashnext-full-mtp${MTP_TOKENS}"
   bench_rc=$?
   echo BENCH_RC=$bench_rc
   if ((bench_rc)); then failed=1; fi
