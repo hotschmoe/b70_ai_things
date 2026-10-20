@@ -1513,3 +1513,79 @@ Stores: 2064875520 bytes, 93 jobs, 0.475s. Post-health card 0 HEALTHY
 VERDICT: Pass. A fully evicted hybrid prefix resumes from host RAM
 with no extra recompute beyond the align-mode tail. No fork commit.
 Report: vllm/flashnext/reports/1G1_kv_offload.md.
+
+## 2026-10-20 07:53 E1 -- mixed int3/int2 FULL_DECODE_ONLY, C1 ITL 10.63 ms
+
+CONFIG: checkpoint qwen36-mixed-int3-int2-experts-w4a16-trunk, alias
+qwen36-mixed-b70-lowbit. Library libb70_lowbit_xpu_e1mix.so.
+B70_LOWBIT_MOE_LAUNCHES=2, FULL_DECODE_ONLY, FLASH_ATTN,
+B70_XPU_CG_RECLAIM=500, bf16, TP=1, max-len 33792, util 0.90, card 1,
+port 18084. B70_LOWBIT_PREFILL unset, so prefill stays the per-expert
+loop. Decode calls moe_gemv_mixed, not the templated moe_gemv used for
+the int4 and int3 arms. Repack storage bits=3, 40 layers, w13 qweight
+(256, 192, 1024), w2 (256, 48, 2048). Those row counts are the int3
+allocation. Shorter int2 rows are sliced in gptq_experts_mixed_to_b70lb1.
+COMMAND: e1_mixed_graph.sh. Logs e1-mix-serve.log,
+e1-mix-graph-bench.json, e1-mix-ppl.json.
+RESULT: Identity hotschmoe-dev first, alias ok. Coherence ok, same,
+paris. Both texts: " Paris.\nThe capital of France is Paris.\nThe
+capital of France is". Two graph captures, 1 s each. Weight load
+14.38 GiB in 522 s. KV 10.78 GiB. init engine 18.07 s. gpu-run exit 0.
+C1 ITL p50/p90/p99 10.63/10.96/11.12 ms, 95.54 tok/s, TTFT 2123.48 ms,
+n=64. C2 p50 14.26 and 13.97 ms, p90 14.72 and 14.55, p99 21.75 and
+14.92, TTFT 4684.66 and 4709.15 ms, 70.78 and 78.76 tok/s. Prefill
+1017/8185/32762 tok at 112.47/126.94/129.10 tok/s. Ppl 10.1590, nll
+2.3184, tokens 2044. Window nll 1.9115, 2.5400, 2.3456, 2.4763.
+Expert bytes per token, full weight read, 8 slots x 40 layers, no
+dedup, trunk excluded. int4 519045120 B, int3 393216000 B, int2
+267386880 B. Design mix (mass 0.8 on int3) 368050176 B. Count-weighted
+uniform average 300158976 B, which understates routed traffic because
+the hot experts are int3.
+Matched graph arms, C1 ITL / 8k prefill / ppl: int4 10.23 ms / 108.74
+tok/s / 8.858; int3 11.29 ms / 112.32 tok/s / 9.120; mixed 10.63 ms /
+126.94 tok/s / 10.159. Mixed moves fewer expert bytes than int3 and
+the C1 step is 0.66 ms faster than int3, still slower than int4.
+VERDICT: Mixed arm measured. The kernel is not the uniform one, so
+this is not an expert-bits-only delta. Server stopped. d2-shisa took
+card 1 at 07:52:47. Next is grouped prefill on the int3 checkpoint
+with the probed e1.so.
+
+## 2026-10-20 07:55 C8 -- N-fast prefill merged, 25 TF dense, T=512 experts win
+
+CONFIG: card 0, ZE_AFFINITY_MASK=0, icpx 2026.1, flags unchanged
+(-fsycl -O3 -fPIC -fexceptions -fsycl-device-code-split=per_kernel).
+C5 06:38 still the latest C5 entry; IGC 2.41.5 not mounted.
+Prefill source is prefill_sched.inl: C6 dequant-once SLM panel, dense
+grid N-fast, auto policy dense=reuse-rm64 and experts=s64 (MT 4 when
+avg rows <= 32 else 16). Decode sources not edited. Full link used
+kernels.cpp at 07:32:53. Side libraries kept: _C.c6.so (5445576, 06:23),
+_C.c8.so (5445760, sha 82f8e4296849c1c3), _C.graph.so (6987192).
+COMMAND: bin/gpu-run --card 0 bin/cpu-run --quiet scripts/c6_run.sh --full
+on _C.c6.so (c8-prefill-smoke.log) and on _C.c8.so (c8-prefill-c8bench2.log).
+Rejected BN=128 + SLM-acc binary recorded in c8-prefill-c8bench.log.
+Full link B70_PREFILL_OUT=_C.c8full.so (c8-full-build.log, 89s, exit 0).
+One lease c8-task3.sh: moe_layer on the 04:32 _C.so, then gpu_check,
+moe_layer, prefill_check, c6 --full on _C.c8full.so (c8-task3.log,
+TASK3_FAIL:0). compare_cpu.py under bin/cpu-run, PYTHONPATH=venv
+(c8-compare-cpu.log). Then cp -a + sha recheck + mv onto _C.so.
+RESULT: All GPU runs HEALTH_BEFORE/AFTER 0, failures=0. compare_cpu
+13/13 mismatches=0. Dense Q4_K N=12288 K=2560 reuse-rm64 event-min
+1227.1 / 10243.9 / 30689.3 us (26.25 / 25.16 / 25.19 TF) at
+M=512 / 4096 / 12288. torch.mm bf16 323.0 / 1855.5 / 5481.5 us
+(99.74 / 138.89 / 141.04 TF). C2 was 5296 / 42016 / 126036 us.
+C6 smoke reuse at M=12288 was 44878 us (17.23 TF); the N-fast grid
+holds the rate flat. Layer IQ3_XXS+Q2_0 E=512 top-10: T=512 s64-mt4
+9716.9 us (expert48 1098, C2 13885 / 768); T=4096 s64-mt16 28335.7 us
+(3012, C2 27599 / 3092); T=12288 s64-mt16 76670.8 us (3339) tied with
+reuse-rm32 76389.3 (3351), both behind C2 66129 / 3871. Down at
+T=12288 is 19.2 ms vs C2 11.7 ms. Decode moe_layer behind_us
+T=1/2/4/8: 04:32 was 472.7/417.0/713.9/1383.3, merged 367.3/315.0/515.1/815.1.
+_C.so sha now 086595a01babbc366b3d5366147464ebd24022fba0b65d83b1ff530489c70d55
+(was 1e484faeeade967701bf56b8abeb24acd230b28eec79212b28a101ffe4bc3cac).
+GEMM-only projection at T=12288, Q4 rate on quantized mats and torch.mm
+rate on BF16 HC/router/indexer, attention excluded: 7265 ms, 1691 tok/s.
+VERDICT: Dense and grouped prefill are correct and merged. Dense is
+4.1x C2 and 5.6x behind torch at M=12288 (25 TF wall). Experts win at
+T=512 and miss at T=4096/12288 on the short-K down GEMM. 2000 tok/s
+prefill is still ahead of the 1691 tok/s GEMM projection. Report:
+vllm/flashnext/reports/1C8_prefill3.md. No commit.

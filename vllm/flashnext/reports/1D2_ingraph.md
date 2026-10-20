@@ -56,9 +56,9 @@ ms/token. The same graph with the Shisa head at spec=2 is C1 ITL 18.72
 ms, 121.73 tok/s, acceptance 0.665, 8.22 ms/token. The no-MTP baseline
 is 12.81 ms/token. Spec=1 accepts more often (0.775) and is slower
 (111.90 tok/s, 8.94 ms/token) because it has only one draft slot.
-Spec=3's first serve timed out after 600 s while E1 held card 1. A
-rerun with an 1800 s lease wait is in flight; this file will be
-updated when that bench lands.
+Spec=3 accepts less (0.527) and the chunk grows to 21.55 ms, so it
+lands at 113.89 tok/s, 8.78 ms/token. Spec=2 is the fastest of the
+three.
 
 ## 2. GEMV floor
 
@@ -240,14 +240,15 @@ spec=2 (both greedy calls were the same Paris text).
 | native spec=2, D1 | 18.81/19.17/19.37 | 93.88 | | 20.9 | 0.383 | 10.7 |
 | Shisa spec=1 | 15.74/16.22/16.43 | 111.90 | 92.3 | 17.43 / 17.47 | 0.775 (86/111) | 8.94 |
 | Shisa spec=2 | 18.72/18.97/19.26 | 121.73 | 115.1 | 20.93 / 20.99 | 0.665 (113/170) | 8.22 |
-| Shisa spec=3 | | | | | | rerun in flight |
+| Shisa spec=3 | 21.55/21.86/22.00 | 113.89 | 91.0 | 24.03 / 24.04 | 0.527 (125/237) | 8.78 |
 
 ms/token is 1000/C1 tok/s. Chunk ITL did not fall below the no-MTP
-row. The extra accepted tokens did. Spec=2 is the faster of the two
-measured Shisa settings. C2 tok/s was 102 and 108 at spec=1, and 111
-and 123 at spec=2.
+row. The extra accepted tokens did. Spec=2 is the fastest of the
+three Shisa settings. C2 tok/s was 102 and 108 at spec=1, 111 and
+123 at spec=2, and 108 and 112 at spec=3.
 
-JSON: `d2-bench-shisa-spec1.json`, `d2-bench-shisa-spec2.json`.
+JSON: `d2-bench-shisa-spec1.json`, `d2-bench-shisa-spec2.json`,
+`d2-bench-shisa-spec3.json`.
 Shisa copy log: `d2-shisa.log` (rotated per serve; the spec=2 copy
 is in the journal entry and the spec=1 chain log).
 
@@ -260,16 +261,18 @@ band. Ornith Shisa spec=2 at 0.665 sits next to Strata's lower N4
 rate and still trails the N6 pair. The tok/s figures are not
 comparable across the two stacks.
 
-## 6. Spec=3 status
+## 6. Verdict
 
-COMMAND: the first spec=3 serve used `B70_GPU_LOCK_TIMEOUT=600`.
-`gpu-run` printed `timed out after 600s on card 1`. E1
-(`vllm-fn-lowbit-e1-mix`) held the lease from 07:36. No spec=3
-tokens were generated. The rerun uses an 1800 s wait, same flags,
-`MTP_TOKENS=3`, port 18081. Capture sizes are 1,2,3,4,8, which cover
-a decode query of length 4.
+The first spec=3 serve used `B70_GPU_LOCK_TIMEOUT=600` and exited
+with `timed out after 600s on card 1` while E1 held the lease. The
+rerun waited, then served with the same Shisa overlay
+(`copied=16 skipped=2`). Identity and coherence passed. C1 ITL
+p50/p90/p99 21.55/21.86/22.00 ms, 113.89 tok/s, TTFT 91.0 ms,
+acceptance 125/237 = 0.527. Effective 8.78 ms/token, behind spec=2.
+The container was stopped after the bench. Card 1 was free for E1
+again at 07:54.
 
-VERDICT so far: ship the Shisa overlay for a latency run, at
-`num_speculative_tokens=2`, if the goal is effective ms/token.
+Ship the Shisa overlay for a latency run at
+`num_speculative_tokens=2` when the goal is effective ms/token.
 Leave the int4 trunk overlay off. The MoE kernel request in section
 4 is the way through the remaining device time.
