@@ -205,3 +205,82 @@ def gptq_to_b70lb1(
         )
     scale = scales.transpose(0, 1).contiguous().to(torch.bfloat16)
     return plane2, plane_hi, scale
+
+
+def _signed_codes_batch(qweight: torch.Tensor, bits: int, k: int) -> torch.Tensor:
+    """Unsigned GPTQ bitstream to signed int8 codes [C, N, K].
+
+    qweight is int32 [C, K * bits / 32, N]. int3 may straddle int32 words.
+    int2 and int4 stay inside one word, so they skip the second gather.
+    """
+    if bits not in (2, 3, 4):
+        raise ValueError(bits)
+    c, rows, n = qweight.shape
+    if rows * 32 != k * bits:
+        raise ValueError(f"qweight rows {rows} * 32 != K {k} * bits {bits}")
+    u = qweight.to(torch.int64) & 0xFFFFFFFF
+    idx = torch.arange(k, device=qweight.device)
+    word = (idx * bits) // 32
+    off = (idx * bits) % 32
+    mask = (1 << bits) - 1
+    w0 = u[:, word, :]
+    shift = off.view(1, k, 1)
+    unsigned = (w0 >> shift) & mask
+    if bits == 3:
+        nxt = (word + 1).clamp(max=rows - 1)
+        w1 = u[:, nxt, :]
+        nlow = (32 - off).view(1, k, 1)
+        mixed = ((w0 >> shift) | (w1 << nlow)) & mask
+        straddle = (off + bits > 32).view(1, k, 1)
+        unsigned = torch.where(straddle, mixed, unsigned)
+    maxq = 1 << (bits - 1)
+    signed = (unsigned - maxq).to(torch.int8)
+    return signed.permute(0, 2, 1).contiguous()
+
+
+def gptq_experts_to_b70lb1(
+    qweight: torch.Tensor,
+    scales: torch.Tensor,
+    bits: int,
+    k: int,
+    chunk: int | None = None,
+) -> tuple[torch.Tensor, torch.Tensor | None, torch.Tensor]:
+    """Repack routed experts without flattening K across the expert axis.
+
+    qweight: int32 [E, K * bits / 32, N]
+    scales: float [E, K / 128, N]
+    Returns plane2 [E, N, stride2], plane_hi or None, scale bf16 [E, N, K/128].
+    chunk bounds the int64 unpack temporary. The default targets about 128MB.
+    """
+    if qweight.ndim != 3:
+        raise ValueError(f"expert qweight rank {qweight.ndim} != 3")
+    e, _rows, n = qweight.shape
+    if scales.shape != (e, k // GROUP, n):
+        raise ValueError(
+            f"expert scales {tuple(scales.shape)} != {(e, k // GROUP, n)}"
+        )
+    s2 = plane2_stride(k)
+    shi = plane_hi_stride(k, bits)
+    plane2 = torch.empty(e, n, s2, dtype=torch.uint8, device=qweight.device)
+    plane_hi = None
+    if bits != 2:
+        plane_hi = torch.empty(e, n, shi, dtype=torch.uint8, device=qweight.device)
+    scale_out = torch.empty(
+        e, n, k // GROUP, dtype=torch.bfloat16, device=qweight.device
+    )
+    bytes_per = max(k * n * 8, 1)
+    step = chunk if chunk is not None else max(1, min(e, (128 << 20) // bytes_per))
+    for start in range(0, e, step):
+        end = min(e, start + step)
+        codes = _signed_codes_batch(qweight[start:end], bits, k)
+        packed2, packed_hi = pack_codes(codes.reshape(-1, k), bits)
+        c = end - start
+        plane2[start:end].copy_(packed2.view(c, n, s2))
+        if plane_hi is not None:
+            if packed_hi is None:
+                raise RuntimeError("int3/int4 pack produced no plane_hi")
+            plane_hi[start:end].copy_(packed_hi.view(c, n, shi))
+        scale_out[start:end].copy_(
+            scales[start:end].transpose(1, 2).contiguous().to(torch.bfloat16)
+        )
+    return plane2, plane_hi, scale_out

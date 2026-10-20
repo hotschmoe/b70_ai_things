@@ -33,10 +33,22 @@ if [[ "${B70_GGUF_HOST_ONLY:-0}" == 1 ]]; then
     exit 0
 fi
 
+# C2: grouped_prefill.cpp. B70_PREFILL_SMOKE=1 builds IQ3_XXS+Q2_0 fp16 only
+# and writes _C.smoke.so so a failed smoke link does not replace _C.so.
+PREFILL_DEFS=()
+OUT_SO="$OUT/_C.so"
+if [[ "${B70_PREFILL_SMOKE:-0}" == "1" ]]; then
+    PREFILL_DEFS+=(-DB70_PREFILL_SMOKE=1)
+    OUT_SO="${B70_PREFILL_SMOKE_OUT:-$OUT/_C.smoke.so}"
+    echo "build: prefill smoke instantiations -> $OUT_SO"
+elif [[ -n "${B70_PREFILL_OUT:-}" ]]; then
+    OUT_SO="$B70_PREFILL_OUT"
+fi
 echo "build: SYCL extension (MAX_JOBS=${MAX_JOBS:-1})"
 "$ICPX" -fsycl -std=c++20 -O3 -fPIC -fexceptions -shared \
     -fsycl-device-code-split=per_kernel \
     "${CXXFLAGS_STD[@]}" \
+    "${PREFILL_DEFS[@]}" \
     -I"$ROOT/csrc" \
     -I"$TORCH/include" \
     -I"$TORCH/include/torch/csrc/api/include" \
@@ -44,9 +56,9 @@ echo "build: SYCL extension (MAX_JOBS=${MAX_JOBS:-1})"
     -DTORCH_EXTENSION_NAME=_C \
     -DTORCH_API_INCLUDE_EXTENSION_H \
     -D_GLIBCXX_USE_CXX11_ABI=1 \
-    "$ROOT/csrc/kernels.cpp" "$ROOT/csrc/bind.cpp" \
+    "$ROOT/csrc/kernels.cpp" "$ROOT/csrc/grouped_prefill.cpp" "$ROOT/csrc/bind.cpp" \
     -L"$TORCH/lib" -L"$VENV/lib" \
     -ltorch_xpu -ltorch_cpu -ltorch -lc10 -lc10_xpu -lsycl \
     -Wl,-rpath,"$TORCH/lib" -Wl,-rpath,"$VENV/lib" -Wl,-rpath,"$ONEAPI/lib" \
-    -o "$OUT/_C.so"
-echo "build: wrote $OUT/libdequant_cpu.so and $OUT/_C.so"
+    -o "$OUT_SO"
+echo "build: wrote $OUT/libdequant_cpu.so and $OUT_SO"

@@ -26,6 +26,9 @@ static_assert(__builtin_offsetof(B70Q8, qs) == 16, "qs half is 16-byte aligned")
 
 constexpr int b70_kreg_p(int p0) { return (p0 + 15) / 16 * 16; }
 
+// Four signed byte products. Same form as dpct::dp4a (sycl_math.hpp:8): the
+// vec convert is what IGC pattern-matches to DP4A. A shift-and-mask form
+// measured slower on the Q5_K head at M=8 (4330 us -> 6917 us).
 inline int b70_dp4a(int a, int b, int c) {
     const sycl::vec<int, 4> va =
         sycl::vec<int, 1>(a).template as<sycl::vec<int8_t, 4>>().template convert<int>();

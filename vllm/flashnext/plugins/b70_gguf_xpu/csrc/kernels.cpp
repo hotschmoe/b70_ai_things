@@ -236,12 +236,16 @@ void dispatch(int type, Fn fn) {
         B70_DISPATCH(B70_IQ3_S)
         B70_DISPATCH(B70_IQ4_NL)
         B70_DISPATCH(B70_IQ4_XS)
+        B70_DISPATCH(B70_Q2_K)
+        B70_DISPATCH(B70_Q3_K)
         B70_DISPATCH(B70_Q2_0)
     default: throw std::runtime_error("b70_gguf: unsupported ggml type");
     }
 }
 
 #include "kreg.hpp"
+#include "iq_dot.hpp"
+#include "row_moe.hpp"
 
 }  // namespace
 
@@ -254,7 +258,7 @@ void b70_dequant_bf16(void* queue, int type, const uint8_t* q, int64_t rows, int
 
 void b70_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, float* y, int M, int N, int K) {
     const int rb = b70_row_bytes(type, K);
-    if (rb <= 0 || rb > kMaxRow || M <= 0 || N <= 0) throw std::runtime_error("b70_gguf: bad gemv shape");
+    if (rb <= 0 || M <= 0 || N <= 0 || (K % 32) != 0) throw std::runtime_error("b70_gguf: bad gemv shape");
     auto& sy = q_of(queue);
     const bool kreg = (type == B70_Q4_K || type == B70_Q5_K || type == B70_Q6_K || type == B70_IQ4_XS) && (K % 256) == 0;
     if (kreg) {
@@ -266,23 +270,45 @@ void b70_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, float*
         }
         return;
     }
-    for (int m0 = 0; m0 < M; m0 += 8) {
-        const int mm = (M - m0) < 8 ? (M - m0) : 8;
-        dispatch(type, [&]<int TYPE>() {
-            launch_gemv<TYPE>(sy, x + (size_t)m0 * K, w, nullptr, y + (size_t)m0 * N, mm, 0, 0, 0, N, K, rb);
-        });
-    }
+    const int nb = K / 32;
+    B70Q8* xq = b70_q8_scratch(sy, (size_t)M * (size_t)nb);
+    const sycl::event ev = b70_q8_quant(sy, x, xq, M, K);
+    dispatch(type, [&]<int TYPE>() { b70_launch_dense<TYPE>(sy, xq, w, y, M, N, K, rb, ev); });
 }
 
 void b70_moe_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, const int32_t* expert_ids, float* y,
                   int T, int topk, int E, int N, int K) {
     const int rb = b70_row_bytes(type, K);
-    if (rb <= 0 || rb > kMaxRow || T <= 0 || topk <= 0 || E <= 0 || N <= 0)
+    if (rb <= 0 || T <= 0 || topk <= 0 || E <= 0 || N <= 0 || (K % 32) != 0)
         throw std::runtime_error("b70_gguf: bad moe gemv shape");
     auto& sy = q_of(queue);
+    const int nb = K / 32;
+    B70Q8* xq = b70_q8_scratch(sy, (size_t)T * (size_t)nb);
+    const sycl::event ev = b70_q8_quant(sy, x, xq, T, K);
     dispatch(type, [&]<int TYPE>() {
-        launch_gemv<TYPE>(sy, x, w, expert_ids, y, 1, T, topk, E, N, K, rb);
+        b70_launch_row<TYPE>(sy, xq, w, expert_ids, y, T, topk, E, N, K, rb, ev);
     });
+}
+
+void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate_type, const uint8_t* up, int up_type,
+                   const uint8_t* down, int down_type, const int32_t* expert_ids, const float* router,
+                   const uint8_t* sgate, int sg_type, const uint8_t* sup, int su_type, const uint8_t* sdown, int sd_type,
+                   float* y, int T, int topk, int E, int I, int K) {
+    const int grb = b70_row_bytes(gate_type, K);
+    const int urb = b70_row_bytes(up_type, K);
+    const int drb = b70_row_bytes(down_type, I);
+    if (grb <= 0 || urb <= 0 || drb <= 0 || T <= 0 || topk <= 0 || E <= 0 || I <= 0 || K <= 0 || (K % 32) != 0 ||
+        (I % 32) != 0)
+        throw std::runtime_error("b70_gguf: bad moe layer shape");
+    int sgrb = 0, surb = 0, sdrb = 0;
+    if (sgate != nullptr) {
+        sgrb = b70_row_bytes(sg_type, K);
+        surb = b70_row_bytes(su_type, K);
+        sdrb = b70_row_bytes(sd_type, I);
+        if (sgrb <= 0 || surb <= 0 || sdrb <= 0) throw std::runtime_error("b70_gguf: bad shared expert");
+    }
+    b70_moe_layer_launch(q_of(queue), x, gate, gate_type, grb, up, up_type, urb, down, down_type, drb, expert_ids, router,
+                         sgate, sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, y, T, topk, E, I, K);
 }
 
 int b70_grouped_gemm(void* queue, int type, const uint16_t* x, const uint8_t* w, const int32_t* entries, float* y,

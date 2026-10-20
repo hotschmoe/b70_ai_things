@@ -1,5 +1,7 @@
 """ggml type ids used by the Flash-Next IQ3_XXS GGUF mix."""
 
+Q2_K = 10
+Q3_K = 11
 Q4_K = 12
 Q5_K = 13
 Q6_K = 14
@@ -24,6 +26,8 @@ BLOCK = {
     IQ3_S: (256, 110),
     IQ2_S: (256, 82),
     IQ4_XS: (256, 136),
+    Q2_K: (256, 84),
+    Q3_K: (256, 110),
     Q2_0: (64, 18),
 }
 
@@ -38,6 +42,8 @@ NAMES = {
     IQ3_S: "IQ3_S",
     IQ2_S: "IQ2_S",
     IQ4_XS: "IQ4_XS",
+    Q2_K: "Q2_K",
+    Q3_K: "Q3_K",
     Q2_0: "Q2_0",
 }
 

@@ -19,6 +19,8 @@ enum B70GgufType {
     B70_IQ3_S = 21,
     B70_IQ2_S = 22,
     B70_IQ4_XS = 23,
+    B70_Q2_K = 10,
+    B70_Q3_K = 11,
     B70_Q2_0 = 42
 };
 
@@ -34,6 +36,8 @@ inline bool b70_type_info(int type, int& block_elems, int& block_bytes) {
     case B70_IQ3_S: block_elems = 256; block_bytes = 110; return true;
     case B70_IQ2_S: block_elems = 256; block_bytes = 82; return true;
     case B70_IQ4_XS: block_elems = 256; block_bytes = 136; return true;
+    case B70_Q2_K: block_elems = 256; block_bytes = 84; return true;
+    case B70_Q3_K: block_elems = 256; block_bytes = 110; return true;
     case B70_Q2_0: block_elems = 64; block_bytes = 18; return true;
     default: return false;
     }
@@ -47,6 +51,28 @@ inline int b70_row_bytes(int type, int k) {
 
 inline uint32_t b70_ld16(const uint8_t* p) {
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8);
+}
+
+inline uint32_t b70_ld32(const uint8_t* p) {
+    return b70_ld16(p) | (b70_ld16(p + 2) << 16);
+}
+
+// Q3_K 6-bit scales are packed into 12 bytes. ggml dequantize_row_q3_K
+// (and strata dequant.hpp dequantize_q3_K) expands them with kmask1/kmask2
+// before the -32 bias. `is` is 0..15.
+inline int b70_q3_scale(const uint8_t* scales12, int is) {
+    const uint32_t kmask1 = 0x03030303u;
+    const uint32_t kmask2 = 0x0f0f0f0fu;
+    const uint32_t a0 = b70_ld32(scales12);
+    const uint32_t a1 = b70_ld32(scales12 + 4);
+    const uint32_t tmp = b70_ld32(scales12 + 8);
+    const uint32_t o0 = (a0 & kmask2) | (((tmp >> 0) & kmask1) << 4);
+    const uint32_t o1 = (a1 & kmask2) | (((tmp >> 2) & kmask1) << 4);
+    const uint32_t o2 = ((a0 >> 4) & kmask2) | (((tmp >> 4) & kmask1) << 4);
+    const uint32_t o3 = ((a1 >> 4) & kmask2) | (((tmp >> 6) & kmask1) << 4);
+    const uint32_t o[4] = {o0, o1, o2, o3};
+    const uint32_t byte = (o[is >> 2] >> (8 * (is & 3))) & 0xffu;
+    return (int)(int8_t)byte - 32;
 }
 
 inline uint32_t b70_ksign7(uint32_t s7) {
@@ -273,6 +299,47 @@ inline void b70_decode32(const uint8_t* row, int gi, float* v) {
                 v[8 * il + 4 + j] = d * b70_grid_byte_u32(g2, j) * ((signs >> (j + 4)) & 1 ? -1.f : 1.f);
             }
         }
+    } else if constexpr (TYPE == B70_Q2_K) {
+        // block_q2_K: scales[16], qs[64], fp16 d, fp16 dmin. 84 bytes.
+        // dequantize_row_q2_K: 16 groups of 16, two 128-halves, shift 0/2/4/6.
+        const uint8_t* b = row + (gi / 8) * 84;
+        const int gi8 = gi % 8;
+        const int half = gi8 / 4;
+        const int j = gi8 % 4;
+        const int shift = j * 2;
+        const uint8_t* qs = b + 16 + half * 32;
+        const uint8_t sc0 = b[half * 8 + 2 * j];
+        const uint8_t sc1 = b[half * 8 + 2 * j + 1];
+        const float d = b70_fp16_to_fp32((uint16_t)b70_ld16(b + 80));
+        const float mn = b70_fp16_to_fp32((uint16_t)b70_ld16(b + 82));
+        const float dl0 = d * (float)(sc0 & 0xF);
+        const float ml0 = mn * (float)(sc0 >> 4);
+        const float dl1 = d * (float)(sc1 & 0xF);
+        const float ml1 = mn * (float)(sc1 >> 4);
+        for (int l = 0; l < 16; ++l) {
+            v[l] = dl0 * (float)((qs[l] >> shift) & 3) - ml0;
+            v[l + 16] = dl1 * (float)((qs[l + 16] >> shift) & 3) - ml1;
+        }
+    } else if constexpr (TYPE == B70_Q3_K) {
+        // block_q3_K: hmask[32], qs[64], scales[12], fp16 d. 110 bytes. No dmin.
+        // The high-bit mask is NOT reset between the two 128-halves.
+        const uint8_t* b = row + (gi / 8) * 110;
+        const int gi8 = gi % 8;
+        const int half = gi8 / 4;
+        const int j = gi8 % 4;
+        const int shift = j * 2;
+        const int mbit = 1 << (half * 4 + j);
+        const uint8_t* hm = b;
+        const uint8_t* qs = b + 32 + half * 32;
+        const float d = b70_fp16_to_fp32((uint16_t)b70_ld16(b + 108));
+        const float dl0 = d * (float)b70_q3_scale(b + 96, half * 8 + 2 * j);
+        const float dl1 = d * (float)b70_q3_scale(b + 96, half * 8 + 2 * j + 1);
+        for (int l = 0; l < 16; ++l) {
+            const int q0 = (qs[l] >> shift) & 3;
+            const int q1 = (qs[l + 16] >> shift) & 3;
+            v[l] = dl0 * (float)(q0 - ((hm[l] & mbit) ? 0 : 4));
+            v[l + 16] = dl1 * (float)(q1 - ((hm[l + 16] & mbit) ? 0 : 4));
+        }
     }
 }
 
@@ -289,6 +356,8 @@ inline void b70_decode32_switch(int type, const uint8_t* row, int gi, float* v) 
     case B70_IQ2_S: b70_decode32<B70_IQ2_S>(row, gi, v); break;
     case B70_IQ3_XXS: b70_decode32<B70_IQ3_XXS>(row, gi, v); break;
     case B70_IQ3_S: b70_decode32<B70_IQ3_S>(row, gi, v); break;
+    case B70_Q2_K: b70_decode32<B70_Q2_K>(row, gi, v); break;
+    case B70_Q3_K: b70_decode32<B70_Q3_K>(row, gi, v); break;
     default: break;
     }
 }

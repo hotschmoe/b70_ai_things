@@ -281,3 +281,135 @@ the pipelined round-2 KREG, not another quant or occupancy pass. Grouped
 prefill is still the slow kernel after one weight read. Next: night_pf
 pipeline for the head, and the grouped next-superblock preload. Q2_K and
 Q3_K (A1's three MTP tensors) are not in this binary.
+
+## 2026-10-20 03:41 C3 -- GPTQ repack wired, CPU-checked
+
+CONFIG: b70_lowbit pack=gptq beside the B2 b70lb1 plane path. Ornith
+GPTQ int4 mixedcal-v2 (routed experts only; attn, shared, router, mtp,
+vision, embed, lm_head dense). B1 extra_config on
+qwen36-w3a16-g128-experts-w4a16-trunk (experts bits 3, trunk bits 4).
+Signed codes are unsigned - maxq. Kernel .so not rebuilt. Card 0 was
+free; card 1 held by B1. xpu-health --card 0 HEALTHY before serve.
+COMMAND: docker run --network none vllm-flashnext-xpu:py312 (no
+/dev/dri, no gpu-run lease) /opt/venv/bin/python
+vllm/flashnext/plugins/b70_lowbit_xpu/tests/test_gptq_cpu.py
+RESULT: synthetic int2/int3/int4 codes match pack_gptq.pack_linear.
+Batched expert repack matches per-matrix gptq_to_b70lb1, including a
+fused w13 gate||up stack. Ornith layer-0 expert-0 down_proj qweight
+(64, 2048) K=512: exact int8 codes versus pack_gptq.unpack_qweight;
+dequant rel L2 0.001580 from the bf16 scale. Quant config: ornith
+attn, linear_attn, mlp.gate, shared_expert, shared_expert_gate, and
+lm_head skipped; experts bits 4. B2 bench extra_bits experts=2 and
+gate-vs-gate_proj component checks still pass. B1 experts bits 3,
+self_attn.q_proj bits 4, shared_expert.down_proj bits 4,
+shared_expert_gate skipped, shared_expert.gate_proj not treated as the
+router.
+VERDICT: the GPTQ bitstream matches b70lb1 on a real Ornith expert.
+Serve is next. No tok/s claim.
+
+## 2026-10-20 03:40 C1 -- MoE 122 us is a host gap plus a scalar kernel
+
+CONFIG: b70_gguf_xpu A2 binary, card 0, ZE_AFFINITY_MASK=0, no
+immediate-command-list env. Floor binary
+/mnt/vm_8tb/b70/build/gguf-xpu-floor-empty. unitrace and onetrace are
+not installed. Queue profiling property does not stick
+(get_profiling_info throws); timing is submit_profiling_tag, same clock
+as torch.xpu.Event, with a burn kernel queued first.
+COMMAND: B70_AGENT=C1 bin/cpu-run --quiet bin/gpu-run --card 0
+plugins/b70_gguf_xpu/scripts/floor_run.sh
+RESULT: empty kernel behind the burn 2.60/3.16/4.48 us (n=32). 8 MiB
+read 9.06 us. Idle one-shot tag span 90.0 us; 32 empty launches 190.6 us
+(6.0 us each). torch add a2 118.9 us, behind a matmul 2.4 us. Q5_K gemv
+N=32768 K=2560 a2 147.1, behind 111.2 us, 518 GB/s (85% of 608). IQ3_S
+embd slice N=32768 behind 219.9 us, 164 GB/s (27%). moe_gemv T=1 topk=10
+a2 stays 117-120 us, but behind is IQ4_NL down 86.7 us (106 GB/s),
+IQ2_XS gate 71.9, IQ2_XS up 67.1, Q2_0 down 70.9, IQ2_XXS gate 64.0,
+IQ2_XXS up 68.7. Batch-32 matches the behind number.
+VERDICT: 122 us is about 30-50 us of host/tag gap on a real 64-87 us
+scalar kernel, not a pure timer floor. Three calls per layer are about
+210 us of device work before a faster dot. Empty device cost is 3 us.
+Next: DP4A row GEMV and one host call per MoE layer.
+
+## 2026-10-20 03:59 C4 -- GGUF loader on CPU, serve not started
+
+CONFIG: fork /mnt/vm_8tb/b70/build/vllm-flashnext/vllm branch b70/flashnext
+at 7b40eb79c6 plus uncommitted loader (not committed). Dev GGUF
+Qwen3.6-35B-A3B-UD-IQ3_XXS, arch qwen35moe, 753 tensors. HF config
+/mnt/cache/b70/devmodel/Qwen/Qwen3.6-35B-A3B. Installed wheel has no
+gguf package; serve will put the fork first on PYTHONPATH and set
+B70_GGUF=1 so sitecustomize registers --load-format b70_gguf and loads
+b70_gguf_xpu. No GPU lease taken.
+COMMAND: uv CPython 3.12.13, PYTHONPATH=fork:gguf-py:venv site-packages,
+VLLM_TARGET_DEVICE=cpu. Ran the 15 functions in
+tests/models/qwen4_exp/test_b70_gguf_mapping.py (no pytest in the venv).
+Meta-constructed Qwen3_5MoeForConditionalGeneration (language-model-only,
+max_model_len 2048) and compared layer 0 / layer 3 partitions to the
+GGUF header. Q6_K two-row dequant vs gguf-py. Q8_0 one-row dequant.
+RESULT: 15/15 PASS after the GDN last-dim check was corrected (first
+run failed 1 assertion that compared a K-axis retile to an illegal
+dim-0 retile). Meta partitions match the header: GDN qkvz
+[2048, 2048, 4096, 4096] K=2048 vs attn_qkv rows 8192 and attn_gate
+rows 4096; full attn q/k/v [8192, 512, 512]; out and o_proj
+[2048] K=4096; experts E=256 N=512 K=2048 ep=1. Conv, router gate,
+shared-expert gate, and both embeddings are unquantized modules
+(the model builds them with quant_config=None), so those F32/Q6_K
+tensors are dense copies, not gemv. Q6_K row dequant matches gguf-py
+(max abs 0). Q8_0 dequant of blk.39 shared down is finite. Both GPU
+leases were held (card 0 C3 vllm-fn-lowbit-c0 since 03:41, card 1 B1
+quant eval since 00:54), so the one-card serve did not start.
+VERDICT: Loader and the correctness fixes are in the fork working
+tree. Step 1 serve is next on the first free card:
+harness/serve_qwen36_gguf.sh (port 18104, eager, max_model_len 2048,
+hotschmoe-dev first). Packed TP sharding is still refused, so step 1b
+is blocked until that lands.
+
+## 2026-10-20 04:02 C3 -- int4 b70_lowbit serve, decode near A3, prefill not
+
+CONFIG: card 0, Ornith GPTQ int4 mixedcal-v2, TP=1, dtype bfloat16
+(kernel requires bf16 x and scale; A3 baseline was float16),
+language-model-only, enforce-eager, gpu-memory-utilization 0.90,
+max-model-len 33792, max-num-seqs 4, port 18083, --quantization
+b70_lowbit. Served names hotschmoe-dev then
+ornith-1.5-35b-a3b-b70-lowbit-int4. Container vllm-fn-lowbit-c0.
+Kernel .so unchanged (four device submits inside moe_gemv). GPTQ
+experts repacked to b70lb1 in process_weights_after_loading. Routed
+experts only; attn, shared, router, norms stay dense bf16.
+COMMAND: B70_AGENT=C3 CARD=0 PORT=18083
+plugins/b70_lowbit_xpu/serve_lowbit.sh via harness/xpu-run.sh.
+Then harness/bench_latency.py --base-url http://127.0.0.1:18083
+--tag b70-lowbit-int4-eager --decode-tokens 64
+--out /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c3-int4-bench.json
+RESULT: 40/40 MoE layers repacked. w13 qweight (256, 256, 1024) to
+plane2 (256, 1024, 512); w2 (256, 64, 2048) to (256, 2048, 128).
+KV cache 230319 tokens, 6.82x at 33792. Weight footprint 21.41 GiB.
+init engine 16.70 s. /v1/models ids hotschmoe-dev,
+ornith-1.5-35b-a3b-b70-lowbit-int4. Two temp-0 completions identical,
+both " Paris.\nThe capital of France is Paris.\nThe capital of France is".
+C1 ITL p50/p90/p99 79.55/82.15/116.59 ms, 12.98 tok/s (n=64).
+C2 streams 13.39 and 13.62 tok/s, ITL p50 77.36 and 77.06 ms.
+Short-prompt TTFT 2868 ms (24 tokens) and C2 TTFT about 6.5 s.
+Prefill 1017 tok TTFT 8279 ms (123 tok/s), 8185 tok 49502 ms
+(165 tok/s), 32762 tok 196439 ms (167 tok/s). A3 eager fp16 reference
+was C1 74.78/75.36/76.40 ms (13.57 tok/s), C2 about 73.9 ms
+(13.52 and 13.74 tok/s), prefill 169/1038/5121 ms. Decode ITL is
+within about 6 percent of that reference. Prefill is the per-expert
+Python loop (host sync per expert); T>8 takes that path, including
+the 24-token decode prompt. docker stop removed the container and
+port 18083 closed. The gpu-run process was SIGKILL'd, so the owner
+file was stale until flock showed the card free. C1 acquired card 0
+at 04:01:32 (c1_run.sh) before a post xpu-health could run.
+VERDICT: int4 control is coherent and the decode ITL matches the
+GPTQ eager baseline. Prefill does not. No speed claim over
+XPUExpertsWNA16. Post-health is still owed on the next card-0 window.
+
+## 2026-10-20 04:45 orchestrator -- reprioritize card 1 to decode overhead
+CONFIG: C3/A3 eager vLLM decode on Ornith-35B-A3B int4 = 75-80 ms/token
+(13 tok/s); host overhead, not kernels, dominates. B1 perplexity eval was
+holding card 1 (slow on-the-fly unpack); A3 MTP serve queued 3.5 h.
+COMMAND: killed B1 agent + eval job (int3 ppl 9.19 already recorded; int4
+control and mixed ppl still TODO via run_quant.py --mode eval); killed A3
+agent (its queued MTP serve then started on card 1, port 18081). Launched
+D1 (prompts/D1_overhead.md): profile eager step, XPU graph capture, host
+overhead fixes; target C1 ITL < 15 ms on 35B int4.
+RESULT: pending.
+VERDICT: decode overhead is the top latency item; quality eval deferred.

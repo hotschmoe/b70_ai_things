@@ -23,6 +23,8 @@
 #include <torch/torch.h>
 
 #include <cstdint>
+#include <cstdlib>
+#include <type_traits>
 
 namespace esimd = sycl::ext::intel::esimd;
 using bf16_t = sycl::ext::oneapi::bfloat16;
@@ -379,6 +381,257 @@ struct RouterReduceKernel {
   }
 };
 
+// Round-trip through bf16 so a fused epilogue matches the 4-launch store/load.
+SYCL_ESIMD_FUNCTION float bf16_roundtrip(float v) {
+  return bf16_u16_to_f32(f32_to_bf16_u16(v));
+}
+
+// One output row. x of length K is already in SLM at byte 0.
+template <int BITS>
+SYCL_ESIMD_FUNCTION float gemv_row_slm(
+    const uint8_t* row2,
+    const uint8_t* rowhi,
+    const uint16_t* scale_row,
+    int K,
+    int groups) {
+  float acc_box[1] = {0.f};
+  int g = 0;
+  for (; g + 1 < groups; g += 2) {
+    accum_pair<BITS>(row2, rowhi, scale_row, g, K, 1, acc_box);
+  }
+  if (g < groups) {
+    float sc = bf16_u16_to_f32(scale_row[g]);
+    esimd::simd<float, 128> wf = dequant_group<BITS>(row2, rowhi, g, sc);
+    acc_box[0] += dot_slm(g * 128 * (int)sizeof(uint16_t), wf);
+  }
+  return acc_box[0];
+}
+
+// Launch 1 of 2: gate and up for hidden index i, then SiLU, one submit.
+// A work-group owns 16 consecutive i values of one expert slot and shares x.
+template <int BITS>
+struct GateUpSiluKernel {
+  const uint16_t* x;
+  const int32_t* ids;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* hid;
+  int slots;
+  int I;
+  int H;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int E;
+  int topk;
+
+  void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<kSlmRowBytes>();
+    const int slot = (int)it.get_global_id(0);
+    const int i = (int)it.get_global_id(1);
+    const int lid = (int)it.get_local_id(1);
+    if (slot < slots) {
+      const int x_row = slot / topk;
+      for (int g = lid; g < groups; g += kGemvWg) {
+        const uint16_t* src =
+            x + ((size_t)x_row * (size_t)H + (size_t)g * 128);
+        slm_store_group(src, g * 128 * (int)sizeof(uint16_t));
+      }
+    }
+    esimd::barrier();
+    if (slot >= slots || i >= I) {
+      return;
+    }
+    const int e = ids[slot];
+    if (e < 0 || e >= E) {
+      hid[(size_t)slot * (size_t)I + i] = 0;
+      return;
+    }
+    const int N13 = I * 2;
+    const size_t gate_row = (size_t)e * (size_t)N13 + (size_t)i;
+    const size_t up_row = gate_row + (size_t)I;
+    const uint8_t* grow2 = plane2 + gate_row * (size_t)stride2;
+    const uint8_t* growhi =
+        plane_hi ? plane_hi + gate_row * (size_t)stride_hi : grow2;
+    const uint8_t* urow2 = plane2 + up_row * (size_t)stride2;
+    const uint8_t* urowhi =
+        plane_hi ? plane_hi + up_row * (size_t)stride_hi : urow2;
+    float gacc = gemv_row_slm<BITS>(
+        grow2, growhi, scale + gate_row * (size_t)groups, H, groups);
+    float uacc = gemv_row_slm<BITS>(
+        urow2, urowhi, scale + up_row * (size_t)groups, H, groups);
+    gacc = bf16_roundtrip(gacc);
+    uacc = bf16_roundtrip(uacc);
+    float h = gacc / (1.f + sycl::exp(-gacc)) * uacc;
+    hid[(size_t)slot * (size_t)I + i] = f32_to_bf16_u16(h);
+  }
+};
+
+// Launch 2 of 2: down GEMV for every expert slot of one token, weighted sum.
+// One work-group owns 16 consecutive output rows of one token.
+template <int BITS>
+struct DownReduceKernel {
+  const uint16_t* hid;
+  const int32_t* ids;
+  const float* router;
+  const uint8_t* plane2;
+  const uint8_t* plane_hi;
+  const uint16_t* scale;
+  uint16_t* y;
+  int T;
+  int H;
+  int I;
+  int groups;
+  int stride2;
+  int stride_hi;
+  int E;
+  int topk;
+
+  void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<kSlmRowBytes>();
+    const int t = (int)it.get_global_id(0);
+    const int h = (int)it.get_global_id(1);
+    const int lid = (int)it.get_local_id(1);
+    float acc = 0.f;
+    for (int k = 0; k < topk; ++k) {
+      const int slot = t * topk + k;
+      if (t < T) {
+        for (int g = lid; g < groups; g += kGemvWg) {
+          const uint16_t* src =
+              hid + ((size_t)slot * (size_t)I + (size_t)g * 128);
+          slm_store_group(src, g * 128 * (int)sizeof(uint16_t));
+        }
+      }
+      esimd::barrier();
+      if (t < T && h < H) {
+        const int e = ids[slot];
+        if (e >= 0 && e < E) {
+          const size_t row = (size_t)e * (size_t)H + (size_t)h;
+          const uint8_t* row2 = plane2 + row * (size_t)stride2;
+          const uint8_t* rowhi =
+              plane_hi ? plane_hi + row * (size_t)stride_hi : row2;
+          float d = gemv_row_slm<BITS>(
+              row2, rowhi, scale + row * (size_t)groups, I, groups);
+          d = bf16_roundtrip(d);
+          acc += router[slot] * d;
+        }
+      }
+      esimd::barrier();
+    }
+    if (t < T && h < H) {
+      y[(size_t)t * (size_t)H + h] = f32_to_bf16_u16(acc);
+    }
+  }
+};
+
+// One launch, one work-group per token. The group loops experts itself.
+// Local barriers only, so a short grid (T work-groups) cannot deadlock.
+// The running sum stays in fp32. Occupancy is one work-group per token.
+template <int BITS>
+struct MoeTokenKernel {
+  const uint16_t* x;
+  const int32_t* ids;
+  const float* router;
+  const uint8_t* up2;
+  const uint8_t* uph;
+  const uint16_t* usc;
+  const uint8_t* dp2;
+  const uint8_t* dph;
+  const uint16_t* dsc;
+  uint16_t* hid;
+  float* acc;
+  uint16_t* y;
+  int H;
+  int I;
+  int up_groups;
+  int dn_groups;
+  int up_stride2;
+  int up_stride_hi;
+  int dn_stride2;
+  int dn_stride_hi;
+  int E;
+  int topk;
+
+  void operator()(sycl::nd_item<2> it) const SYCL_ESIMD_KERNEL {
+    esimd::slm_init<kSlmRowBytes>();
+    const int t = (int)it.get_global_id(0);
+    const int lid = (int)it.get_local_id(1);
+    for (int h = lid; h < H; h += kGemvWg) {
+      acc[(size_t)t * (size_t)H + h] = 0.f;
+    }
+    esimd::barrier();
+    for (int k = 0; k < topk; ++k) {
+      for (int g = lid; g < up_groups; g += kGemvWg) {
+        const uint16_t* src = x + ((size_t)t * (size_t)H + (size_t)g * 128);
+        slm_store_group(src, g * 128 * (int)sizeof(uint16_t));
+      }
+      esimd::barrier();
+      const int slot = t * topk + k;
+      const int e = ids[slot];
+      const bool live = e >= 0 && e < E;
+      for (int i = lid; i < I; i += kGemvWg) {
+        float hval = 0.f;
+        if (live) {
+          const int n13 = I * 2;
+          const size_t gate_row = (size_t)e * (size_t)n13 + (size_t)i;
+          const size_t up_row = gate_row + (size_t)I;
+          const uint8_t* grow2 = up2 + gate_row * (size_t)up_stride2;
+          const uint8_t* growhi =
+              uph ? uph + gate_row * (size_t)up_stride_hi : grow2;
+          const uint8_t* urow2 = up2 + up_row * (size_t)up_stride2;
+          const uint8_t* urowhi =
+              uph ? uph + up_row * (size_t)up_stride_hi : urow2;
+          float gacc = gemv_row_slm<BITS>(
+              grow2, growhi, usc + gate_row * (size_t)up_groups, H, up_groups);
+          float uacc = gemv_row_slm<BITS>(
+              urow2, urowhi, usc + up_row * (size_t)up_groups, H, up_groups);
+          gacc = bf16_roundtrip(gacc);
+          uacc = bf16_roundtrip(uacc);
+          hval = gacc / (1.f + sycl::exp(-gacc)) * uacc;
+        }
+        hid[(size_t)t * (size_t)I + i] = f32_to_bf16_u16(hval);
+      }
+      esimd::barrier();
+      for (int g = lid; g < dn_groups; g += kGemvWg) {
+        const uint16_t* src = hid + ((size_t)t * (size_t)I + (size_t)g * 128);
+        slm_store_group(src, g * 128 * (int)sizeof(uint16_t));
+      }
+      esimd::barrier();
+      const float w = live ? router[slot] : 0.f;
+      for (int h = lid; h < H; h += kGemvWg) {
+        float d = 0.f;
+        if (live) {
+          const size_t row = (size_t)e * (size_t)H + (size_t)h;
+          const uint8_t* row2 = dp2 + row * (size_t)dn_stride2;
+          const uint8_t* rowhi =
+              dph ? dph + row * (size_t)dn_stride_hi : row2;
+          d = gemv_row_slm<BITS>(
+              row2, rowhi, dsc + row * (size_t)dn_groups, I, dn_groups);
+          d = bf16_roundtrip(d);
+        }
+        acc[(size_t)t * (size_t)H + h] += w * d;
+      }
+      esimd::barrier();
+    }
+    for (int h = lid; h < H; h += kGemvWg) {
+      y[(size_t)t * (size_t)H + h] =
+          f32_to_bf16_u16(acc[(size_t)t * (size_t)H + h]);
+    }
+  }
+};
+
+static int moe_launch_count() {
+  const char* env = std::getenv("B70_LOWBIT_MOE_LAUNCHES");
+  if (env != nullptr && env[0] == '1' && env[1] == '\0') {
+    return 1;
+  }
+  if (env != nullptr && env[0] == '2' && env[1] == '\0') {
+    return 2;
+  }
+  return 4;
+}
+
 // 16 signed codes starting at k0 (multiple of 16).
 SYCL_ESIMD_FUNCTION esimd::simd<int32_t, 16> load_codes16(
     const uint8_t* row2, const uint8_t* rowhi, int k0, int bits) {
@@ -733,6 +986,100 @@ static torch::Tensor gemv(
   return y;
 }
 
+// B70_LOWBIT_MOE_LAUNCHES=2 fuses SiLU into gate/up and the router sum into
+// down (two submits, full N grid). =1 is one submit with one work-group per
+// token. Unset stays the four-submit path.
+static torch::Tensor launch_reduced_moe(
+    const torch::Tensor& x,
+    const torch::Tensor& ids,
+    const torch::Tensor& router_w,
+    const torch::Tensor& w13_plane2,
+    const torch::Tensor& w13_plane_hi,
+    const torch::Tensor& w13_scale,
+    const torch::Tensor& w2_plane2,
+    const torch::Tensor& w2_plane_hi,
+    const torch::Tensor& w2_scale,
+    int64_t bits,
+    int which) {
+  const int T = (int)x.size(0);
+  const int H = (int)x.size(1);
+  const int topk = (int)ids.size(1);
+  const int E = (int)w13_plane2.size(0);
+  const int I = (int)w13_plane2.size(1) / 2;
+  const int slots = T * topk;
+  const at::DeviceGuard guard(x.device());
+  auto y = torch::empty({T, H}, x.options());
+  auto& q = c10::xpu::getCurrentXPUStream().queue();
+  const int32_t* idp = ids.data_ptr<int32_t>();
+  const float* rp = router_w.data_ptr<float>();
+  const uint16_t* xp = reinterpret_cast<const uint16_t*>(x.data_ptr());
+  const uint8_t* up2 = w13_plane2.data_ptr<uint8_t>();
+  const uint8_t* uph = hi_ptr(w13_plane_hi);
+  const uint16_t* usc = reinterpret_cast<const uint16_t*>(w13_scale.data_ptr());
+  const uint8_t* dp2 = w2_plane2.data_ptr<uint8_t>();
+  const uint8_t* dph = hi_ptr(w2_plane_hi);
+  const uint16_t* dsc = reinterpret_cast<const uint16_t*>(w2_scale.data_ptr());
+  const int up_stride2 = (int)w13_plane2.size(2);
+  const int up_stride_hi = bits == 2 ? 0 : (int)w13_plane_hi.size(2);
+  const int dn_stride2 = (int)w2_plane2.size(2);
+  const int dn_stride_hi = bits == 2 ? 0 : (int)w2_plane_hi.size(2);
+  uint16_t* yp = reinterpret_cast<uint16_t*>(y.data_ptr());
+  auto run = [&](auto tag) {
+    constexpr int BITS = decltype(tag)::value;
+    if (which == 1) {
+      auto hid = torch::empty({T, I}, x.options());
+      auto acc = torch::empty({T, H}, x.options().dtype(at::kFloat));
+      for (const torch::Tensor& t :
+           {x, ids, router_w, w13_plane2, w13_plane_hi, w13_scale, w2_plane2,
+            w2_plane_hi, w2_scale, hid, acc, y}) {
+        record_use(t);
+      }
+      const auto nd = sycl::nd_range<2>(
+          sycl::range<2>((size_t)T, (size_t)kGemvWg),
+          sycl::range<2>(1, (size_t)kGemvWg));
+      q.parallel_for(
+          nd,
+          MoeTokenKernel<BITS>{
+              xp, idp, rp, up2, uph, usc, dp2, dph, dsc,
+              reinterpret_cast<uint16_t*>(hid.data_ptr()),
+              acc.data_ptr<float>(), yp, H, I, H / 128, I / 128, up_stride2,
+              up_stride_hi, dn_stride2, dn_stride_hi, E, topk});
+      return;
+    }
+    auto hid = torch::empty({slots, I}, x.options());
+    for (const torch::Tensor& t :
+         {x, ids, router_w, w13_plane2, w13_plane_hi, w13_scale, w2_plane2,
+          w2_plane_hi, w2_scale, hid, y}) {
+      record_use(t);
+    }
+    uint16_t* hp = reinterpret_cast<uint16_t*>(hid.data_ptr());
+    const size_t gI = ((size_t)I + kGemvWg - 1) / kGemvWg * kGemvWg;
+    const size_t gH = ((size_t)H + kGemvWg - 1) / kGemvWg * kGemvWg;
+    q.parallel_for(
+        sycl::nd_range<2>(
+            sycl::range<2>((size_t)slots, gI),
+            sycl::range<2>(1, (size_t)kGemvWg)),
+        GateUpSiluKernel<BITS>{
+            xp, idp, up2, uph, usc, hp, slots, I, H, H / 128, up_stride2,
+            up_stride_hi, E, topk});
+    q.parallel_for(
+        sycl::nd_range<2>(
+            sycl::range<2>((size_t)T, gH),
+            sycl::range<2>(1, (size_t)kGemvWg)),
+        DownReduceKernel<BITS>{
+            hp, idp, rp, dp2, dph, dsc, yp, T, H, I, I / 128, dn_stride2,
+            dn_stride_hi, E, topk});
+  };
+  if (bits == 2) {
+    run(std::integral_constant<int, 2>{});
+  } else if (bits == 3) {
+    run(std::integral_constant<int, 3>{});
+  } else {
+    run(std::integral_constant<int, 4>{});
+  }
+  return y;
+}
+
 static torch::Tensor moe_gemv(
     const torch::Tensor& x,
     const torch::Tensor& ids,
@@ -781,6 +1128,13 @@ static torch::Tensor moe_gemv(
       I,
       (int)bits);
 
+  TORCH_CHECK(H <= 2560 && I <= 2560, "moe SLM activation row cap is 2560");
+  if (moe_launch_count() != 4) {
+    return launch_reduced_moe(
+        x, ids, router_w, w13_plane2, w13_plane_hi, w13_scale, w2_plane2,
+        w2_plane_hi, w2_scale, bits, moe_launch_count());
+  }
+
   const int slots = T * topk;
   const at::DeviceGuard guard(x.device());
   auto gu = torch::empty({slots, N13}, x.options());
@@ -794,7 +1148,6 @@ static torch::Tensor moe_gemv(
   }
   auto& q = c10::xpu::getCurrentXPUStream().queue();
   const int32_t* idp = ids.data_ptr<int32_t>();
-  TORCH_CHECK(H <= 2560 && I <= 2560, "moe SLM activation row cap is 2560");
   const size_t gN13 = ((size_t)N13 + kGemvWg - 1) / kGemvWg * kGemvWg;
   const size_t gH = ((size_t)H + kGemvWg - 1) / kGemvWg * kGemvWg;
   const auto nd_up = sycl::nd_range<2>(

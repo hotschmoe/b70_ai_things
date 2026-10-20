@@ -155,3 +155,33 @@ Implementation note (A2, 2026-10-20, signatures unchanged):
 
 - `gemv` for Q4_K, Q5_K, Q6_K, and IQ4_XS with K divisible by 256 quantizes x to Q8_1 once per call, then runs the KREG schedule. Other types, and MoE, stay on the scalar GEMV. K=640 expert-down is not a KREG shape.
 - `grouped_gemm` is joint_matrix 8x16x16, MT=16, so one entry of 128 contiguous rows reads its weight once. An entry with `nrows = 1` reads that expert's weight for a single row. Packing one expert's rows into one entry is what the bench measures.
+
+## C1 addition -- 2026-10-20
+
+`gemv` and `moe_gemv` signatures are unchanged. Q4_K / Q5_K / Q6_K / IQ4_XS
+GEMV with K divisible by 256 stays on KREG. Every other GEMV and every
+`moe_gemv` quantizes x to Q8_1 once, then one subgroup owns one output row
+and dots with the DP4A IQ/Q2_0 path (or a float dequant for Q2_K, Q3_K,
+and the K-quants). Q2_K is ggml id 10 (256 values, 84 bytes). Q3_K is id 11
+(256 values, 110 bytes). Dequant of both is bit-exact. GEMV tolerance is
+the Q8_1 gate, atol/rtol 5e-2.
+
+```
+moe_layer(Tensor x, Tensor gate_q, int gate_type, Tensor up_q, int up_type,
+          Tensor down_q, int down_type, Tensor expert_ids, Tensor router_w,
+          Tensor shared_gate_q, int shared_gate_type, Tensor shared_up_q,
+          int shared_up_type, Tensor shared_down_q, int shared_down_type,
+          int I, int K) -> Tensor
+  x: bf16 [T, K]
+  gate_q / up_q: uint8 expert packs, numel == E * I * row_bytes(type, K)
+  down_q: uint8 expert pack, numel == E * K * row_bytes(type, I)
+  expert_ids: int32 [T, topk], value in [0, E). An id outside that range
+    contributes 0.
+  router_w: fp32 [T, topk]
+  shared_*: one expert matrix, or a 0-element uint8 tensor to skip.
+    Shared routing weight is 1. Gate/up row_bytes use K; down uses I.
+  returns fp32 [T, K]
+  One host call. The queue gets Q8(x), fused gate+up+SiLU over top-k and
+  the shared expert, Q8(hidden), down, then the routing sum. No host sync
+  between those submits.
+```

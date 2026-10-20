@@ -43,6 +43,63 @@ def moe_gemv(x, q, expert_ids, ggml_type: int, n: int, k: int):
     return torch.ops.b70_gguf.moe_gemv(x, q, expert_ids, int(ggml_type), int(n), int(k))
 
 
+def moe_layer(
+    x,
+    gate_q,
+    gate_type: int,
+    up_q,
+    up_type: int,
+    down_q,
+    down_type: int,
+    expert_ids,
+    router_w,
+    n_inter: int,
+    k_hidden: int,
+    shared_gate_q=None,
+    shared_gate_type: int = 0,
+    shared_up_q=None,
+    shared_up_type: int = 0,
+    shared_down_q=None,
+    shared_down_type: int = 0,
+):
+    """One decode MoE layer. x bf16 [T, K] -> fp32 [T, K].
+
+    expert_ids int32 [T, topk], router_w fp32 [T, topk]. Empty shared tensors
+    skip the shared expert. Shared routing weight is 1.
+    """
+    load()
+    import torch
+
+    def empty_u8():
+        return torch.empty(0, dtype=torch.uint8, device=x.device)
+
+    if shared_gate_q is None:
+        shared_gate_q = empty_u8()
+    if shared_up_q is None:
+        shared_up_q = empty_u8()
+    if shared_down_q is None:
+        shared_down_q = empty_u8()
+    return torch.ops.b70_gguf.moe_layer(
+        x,
+        gate_q,
+        int(gate_type),
+        up_q,
+        int(up_type),
+        down_q,
+        int(down_type),
+        expert_ids,
+        router_w,
+        shared_gate_q,
+        int(shared_gate_type),
+        shared_up_q,
+        int(shared_up_type),
+        shared_down_q,
+        int(shared_down_type),
+        int(n_inter),
+        int(k_hidden),
+    )
+
+
 def grouped_gemm(x, q, entries, ggml_type: int, n: int, k: int):
     """x fp16 or bf16 [M, K], entries int32 [n_ent, 3] = (expert, row0, nrows) -> fp32 [M, N].
 

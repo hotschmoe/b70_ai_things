@@ -26,7 +26,7 @@ SHARD = (
     "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf"
 )
 ROOF_GBPS = 608.0
-WANTED = [12, 13, 14, 16, 17, 18, 20, 21, 22, 23, 42]
+WANTED = [10, 11, 12, 13, 14, 16, 17, 18, 20, 21, 22, 23, 42]
 
 
 def f32_to_bf16_bits(a: np.ndarray) -> np.ndarray:
@@ -111,6 +111,28 @@ def elapsed_us(fn, warmup: int = 3, iters: int = 10) -> float:
     return min(samples)
 
 
+def elapsed_behind(fn, iters: int = 4) -> float:
+    # Device-side span with a matmul already queued, so the tag is not the
+    # idle host-submit gap. Same clock as elapsed_us (submit_profiling_tag).
+    burn_a = torch.randn(1024, 1024, device="xpu")
+    burn_b = torch.randn(1024, 1024, device="xpu")
+    for _ in range(2):
+        (burn_a @ burn_b).sum()
+        fn()
+    torch.xpu.synchronize()
+    start = torch.xpu.Event(enable_timing=True)
+    end = torch.xpu.Event(enable_timing=True)
+    samples = []
+    for _ in range(iters):
+        (burn_a @ burn_b).sum()
+        start.record()
+        fn()
+        end.record()
+        torch.xpu.synchronize()
+        samples.append(float(start.elapsed_time(end)) * 1000.0)
+    return min(samples)
+
+
 def main() -> int:
     assert torch.xpu.is_available(), "XPU not available"
     assert torch.xpu.device_count() == 1, f"expected 1 visible device, got {torch.xpu.device_count()}"
@@ -180,13 +202,9 @@ def main() -> int:
                 y_np = y.cpu().numpy()
                 x_ref = x.float().cpu().numpy()
                 ref_y = x_ref @ ref.T
-                # KREG types dot Q8_1 activations. The gate still rejects a
-                # swapped-lane layout (that misses by a large fraction of y).
-                if tid in (12, 13, 14, 23):
-                    atol, rtol = 5e-2, 5e-2
-                else:
-                    atol, rtol = 2e-2, 2e-3
-                ok, mx, mr = close_enough(y_np, ref_y, atol=atol, rtol=rtol)
+                # Every GEMV quantizes x to Q8_1 (KREG or the row DP4A). A
+                # swapped lane still misses by a large fraction of y.
+                ok, mx, mr = close_enough(y_np, ref_y, atol=5e-2, rtol=5e-2)
                 status = "OK" if ok else "FAIL"
                 if not ok:
                     failures += 1
@@ -228,7 +246,7 @@ def main() -> int:
                             rows = np.ascontiguousarray(packed[ids[t, s], :n_exp])
                             w = cpu_dequant(lib, tid, rows, k2)
                             ref_y = x_ref[t : t + 1] @ w.T
-                            ok, mx, mr = close_enough(y_np[t, s : s + 1], ref_y, atol=2e-2, rtol=2e-3)
+                            ok, mx, mr = close_enough(y_np[t, s : s + 1], ref_y, atol=5e-2, rtol=5e-2)
                             moe_ok = moe_ok and ok
                             worst = max(worst, mx)
                     status = "OK" if moe_ok else "FAIL"
@@ -301,6 +319,12 @@ def run_bench(reader, lib) -> list[str]:
         rows.append(
             f"gemv\t{NAMES[tid]}\tM={m} N={n} K={k} bytes={weight}\t{us:.1f}\t{gbps:.1f}\t{100.0 * gbps / ROOF_GBPS:.1f}"
         )
+        if m == 1 and tid in (12, 14, 21, 23):
+            bus = elapsed_behind(lambda: gemv(x, q, tid, n, k))
+            bgbps = (weight / 1e9) / (bus * 1e-6)
+            rows.append(
+                f"gemv_behind\t{NAMES[tid]}\tM={m} N={n} K={k} bytes={weight}\t{bus:.1f}\t{bgbps:.1f}\t{100.0 * bgbps / ROOF_GBPS:.1f}"
+            )
         del q, x
 
     for tid, (_n, tensor) in best2.items():

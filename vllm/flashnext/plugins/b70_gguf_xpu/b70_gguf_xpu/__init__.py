@@ -1,6 +1,6 @@
 """GGUF decode kernels for Intel XPU. vLLM loads this via the vllm.general_plugins group."""
 
-from .ops import grouped_gemm, dequant_bf16, gemv, load, moe_gemv
+from .ops import grouped_gemm, dequant_bf16, gemv, load, moe_gemv, moe_layer
 from .types import BLOCK, NAMES, Q2_0, row_bytes
 
 __all__ = [
@@ -12,6 +12,7 @@ __all__ = [
     "grouped_gemm",
     "load",
     "moe_gemv",
+    "moe_layer",
     "register",
     "row_bytes",
 ]
