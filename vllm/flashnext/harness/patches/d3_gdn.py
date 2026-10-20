@@ -183,27 +183,42 @@ def _forward(self, hidden_states, orig):
             has_initial = _has_ones(self, slot)
     conv_state = cache[0]
     ssm_state = cache[1]
+    # bind_kv_cache slices conv and ssm out of one padded int8 page, so
+    # slot stride is larger than the packed state. Inner dims stay packed.
+    conv_ok = (
+        conv_state.dtype == torch.float16
+        and conv_state.dim() == 3
+        and conv_state.size(2) == 8192
+        and conv_state.size(1) >= 3
+        and conv_state.stride(2) == 1
+        and conv_state.stride(1) == 8192
+    )
+    ssm_ok = (
+        ssm_state.dtype == torch.float32
+        and ssm_state.dim() == 4
+        and tuple(ssm_state.shape[-3:]) == (32, 128, 128)
+        and ssm_state.stride(-1) == 1
+        and ssm_state.stride(-2) == 128
+        and ssm_state.stride(-3) == 128 * 128
+    )
+    slot_ok = slot.dtype == torch.int32 and cu.dtype == torch.int32 and (
+        use_spec or (slot.dim() == 1 and cu.shape[0] == slot.shape[0] + 1)
+    )
     if (
-        not conv_state.is_contiguous()
-        or not ssm_state.is_contiguous()
-        or conv_state.dtype != torch.float16
-        or ssm_state.dtype != torch.float32
-        or conv_state.dim() < 3
-        or conv_state.size(2) != 8192
-        or conv_state.size(1) < 3
-        or slot.dtype != torch.int32
-        or cu.dtype != torch.int32
-        or (not use_spec and (slot.dim() != 1 or cu.shape[0] != slot.shape[0] + 1))
+        not conv_ok
+        or not ssm_ok
+        or not slot_ok
         or conv_w.shape[0] != 8192
         or conv_w.shape[1] != 4
     ):
         _once(
             "layout",
             "b70_d3 gdn skip layout "
-            f"conv={tuple(conv_state.shape)}:{conv_state.dtype} "
-            f"ssm={tuple(ssm_state.shape)}:{ssm_state.dtype} "
-            f"cu={None if cu is None else tuple(cu.shape)} "
-            f"slot={None if slot is None else tuple(slot.shape)} "
+            f"conv={tuple(conv_state.shape)}:{conv_state.dtype}"
+            f" stride={tuple(conv_state.stride())} "
+            f"ssm={tuple(ssm_state.shape)}:{ssm_state.dtype}"
+            f" stride={tuple(ssm_state.stride())} "
+            f"cu={tuple(cu.shape)}:{cu.dtype} slot={tuple(slot.shape)}:{slot.dtype} "
             f"w={tuple(conv_w.shape)}",
         )
         return orig(self, hidden_states)

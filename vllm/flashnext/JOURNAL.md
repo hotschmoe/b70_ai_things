@@ -2257,3 +2257,44 @@ reports/1C10_prefill_dq.md.
 VERDICT: CORRECT_AND_WIRED. End-to-end 2000 tok/s is not claimed.
 Recommend max_num_batched_tokens=12288.
 
+## 2026-10-20 09:23 D3 -- fused GDN decode measured, serve capture blocked on page views
+
+CONFIG: card 1, Ornith-35B GPTQ int4, torch 2.14.0+xpu, vLLM
+0.32.1rc1.dev94+g5fd62688f. Plugin
+plugins/b70_gdn_xpu (libb70_gdn_xpu.so, 08:52 build) plus
+harness/patches/d3_gdn.py. Overlay default off. Attention overlay
+left off. Claude fable-5.1 and claude-5.5 both unrecognized_model /
+not logged in (exit 1); not retried.
+COMMAND: harness/d3_probe.py --only gdn under xpu-run --card 1.
+Log logs/d3-probe-gdn.json. Then two no-MTP FULL_DECODE_ONLY serves
+(B70_D3_GDN=1 only). Both torn down before bench.
+RESULT: SSM state is fp32 [32,128,128] = 2 MiB/layer. Conv state is
+fp16 [3,8192] = 48 KiB. T=1 traffic 4.40 MB, roof 7.24 us. Stock
+conv+delta graph 0.0640 ms, fused conv+delta+RMSNorm 0.0411 ms.
+Core max_abs 7.6e-6, cosine 1. Post-norm max_abs 3.9e-3 is one fp16
+ulp at magnitude 4. T=3 fused 0.0144 vs stock 0.0170 ms. T=3 conv
+state vs stock cosine 0.15 because stock does not write conv state
+when num_prefills==0 and T>1; fused vs CPU ref is exact. Spec T=3
+fused 0.0161 vs stock 0.0178 ms, core cosine 1. Attention sweep is
+in logs/d3-probe.json: FA auto split-k at S=200000 is 1.13 ms
+(363 GB/s); custom paged kernel matches cosine 1 and is ~18x slower.
+B70_D3_ATTN stays off. First serve fell back because pure decode sets
+has_initial_state to None. Second serve skipped the op because
+bind_kv_cache views conv/ssm out of a padded int8 page (non-contiguous
+slot stride, packed inner dims). The kernel already takes stride(0).
+The contiguous check is being removed and the .so rebuilt.
+VERDICT: microbench correct and faster. No end-to-end number yet.
+30-layer isolated upper bound on the fusion win is about 0.69 ms
+on the 11.4 ms step. MoE not touched.
+
+
+## 2026-10-20 09:35 orchestrator -- EP sidecar transport works (M0 64/65)
+CONFIG: b70_ep_xpu, single process, both cards, same-context peer stores
+(IPC open fails, not needed), bounded device flags, no oneCCL.
+COMMAND: H1b window, tests/m0_probe.py (log h1b-m0-probe.log).
+RESULT: one-way flag 1.82/1.77 us p50 (0->1 / 1->0); push 4 KB 0.83 us,
+64 KB 5.83 us (11.2 GB/s, near PCIe 3.0 x16); preflight to 614 KB ok;
+eager oracle 64/65 (first-use sample only: stale push, spin timeout);
+graph samples pass; health clean after.
+VERDICT: transport beats Strata's own 3-5 us handshake. First-use warm-up
+is the only M0 gap; H1c (with --max-turns) continues to M1-M3.

@@ -483,8 +483,16 @@ void decode_fused(
   TORCH_CHECK(slot.scalar_type() == at::kInt, "slot int32");
   TORCH_CHECK(core.is_contiguous() && out.is_contiguous() && qkvz.is_contiguous(), "contig");
   TORCH_CHECK(ba.is_contiguous() && conv_w.is_contiguous() && A_log.is_contiguous(), "contig w");
-  TORCH_CHECK(dt_bias.is_contiguous() && conv_state.is_contiguous() && ssm_state.is_contiguous(),
-              "contig state");
+  // Mamba pages pack conv then ssm into one int8 page, then view them
+  // back. Each state is a non-contiguous slot stride with a packed
+  // inner tail. stride(0) is the page gap; the kernel already uses it.
+  TORCH_CHECK(dt_bias.is_contiguous(), "contig dt");
+  TORCH_CHECK(conv_state.stride(-1) == 1, "conv channel stride");
+  TORCH_CHECK(conv_state.stride(-2) == conv_state.size(-1), "conv row packed");
+  TORCH_CHECK(ssm_state.stride(-1) == 1, "ssm K stride");
+  TORCH_CHECK(ssm_state.stride(-2) == ssm_state.size(-1), "ssm V packed");
+  TORCH_CHECK(ssm_state.stride(-3) == ssm_state.size(-1) * ssm_state.size(-2),
+              "ssm head packed");
 
   const bool is_spec = token_indx.has_value();
   if (is_spec) {
