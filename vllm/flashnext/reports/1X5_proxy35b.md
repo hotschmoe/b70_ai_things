@@ -1,8 +1,11 @@
 # X5 -- Qwen3.6-35B-A3B proxy best-stack comparison
 
-In progress. The eventless stock proxy completes the short-context
-identity/coherence/exact-repeat/health gates. No localmaxxing result
-has been submitted or fully qualified.
+In progress. Request-level identity/coherence/exact-repeat and health
+checks pass for completed eventless arms, but all three exit139 during
+SYCL queue finalization. They are diagnostic timings, not qualified
+serves. Earlier teardown summaries missed the child exit status; the
+raw logs are retained and the correction is appended to JOURNAL.md.
+No localmaxxing result has been submitted.
 Non-speculative decode is the headline. Flash-Next MTP remains with O5;
 X1's implementation and findings are in reports/1X1_mtp.md.
 
@@ -46,9 +49,11 @@ attributed solely to expert bits. Output head is Q6_K in all three.
 All numbers below are card1 only, no MTP, no prefix cache, maxlen4096.
 ITL columns are SSE inter-chunk p50, not MTP effective token latency.
 
-| Format / path | C1 p50 ms | C2 p50 ms/stream | Prefix PPL | Repeat | Health |
+| Format / path | C1 p50 ms | C2 p50 ms/stream | Prefix PPL | Repeat | Health / teardown |
 | --- | ---: | --- | ---: | --- | --- |
-| IQ3, stock GDN, eventless | 8.83 | 11.14 / 11.02 | 9.09554 | exact C1+C2 | before/after HEALTHY |
+| IQ3, stock GDN, eventless | 8.83 | 11.14 / 11.02 | 9.09554 | exact C1+C2 | HEALTHY / exit139 |
+| IQ3, BF16 fused GDN, eventless | 8.69 | 10.74 / 10.77 | 9.09554 | exact repeat and stock parity | HEALTHY / exit139 |
+| IQ4_XS, BF16 fused GDN, eventless | 11.02 | 12.87 / 12.79 | 8.70159 | exact C1+C2 | HEALTHY / exit139 |
 
 C1 p90/p99=9.04/9.17ms,115.11tok/s,63completion tokens through EOS.
 C2 stream0 p99=71.60ms includes a concurrency-admission/prefill gap;

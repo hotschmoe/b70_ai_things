@@ -7278,3 +7278,180 @@ cross-run full-QSA budget around6.8s does not establish2000tok/s.
 No commit/push, reset/reboot, DD start or other service action occurred.
 Setup cost reflection: final compiled body33s queued roughly16min;
 no CPUquiet held during the queue and no redundant weight load/probe.
+
+## 2026-10-20 21:58 X5 -- BF16 GDN proxy measured; token parity passes
+
+CONFIG: IQ3/O3g38f7176a/shared-fused,eventlessb824/reclaim0, same
+BF16/FA/FULL_DECODE_ONLY,maxlen4096,maxseq2. New GDN2bb3661f only.
+COMMAND: x5_proxy_window.sh; raw ud-iq3_xxs-mtp0-gdn1-ev1.
+RESULT: FUSED_GDN_ACTIVE1; actual T1/T2 capture/eager calls logged on
+strided529-page state cache. Identity/coherence and same-load C1/C2
+repeat pass. Comparison to stockEV control matches all tested token
+IDs C1+C2 through EOS. C1 p50/p90/p99=8.69/8.89/9.02ms,116.83tok/s;
+C2p50=10.74/10.77ms,p99=11.51/11.22. PPL9.09554145/2044tokens,
+identical prefix score (prefill remains stock). Sources unchanged.
+Teardown done; post-health queues behind O5 m2v. No reset.
+VERDICT: retain as candidate pending post-health; observed C1 change
+8.83->8.69ms is modest, not a broad speed/stability claim. IQ4_XS and
+Q4_K_M arms remain queued independently, with the same flags/corpus.
+
+## 2026-10-20 21:58 F1 -- p2: per-op budget; card 1 is the critical path (3x)
+
+CONFIG: p1 serve plus a runtime control file (B70_EP_PREFILL_CTL, read at
+layer 0 of each forward; keys profile/ret/c1_chunk) so one load measures
+several arms. Arms: fp32 return, bf16 return, card-1 fused sub-chunk 2048
+and 4096. p1's own health-after did not run (bash parse error: I edited
+f1_window.sh while p1's shell was still reading it; never again). p2's
+health-before at 21:32 HEALTHY on both cards covers post-p1.
+COMMAND: TAG=p2 F1_ARMS=... harness/f1_window.sh; raw f1/run-p2/.
+RESULT: EP-PF PROFILE, per 12288-token chunk, 48 layers, card-0 events
+unless noted (fp32 arm): dispatch push 272 ms (5.7 ms/layer = 63 MB at
+11 GB/s), card-0 shared 93 ms, card-0 experts 1.2-1.6 s (138 experts,
+X3 bucket/tile64 dq+bmm), card-1 experts 4.0-4.1 s (374 experts, fused
+DPAS op in 2048-token sub-chunks, 86 ms/layer), card-0 wait+add 4.4-4.6
+s. At T=8186: push 181, c0 experts 1.2-1.65 s, c1 experts 2.6-3.0 s,
+wait+add 1.5-2.0 s. TTFT (warm, bf16 return, profile off): 8K 4.49 s =
+1822 tok/s (chunk 2048) / 4.31 s = 1899 tok/s (chunk 4096); 32K 21.3 s =
+1540 / 20.3 s = 1614 tok/s. fp32 8K 4.62 s = 1773 (profile on). bf16
+return: gates 323/667 pass per arm, 32K filler math 323/667 pass.
+12288-token rows read TTFT=None (first streamed piece empty); fixed in
+f1_probe.py by a wall-time fallback. 0 flag timeouts. SERVE_RC 0.
+VERDICT: card 1 (374 experts, 1.19 GiB free, no dequant scratch) is the
+critical path at 86 ms/layer; card 0 idles 4.4 s per 12288 chunk waiting
+for it. bf16 return kept. Next p3: card 1 on X3's dequant+bmm bucket path
+with small expert tiles (32/16/64; tile 32 is about 550 MB), which X3
+measured at 65 ms per 512-expert layer, i.e. about 2x faster than the
+fused small-chunk kernel per expert.
+
+## 2026-10-20 22:02 O5 -- sidecar MTP2 runs: C1 13.0 ms/token, C2 20.9; parity fails
+
+CONFIG: O4 f3 recipe (see 20:35 entry), MoE _C.o4pin-o3g.so, FULL_DECODE_ONLY
+target + draft, capture sizes 1,2,3,4,6,8, maxlen 2048, eager-free. Arms:
+m0b (no MTP), m2 (MTP k=2, full-vocab draft head), m2v (k=2 +
+B70_MTP_DRAFT_VOCAB = Strata draft_vocab_en.bin, 40525 rows, via new
+Qwen4ExpMTP.get_top_tokens + speculative_config use_local_argmax_reduction).
+4 prompts x 128 forced greedy tokens at C1, two C2 pairs.
+COMMAND: harness/o5_window.sh TAG=m0b|m2|m2v; raw
+/mnt/vm_8tb/b70/build/vllm-flashnext/o5/run-*/ (tokens-*.json, steps-*.jsonl).
+Effective ms/token = decode window / 127 tokens per stream.
+RESULT: gates 323/667 pass in all arms. HEALTHY before/after windows.
+| arm | C1 ms/tok | C2 ms/tok/stream | accept | step p50 | verify graph | propose dev |
+| m0b | 19.79 | 24.32 | - | 19.8 | 17.4 (T=1) | - |
+| m2 | 13.04 | 20.88 | 72.4% C1, 59.5% C2 | 32.1 | 24.5 (T=3) | 3.70 |
+| m2v | 13.01 | 20.65 | 68.2% C1, 55.9% C2 | 30.8 | 24.5 (T=3) | 2.37 |
+Host-serial gap per MTP step ~3.9 ms (step - verify - propose). Draft
+vocab saves 1.3 ms/step of drafting but costs ~4 points of acceptance:
+net neutral at k=2. Parity (harness/o5_compare.py): m2 C2 == m0b C2
+token-identical on all 4 prompts (T=6 vs T=2), but m2 C1 differs from
+m0b C1 at 111/57/none/24, and within m0b C1 vs C2 differs at
+101/106/none/24. So the target is NOT batch invariant between a 1-request
+batch and a 2-request batch, independent of MTP.
+VERDICT: MTP runs on the sidecar (1.52x C1, 1.16x C2 vs no-MTP) but is
+far from 7.09 ms. Exactness: queued an eager per-module hash probe
+(harness/o5_invar_probe.py; [A] vs [A,A] vs [A,A,A], MTP 0 and 2) to
+name the first batch-variant module, plus a unitrace of the T=3 verify.
+
+## 2026-10-20 21:58 O4 -- f6: PLE on the device, no host sync: C1 17.43 ms
+
+CONFIG: f5 flags with HC GEMV ksplit 4, minus B70_PLE_FAST/MLOCK, plus
+B70_PLE_DEVICE=1 (fork gguf/ple_device.py + b70_o4_xpu host_table op:
+the IQ4_NL table copied into 26.82 GiB pinned host USM, read by the GPU
+with index_select inside the graph; hash, token ring and slot metadata
+on device; X1's conv ring unchanged). First attempt failed at load
+(from_blob refuses a host-USM pointer; fixed with a DataPtr storage),
+health after HEALTHY. Host-USM table checked on card 1 (eager and graph
+gather equal to the CPU rows, harness/o4_hosttab_test.py).
+COMMAND: o4_window.sh TAG=f6; raw o4/run-f6.
+RESULT: gates 323/667 pass, c2 same_text. C1 and C2 token ids identical
+to f5 (c2 also identical to f4): the device PLE is exact. C1 step 19.04
+-> 17.43 ms (graph 16.55; GPU idle per step ~0.05 ms, the host now waits
+inside the replay call), C2 22.48 -> 20.82 ms. Table pin costs 122 s at
+load (cold memmap copy). Health before/after HEALTHY.
+VERDICT: keep. Also built my own variant of the GGUF library
+(o4/_C.o4g.so = repo csrc incl. O3 stage 3 + gemv_out: bf16 epilogue and
+output stride, so a multi-shard linear writes straight into one bf16
+output). gemv_out bitwise equal to gemv().to(bf16) for IQ3_S, IQ4_XS,
+IQ4_NL, Q6_K, Q4_K, Q5_K, Q2_0 at M=1..3 (harness/o4_gemv_out_test.py).
+That build step also rewrote plugins/b70_gguf_xpu/libdequant_cpu.so
+from unchanged source. f7 (f6 + B70_GEMV_BF16=1 on _C.o4g.so) queued.
+Note: standalone JIT tests need SYCL_CACHE_PERSISTENT=0 (the shared
+persistent cache segfaulted the first kernel call twice).
+
+## 2026-10-20 22:03 X5 -- IQ3 fusion health closes; IQ4 queued
+
+CONFIG: completed IQ3 GDN1/EV1 card1 arm, all token/quality checks pass.
+COMMAND: pinned native post-health then next IQ4_XS pre-health.
+RESULT: IQ3 post HEALTHY/21s; IQ4 pre HEALTHY. Both sources and the
+2044-token corpus are fixed; no new flags between quant formats.
+VERDICT: IQ3 fusion is the retained bounded-control candidate. IQ4
+serving queues normally behind current lease owners, then Q4_K_M.
+No new risk probe or rebuild; no reset, DD start, or commit.
+
+## 2026-10-20 22:06 G2b -- audit pass 24
+
+CONFIG: CPU only. No GPU, no server, no commit. Findings F224-F231 appended to reports/1G2_audit.md.
+COMMAND: compared JOURNAL.md entries from 21:26 through the 22:02 O5 note with x3/flashnext-serve.json, x3 serve/health/collective logs, x3/qsa-real-r7.log, x3/complete.json, x3/serve-ab.json, x4/proxy-live-gate.json, x5 ev1 and gdn1 bench/repeat/quality/health/source JSON, f1/run-p1/health-after.txt, f1/run-p2/probe.json, and o5/run-m0b|m2|m2v profile and tokens JSON. git status in this clone and the fork.
+RESULT: X3 plain C1 prefill_tok_s median is 2615.490 on 12288 tokens, itl null, first id hotschmoe-dd (campaign name WRONG). C2 plain is 2431.924 and 1242.151. Native post-health HEALTHY both cards in 29s. Compiled collective OK in 33s. QSA event_ms 3648.721 to 171.049 and glue event times match; exact-output is unverified. X4 gate exit 3, repeat timeout, HTTP 400 on 8192 and 32768 versus 4096, first id hotschmoe-dd. X5 ev1 C1 itl_p50 8.832 ms and decode_tok_s 115.113, PPL 9.09554, card 1 health both sides, name WRONG, and linear.py changed during that window. X5 gdn1 C1 itl_p50 8.689 ms and decode_tok_s 116.833, same PPL, parity booleans true, post-health not HEALTHY, and linear.py differs from the ev1 start so the 0.14 ms gap is not GDN-only. F1 p2 warm bf16 profile-off rates are 1821.99 / 1899.39 / 1539.80 / 1614.26 tok/s, identity hotschmoe-dev, still under 2000. The 4.62 s row is bf16 profile-on, not fp32. p1 health-after is HEALTHY both cards in 31s. O5 eff means are m0b 19.787, m2 13.045, m2v 13.006 ms/tok. Wall/127 C1 means are 21.963, 15.306, and 15.236. m0b omits capture size 6. m2v post-health has not printed HEALTHY. Parity indices were not in a compare file. HEAD 21c5878e subject calls O4 profiler 19.04 ms a decode result. Porcelain 16, only the known push .so. Fork still 0a6170da8c, 727 insertions. Deferred at append: ['## 2026-10-20 21:58 O4 -- f6: PLE on the device, no host sync: C1 17.43 ms', '## 2026-10-20 22:03 X5 -- IQ3 fusion health closes; IQ4 queued'].
+VERDICT: no Flash-Next harness-decode promotion. X3 2615 tok/s is a real dense-GQA prefill rate with the campaign name wrong, C2 unbalanced, and native QSA still open. F1 p2 stays under 2000 tok/s. O5 13.0 ms/tok is an in-process eff mean, not wall clock and not a harness ITL, with parity unproven. X5 8.69 ms is a 35B proxy.
+
+## 2026-10-20 22:08 G2b -- audit pass 24 addendum
+
+CONFIG: CPU only. No GPU. Checks the two notes that were already on disk when the 22:06 milestone deferred them.
+COMMAND: read o4/run-f6/profile.log, gates.json, window.log, health-after.txt, and text json against run-f5 and run-f4. Re-read x5 gdn1 health-after and the IQ4 health files.
+RESULT: f6 C1 step_ms p50 is 17.434 and replay_dev_ms p50 is 16.55, n_graph_steps 94. C2 step_ms p50 is 20.822. Gates 323/667, same_text true, first id hotschmoe-dev. text-c1 and text-c2 match f5 byte for byte. c2 also matches f4. Health-after HEALTHY both cards in 29s. No health-before file. gap_ms p50 is 0.307, not 0.05. replay_host_ms p50 is 13.191. Profiler step_ms, not a harness ITL. gdn1 health-after is now HEALTHY card 1 in 21s. IQ4 health-before is HEALTHY card 1 in 13s. No IQ4 bench graded. Newer titles at append: none.
+VERDICT: F232 and F233. f6 17.43 ms does not promote Flash-Next decode. The 0.05 ms idle figure is not in the profile summary. IQ3 post-health is closed. No speed change to F224-F230.
+
+## 2026-10-20 22:13 X5 -- teardown correction and late-load replay build
+
+CONFIG: audit actual serve.log exit status for all completed EV arms.
+COMMAND: inspect stockIQ3, fusedIQ3, IQ4 logs and DT_NEEDED of shim.
+RESULT: all3 finish request gates but exit139 at SYCL queueFinish/
+queueRelease in global torch stream-pool vector destruction. Worker
+reports shutdown done but parent force-kills it after5s; parent later
+faults in __cxa_finalize. Native post-health passes. Earlier summaries
+missed that serve rc because cleanup discarded wait status. Correct
+qualification: request-level checks pass, teardown FAIL; no promotion.
+IQ4 C1p50=11.02ms,C2=12.87/12.79,PPL8.70159088, exact repeat pass.
+VERDICT: preserve all failures/timings as diagnostics. Build own late-
+load variant of identical X1 replay body: preload libc-only C stub;
+load Torch-linked helper after normal Torch import, bind helper replay
+locally with Bsymbolic to prevent recursion. Hypothesis is constructor/
+finalizer ordering, not established cause. CPU build undercpu-run/MAX4;
+new2066replay+RNG test must permit NORMAL Python finalization before
+a full serving test. No os._exit status masking or GPU reset.
+
+## 2026-10-20 22:22 X5 -- quant comparison requests complete; replay gate queued
+
+CONFIG: Q4_K_M with same O3g/GDN1/EV1/FA/full graphs as IQ4.
+COMMAND: last quant arm under comparison master (now exited).
+RESULT: identity/coherence/exact C1+C2 repeat pass. C1p50=10.96ms,
+C2p50=12.94/12.96ms; PPL8.51682205/2044tokens on identical corpus.
+All request-level measurements complete; inspect actual exit separately
+from window rc (old cleanup swallowed it). Q4 is selected four-bit
+candidate: lower prefixPPL thanIQ4 and similar observed decode latency.
+VERDICT: new late-load stub/helper build succeeds21s/MAX4. Stub-only
+relink prunes unused Intel math deps; no Torch/SYCL NEEDED in preload.
+Card1 pinned short probe2066replays+RNG+normal Python finalization is
+queued, expected<1min body plus native pre/post health. No speed claim
+from that probe, no GPU reset. Full serve follows only if it passes.
+
+## 2026-10-20 22:30 F1 -- p3: card-1 dequant tile 32 OOMs on routing skew
+
+CONFIG: p2 serve plus runtime arm c1=fast:N (card 1 on X3's bucketed
+dequant+bmm path with N-expert tiles, DQ_T forced on for card 1 so it
+never falls to a whole-chunk fused call). First launch aborted at the
+60 GB host-RAM floor while O5's serve held 27 GiB mlocked; requeued
+behind a RAM wait. p2 health-after HEALTHY (22:0x, queued behind O4 f6).
+COMMAND: TAG=p3 F1_ARMS="... c1=fast:32; fast:16; fast:64" f1_window.sh.
+RESULT: health-before HEALTHY; READY 22:22:36. First 8186-token request
+on c1=fast:32: card 1 bucket census E=374 slots=64340 max_rows=5428
+buckets=9 -> one expert holds 5428 of 8186 tokens, so a 32-expert tile
+in the 8192-row bucket pads to 262144 rows (1.3 GB bf16 xpad) and
+card 1 (1.19 GiB free) died: Level Zero error 40 OUT_OF_RESOURCES in
+EngineCore, HTTP 500, serve exited rc 0, health-after queued.
+VERDICT: natural-text routing on card 1 is heavily skewed (the hot
+expert of the snake). Card-1 tiles need X3's B70_PREFILL_MAX_PAD_ROWS
+cap (X3 used 65536 with 10 GB free); new card-1-only override
+B70_EP_PREFILL_C1_MAXPAD (default 16384 = ~290 MB), runtime key
+c1_maxpad. p4 queued: fast:32/16 at maxpad 16384 and 32768, fused
+chunk 4096 control, card 0 at maxpad 65536.

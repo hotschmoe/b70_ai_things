@@ -97,9 +97,17 @@ for arm in ARMS:
         if r > 0:
             # Fresh nonce: no prefix reuse between repeats (prefix cache is off anyway).
             prompt, built = make_prompt(BASE, MODEL, n, f"f1-{n}-{r}-{time.time_ns()}")
+        t_req = time.perf_counter()
         row = stream_completion(BASE, MODEL, prompt, 1, TIMEOUT)
+        wall_ms = (time.perf_counter() - t_req) * 1000.0
+        if row.get("ttft_ms") is None:
+            # First streamed piece was empty text; with max_tokens=1 the
+            # request wall time is the TTFT within a few ms.
+            row["ttft_ms"] = wall_ms
+            pt = row.get("prompt_tokens")
+            row["prefill_tok_s"] = (pt / (wall_ms / 1000.0)) if isinstance(pt, int) and pt else None
         s = summarize_itl(row)
-        s.update(target=n, built=built, run=r, first_token=row.get("text"), arm=arm)
+        s.update(target=n, built=built, run=r, first_token=row.get("text"), arm=arm, wall_ms=wall_ms)
         report["prefill"].append(s)
         log(f"prefill arm={arm!r} n={n} run={r} prompt_tokens={s.get('prompt_tokens')} ttft_ms={s.get('ttft_ms')} tok_s={s.get('prefill_tok_s')}")
         save()

@@ -99,4 +99,49 @@ Build: `cpu-run /mnt/vm_8tb/b70/build/vllm-flashnext/f1/build_ep.sh`
 
 ## 4. Results
 
-(filled per window below)
+Raw: `/mnt/vm_8tb/b70/build/vllm-flashnext/f1/run-<tag>/` (serve.log,
+probe.json, probe.log, window.log, health-*.txt). All TTFTs are warm
+server, prefix cache off, one request, `max_tokens=1`, prompts built by
+`bench_latency.make_prompt` to the token count (the 12288 rows are 12283
+tokens). Health HEALTHY on both cards before every window; p1's own
+post-health was replaced by p2's pre-health (HEALTHY) after a script
+parse error (see JOURNAL 21:58). No flag timeout, no reset.
+
+### 4.1 p1 -- first end-to-end (fp32 return, card-1 fused sub-chunk 2048)
+
+| prompt tokens | TTFT ms | input tok/s |
+| ---: | ---: | ---: |
+| 1019 | 811 | 1256 |
+| 8187 | 4650 | 1761 |
+| 32762 | 21979 | 1491 |
+| 131066 | 117232 | 1118 |
+
+Gates 323/667 pass; 32788-token filler + math -> 323/667; decode C1
+ITL p50 18.45 ms (O4 f4 unchanged); card 0 KV 396,288 tokens
+(2.69x 147,456) with 2.22 GiB peak activation at the 12288 chunk.
+
+### 4.2 p2 -- per-op budget (EP-PF PROFILE, card-0 events; sums over 48 layers)
+
+| T | dispatch push | card-0 shared | card-0 experts | card-1 experts (card-1 events) | card-0 wait + add |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 8186, fp32 | 181-198 ms | 63 | 1200-1650 | 2640-2990 | 1520-1960 |
+| 12288, fp32 | 272 | 93 | 1170-1620 | 4000-4150 | 4260-4620 |
+| 12288, bf16 return | 272 | 93 | 1170-1220 | 4030-4150 | 4260-4380 |
+
+Reading: the push is the posted-write wire (63 MB in 5.7 ms/layer =
+11 GB/s). Card 0's 138 experts take 25-34 ms/layer on X3's bucket/tile64
+dequant+bmm path. Card 1's 374 experts take 84-86 ms/layer on the fused
+DPAS op in 2048-token sub-chunks (~27 rows per expert per call, where that
+kernel is inefficient), so card 0 spends 4.3-4.6 s per 12288 chunk in
+`ep_wait`. The transfer is not the problem; card 1's kernel path is.
+
+TTFT arms in p2 (warm): 8K fp32 4.62 s (1773 tok/s); 8K bf16 4.49 s
+(1822); 8K bf16 + card-1 chunk 4096: 4.31 s (1899); 32K bf16 21.3 s
+(1540), chunk 4096 20.3 s (1614). bf16 return keeps 323/667 and the 32K
+filler math exact, so it stays on.
+
+X3's DP2/EP layout measured 2615 tok/s at 12288 (JOURNAL 21:36). There
+each card runs 256 experts with ~10 GB of headroom, so both halves use the
+dequant+bmm path. The sidecar's card 1 (374 experts, 1.19 GiB free) is the
+difference, not the transport: the sidecar's push+return at 12288 costs
+272 ms + ~0.5 s hidden inside the wait, against X3's padded RS 421 ms.

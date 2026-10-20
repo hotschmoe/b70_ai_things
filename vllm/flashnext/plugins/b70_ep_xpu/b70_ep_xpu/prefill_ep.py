@@ -43,6 +43,11 @@ _MAX_T = int(os.environ.get("B70_EP_PREFILL_MAX_T", "12288"))
 # scratch per expanded row (xpack, gu fp32, h, ydown fp32, slot fp32), so
 # card 1 runs its experts in token sub-chunks of this size (M = chunk*topk).
 _C1_CHUNK = int(os.environ.get("B70_EP_PREFILL_C1_CHUNK", "2048"))
+# Card-1 cap on padded rows per bucketed dq+bmm call (B70_PREFILL_MAX_PAD_ROWS
+# override). Real routing is skewed (one expert took 5428 of 8186 tokens);
+# an uncapped 32-expert tile padded to the 8192 bucket is 1.3 GB and OOMs
+# card 1 (p3, Level Zero error 40). 16384 rows is about 290 MB.
+_C1_MAXPAD = int(os.environ.get("B70_EP_PREFILL_C1_MAXPAD", "16384"))
 _NLAYERS = 64
 _LOGGED: set = set()
 # Profile accumulators for the forward in flight: name -> [ms sum, calls].
@@ -126,11 +131,16 @@ def _experts(x, ids, w, gate, up, down, gt: int, ut: int, dt: int, h: int, f: in
         elif card == 0:
             tile = os.environ.get("B70_EP_PREFILL_TILE0")
         old = _env_override("B70_PREFILL_EXPERT_TILE", tile) if tile is not None else None
+        old_t = _env_override("B70_PREFILL_DQ_T", "0") if card == 1 else None
+        old_p = _env_override("B70_PREFILL_MAX_PAD_ROWS", _C1_MAXPAD) if card == 1 else None
         try:
             y = serve_prefill.moe_prefill(x, ids, gate, up, down, w, gt, ut, dt, h, f)
         finally:
             if tile is not None:
                 _restore("B70_PREFILL_EXPERT_TILE", old)
+            if card == 1:
+                _restore("B70_PREFILL_DQ_T", old_t)
+                _restore("B70_PREFILL_MAX_PAD_ROWS", old_p)
         _note(f"c{card}-fast", f"card {card} experts: fast dispatcher (dq/bmm or fused by T) tile={tile} {serve_prefill.LAST}")
         return y
     # fused: force the single-launch DPAS grouped kernel (no bf16 scratch).
@@ -148,7 +158,7 @@ def _experts(x, ids, w, gate, up, down, gt: int, ut: int, dt: int, h: int, f: in
 
 
 def _poll_ctl() -> None:
-    global _CTL_MTIME, _PROF, _RET_BF16, _C1_CHUNK
+    global _CTL_MTIME, _PROF, _RET_BF16, _C1_CHUNK, _C1, _C1_MAXPAD
     if not _CTL:
         return
     try:
@@ -170,8 +180,12 @@ def _poll_ctl() -> None:
             _RET_BF16 = v.lower() == "bf16"
         elif k == "c1_chunk":
             _C1_CHUNK = int(v)
+        elif k == "c1":
+            _C1 = v.lower()
+        elif k == "c1_maxpad":
+            _C1_MAXPAD = int(v)
     _EVENTS.clear()
-    print(f"b70_ep: prefill ctl profile={int(_PROF)} ret={'bf16' if _RET_BF16 else 'fp32'} c1_chunk={_C1_CHUNK}", flush=True)
+    print(f"b70_ep: prefill ctl profile={int(_PROF)} ret={'bf16' if _RET_BF16 else 'fp32'} c1={_C1} c1_chunk={_C1_CHUNK} c1_maxpad={_C1_MAXPAD}", flush=True)
 
 
 def apply(method, layer, x, topk_weights, topk_ids, shared_experts=None, shared_experts_input=None):
@@ -227,7 +241,7 @@ def apply(method, layer, x, topk_weights, topk_ids, shared_experts=None, shared_
     with torch.xpu.device(1):
         if _PROF:
             s_c1 = [_ev()]
-        step = _C1_CHUNK if _C1_CHUNK > 0 else t
+        step = _C1_CHUNK if (_C1_CHUNK > 0 and _C1 == "fused") else t
         if step >= t:
             y1 = _experts(x1, ids1, w1, method._c1_gate, method._c1_up, method._c1_down, gt, ut, dt, h, f, _C1, 1)
         else:

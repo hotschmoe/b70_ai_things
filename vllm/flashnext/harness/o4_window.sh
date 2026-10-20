@@ -4,6 +4,11 @@
 #
 #   TAG=base UT=0 bash vllm/flashnext/harness/o4_window.sh
 #
+# Current best flags: harness/o4_recipe.env, e.g.
+#   TAG=x O4_SO=/mnt/vm_8tb/b70/build/vllm-flashnext/o4/_C.o4g.so \
+#   O4_EXTRA="$(grep -v '^#' vllm/flashnext/harness/o4_recipe.env | sed 's/ *#.*//' | grep -v GGUF_SO | xargs)" \
+#   bash vllm/flashnext/harness/o4_window.sh
+# Copy this script before queueing it (bash reads it while it runs).
 # Env: TAG (required), UT=1 wraps the process in unitrace (kernel timing),
 # O4_SO (MoE library; default the pinned copy of O3 _C.o3f.so), O4_EXTRA
 # ("K=V K=V" passed into the container), O4_TOKENS, SKIP_HEALTH_BEFORE=1.
