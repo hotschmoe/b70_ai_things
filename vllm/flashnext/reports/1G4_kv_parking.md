@@ -12,8 +12,9 @@ move. Greedy text matched a never-evicted control. Restored TTFT was
 0.175 s against a 0.417 s control prefill of the same prompt.
 
 The copy was ops.swap_blocks_batch. The load was 131235840 bytes in
-0.063618 s, which is 2.063 GB/s. That is not the copy-engine target.
-W8, T3, FULL_DECODE_ONLY, 200K, and Flash-Next T6 are not measured yet.
+0.063618 s, which is 2.063 GB/s. A later copy-engine bench produced
+no bandwidth number (see W8). T3, FULL_DECODE_ONLY, 200K, and
+Flash-Next T6 are not measured yet.
 
 ## T2 configuration
 
@@ -101,9 +102,7 @@ Health after: xpu-health HEALTHY card 1, gpu-run 26 s, exit 0, at
 
 ## What T2 does not show
 
-- 7.5 GB/s. The plugin libb70_kvpark.so is compiled (90904 bytes,
-  icpx 2026.1.0) and is not wired into the worker. bench_copy.py has
-  not run.
+- 7.5 GB/s. W8 ran once and scored nothing. See the W8 section.
 - Two streams decoding while a third is restored (T3), or an ITL stall.
 - FULL_DECODE_ONLY capture with a parked tail.
 - A 200K context. Ornith here was capped at 32768, and the GPU block
@@ -141,10 +140,40 @@ Health after: xpu-health HEALTHY card 1, gpu-run 26 s, exit 0, at
 - F-C is not committed. The deferred tail store completed before the
   restore lookup (host 3063, device 0).
 
+## W8 attempt (no bandwidth)
+
+CONFIG: card 1, one process. Library
+/mnt/vm_8tb/b70/build/vllm-flashnext/b70_kvpark/libb70_kvpark.so,
+90904 bytes, built 08:41, icpx 2026.1.0. That binary has no
+`ordered` symbol. The bench builds one uint8 device buffer and two
+USM-host buffers at 16 MiB, 64 MiB, 256 MiB, and 1 GiB.
+
+COMMAND: /tmp/g4-launch-copy.sh, which ran
+`CARD=1 vllm/flashnext/kvoffload/run_copy_bench.sh`.
+Health before and after: bin/xpu-health --card 1.
+Log: /mnt/vm_8tb/b70/build/vllm-flashnext/logs/g4-copy-driver.txt.
+
+RESULT: COPY_START 10:40:42. Health before ok. The library opened a
+copy queue on group 1 (`engine_ordinal=1`) and malloc_host returned
+USM host. The first timed copy then raised
+`ValueError: Overflow when unpacking long long` in
+`torch.tensor([dst], dtype=torch.int64)` because the device pointer
+does not fit in a signed int64. No COPY_BENCH line. gpu-run exit 1
+in 15 s at 10:41:19. Health after at 10:41:34: xpu-health HEALTHY
+card 1, exit 0. No xe-reset.
+
+The pointer pack is now a uint64 tensor viewed as int64, which keeps
+the bits copy_batch casts back through uintptr_t. A second library,
+libb70_kvpark_ordered.so, 95512 bytes, compiled at 10:47 (cpu-run,
+74 s, rc 0) from the source that barriers the copy queue on the
+current stream. It exports `ordered() -> int`. It has not been
+loaded on a GPU. The 08:41 library was left in place.
+
 ## Still open
 
-1. W8 bench of copy_batch versus swap_blocks_batch, 16 MiB to 1 GiB,
-   on a CPU-quiet card, with xpu-health before and after.
+1. Rerun W8 on libb70_kvpark_ordered.so once a card is free. C7's
+   Flash-Next DP=2 window (journal 10:48) holds both cards. The pass
+   line is still worst one-buffer H2D and D2H at or above 7.5 GB/s.
 2. Wire the op on the copy queue, with a compute-queue order, behind
    a fallback to swap_blocks_batch. Re-check T2 on that path.
 3. T3: two decoding streams plus one restore, ITL p50/p99 stall at

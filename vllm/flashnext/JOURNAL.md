@@ -2782,3 +2782,43 @@ CONFIG: Same candidate _C.c12.so sha256 d46f80175c67a10681e09e7642b5293eedec0d3f
 COMMAND: bin/gpu-run --card 0 /mnt/vm_8tb/b70/build/vllm-flashnext/c12/run_gates.sh
 RESULT: The first acquire ran the script and the kernel returned EACCES (exit 126, 0s). The file mode was 644. chmod +x and the same command is queued again. CPU crop probe of tests/c12_types.py shapes passed: five cases CROP_OK and Q8_0 cropped dequant mismatches=0 (c12/crop_probe.log, 30s). At 10:43 card 0 is held by C7's TP=2 eager serve (vllm-fn-qwen36-gguf-tp, old _C.graph.so). No install. No xe-reset.
 VERDICT: Host path is unchanged. Device gates have not started.
+
+## 2026-10-20 10:48 C7 -- Flash-Next IQ3_XXS DP=2 EP window
+
+CONFIG: fork e442b4b53f. qwen4_exp IQ3_XXS shard 1 plus the IQ4_NL
+PLE shard, HF hf-flashnext, DP=2 TP=1 --enable-expert-parallel,
+enforce-eager, language-model-only, max_model_len 2048, memory 100g.
+SYCL_CACHE_PERSISTENT=0. No P2P. No hotschmoe-dd. Collective health
+first. Greedy chat vs recorded Strata texts 323 and 667.
+COMMAND: bash /tmp/c7-fn-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+
+## 2026-10-20 10:50 G4 -- W8 bench overflowed a device pointer; ordered library is built
+
+CONFIG: card 1, libb70_kvpark.so 90904 bytes from 08:41 (no ordered
+symbol). USM-host via sycl::malloc_host, copy queue group 1.
+Side library libb70_kvpark_ordered.so built with cpu-run, no GPU.
+C7's Flash-Next DP=2 window (10:48, /tmp/c7-fn-window.sh) holds both
+cards after this. qwen4_exp was not edited.
+
+COMMAND: /tmp/g4-launch-copy.sh then
+CARD=1 vllm/flashnext/kvoffload/run_copy_bench.sh.
+Health: bin/xpu-health --card 1 before and after.
+Ordered build: SO_NAME=libb70_kvpark_ordered.so
+vllm/flashnext/plugins/b70_kvpark/build.sh under bin/cpu-run.
+
+RESULT: COPY_START 10:40:42 card 1. engine_ordinal=1, malloc_host
+type=host. The first torch.tensor of the device pointer raised
+ValueError: Overflow when unpacking long long. No COPY_BENCH line
+and no GB/s. gpu-run exit 1 in 15s. Health after 10:41:34 HEALTHY
+card 1, exit 0. No xe-reset. The 08:41 file is unchanged.
+Ordered compile rc=0 in 74s at 10:47, 95512 bytes, schema
+"ordered() -> int". That file has not been loaded on a GPU.
+bench_copy.py now packs pointers as uint64 and views them as int64.
+The next bench waits out C7's window, then loads the ordered file.
+T3 client is written (t3_test.py, run_t3.sh) and has not run.
+
+VERDICT: W8 has no bandwidth number. T2 on swap_blocks_batch stands
+(2.063 GB/s host load, gate pass). Direct copy stays off.

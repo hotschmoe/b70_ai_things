@@ -14,6 +14,19 @@ from b70_lowbit_xpu.format import gptq_to_b70lb1, plane2_stride, plane_hi_stride
 _GEMV_MAX_ELEMENTS = 8 * 2560
 
 
+def _vendor_dense_prefill() -> bool:
+    """True when dense prefill should unpack to bf16 and call F.linear.
+
+    The MoE file/env switch is the source of truth. Env "bmm" used to
+    fall through to prefill_wna16 here, so every GDN and attention
+    projection took the slow DPAS kernel while experts used the vendor
+    GEMM.
+    """
+    from b70_lowbit_xpu.moe import _prefill_flag
+
+    return _prefill_flag() in ("matmul", "bmm")
+
+
 def _ignore_loaded(param, loaded_weight, loaded_shard_id=None, **kwargs):
     """Checkpoint tensors the symmetric kernel does not read (qzeros, g_idx)."""
     del param, loaded_weight, loaded_shard_id, kwargs
@@ -241,7 +254,7 @@ class B70LowbitLinearMethod:
         m_tok = x2.shape[0]
         if m_tok <= 8 and m_tok * x2.shape[1] <= _GEMV_MAX_ELEMENTS:
             y = ops.gemv(x2, layer.weight, plane_hi, layer.weight_scale, self.bits)
-        elif os.environ.get("B70_LOWBIT_PREFILL", "") == "matmul":
+        elif _vendor_dense_prefill():
             weight = ops.unpack_bf16(
                 layer.weight, plane_hi, layer.weight_scale, self.bits
             )
