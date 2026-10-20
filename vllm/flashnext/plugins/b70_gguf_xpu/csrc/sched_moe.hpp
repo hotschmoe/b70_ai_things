@@ -29,6 +29,14 @@
 // The grid is the host ceiling (T*topk [+ shared]); extra groups exit.
 // Scratch is reserved at that ceiling before capture.
 //
+// O3 (2026-10-20): the 2x gap to Strata R2 was the weight loads, not the
+// schedule. b70_prep read 8/4-byte fields at 2-aligned block addresses through
+// memcpy, which IGC lowered to d64/d32 LSC loads at misaligned addresses
+// (gate/up 123 us -> 44 us, down 38 -> 16.5 us at T=1 once those became the
+// aligned-dword loads of Strata load8_a2; see iq_dot.hpp). The single-thread
+// plan kernel (8.5 us T=1, 74 us T=4) is now one parallel work-group fused
+// with Q8(x), and SiLU is fused with Q8(hidden): 5 launches per layer.
+//
 // B70_MOE_PHASE=1 prints C12_PHASE on stderr (host submit+wait, serialized).
 // It drains the queue. Do not set it during graph capture.
 #pragma once
@@ -48,6 +56,12 @@ struct B70Q8S {
 };
 static_assert(sizeof(B70Q8S) == 36, "q8s block");
 static_assert(offsetof(B70Q8S, qs) == 4, "q8s qs");
+
+// B70_SCHED_FUSE=0 at compile time restores the separate plan, Q8(x), SiLU and
+// Q8(hidden) launches (O3 A/B). Default fused.
+#ifndef B70_SCHED_FUSE
+#define B70_SCHED_FUSE 1
+#endif
 
 constexpr int kSchedMaxT = 8;
 constexpr int kSchedMaxTopk = 16;
@@ -189,7 +203,7 @@ inline const B70Q8S* b70_q8s_cptr(const uint8_t* base, size_t block) {
 // xor 4,2,1 stays inside an aligned 8-lane rib of a 16-lane subgroup.
 inline float b70_sched_lanes(sycl::sub_group sg, float v) {
 #pragma unroll
-    for (int o = 4; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
+    for (int o = kSchedLn / 2; o > 0; o >>= 1) v += sycl::permute_group_by_xor(sg, v, o);
     return v;
 }
 
@@ -292,6 +306,8 @@ inline void b70_sched_dot_t(sycl::sub_group sg, const uint8_t* row0, const uint8
 }
 
 class b70_sched_plan_k;
+class b70_sched_planq8_k;
+class b70_sched_siluq8_k;
 class b70_sched_q8_k;
 class b70_sched_q8f_k;
 class b70_sched_silu_k;
@@ -448,6 +464,184 @@ inline sycl::event b70_sched_q8_f32(sycl::queue& q, const float* x, uint8_t* yb,
                 b->qs[t] = (int8_t)r;
             }
         });
+    });
+}
+
+// O3 (reports/2O3_moe_decode.md): plan + Q8(x) in one launch. Work-group 0 builds the plan in parallel
+// (one work-item per slot, ids staged in SLM). The other work-groups quantize
+// x, eight lanes per 32-value block. Same plan bytes as the old single_task
+// (groups in first-occurrence slot order, entries in slot order, shared group
+// last) and the same Q8 bytes as b70_sched_q8_bf16 (amax is order-free).
+constexpr int kSchedPlanWg = 256;
+static_assert(kSchedPlanWg >= kSchedMaxT * kSchedMaxTopk, "plan work-group covers every slot");
+
+inline sycl::event b70_sched_plan_q8(sycl::queue& q, B70SchedPlan* plan, const int32_t* ids, int T, int topk, int E,
+                                     int gate_type, int up_type, int down_type, int grb, int urb, int drb, int sg_type,
+                                     int su_type, int sd_type, int sgrb, int surb, int sdrb, int shared,
+                                     const uint16_t* x, uint8_t* yb, int K) {
+    const int nb = K / 32;
+    const int nq = T * nb * 8;
+    const int nwg = 1 + (nq + kSchedPlanWg - 1) / kSchedPlanWg;
+    return q.submit([&](sycl::handler& h) {
+        sycl::local_accessor<int, 1> sid(sycl::range<1>(kSchedMaxT * kSchedMaxTopk), h);
+        sycl::local_accessor<int, 1> scnt(sycl::range<1>(kSchedMaxT * kSchedMaxTopk), h);
+        h.parallel_for<b70_sched_planq8_k>(
+            sycl::nd_range<1>((size_t)nwg * kSchedPlanWg, (size_t)kSchedPlanWg),
+            [=](sycl::nd_item<1> it) [[sycl::reqd_sub_group_size(kSchedSg)]] {
+                const int wg = (int)it.get_group(0);
+                const int lid = (int)it.get_local_id(0);
+                if (wg == 0) {
+                    const int nslot = T * topk;
+                    const int i = lid;
+                    const int id = i < nslot ? ids[i] : -1;
+                    const bool valid = i < nslot && id >= 0 && id < E;
+                    if (i < nslot) sid[i] = id;
+                    sycl::group_barrier(it.get_group());
+                    int first = i, rank = 0, cnt = 0;
+                    if (valid) {
+                        first = nslot;
+                        for (int j = 0; j < nslot; ++j) {
+                            const bool same = sid[j] == id;
+                            if (same && j < first) first = j;
+                            if (same && j < i) rank += 1;
+                            if (same) cnt += 1;
+                        }
+                    }
+                    const bool lead = valid && first == i;
+                    if (i < nslot) scnt[i] = lead ? cnt : 0;
+                    sycl::group_barrier(it.get_group());
+                    if (valid) {
+                        int g = 0, st = 0;
+                        for (int j = 0; j < first; ++j) {
+                            const int c = scnt[j];
+                            g += c > 0 ? 1 : 0;
+                            st += c;
+                        }
+                        const int pos = st + rank;
+                        plan->tok[pos] = i / topk;
+                        plan->slot[pos] = i - (i / topk) * topk;
+                        if (lead) {
+                            plan->start[g] = st;
+                            plan->expert[g] = id;
+                            plan->gtype[g] = gate_type;
+                            plan->utype[g] = up_type;
+                            plan->dtype[g] = down_type;
+                            plan->grb[g] = grb;
+                            plan->urb[g] = urb;
+                            plan->drb[g] = drb;
+                        }
+                    }
+                    const int ngr = sycl::reduce_over_group(it.get_group(), lead ? 1 : 0, sycl::plus<int>());
+                    const int ner = sycl::reduce_over_group(it.get_group(), valid ? 1 : 0, sycl::plus<int>());
+                    if (shared) {
+                        if (lid < T) {
+                            plan->tok[ner + lid] = lid;
+                            plan->slot[ner + lid] = topk;
+                        }
+                        if (lid == 0) {
+                            plan->start[ngr] = ner;
+                            plan->expert[ngr] = -1;
+                            plan->gtype[ngr] = sg_type;
+                            plan->utype[ngr] = su_type;
+                            plan->dtype[ngr] = sd_type;
+                            plan->grb[ngr] = sgrb;
+                            plan->urb[ngr] = surb;
+                            plan->drb[ngr] = sdrb;
+                        }
+                    }
+                    if (lid == 0) {
+                        const int ng = ngr + (shared ? 1 : 0);
+                        const int ne = ner + (shared ? T : 0);
+                        plan->start[ng] = ne;
+                        plan->ng = ng;
+                        plan->nent = ne;
+                    }
+                    return;
+                }
+                // Q8(x): lane l of an 8-lane rib takes values 4l..4l+3 of block blk.
+                const int gid = (wg - 1) * kSchedPlanWg + lid;
+                const int blk0 = gid >> 3;
+                const int lane = gid & 7;
+                const bool live = gid < nq;
+                const int blk = live ? blk0 : 0;
+                const uint16_t* p = x + (size_t)blk * 32 + lane * 4;
+                const uint64_t raw = *reinterpret_cast<const uint64_t*>(p);
+                float v[4];
+                float m = 0.f;
+#pragma unroll
+                for (int t = 0; t < 4; ++t) {
+                    v[t] = b70_bf16_to_fp32((uint16_t)(raw >> (16 * t)));
+                    m = sycl::fmax(m, sycl::fabs(v[t]));
+                }
+                auto sg = it.get_sub_group();
+#pragma unroll
+                for (int o = 4; o > 0; o >>= 1) m = sycl::fmax(m, sycl::permute_group_by_xor(sg, m, o));
+                if (!live) return;
+                const float idv = m > 0.f ? 127.f / m : 0.f;
+                uint32_t packed = 0;
+#pragma unroll
+                for (int t = 0; t < 4; ++t) {
+                    int r = (int)sycl::rint(v[t] * idv);
+                    if (r > 127) r = 127;
+                    if (r < -127) r = -127;
+                    packed |= (uint32_t)(uint8_t)(int8_t)r << (8 * t);
+                }
+                uint8_t* b = yb + (size_t)blk * 36ull;
+                if (lane == 0) *reinterpret_cast<float*>(b) = m * (1.f / 127.f);
+                *reinterpret_cast<uint32_t*>(b + 4 + 4 * lane) = packed;
+            });
+    });
+}
+
+// O3 (reports/2O3_moe_decode.md): SiLU(gate) * up, then Q8 of the hidden row, in one launch. Eight lanes
+// per 32-value block. Same expression and rounding as b70_sched_silu followed
+// by b70_sched_q8_f32, so the Q8 bytes are identical; the float hidden row is
+// never written.
+inline sycl::event b70_sched_silu_q8(sycl::queue& q, const B70SchedPlan* plan, const float* gate, const float* up,
+                                     uint8_t* yb, int host_ent, int I, sycl::event dep) {
+    const int nb = I / 32;
+    const int n = host_ent * nb * 8;
+    constexpr int L = 256;
+    const size_t global = (size_t)((n + L - 1) / L) * (size_t)L;
+    return q.submit([&](sycl::handler& h) {
+        h.depends_on(dep);
+        h.parallel_for<b70_sched_siluq8_k>(
+            sycl::nd_range<1>(global, (size_t)L), [=](sycl::nd_item<1> it) [[sycl::reqd_sub_group_size(kSchedSg)]] {
+                const int gid = (int)it.get_global_id(0);
+                const int blk0 = gid >> 3;
+                const int lane = gid & 7;
+                const int nent = plan->nent;
+                const bool live = gid < n && blk0 / nb < nent;
+                const int blk = live ? blk0 : 0;
+                const size_t off = (size_t)blk * 32 + (size_t)lane * 4;
+                const sycl::float4 g4 = *reinterpret_cast<const sycl::float4*>(gate + off);
+                const sycl::float4 u4 = *reinterpret_cast<const sycl::float4*>(up + off);
+                float hv[4];
+                float m = 0.f;
+#pragma unroll
+                for (int t = 0; t < 4; ++t) {
+                    const float rg = g4[t];
+                    const float ru = u4[t];
+                    hv[t] = rg * (1.f / (1.f + sycl::exp(-rg))) * ru;
+                    m = sycl::fmax(m, sycl::fabs(hv[t]));
+                }
+                auto sg = it.get_sub_group();
+#pragma unroll
+                for (int o = 4; o > 0; o >>= 1) m = sycl::fmax(m, sycl::permute_group_by_xor(sg, m, o));
+                if (!live) return;
+                const float idv = m > 0.f ? 127.f / m : 0.f;
+                uint32_t packed = 0;
+#pragma unroll
+                for (int t = 0; t < 4; ++t) {
+                    int r = (int)sycl::rint(hv[t] * idv);
+                    if (r > 127) r = 127;
+                    if (r < -127) r = -127;
+                    packed |= (uint32_t)(uint8_t)(int8_t)r << (8 * t);
+                }
+                uint8_t* b = yb + (size_t)blk * 36ull;
+                if (lane == 0) *reinterpret_cast<float*>(b) = m * (1.f / 127.f);
+                *reinterpret_cast<uint32_t*>(b + 4 + 4 * lane) = packed;
+            });
     });
 }
 
@@ -766,6 +960,14 @@ inline bool b70_sched_try(sycl::queue& q, const uint16_t* x, const uint8_t* gate
 
     if (phase) q.wait();
     auto t0 = std::chrono::steady_clock::now();
+#if B70_SCHED_FUSE
+    const sycl::event ep = b70_sched_plan_q8(q, mem.plan, ids, T, topk, E, gate_type, up_type, down_type, gate_rb, up_rb,
+                                             down_rb, sg_type, su_type, sd_type, sg_rb, su_rb, sd_rb, shared, x, mem.q8x,
+                                             K);
+    const double tp = b70_sched_stamp(phase, q, ep, t0);
+    const sycl::event eq = ep;
+    const double tq = 0.0;
+#else
     const sycl::event ep = b70_sched_plan(q, mem.plan, ids, T, topk, E, gate_type, up_type, down_type, gate_rb, up_rb,
                                           down_rb, sg_type, su_type, sd_type, sg_rb, su_rb, sd_rb, shared);
     const double tp = b70_sched_stamp(phase, q, ep, t0);
@@ -774,6 +976,7 @@ inline bool b70_sched_try(sycl::queue& q, const uint16_t* x, const uint8_t* gate
     t0 = std::chrono::steady_clock::now();
     const sycl::event eq = b70_sched_q8_bf16(q, x, mem.q8x, T, K);
     const double tq = b70_sched_stamp(phase, q, eq, t0);
+#endif
 
     int gu_types[8];
     int ngu = 0;
@@ -800,6 +1003,11 @@ inline bool b70_sched_try(sycl::queue& q, const uint16_t* x, const uint8_t* gate
     // Hidden floats reuse the up buffer after silu. Gate is still live until silu reads it.
     if (phase) q.wait();
     t0 = std::chrono::steady_clock::now();
+#if B70_SCHED_FUSE
+    const sycl::event eh = b70_sched_silu_q8(q, mem.plan, mem.gate, mem.up, mem.q8h, host_ent, I, egu);
+    const double ts = b70_sched_stamp(phase, q, eh, t0);
+    const double th = 0.0;
+#else
     const sycl::event es = b70_sched_silu(q, mem.plan, mem.gate, mem.up, mem.up, host_ent, I, egu);
     const double ts = b70_sched_stamp(phase, q, es, t0);
 
@@ -807,6 +1015,7 @@ inline bool b70_sched_try(sycl::queue& q, const uint16_t* x, const uint8_t* gate
     t0 = std::chrono::steady_clock::now();
     const sycl::event eh = b70_sched_q8_f32(q, mem.up, mem.q8h, mem.plan, host_ent, I, es);
     const double th = b70_sched_stamp(phase, q, eh, t0);
+#endif
 
     int dn_types[4];
     int ndn = 0;

@@ -64,6 +64,13 @@ def register1(layer, gate, up, down, e):
     return torch.ops.b70_ep.ep_register1(int(layer), gate, up, down, int(e))
 
 
+def register_map(layer, map0, map1):
+    load()
+    import torch
+
+    return torch.ops.b70_ep.ep_register_map(int(layer), map0, map1)
+
+
 def capture_begin(key: int):
     load()
     import torch

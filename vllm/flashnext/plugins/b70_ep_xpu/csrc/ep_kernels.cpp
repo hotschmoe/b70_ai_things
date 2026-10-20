@@ -143,18 +143,29 @@ void ep_add_uncached(sycl::queue& q, float* y, const float* a, const float* b, i
 
 void ep_dispatch(sycl::queue& q, const int32_t* ids, const float* w, const uint16_t* x, int32_t* ids0,
                  int32_t* peer_ids, float* peer_w, uint16_t* peer_x, int n_ids, size_t x_bytes, int n0, int e1,
-                 uint32_t* done, uint32_t* peer_flag, const uint32_t* ctr) {
+                 const int32_t* map0, const int32_t* map1, int nexp, uint32_t* done, uint32_t* peer_flag,
+                 const uint32_t* ctr) {
     constexpr size_t WG = 256;
     const size_t words = x_bytes / 4;
     size_t groups = (std::max(words, (size_t)std::max(n_ids, 1)) + WG - 1) / WG;
     if (groups < 1) groups = 1;
     if (groups > 64) groups = 64;
+    const bool mapped = map0 != nullptr;
     q.parallel_for<class b70_ep_dispatch_k>(sycl::nd_range<1>(groups * WG, WG), [=](sycl::nd_item<1> it) {
         const size_t stride = groups * WG;
         for (size_t i = it.get_global_id(0); i < (size_t)n_ids; i += stride) {
             const int id = ids[i];
-            ids0[i] = (id >= 0 && id < n0) ? id : -1;
-            peer_ids[i] = (id >= n0 && id < n0 + e1) ? id - n0 : -1;
+            if (mapped) {
+                const bool ok = id >= 0 && id < nexp;
+                const int s0 = ok ? map0[id] : -1;
+                const int s1 = ok ? map1[id] : -1;
+                // A slot outside the local pack contributes 0, same as -1.
+                ids0[i] = (s0 >= 0 && s0 < n0) ? s0 : -1;
+                peer_ids[i] = (s1 >= 0 && s1 < e1) ? s1 : -1;
+            } else {
+                ids0[i] = (id >= 0 && id < n0) ? id : -1;
+                peer_ids[i] = (id >= n0 && id < n0 + e1) ? id - n0 : -1;
+            }
             peer_w[i] = w[i];
         }
         const uint32_t* s = reinterpret_cast<const uint32_t*>(x);

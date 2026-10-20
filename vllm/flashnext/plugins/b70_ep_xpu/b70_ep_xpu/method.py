@@ -12,6 +12,7 @@ import os
 _INSTALLED = False
 _INIT = False
 _NEXT = 0
+_SHARED_LOGGED = False
 
 
 def install() -> None:
@@ -58,6 +59,7 @@ def _make_class():
             if getattr(layer, "_ep_split", False) or self._split:
                 return
             from . import ops
+            from .placement import ROUTED_TYPES, flashnext_plans, split_mode
 
             gate_info = layer.b70_expert.get("gate")
             up_info = layer.b70_expert.get("up")
@@ -65,12 +67,48 @@ def _make_class():
             if gate_info is None or up_info is None or down_info is None:
                 raise RuntimeError("b70_ep: layer is missing gate/up/down blobs")
             e, inter, hidden = (int(v) for v in gate_info["logical_shape"])
-            if e % 2 != 0:
+            for info, name in ((up_info, "up"), (down_info, "down")):
+                if int(info["logical_shape"][0]) != e:
+                    raise RuntimeError(f"b70_ep: {name} expert count != gate count {e}")
+            mode = split_mode(e)
+            if mode == "linear" and e % 2 != 0:
                 raise RuntimeError(f"b70_ep: expert count {e} is odd")
-            n0 = e // 2
-            g0, g1 = _halves(layer.b70_w_gate, gate_info, packed_row_bytes)
-            u0, u1 = _halves(layer.b70_w_up, up_info, packed_row_bytes)
-            d0, d1 = _halves(layer.b70_w_down, down_info, packed_row_bytes)
+            gt = int(layer.b70_gate_type_id)
+            ut = int(layer.b70_up_type_id)
+            dt = int(layer.b70_down_type_id)
+            plan = None
+            row_note = ""
+            if mode == "profile":
+                for name, qtype in (("gate", gt), ("up", ut), ("down", dt)):
+                    if qtype not in ROUTED_TYPES:
+                        raise RuntimeError(
+                            f"b70_ep: {name} ggml type {qtype} is not a routed expert type"
+                        )
+                n_layers = int(os.environ.get("B70_EP_NLAYERS", "48"))
+                plans = flashnext_plans(n_layers=n_layers, n_expert=e)
+                if _NEXT >= len(plans):
+                    raise RuntimeError(
+                        f"b70_ep: profile covers {len(plans)} layers; MoE index {_NEXT} is past it"
+                    )
+                plan = plans[_NEXT]
+                n0 = len(plan.card0)
+                n1 = len(plan.card1)
+                g0, g1, g_rb = _take(
+                    layer.b70_w_gate, gate_info, packed_row_bytes, plan.card0, plan.card1
+                )
+                u0, u1, u_rb = _take(
+                    layer.b70_w_up, up_info, packed_row_bytes, plan.card0, plan.card1
+                )
+                d0, d1, d_rb = _take(
+                    layer.b70_w_down, down_info, packed_row_bytes, plan.card0, plan.card1
+                )
+                row_note = f" rows={g_rb},{u_rb},{d_rb}"
+            else:
+                n0 = e // 2
+                n1 = e - n0
+                g0, g1 = _halves(layer.b70_w_gate, gate_info, packed_row_bytes)
+                u0, u1 = _halves(layer.b70_w_up, up_info, packed_row_bytes)
+                d0, d1 = _halves(layer.b70_w_down, down_info, packed_row_bytes)
             if not _INIT:
                 max_t = int(os.environ.get("B70_EP_MAX_T", "8192"))
                 ops.init(max_t, hidden, 16, 64)
@@ -78,9 +116,7 @@ def _make_class():
             idx = _NEXT
             _NEXT += 1
             self._layer_idx = idx
-            gt = int(layer.b70_gate_type_id)
-            ut = int(layer.b70_up_type_id)
-            dt = int(layer.b70_down_type_id)
+            # Card-0 pack replaces the CPU parameter so the loader copy can drop.
             layer.register_parameter("b70_w_gate", nn.Parameter(g0, requires_grad=False))
             layer.register_parameter("b70_w_up", nn.Parameter(u0, requires_grad=False))
             layer.register_parameter("b70_w_down", nn.Parameter(d0, requires_grad=False))
@@ -88,14 +124,26 @@ def _make_class():
             self._c1_up = u1
             self._c1_down = d1
             ops.register0(idx, g0, gt, u0, ut, d0, dt, n0, inter, hidden)
-            ops.register1(idx, g1, u1, d1, e - n0)
+            ops.register1(idx, g1, u1, d1, n1)
+            if plan is not None:
+                m0 = torch.tensor(plan.res0, dtype=torch.int32, device="xpu:0")
+                m1 = torch.tensor(plan.res1, dtype=torch.int32, device="xpu:0")
+                self._map0 = m0
+                self._map1 = m1
+                ops.register_map(idx, m0, m1)
+                print(
+                    f"b70_ep: split layer {idx} mode=profile E={e} n0={n0} n1={n1} "
+                    f"I={inter} K={hidden} types={gt},{ut},{dt}{row_note}",
+                    flush=True,
+                )
+            else:
+                print(
+                    f"b70_ep: split layer {idx} E={e} n0={n0} I={inter} K={hidden} "
+                    f"types={gt},{ut},{dt}",
+                    flush=True,
+                )
             self._split = True
             object.__setattr__(layer, "_ep_split", True)
-            print(
-                f"b70_ep: split layer {idx} E={e} n0={n0} I={inter} K={hidden} "
-                f"types={gt},{ut},{dt}",
-                flush=True,
-            )
 
         def apply(
             self,
@@ -106,6 +154,15 @@ def _make_class():
             shared_experts=None,
             shared_experts_input: torch.Tensor | None = None,
         ):
+            global _SHARED_LOGGED
+            # The runner owns the shared expert and adds it after this call.
+            # moe_ep does not see those weights. They stay on card 0.
+            if shared_experts is not None and not _SHARED_LOGGED:
+                _SHARED_LOGGED = True
+                print(
+                    "b70_ep: shared expert stays on card 0; the runner adds it after moe_ep",
+                    flush=True,
+                )
             del shared_experts, shared_experts_input
             if getattr(layer, "expert_map", None) is not None:
                 raise RuntimeError("b70_ep: expert_map is set; sidecar expects world size 1")
@@ -135,6 +192,23 @@ def _make_class():
         a = view[:n0].contiguous().to(device="xpu:0")
         b = view[n0:].contiguous().to(device="xpu:1")
         return a.reshape(-1), b.reshape(-1)
+
+    def _take(param: torch.Tensor, info: dict, row_bytes_fn, card0, card1):
+        """Copy one card's experts. index_select, not a contiguous() of the full pack."""
+        logical = tuple(int(v) for v in info["logical_shape"])
+        qtype = int(info["qtype"])
+        e, n, last = logical
+        rb = int(row_bytes_fn(last, qtype))
+        if rb <= 0:
+            raise RuntimeError(f"b70_ep: packed row is {rb} bytes for ggml type {qtype}")
+        if param.device.type != "cpu":
+            raise RuntimeError(f"b70_ep: expert blob is on {param.device}, expected CPU")
+        view = param.detach().reshape(e, n * rb)
+        i0 = torch.tensor(tuple(card0), dtype=torch.long)
+        i1 = torch.tensor(tuple(card1), dtype=torch.long)
+        a = view.index_select(0, i0).contiguous().to(device="xpu:0")
+        b = view.index_select(0, i1).contiguous().to(device="xpu:1")
+        return a.reshape(-1), b.reshape(-1), rb
 
     return _Method
 

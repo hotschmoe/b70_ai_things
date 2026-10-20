@@ -15,6 +15,7 @@
 #include <sycl/ext/intel/experimental/grf_size_properties.hpp>
 #include <cstdio>
 #include <stdexcept>
+#include <string>
 
 namespace {
 
@@ -254,6 +255,14 @@ void dispatch(int type, Fn fn) {
 // include the C library. b70_prep and b70_device_grow remain visible here.
 #include "sched_moe.hpp"
 
+// b70_prep reads weight blocks with aligned-dword loads that assume an even
+// block address (iq_dot.hpp b70_ld8_a2). Every block size is even, so only the
+// base pointer can break it.
+static void b70_check_a2(const void* p, const char* what) {
+    if (p != nullptr && (reinterpret_cast<uintptr_t>(p) & 1u) != 0)
+        throw std::runtime_error(std::string("b70_gguf: odd weight address for ") + what);
+}
+
 void b70_dequant_bf16(void* queue, int type, const uint8_t* q, int64_t rows, int64_t cols, uint16_t* out) {
     const int rb = b70_row_bytes(type, (int)cols);
     if (rb <= 0 || rows <= 0) throw std::runtime_error("b70_gguf: bad dequant shape");
@@ -264,6 +273,7 @@ void b70_dequant_bf16(void* queue, int type, const uint8_t* q, int64_t rows, int
 void b70_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, float* y, int M, int N, int K) {
     const int rb = b70_row_bytes(type, K);
     if (rb <= 0 || M <= 0 || N <= 0 || (K % 32) != 0) throw std::runtime_error("b70_gguf: bad gemv shape");
+    b70_check_a2(w, "gemv");
     auto& sy = q_of(queue);
     const bool kreg = (type == B70_Q4_K || type == B70_Q5_K || type == B70_Q6_K || type == B70_IQ4_XS) && (K % 256) == 0;
     if (kreg) {
@@ -286,6 +296,7 @@ void b70_moe_gemv(void* queue, int type, const uint16_t* x, const uint8_t* w, co
     const int rb = b70_row_bytes(type, K);
     if (rb <= 0 || T <= 0 || topk <= 0 || E <= 0 || N <= 0 || (K % 32) != 0)
         throw std::runtime_error("b70_gguf: bad moe gemv shape");
+    b70_check_a2(w, "moe_gemv");
     auto& sy = q_of(queue);
     const int nb = K / 32;
     B70Q8* xq = b70_q8_scratch(sy, (size_t)T * (size_t)nb);
@@ -317,6 +328,12 @@ void b70_moe_layer(void* queue, const uint16_t* x, const uint8_t* gate, int gate
         sdrb = b70_row_bytes(sd_type, I);
         if (sgrb <= 0 || surb <= 0 || sdrb <= 0) throw std::runtime_error("b70_gguf: bad shared expert");
     }
+    b70_check_a2(gate, "gate");
+    b70_check_a2(up, "up");
+    b70_check_a2(down, "down");
+    b70_check_a2(sgate, "shared gate");
+    b70_check_a2(sup, "shared up");
+    b70_check_a2(sdown, "shared down");
     sycl::queue& sq = q_of(queue);
     if (!b70_sched_try(sq, x, gate, gate_type, grb, up, up_type, urb, down, down_type, drb, expert_ids, router, sgate,
                        sg_type, sgrb, sup, su_type, surb, sdown, sd_type, sdrb, y, T, topk, E, I, K))

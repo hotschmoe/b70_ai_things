@@ -4002,3 +4002,287 @@ exits 1; G4 r9 greedy misses three tokens; D2H stays under 7.5;
 fair bulk rel is high; the PLE CPU test log and the 46.4 percent
 hit rate stay unverified.
 
+
+## 2026-10-20 14:36 C7b -- Flash-Next DP=2 eager window
+
+CONFIG: fork 0a6170da8c. Both gpu.lock owner files empty. MemAvailable
+118492772 kB. hotschmoe-dd inactive. Frontdoor on 18080 left running.
+No P2P. No B70_QSA. Prepared window logs/c7-fn-window.sh: DP=2 TP=1,
+--enable-expert-parallel, enforce-eager, language-model-only,
+max_model_len 2048, docker memory 100g, SYCL_CACHE_PERSISTENT=0,
+B70_GGUF_SO=_C.graph.so (10165216 bytes, C12 11:22). Greedy chat,
+temperature 0, enable_thinking false, against recorded Strata texts
+323 and 667. Watchdog docker-stops if MemAvailable falls under 8 GiB.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7-fn-window.sh
+stdout /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-window.out. RSS trace /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-rss.log.
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+
+## 2026-10-20 14:41 C7b -- Flash-Next load stopped on duplicated expert bytes
+
+CONFIG: fork 0a6170da8c plus an uncommitted local edit that is not in
+this run. Eager DP=2 TP=1 EP, max_model_len 2048, docker memory 100g,
+SYCL_CACHE_PERSISTENT=0, B70_GGUF_SO=_C.graph.so (10165216 bytes).
+No P2P. No B70_QSA. No hotschmoe-dd. Collective health first.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7-fn-window.sh
+stdout /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-window.out (preserved /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-window-ram.out).
+Serve log preserved /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-serve-ram.log. RSS /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-rss-ram.log.
+RESULT: HEALTH_RC 0. MEM_AVAILABLE_KB 118396268 at serve start 14:36:44.
+Engine 0.32.1rc1.dev94+g5fd62688f, Qwen4ExpForConditionalGeneration,
+DP=2 EP linear 256/512. Placed 1100 of 1224 tensors at 14:40:47.
+No host-table line, so the PLE memmap view was not reached. No Python
+traceback. Watchdog ABORT_LOW_RAM avail_kb=7309964 at 14:40:53.
+SERVE_RC 137. No new kernel oom-kill (last one is still the 11:17
+PLE copy). MemAvailable returned to about 118 GiB. No xe-reset.
+Card 0 was then taken by O3 for a 73 s profile and returned HEALTHY.
+Shard 1 is 43.81 GiB: 144 expert tensors 39.97 GiB, 887 other tensors
+3.72 GiB, 192 shared-expert tensors 0.11 GiB. Largest tensor 0.439 GiB.
+slice_expert_tensor returned a dim-0 view, so each worker kept the
+full expert Storage. Docker cgroup was 84.59 GiB at 1000 tensors and
+AnonPages was 85399492 kB. Strata's about 16 GiB is one process after
+the weights sit on the GPU. This watermark is two private copies of
+the packed experts, still on the host, before the GPU upload.
+VERDICT: not a coherence result. The PLE view was not the copy that
+filled the host. The next load clones the local expert half.
+
+## 2026-10-20 14:45 C7b -- Flash-Next DP=2 retry, local expert storage
+
+CONFIG: same eager window. mapping.slice_expert_tensor now clones a
+partial expert slice so the other rank's bytes can be freed. ep_size 1
+still returns the original tensor. CPU check EP_SLICE_STORAGE_OK.
+Not committed. MemAvailable 118622492 kB. Both locks empty.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7-fn-window.sh
+stdout /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-window.out.
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+## 2026-10-20 14:53 G2b -- audit pass 13
+
+CONFIG: CPU only. No GPU, no systemd, no commit. Cursor is the 14:45
+C7b heading. Findings F133-F138 append reports/1G2_audit.md after F132.
+COMMAND: Check c7b-fn-window-ram.out, c7b-fn-serve-ram.log,
+c7b-rss-ram.log, the retry c7b-fn-window.out, c7-fn-serve.log,
+c7b-rss.log, kern.log oom lines, fork log -1, git status, and the
+uncommitted mapping.py and b70_ep_xpu diffs.
+RESULT: First window health-before OK, p2p=0, then ABORT_LOW_RAM
+7309964 at 14:40:53, SERVE_RC 137, placed 1100 of 1224. Journal
+118492772 kB is not the window's 118396268. The rebound sample is
+119235164 kB (113.71 GiB). Nearby docker samples are 80.16GiB and
+84.52GiB, not 84.59. Shard counts sum to 1223, not 1224. Retry
+health-before OK, MEM_AVAILABLE_KB 118262704, placed 1224, PLE
+memmap 28800138240 bytes, then XPU OOM 418 MiB with 200.77 and
+202.14 MiB free. SERVE_RC 1 at 14:49:26. No live /v1/models and no
+greedy. EP map stores raw pointers and does not bounds-check the
+looked-up slot. Cached diff empty. Fork still 0a6170da8c (F133-F138).
+VERDICT: Pass 13 recorded. Neither eager window is a coherence or
+ITL result. The retry reached placement and died on device OOM.
+Open items: C13 bench exit 1, G4 r9 greedy, D2H under 7.5, fair
+bulk rel, the earlier PLE CPU test log, and the 46.4 percent hit
+rate. The EP map needs an owned copy and a slot check before capture.
+
+
+
+## 2026-10-20 14:49 C7b -- PLE view held, XPU OOM on the bf16 placeholder
+
+CONFIG: eager DP=2 window, fork plus the uncommitted expert-slice clone.
+max_model_len 2048, gpu_memory_utilization 0.90. No P2P. No B70_QSA.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7-fn-window.sh
+stdout preserved c7b-fn-window-xpuoom.out. Serve log preserved
+c7b-fn-serve-xpuoom.log.
+RESULT: HEALTH_RC 0. MEM_AVAILABLE_KB 118262704 at 14:46:02.
+Placed 1224, skipped_mtp 0, arch qwen4exp. Host table
+per_layer_token_embd.weight memmap view bytes=28800138240.
+Host MemAvailable bottomed at 40042444 kB (anon 13164496 kB), then
+recovered. No kernel oom-kill. Both workers then raised
+torch.OutOfMemoryError in embedding.py process_weights_after_loading
+at packed.to(device), 418 MiB. GPU 0 and GPU 1 each had 31.10 GiB
+allocated by PyTorch of 31.89 GiB. SERVE_RC 1 at 14:49:26. No xe-reset.
+O3 used card 0 for 75 s after that and left it HEALTHY, then started
+another card-0 run at 14:53:52. Card 1 stayed empty.
+Model init runs inside the XPU device context, so each linear and
+embedding allocates its bf16 weight on the card. apply() and
+embedding() read the packed tensor. Packed experts are about 20 GiB
+per rank after the slice clone. The placeholders make up the rest of
+the 31.10 GiB.
+VERDICT: host RAM is no longer the stop. The next load drops a packed
+layer's bf16 placeholder before the packed H2D. That retry waits until
+both locks are empty so card 1 is not blocked behind card 0.
+
+
+## 2026-10-20 14:54 C7b -- Flash-Next DP=2 retry, drop bf16 placeholders
+
+CONFIG: same eager window. linear and embedding
+process_weights_after_loading replace a packed layer's bf16 weight
+with an empty parameter on the same device before the packed copy.
+Expert-slice clone still in place. Not committed. MemAvailable
+118062644 kB. Both locks empty.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7-fn-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+## 2026-10-20 14:55 H1d -- Flash-Next EP sidecar adapted on CPU
+
+CONFIG: Phase A, no GPU. Profile
+/mnt/vm_8tb/b70/build/strata-ab/src/data/expert-profile-sycl.bin,
+q0=138, share0 off. B70_EP_SKIP_GGUF=1, MAX_JOBS=4. GGUF library
+for the later serve is b70_gguf_xpu/_C.graph.so (symbol
+_Z13b70_moe_layerPvPKtPKhiS3_iS3_iPKiPKfS3_iS3_iS3_iPfiiiii and
+b70_reserve_decode_queue both present). _C.ep.so not rebuilt.
+At 14:55 both gpu lock owner files were empty and
+reports/1C7b_flashnext_serve.md was absent. C7b's 14:54 entry had
+just requested a window, so the sidecar serve stays down until that
+report exists or both locks have been empty for 10 minutes.
+COMMAND: B70_AGENT=H1d B70_CPU_LOCK_TIMEOUT=7200 B70_EP_SKIP_GGUF=1
+MAX_JOBS=4 bin/cpu-run bash
+vllm/flashnext/plugins/b70_ep_xpu/scripts/build.sh
+Logs h1d-ep-build.log (first link) and h1d-ep-build2.log (owned
+maps). Then python3
+vllm/flashnext/plugins/b70_ep_xpu/tests/test_placement.py.
+RESULT: First link waited on b70s4dayz mb/build.sh, then exit 0 in
+45s, sha 308cd69d555edc7c59bd12688cf750644e7de2849f9fd2485be5eafb8fbc86d7
+(495104 bytes). That binary stored the caller's map pointer. Second
+link exit 0 in 39s, sha
+5a0a047c67fc192588007e93b69c22a8ed9c781d2a891056dff200cceab067ac
+(499200 bytes, 14:55). It copies both maps onto card 0, rejects a
+slot outside the local pack, a duplicate slot, or an expert on both
+cards or neither, and the dispatch kernel clamps a bad slot to -1.
+_C.ep.so sha stays
+55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0.
+CPU test printed PLACEMENT_OK and PLE_GUARD_OK. 48 layers, 138 and
+374, disjoint, union 0..511, local slots 0..n-1. Hottest profile
+expert of a layer lands on card 0 and the next on card 1. Layer 0
+card 0 head is (3, 7, 10, 17). Ranked pairs 24576. Shorthand pack
+(IQ3_XXS gate, IQ3_XXS up, Q2_0 down) is 11361484800 bytes on card 0
+and 30791270400 on card 1. The shard mix is wider than that
+shorthand (reports/02_model_support.md). PLE guard rejects a
+non-memmap, a second data pointer, a size mismatch, and
+MemAvailable under the floor. MemAvailable during the test was
+118655020 kB. Serve script
+vllm/flashnext/harness/serve_flashnext_ep.sh is written and was
+not launched.
+VERDICT: Phase A CPU adapt is in place, including an owned map.
+Phase B has not started. No greedy text and no ITL.
+
+## 2026-10-20 15:02 C7b -- placeholders dropped, KV budget short
+
+CONFIG: eager DP=2 EP window, fork plus uncommitted expert-slice
+clone and the packed-layer bf16 placeholder drop (linear.py and
+embedding.py process_weights_after_loading). max_model_len 2048,
+gpu_memory_utilization 0.90, max_num_seqs 2, enforce-eager.
+B70_GGUF_SO is _C.graph.so. B70_GGUF_REF=0, B70_EAGER_QK=0. No P2P.
+No B70_QSA. The window parent died after launch; timeout pid
+3345213 kept the serve. Host watchdog was the adopt loop.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7-fn-window.sh
+Serve log preserved at
+/mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-serve-kvshort.log.
+RSS samples c7b-rss-run3.log.
+RESULT: HEALTH_RC 0 at 14:54:56. MEM_AVAILABLE_KB 118704776.
+Placed 1224, skipped_mtp 0, q8_dequant 0, arch qwen4exp. Host table
+per_layer_token_embd.weight memmap view bytes=28800138240 on both
+workers. Model loading took 24.9 GiB and about 125 s on each card.
+No XPU OOM on the packed upload. Then both engine cores raised
+ValueError: No available memory for the cache blocks.
+gpu_worker.py logged Available KV cache memory: -1.53 GiB.
+Card capacity on the previous OOM was 31.89 GiB, so 0.90 requests
+about 28.70 GiB and the profiled non-KV footprint is about 30.23 GiB.
+Host during placement peaked near AnonPages 51190084 kB
+(MemAvailable 45549788 kB) around 800 tensors. After the upload,
+steady AnonPages was 12252612 kB and the two VLLM workers summed to
+9206088 kB RSS (about 4.4 GiB each). Strata's about 16 GiB is one
+process after weights are on the device. The extra host RAM here is
+the transient two-worker packed copy, and it was released. Steady
+host use is under that 16 GiB figure. No kernel oom-kill. Locks
+released by 15:01. No xe-reset. No greedy text.
+VERDICT: the placeholder drop lets the packed weights land (24.9 GiB
+per card). The 0.90 pool cannot hold a KV cache. Next serve uses
+gpu_memory_utilization 0.98 and max_num_batched_tokens 2048.
+
+
+## 2026-10-20 15:03 C7b -- eager window, util 0.98
+
+CONFIG: DP=2 EP eager, max_model_len 2048, max_num_batched_tokens
+2048, gpu_memory_utilization 0.98, max_num_seqs 2. Same fork fixes
+as the 15:02 entry. Container vllm-fn-flashnext-gguf-ep98. Port
+18104. MemAvailable 118285456 kB. Both locks empty.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-eager98.sh
+stdout c7b-fn-eager98-window.out. Serve log c7b-fn-serve-eager98.log.
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+## 2026-10-20 15:10 C7b -- eager DP=2 coherent at util 0.98
+
+CONFIG: logs/c7b-fn-eager98.sh. DP=2 EP, enforce-eager,
+max_model_len 2048, max_num_batched_tokens 2048,
+gpu_memory_utilization 0.98, max_num_seqs 2. Fork placeholder
+drop and expert-slice clone, uncommitted. _C.graph.so.
+B70_GGUF_REF=0, B70_EAGER_QK=0. No P2P. No B70_QSA. Container
+vllm-fn-flashnext-gguf-ep98. Port 18104.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-eager98.sh
+RESULT: HEALTH_RC 0. MEM_AVAILABLE_KB 118088084 before serve.
+Model loading took 24.9 GiB per card. Available KV cache memory
+0.89 GiB. XPU KV cache size 6144 tokens. Maximum concurrency for
+2048 tokens: 3.00x. kv lcm block size 1600. HTTP ready 15:09:33.
+Greedy temperature 0, enable_thinking false, 25 prompt tokens:
+"Return only the integer: 17 * 19." -> "323" (4 completion tokens).
+"Return only the integer: 23 * 29." -> "667" (4 completion tokens).
+Both match the Strata strings. SERVE_RC 0. Served names
+hotschmoe-dev, qwen3.8-flash-next-iq3-xxs.
+Host at ready: MemAvailable 47736880 kB, AnonPages 12847624 kB.
+Worker RSS 4562356 kB and 4645336 kB. PSS 4316028 kB and
+4398933 kB. Anonymous 4136256 kB and 4219228 kB. Shared_Clean
+about 425000 kB each. Placement peak AnonPages 53938904 kB at
+15:08:08, then the host copies were released. Strata's about
+16 GiB is one process after the weights are resident. Steady
+host anonymous memory here is 12.3 GiB for two workers, under
+that figure. The 51 GiB peak is the transient packed copy.
+VERDICT: first coherent Flash-Next IQ3_XXS eager serve. Graph
+window is next, still at max_model_len 2048.
+
+## 2026-10-20 15:13 C7b -- FULL_DECODE_ONLY window open
+
+CONFIG: logs/c7b-fn-graph-window.sh. DP=2 EP,
+FULL_DECODE_ONLY, capture sizes 1,2,3,4,8, FLASH_ATTN,
+B70_XPU_CG_RECLAIM=500, max_model_len 2048,
+max_num_batched_tokens 2048, gpu_memory_utilization 0.98,
+max_num_seqs 4. Same weights and _C.graph.so. No P2P.
+MemAvailable 117855916 kB. Both locks empty. O3 had card 0 for
+run_gates.sh from 15:09:57 until the locks were empty again.
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/logs/c7b-fn-graph-window.sh
+RESULT: leases requested immediately after this entry.
+VERDICT: window open.
+
+## 2026-10-20 15:40 O3 -- MoE decode gap closed: misaligned weight loads, serial plan
+CONFIG: card 0 only. Plugin b70_gguf_xpu, fair dumps from C9 (E=10..28
+dense, top-10 + shared, K=2560, I=640, IQ3_S/Q2_0 and IQ2_XS/IQ4_NL).
+Strata fair_strata (C9 bench plus a FAIR_T/FAIR_PAIR filter) in image
+e41d59c0. unitrace -d for device time per kernel. Work dir
+/mnt/vm_8tb/b70/build/vllm-flashnext/o3.
+COMMAND: gpu-run --card 0 o3/run_prof.sh (unitrace, ours and Strata);
+o3/mb microbench A/B (o3/run_mb.sh); o3/run_gates.sh; cpu-run --quiet
+gpu-run --card 0 o3/run_fair.sh; o3/serve_35b.sh (C12 recipe).
+RESULT: T=1 device time, gate/up was 123.1 us here vs 45.3 us in Strata R2
+(same geometry, same 112 dp4a, no spills). The cause is b70_prep reading the
+8-/4-byte block fields via memcpy at 2-aligned addresses. IGC emits
+misaligned d64/d32 LSC loads. Strata load8_a2/load4_a2 aligned-dword loads:
+gate/up 123 -> 44.4 us, down 38 -> 16.5 us. The plan single_task was 8.5 us
+(T=1) and 74 us (T=4); it is now a parallel work-group fused with Q8(x),
+and SiLU is fused with Q8(h), so a layer is 5 launches (was 7). Fair graph
+under cpu-run --quiet, IQ3_S/Q2_0 T=1..4: 180.1/267.0/385.8/515.8 ->
+68.6/100.3/141.4/178.6 us. Strata R2 is 112.9/148.1/202.9/261.6. Device-only,
+ours is 1.07x (T=1) and 1.01x (T=4) Strata IQR2. IQ2_XS/IQ4_NL:
+192.2/281.4/403.8/565.4 -> 81.4/117.4/168.3/216.7. Outputs are bit-identical
+to C12 (same cos/max_abs vs the Strata dump). Gates: gpu_check, moe_layer_bench
+(sched 1 and 0), c12_types (12), graph_probe, compare_cpu 14/14, all
+failures=0; health HEALTHY before and after each GPU run. 35B UD-IQ3_XXS
+FULL_DECODE_ONLY serve: identity ok, coherence OK, C1 ITL p50 11.02 ->
+9.34 ms (107.0 tok/s), C2 16.61 -> 12.60 ms/stream.
+Installed _C.so = _C.graph.so = _C.o3.so sha256 be76661bd120aa2f...e861eb
+(10135104 bytes). Revert copy: _C.c12.so (b3c15e14). NOTE for C7b: its
+graph window uses _C.graph.so and had not started at install (15:19), so it
+will load the O3 binary.
+VERDICT: the gap was memory-op lowering, not schedule. Target (<= 1.15x
+Strata at T=1..4) met at 0.61-0.73x of the R2 numbers. Next: the same
+aligned-load fix for the float decode32 K-quant path (35B Q2_K/Q3_K/IQ4_XS
+experts), then bandwidth (gate/up ~350 GB/s of ~608). Report:
+reports/2O3_moe_decode.md.

@@ -3601,6 +3601,219 @@ Verdict: OK on staging.
 Suggested fix: leave the push-allreduce .so unstaged. Do not
 push.
 
+## Pass 13 -- 2026-10-20 14:50 UTC
+
+Cursor: JOURNAL.md through the 14:45 C7b retry heading (4059 lines
+at the read). The 14:45 eager serve was still loading. No bench JSON.
+
+### F133 -- 14:36 Flash-Next eager window config
+
+Claim: fork 0a6170da8c, locks empty, MemAvailable 118492772 kB,
+hotschmoe-dd inactive, frontdoor left on 18080, no P2P, no B70_QSA.
+Window logs/c7-fn-window.sh is DP=2 TP=1, expert parallel,
+enforce-eager, language-model-only, max_model_len 2048, docker
+memory 100g, SYCL_CACHE_PERSISTENT=0, B70_GGUF_SO=_C.graph.so at
+10165216 bytes. Greedy temperature 0, enable_thinking false, refs
+323 and 667. Watchdog stops the container under 8 GiB. Result line
+is only "window open".
+
+Evidence: fork log -1 is 0a6170da8c, ahead 18. _C.graph.so is
+10165216 bytes, sha256 b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979,
+mtime 11:22:28 UTC. The script matches that serve shape, the greedy
+body, and the 8388608 kB watchdog. It exits 2 if either gpu.lock
+owner file is non-empty, and it reached health and serve.
+c7b-fn-window-ram.out: collective health 14:36:05, HEALTH_RC 0,
+MEM_AVAILABLE_KB 118396268, serve 14:36:44. The RSS trace at
+14:36:05 is avail_kb=118485716. 118492772 is only in the journal
+(96504 kB above the window line, 7056 kB above the RSS line).
+The health file was read before the retry overwrote it:
+COLLECTIVE_HEALTH_OK world_size=2 p2p=0, HEALTHY, gpu-run 39s
+exit 0, cards 0 and 1. A 14:42 unit read showed hotschmoe-dd
+inactive, frontdoor active, and 18080 listening. The preserved
+serve command has no B70_QSA and no CCL_TOPO_P2P_ACCESS=1.
+SYCL_CACHE_PERSISTENT=1 from the harness and =0 from the window
+are both on that docker line; the window flag is the later one.
+served-model-name lists hotschmoe-dev first. There is no READY
+line and no c7-fn-greedy.json.
+
+Verdict: OK on the script, the library, the fork, health-before,
+and the later unit read. UNVERIFIED the exact 118492772 kB.
+The prepared greedy did not run. This heading is not an ITL.
+
+Suggested fix: quote MEM_AVAILABLE_KB from the window log. Pass
+SYCL_CACHE_PERSISTENT once.
+
+### F134 -- 14:41 load abort
+
+Claim: MEM_AVAILABLE_KB 118396268 at 14:36:44. Engine
+0.32.1rc1.dev94+g5fd62688f, Qwen4ExpForConditionalGeneration, DP=2
+EP linear 256/512. Placed 1100 of 1224 tensors at 14:40:47. No
+host-table line, no Python traceback. ABORT_LOW_RAM avail_kb=7309964
+at 14:40:53. SERVE_RC 137. No new kernel oom-kill after the 11:17
+one. MemAvailable returned to about 118 GiB. No xe-reset. O3 then
+held card 0 for a 73 s profile and returned HEALTHY. Shard 1 is
+43.81 GiB (144 expert tensors 39.97 GiB, 887 other 3.72 GiB, 192
+shared-expert tensors 0.11 GiB, largest 0.439 GiB). The dim-0 slice
+kept the full expert Storage. Docker cgroup was 84.59 GiB at 1000
+tensors and AnonPages was 85399492 kB. Not a coherence result. The
+PLE view was not what filled the host.
+
+Evidence: c7b-fn-window-ram.out has those MEM, ABORT, and SERVE_RC
+lines. 7309964 is under 8388608. c7b-fn-serve-ram.log has the engine
+string twice, Qwen4ExpForConditionalGeneration, tensors=1224 twice,
+and both workers "placed 1100 tensors" at 14:40:47. "Expert
+parallelism" / "strategy: linear" / "256/512" occurs once (the DP0
+line). Traceback, host-table, ple_, xe-reset, error 40, error 44,
+and Out of memory are absent. gpu-run done in 265s exit 137.
+kern.log's last oom-kill is 2026-10-20 11:17:41. journalctl -k
+since 14:00 has no oom line. The RSS trace ends at 14:41:09 with
+avail_kb=119235164, which is 113.71 GiB, then SAMPLER_DONE.
+The 14:42:13 lock file was "O3 pid=3327438 since=2026-10-20 14:41:09
+cmd: ./run_prof.sh". A C7 session tool stdout at 14:42:23 says
+"xpu-health: HEALTHY (cards 0)" and "gpu-run: [O3] done in 73s
+(exit 0)". That stdout is not copied under logs/. It names card 0
+only. 144+887+192=1223, not the log's 1224 tensors. 39.97+3.72+0.11
+=43.80, not 43.81. Those GiB lines are not in the serve log, the
+RSS log, or the window log. RSS docker lines near the 1000-tensor
+mark (14:40:27) are 80.16GiB at 14:40:32 and 84.52GiB at 14:40:44.
+AnonPages samples are 81293680 and 85921508. 85399492 is not one
+of them. mapping.py's clone edit is mtime 14:42:59, after the
+14:41:10 serve exit. The committed function returned packed[start:end].
+The 16 GiB Strata sentence is not in this window's logs.
+
+Verdict: OK on the abort, the placement counter, the missing
+PLE line, the missing traceback, the 11:17 oom being the last one,
+the O3 card-0 tool stdout, and "not a coherence result". Live
+/v1/models did not run. WRONG on "about 118 GiB" and on 84.59 GiB
+at 1000 tensors. UNVERIFIED the shard table, 85399492, and the
+Strata 16 GiB sentence. The abort script has no health-after.
+Device delta is not involved. Not an ITL and not a Strata match.
+
+Suggested fix: quote the RSS line 119235164 kB and the 84.52GiB
+docker sample with its timestamp. Save the shard tally in a file.
+The next window's own health-before is the both-card check.
+
+### F135 -- 14:45 clone retry, still loading
+
+Claim: slice_expert_tensor clones a partial expert slice and
+ep_size 1 still returns the original tensor. CPU check
+EP_SLICE_STORAGE_OK. Not committed. MemAvailable 118622492 kB.
+Both locks empty. Same eager window. Leases requested, window open.
+
+Evidence: the uncommitted mapping.py clones when numel or data_ptr
+differs, so a full dim-0 slice of a contiguous owner is returned
+as the same tensor. git status shows the file modified. Fork tip
+is still 0a6170da8c. /tmp/c7b-ep-slice-test.py (mtime 14:44:50)
+prints EP_SLICE_STORAGE_OK and imports /fork/vllm/.../mapping.py.
+No stdout file was saved beside it. The venv python is a broken
+symlink, so this pass did not re-run the import. The new RSS
+trace at 14:45:27 is avail_kb=118622460, 32 kB under the journal
+figure. c7b-fn-window.out, read at 14:49, says health 14:45:27,
+HEALTH_RC 0, MEM_AVAILABLE_KB 118262704, serve 14:46:02, and has
+no READY line. 118262704 is over the script's 104857600 gate.
+The health file now on disk is this launch: COLLECTIVE_HEALTH_OK
+p2p=0, HEALTHY, gpu-run 35s exit 0, cards 0 and 1. It replaced
+the 14:36 health file. At 14:46 both lock files were the C7
+docker run. No greedy JSON.
+
+Verdict: OK that the retry launched, passed the logged RAM gate,
+and had health-before. UNVERIFIED the exact 118622492 kB and that
+a process printed EP_SLICE_STORAGE_OK. Not an identity check and
+not a coherence result. The serve was still loading at 14:49.
+
+Suggested fix: save the CPU test stdout. Quote the window's
+MEM_AVAILABLE_KB. Leave the result for the log that contains READY
+or the abort line.
+
+### F136 -- uncommitted expert clone and EP map
+
+Claim: the 14:45 heading describes the clone. The working tree
+also adds ep_register_map, which the headings do not mention.
+
+Evidence: mapping.py clone is load-time host code, not a captured
+op. A partial slice gets its own storage. ep_size 1 does not clone,
+so a full-range view of a larger storage still pins that storage.
+ep_register_map (ops.py, bind.cpp, moe_ep.cpp, ep_kernels.cpp)
+checks xpu, int32, contiguous, equal non-empty length, and layer
+range, then stores the two data pointers. The dispatch kernel
+writes ids0[i]=map0[id] and peer_ids[i]=map1[id] when
+0<=id<nexp, else -1. It does not check that the looked-up slot
+is -1 or inside the local expert count, and both maps may be
+non-negative for one id. enqueue_moe throws on the host if exactly
+one pointer is set, before the launch. The warmup call passes
+nullptr. No new queue wait was added on the forward path. The
+pointers are not copied into State-owned memory.
+
+Verdict: OK that the clone matches the heading for a contiguous
+owner, and that the new forward path adds no replay host sync.
+The map slot values are missing a bounds check, and a temporary
+map tensor would dangle, including inside a later capture.
+
+Suggested fix: copy both int32 tables into allocations owned by
+State at register time. Reject a value that is not -1 and not in
+the local expert range, and reject a token that is active on both
+sides. Clone on ep_size 1 when the storage is larger than the tensor.
+
+### F137 -- hygiene at 14:50 UTC
+
+Claim: no new staged binary. The 14:33 commit 3dcfca6c is the
+tree that the later headings sit on.
+
+Evidence: git diff --cached --stat line count 0. git status
+porcelain was 14 lines. The only modified binary is the
+pre-existing vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so.
+Untracked paths checked are small (the largest file seen was
+postprocess_plans.json at 12949 bytes). No secret-like names.
+Commit 3dcfca6c is 40 files. None of those paths present in the
+worktree were over 1 MB. Fork remains 0a6170da8c, ahead 18, with
+the uncommitted mapping.py edit. The EP sources are unstaged text.
+_C.graph.so is still the b3c15e14 binary from F133.
+
+Verdict: OK on staging. The commit message rounds figures already
+audited in earlier passes. This pass does not reopen them.
+
+Suggested fix: leave the push-allreduce .so unstaged. Do not
+commit the map path until the slot check and the owned copy exist.
+
+### F138 -- 14:45 retry died on XPU OOM after placement
+
+Claim: the 14:45 heading says the window is open. It does not claim
+a greedy result. The log then closed.
+
+Evidence: c7b-fn-window.out now ends "serve exited before ready",
+stop 14:49:26, SERVE_RC 1, WINDOW_DONE. No ABORT_LOW_RAM line.
+c7-fn-serve.log is this launch (the 14:36 copy is c7b-fn-serve-ram.log).
+Both workers placed 1224 tensors at 14:48:51. The kinds dict sums
+to 1224 (14 types), skipped_mtp 0, q8_dequant 0, arch qwen4exp.
+Both log "host table per_layer_token_embd.weight memmap view
+bytes=28800138240" and "installed PLE hash on 1 modules".
+28800138240 bytes is 26.822 GiB. serve_loader.py:296 warns twice
+that the NumPy array is not writable. Then both workers raise
+torch.OutOfMemoryError in embedding.py:77 at packed.to(device):
+tried 418.00 MiB. GPU 0 free 200.77 MiB of 31.89 GiB, PyTorch
+allocated 31.10 GiB, reserved-unallocated 360.06 MiB. GPU 1 free
+202.14 MiB, same allocated and reserved figures. EngineCore wraps
+that as "Engine core initialization failed" and gpu-run exits 1
+in 199s. The RSS minimum is 40042444 kB at 14:49:08, while the
+workers were already shrinking. The lowest sample before that
+drop is 43846676 kB at 14:48:44. The trace returns to 118916024
+kB at 14:49:20. No READY chat and no greedy JSON. The window
+script does not run health after the exit. At 14:51 card 0 was
+held by O3 (pid 3341460, ./run_mb.sh) and card 1 was empty.
+No xe-reset call is in the window script.
+
+Verdict: the 14:45 "window open" line was true when written.
+The run is not a coherence result and not an ITL. Identity
+(/v1/models) did not answer. Placement and the PLE memmap line
+did run. The failure is XPU OOM on a 418 MiB copy, not the host
+watchdog from F134. Health-after is missing.
+
+Suggested fix: preserve this serve log before the next window
+truncates c7-fn-serve.log. Run both-card health after the exit
+when the leases are free. The 418 MiB packed.to(device) needs
+free GPU memory, or it has to stay a host view.
+
+
 
 
 

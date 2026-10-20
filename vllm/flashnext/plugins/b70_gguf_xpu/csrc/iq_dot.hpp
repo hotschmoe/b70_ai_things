@@ -31,6 +31,51 @@ inline uint64_t b70_loadu64(const uint8_t* p) {
     return v;
 }
 
+// O3 (reports/2O3_moe_decode.md): weight blocks of every DP4A type start 2-byte aligned (all block sizes are
+// even, rows and tensors are at least 4-aligned). Strata load8_a2 / load4_a2
+// (iq_kernels.dp.cpp:371): aligned dword loads plus a funnel shift, instead of
+// one d64/d32 LSC load at a 2-aligned address (2.8x slower gate/up on B70).
+// Callers must pass even weight pointers (kernels.cpp b70_check_a2). The fp16 scale is one aligned
+// 16-bit load and a hardware convert (Strata night::h2f) instead of two byte
+// loads and the software b70_fp16_to_fp32 (a denormal loop in the ISA).
+#ifndef B70_LOAD_A2
+#define B70_LOAD_A2 1
+#endif
+#ifndef B70_HW_HALF
+#define B70_HW_HALF 1
+#endif
+inline uint64_t b70_ld8_a2(const uint8_t* p) {
+#if B70_LOAD_A2
+    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+    const uint32_t* q = reinterpret_cast<const uint32_t*>(a & ~uintptr_t(3));
+    const uint32_t w0 = q[0], w1 = q[1];
+    if (!(a & 2)) return (uint64_t)w0 | ((uint64_t)w1 << 32);
+    const uint32_t w2 = q[2];
+    return (uint64_t)((w0 >> 16) | (w1 << 16)) | ((uint64_t)((w1 >> 16) | (w2 << 16)) << 32);
+#else
+    return b70_loadu64(p);
+#endif
+}
+inline uint32_t b70_ld4_a2(const uint8_t* p) {
+#if B70_LOAD_A2
+    const uintptr_t a = reinterpret_cast<uintptr_t>(p);
+    const uint32_t* q = reinterpret_cast<const uint32_t*>(a & ~uintptr_t(3));
+    const uint32_t w0 = q[0];
+    if (!(a & 2)) return w0;
+    return (w0 >> 16) | (q[1] << 16);
+#else
+    return b70_loadu32(p);
+#endif
+}
+inline float b70_h2f(const uint8_t* p) {
+#if B70_HW_HALF
+    const uint16_t h = *reinterpret_cast<const uint16_t*>(p);
+    return (float)sycl::bit_cast<sycl::half>(h);
+#else
+    return b70_fp16_to_fp32((uint16_t)b70_ld16(p));
+#endif
+}
+
 // v is the low 8 bits of a shifted sign field. Bit 7 is replaced by parity,
 // matching ggml unpack_ksigns (iq_kernels.dp.cpp:60).
 inline uint32_t b70_unpack_ksigns(uint32_t v) {
@@ -130,12 +175,12 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
                          ((uint32_t)qs[4 * j + 3] << 24);
             m.w[j] = (int)w;
         }
-        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.d = b70_h2f(b);
         m.fin = 0;
     } else if constexpr (TYPE == B70_IQ2_XXS) {
         const int ib = gi & 7;
         const uint8_t* b = row + (size_t)(gi >> 3) * 66;
-        const uint64_t qq = b70_loadu64(b + 2 + 8 * ib);
+        const uint64_t qq = b70_ld8_a2(b + 2 + 8 * ib);
         const uint32_t q2 = (uint32_t)qq;
         const uint32_t aux = (uint32_t)(qq >> 32);
 #pragma unroll
@@ -147,12 +192,12 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
             m.w[2 * k + 1] = g1;
         }
         m.a = (int)((aux >> 27) | 1u);
-        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.d = b70_h2f(b);
         m.fin = 1;
     } else if constexpr (TYPE == B70_IQ2_XS) {
         const int ib = gi & 7;
         const uint8_t* b = row + (size_t)(gi >> 3) * 74;
-        const uint64_t qq = b70_loadu64(b + 2 + 8 * ib);
+        const uint64_t qq = b70_ld8_a2(b + 2 + 8 * ib);
 #pragma unroll
         for (int k = 0; k < 4; ++k) {
             const uint32_t q = (uint32_t)((qq >> (16 * k)) & 0xffffu);
@@ -164,14 +209,14 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
         }
         m.a = b[66 + ib] & 0x0f;
         m.b = b[66 + ib] >> 4;
-        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.d = b70_h2f(b);
         m.fin = 2;
     } else if constexpr (TYPE == B70_IQ2_S) {
         const int ib = gi & 7;
         const uint8_t* b = row + (size_t)(gi >> 3) * 82;
         const uint32_t qh = b[66 + ib];
-        const uint32_t qs4 = b70_loadu32(b + 2 + 4 * ib);
-        const uint32_t sb4 = b70_loadu32(b + 34 + 4 * ib);
+        const uint32_t qs4 = b70_ld4_a2(b + 2 + 4 * ib);
+        const uint32_t sb4 = b70_ld4_a2(b + 34 + 4 * ib);
 #pragma unroll
         for (int k = 0; k < 4; ++k) {
             const uint32_t qs = (qs4 >> (8 * k)) & 0xffu;
@@ -185,13 +230,13 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
         }
         m.a = b[74 + ib] & 0x0f;
         m.b = b[74 + ib] >> 4;
-        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.d = b70_h2f(b);
         m.fin = 2;
     } else if constexpr (TYPE == B70_IQ3_XXS) {
         const int ib = gi & 7;
         const uint8_t* b = row + (size_t)(gi >> 3) * 98;
-        const uint32_t aux = b70_loadu32(b + 66 + 4 * ib);
-        const uint64_t qq = b70_loadu64(b + 2 + 8 * ib);
+        const uint32_t aux = b70_ld4_a2(b + 66 + 4 * ib);
+        const uint64_t qq = b70_ld8_a2(b + 2 + 8 * ib);
 #pragma unroll
         for (int k = 0; k < 4; ++k) {
             const uint32_t qw = (uint32_t)((qq >> (16 * k)) & 0xffffu);
@@ -201,14 +246,14 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
             m.w[2 * k + 1] = g1;
         }
         m.a = (int)(aux >> 28);
-        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.d = b70_h2f(b);
         m.fin = 3;
     } else if constexpr (TYPE == B70_IQ3_S) {
         const int ib = gi & 7;
         const uint8_t* b = row + (size_t)(gi >> 3) * 110;
         const uint32_t qh = b[66 + ib];
-        const uint64_t qq = b70_loadu64(b + 2 + 8 * ib);
-        const uint32_t sb4 = b70_loadu32(b + 74 + 4 * ib);
+        const uint64_t qq = b70_ld8_a2(b + 2 + 8 * ib);
+        const uint32_t sb4 = b70_ld4_a2(b + 74 + 4 * ib);
 #pragma unroll
         for (int k = 0; k < 4; ++k) {
             const uint32_t qw = (uint32_t)((qq >> (16 * k)) & 0xffffu);
@@ -221,26 +266,26 @@ inline void b70_prep(const uint8_t* row, int gi, B70Part& m) {
             m.w[2 * k + 1] = g1;
         }
         m.a = 1 + 2 * (int)((b[106 + (ib >> 1)] >> (4 * (ib & 1))) & 0x0fu);
-        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.d = b70_h2f(b);
         m.fin = 4;
     } else if constexpr (TYPE == B70_IQ4_NL) {
         const uint8_t* b = row + (size_t)gi * 18;
-        const uint64_t q0 = b70_loadu64(b + 2);
-        const uint64_t q1 = b70_loadu64(b + 10);
+        const uint64_t q0 = b70_ld8_a2(b + 2);
+        const uint64_t q1 = b70_ld8_a2(b + 10);
         const uint32_t qw[4] = {(uint32_t)q0, (uint32_t)(q0 >> 32), (uint32_t)q1, (uint32_t)(q1 >> 32)};
 #pragma unroll
         for (int i = 0; i < 4; ++i) {
             m.w[i] = (int)b70_iq4nl_mux4(qw[i] & 0x0f0f0f0fu);
             m.w[4 + i] = (int)b70_iq4nl_mux4((qw[i] >> 4) & 0x0f0f0f0fu);
         }
-        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.d = b70_h2f(b);
         m.fin = 0;
     } else if constexpr (TYPE == B70_Q2_0) {
         const uint8_t* b = row + (size_t)(gi >> 1) * 18;
-        const uint64_t qq = b70_loadu64(b + 2 + (gi & 1) * 8);
+        const uint64_t qq = b70_ld8_a2(b + 2 + (gi & 1) * 8);
 #pragma unroll
         for (int i = 0; i < 8; ++i) m.w[i] = (int)b70_q2_spread4((uint32_t)((qq >> (8 * i)) & 0xffu));
-        m.d = b70_fp16_to_fp32((uint16_t)b70_ld16(b));
+        m.d = b70_h2f(b);
         m.fin = 0;
     }
 }

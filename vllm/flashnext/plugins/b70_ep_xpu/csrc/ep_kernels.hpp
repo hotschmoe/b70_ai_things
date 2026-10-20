@@ -31,10 +31,14 @@ void ep_push_ctr(sycl::queue& q, void* peer_dst, const void* src, int64_t n4, ui
 void ep_add_uncached(sycl::queue& q, float* y, const float* a, const float* b, int64_t n4);
 
 // Remap expert ids and push weights plus bf16 activations. One kernel, system barrier, then flag.
-// ids0[i] = id if 0 <= id < n0 else -1. peer_ids[i] = id - n0 if n0 <= id < n0+e1 else -1.
+// No maps: ids0[i] = id if 0 <= id < n0 else -1. peer_ids[i] = id - n0 if n0 <= id < n0+e1 else -1.
+// With maps (Flash-Next snake): ids0[i] = map0[id] when that slot is in [0, n0), else -1.
+// peer_ids[i] = map1[id] when that slot is in [0, e1), else -1. Out-of-range ids are -1.
+// map0 and map1 are int32[nexp] on the writer device. Both null keeps the contiguous half split.
 void ep_dispatch(sycl::queue& q, const int32_t* ids, const float* w, const uint16_t* x, int32_t* ids0,
                  int32_t* peer_ids, float* peer_w, uint16_t* peer_x, int n_ids, size_t x_bytes, int n0, int e1,
-                 uint32_t* done, uint32_t* peer_flag, const uint32_t* ctr);
+                 const int32_t* map0, const int32_t* map1, int nexp, uint32_t* done, uint32_t* peer_flag,
+                 const uint32_t* ctr);
 
 // Probe-local push. Scoped=false is the S28 mirror (default barrier). Not the production path.
 template <bool Scoped>

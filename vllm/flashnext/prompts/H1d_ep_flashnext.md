@@ -1,0 +1,7 @@
+You are grok agent H1d, continuing H1c (EP sidecar owner). Read vllm/flashnext/BRIEF.md and obey it (ASCII, bin/gpu-run, bin/cpu-run, journal at the bottom of vllm/flashnext/JOURNAL.md, agents do not commit). Read reports/2O1_ep_design.md (milestones M0-M8) and reports/1H1_ep_sidecar.md. M0-M3 passed on the 35B (both cards, graph C1 11.36 ms, greedy match).
+
+Next: M4+ on Flash-Next IQ3_XXS, the real target. The split is Strata's: card 0 runs everything plus about 138 experts per layer, card 1 holds about 374 experts per layer.
+- Phase A (CPU only, now): adapt the sidecar to Flash-Next. Cover the expert split per layer, the GGUF types (IQ3_XXS gate/up, Q2_0 downs), PLE in host RAM, the QSA hook (B70_QSA), and the shared expert. Use bin/cpu-run for heavy builds. Write the serve script.
+- Phase B (GPU): agent C7b owns both cards first to get Flash-Next coherent on stock DP=2. Do not touch the GPUs until C7b's report (reports/1C7b_flashnext_serve.md) exists or both gpu lock owner files have been empty for 10 minutes. Then run your sidecar serve with the C7b recipe as the base. Gates are greedy "17*19" -> 323 and "23*29" -> 667, then C1/C2 ITL under FULL_DECODE_ONLY. Latency is the top metric. Strata's C1 is ~141 tok/s (7.1 ms ITL) with MTP.
+- Keep host memory in mind: the PLE is 26.8 GiB and must be one shared memmap, never a private copy. Abort if MemAvailable < 8 GiB.
+Run discipline: start long jobs detached and poll them. Do not end your run while a job you own is still running. Update reports/1H1_ep_sidecar.md as you go.

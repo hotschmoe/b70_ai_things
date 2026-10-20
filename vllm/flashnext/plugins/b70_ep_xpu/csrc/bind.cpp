@@ -83,6 +83,16 @@ at::Tensor ep_register1_op(int64_t layer, at::Tensor gate, at::Tensor up, at::Te
     b70ep::ep_register1((int)layer, gate.data_ptr<uint8_t>(), up.data_ptr<uint8_t>(), down.data_ptr<uint8_t>(), (int)e);
     return ok_i();
 }
+at::Tensor ep_register_map_op(int64_t layer, at::Tensor map0, at::Tensor map1) {
+    need_xpu(map0, "map0");
+    need_xpu(map1, "map1");
+    TORCH_CHECK(map0.scalar_type() == at::kInt && map1.scalar_type() == at::kInt, "maps must be int32");
+    TORCH_CHECK(map0.is_contiguous() && map1.is_contiguous(), "maps must be contiguous");
+    TORCH_CHECK(map0.numel() == map1.numel() && map0.numel() > 0, "maps must be the same non-empty length");
+    TORCH_CHECK(map0.device() == map1.device(), "maps must share a device");
+    b70ep::ep_register_map((int)layer, map0.data_ptr<int32_t>(), map1.data_ptr<int32_t>(), (int)map0.numel());
+    return ok_i();
+}
 at::Tensor moe_ep_op(at::Tensor x, at::Tensor w, at::Tensor ids, int64_t layer) {
     need_xpu(x, "x");
     need_xpu(w, "w");
@@ -136,6 +146,7 @@ TORCH_LIBRARY(b70_ep, m) {
     m.def("ep_register0(int layer, Tensor gate, int gate_type, Tensor up, int up_type, Tensor down, int down_type, "
           "int e, int intermediate, int hidden) -> Tensor");
     m.def("ep_register1(int layer, Tensor gate, Tensor up, Tensor down, int e) -> Tensor");
+    m.def("ep_register_map(int layer, Tensor map0, Tensor map1) -> Tensor");
     m.def("moe_ep(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
     m.def("ep_capture_begin(int key) -> Tensor");
     m.def("ep_capture_end(int key) -> Tensor");
@@ -148,6 +159,7 @@ TORCH_LIBRARY(b70_ep, m) {
 TORCH_LIBRARY_IMPL(b70_ep, XPU, m) {
     m.impl("ep_register0", ep_register0_op);
     m.impl("ep_register1", ep_register1_op);
+    m.impl("ep_register_map", ep_register_map_op);
     m.impl("moe_ep", moe_ep_op);
 }
 

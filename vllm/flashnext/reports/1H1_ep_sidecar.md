@@ -179,3 +179,83 @@ RESULT:
 
 VERDICT: M3 text, identity, and C1 speed gates met. C2 ITL is below
 the one-card graph reference on both streams. M0-M3 are closed.
+
+## Phase A -- Flash-Next adapt (CPU)
+
+Status: CPU checks passed 2026-10-20 14:55. GPU serve not started.
+
+The 35B path stays the contiguous half. `B70_EP_SPLIT=auto` selects
+the snake only when the layer has 512 experts. Flash-Next registers
+per-layer int32 maps (`ep_register_map`). Local slots are the
+ascending global ids of that card's set. `moe_ep`'s torch signature
+is unchanged. MTP prefixes still take the plain `B70GGUFMoEMethod`,
+so the drafter stays on card 0.
+
+Split source: STRP v1
+`/mnt/vm_8tb/b70/build/strata-ab/src/data/expert-profile-sycl.bin`
+plus `B70_EP_Q0` (default 138). Port of
+`src-ep/sycl/src/program/generate.cpp` traffic snake. `B70_EP_SHARE0`
+empty leaves the night share off.
+
+CPU test `plugins/b70_ep_xpu/tests/test_placement.py`:
+`PLACEMENT_OK`, `PLE_GUARD_OK`. Every one of 48 layers is 138 on
+card 0 and 374 on card 1, disjoint, covering 0..511. Local slots are
+`0..n-1`. The first two unique profile experts of a layer go to
+card 0 then card 1. Layer 0 card-0 head is `(3, 7, 10, 17)`.
+Ranked pairs: 24576. A 4-expert synthetic snake matches the
+`0,1,1,0` deal, including the quota redirect and `share0=0.25`.
+
+GGUF types follow each tensor. Routed ids accepted: 8, 10, 11, 12,
+13, 14, 16, 17, 18, 20, 21, 22, 23, 42. The IQ3_XXS shard is mixed
+(`reports/02_model_support.md`): expert downs are IQ4_NL (18 layers)
+or Q2_0 (30); expert gate and up are IQ2_XXS, IQ2_XS, IQ2_S,
+IQ3_XXS, or IQ3_S. Row-byte checks: IQ3_XXS K=2560 is 980,
+Q2_0 I=640 is 180, IQ4_NL I=640 is 360. The shorthand
+IQ3_XXS+IQ3_XXS+Q2_0 pack is 11361484800 bytes on card 0 and
+30791270400 bytes on card 1 across 48 layers. Profile loads
+`index_select` the chosen rows and replace the CPU parameter with
+the card-0 pack. The linear half copy is unchanged.
+
+PLE: `ple_guard.py` wraps `install_host_table`. The owner must be a
+numpy memmap (a view's `.base` chain counts). `B70_PLE_NBYTES`
+(28800138240 on the serve) checks the byte count. A second data
+pointer raises. MemAvailable under 8 GiB raises. `B70_EP_MEM_MIN_KB`
+raises that floor. The test used a 64-byte memmap, not a second
+26.8 GiB file. MemAvailable at the test was 118655020 kB.
+
+QSA: `qsa_cover.py` runs only when `B70_QSA=1`. It calls
+`b70_qsa_xpu.register()` and marks an MTP decoder (`"mtp"` in the
+prefix) with `mark_draft`. Unset `B70_QSA` does not import the model.
+
+Shared expert: `apply` still drops the shared-expert arguments. One
+log line records that the runner adds that output and the weights
+stay on card 0. They are not packed into the routed split.
+
+Library: `b70_ep_xpu/_C.so` sha256
+`5a0a047c67fc192588007e93b69c22a8ed9c781d2a891056dff200cceab067ac`
+(499200 bytes, 2026-10-20 14:55). `ep_register_map` copies both maps
+onto card 0. Load rejects a slot outside the local count, a
+duplicate slot, or an expert on both cards or on neither. Dispatch
+clamps any other bad slot to -1. An earlier link the same hour
+(sha `308cd69d...`, 495104 bytes) stored the caller's pointer and
+is not the binary to serve. `_C.ep.so` sha stays
+`55c154ee90f33bec810d24a2cd6ac0c3b6b1a4e53bdc78aed50a59113e8c9bf0`.
+`_C.graph.so` sha
+`b3c15e14ba5811d90dfe8a65e4ccc1353fd67b3f44e4180810fac22b4ed49979`
+exports the `b70_moe_layer` and `b70_reserve_decode_queue` symbols
+`moe_ep.cpp` dlsyms. The serve points `B70_GGUF_SO` at that file.
+
+Serve script (not launched): `harness/serve_flashnext_ep.sh`,
+wrapper `plugins/b70_ep_xpu/tests/m6_serve.sh`. World size 1,
+`--card both`, port 18116, container `vllm-fn-h1-fn`, docker memory
+100g. No `--data-parallel-size`, no `--enable-expert-parallel`.
+`B70_EP=1`, `B70_QSA=1`, `B70_EP_SPLIT=profile`, `B70_EP_Q0=138`,
+`B70_PLE_NBYTES=28800138240`. First served name `hotschmoe-dev`,
+alias `qwen3.8-flash-next-iq3-xxs`. Start aborts under
+`B70_EP_MEM_MIN_KB` (default 8 GiB) and warns under 72 GiB. A
+watchdog docker-stops the container if MemAvailable falls under
+8 GiB. The script does not exec `xpu-run`.
+
+Phase B gate, still open: greedy `17 * 19` -> 323 and `23 * 29` ->
+667, then C1/C2 ITL under `FULL_DECODE_ONLY`. Strata C1 reference
+is about 141 tok/s (7.1 ms ITL) with MTP. Latency is the top metric.

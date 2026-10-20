@@ -49,6 +49,9 @@ struct Layer {
     const uint8_t* d1 = nullptr;
     int gt = 0, ut = 0, dt = 0;
     int e0 = 0, e1 = 0, I = 0, K = 0;
+    const int32_t* map0 = nullptr;
+    const int32_t* map1 = nullptr;
+    int nexp = 0;
     bool ready0 = false, ready1 = false;
 };
 
@@ -275,6 +278,69 @@ void ep_register0(int layer, const uint8_t* gate, int gate_type, const uint8_t* 
     L.ready0 = true;
 }
 
+void ep_register_map(int layer, const int32_t* map0, const int32_t* map1, int nexp) {
+    State& s = S();
+    if (!s.up) throw std::runtime_error("ep_register_map before init");
+    if (layer < 0 || layer >= s.nlayers) throw std::runtime_error("ep layer out of range");
+    if (!map0 || !map1 || nexp < 1 || nexp > 4096) throw std::runtime_error("ep_register_map: empty map");
+    Layer& L = s.layers[layer];
+    if (L.e0 < 1 || L.e1 < 1) throw std::runtime_error("ep_register_map before expert counts");
+    // Own the bytes. The caller's tensor can move; the kernel reads this copy.
+    sycl::queue& q = q0();
+    auto* own0 = sycl::malloc_device<int32_t>((size_t)nexp, q);
+    auto* own1 = sycl::malloc_device<int32_t>((size_t)nexp, q);
+    if (own0 == nullptr || own1 == nullptr) {
+        if (own0) sycl::free(own0, q);
+        if (own1) sycl::free(own1, q);
+        throw std::runtime_error("ep_register_map: device alloc failed");
+    }
+    std::vector<int32_t> host0((size_t)nexp), host1((size_t)nexp);
+    q.memcpy(host0.data(), map0, (size_t)nexp * sizeof(int32_t)).wait();
+    q.memcpy(host1.data(), map1, (size_t)nexp * sizeof(int32_t)).wait();
+    std::vector<uint8_t> seen0((size_t)L.e0, 0), seen1((size_t)L.e1, 0);
+    int n_on0 = 0, n_on1 = 0;
+    for (int i = 0; i < nexp; ++i) {
+        const int a = host0[(size_t)i];
+        const int b = host1[(size_t)i];
+        const bool on0 = a >= 0;
+        const bool on1 = b >= 0;
+        if ((on0 && a >= L.e0) || (on1 && b >= L.e1) || on0 == on1) {
+            sycl::free(own0, q);
+            sycl::free(own1, q);
+            throw std::runtime_error("ep_register_map: slot out of range or not on one card");
+        }
+        if (on0) {
+            if (seen0[(size_t)a]) {
+                sycl::free(own0, q);
+                sycl::free(own1, q);
+                throw std::runtime_error("ep_register_map: duplicate card 0 slot");
+            }
+            seen0[(size_t)a] = 1;
+            n_on0 += 1;
+        } else {
+            if (seen1[(size_t)b]) {
+                sycl::free(own0, q);
+                sycl::free(own1, q);
+                throw std::runtime_error("ep_register_map: duplicate card 1 slot");
+            }
+            seen1[(size_t)b] = 1;
+            n_on1 += 1;
+        }
+    }
+    if (n_on0 != L.e0 || n_on1 != L.e1) {
+        sycl::free(own0, q);
+        sycl::free(own1, q);
+        throw std::runtime_error("ep_register_map: slot set does not match the expert counts");
+    }
+    q.memcpy(own0, host0.data(), (size_t)nexp * sizeof(int32_t)).wait();
+    q.memcpy(own1, host1.data(), (size_t)nexp * sizeof(int32_t)).wait();
+    if (L.map0 != nullptr) sycl::free(const_cast<int32_t*>(L.map0), q);
+    if (L.map1 != nullptr) sycl::free(const_cast<int32_t*>(L.map1), q);
+    L.map0 = own0;
+    L.map1 = own1;
+    L.nexp = nexp;
+}
+
 void ep_register1(int layer, const uint8_t* gate, const uint8_t* up, const uint8_t* down, int e) {
     State& s = S();
     if (!s.up) throw std::runtime_error("ep_register1 before init");
@@ -393,7 +459,9 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
 
     sycl::queue& a = q0();
     ep_bump(a, ctr0);
-    ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, n_ids, x_b, L.e0, L.e1, s.done0, flag_in_r, ctr0);
+    if ((L.map0 == nullptr) != (L.map1 == nullptr)) throw std::runtime_error("ep map is half set");
+    ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, n_ids, x_b, L.e0, L.e1, L.map0, L.map1, L.nexp,
+                s.done0, flag_in_r, ctr0);
     a.memset(s.y0, 0, (size_t)T * (size_t)K * sizeof(float));
     s.moe(&a, x, L.g0, L.gt, L.u0, L.ut, L.d0, L.dt, s.ids0, w, nullptr, 0, nullptr, 0, nullptr, 0, s.y0, T, topk,
           L.e0, L.I, L.K);
@@ -534,7 +602,8 @@ void ep_transport_warmup() {
         ep_wait(*s.q1, flag_in, s.ctr1, s.spin, s.err1, 11);
         ep_push_ctr(*s.q1, s.psum.remote, s.y1, 1, s.done1, flag_ret_r, s.ctr1);
         ep_bump(a, s.ctr0);
-        ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, 1, 64, 1, 1, s.done0, flag_in_r, s.ctr0);
+        ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, 1, 64, 1, 1, nullptr, nullptr, 0, s.done0,
+                    flag_in_r, s.ctr0);
         ep_wait(a, flag_ret, s.ctr0, s.spin, s.err0, 12);
         s.q1->wait();
         a.wait();
