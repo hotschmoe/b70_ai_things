@@ -63,6 +63,62 @@ def _register_fakes() -> None:
         del attn, q_full
         return out.new_empty(out.shape)
 
+    @register_fake("b70_qsa::write_step_batch")
+    def _write_step_batch_fake(pos, step, top_k, block):
+        del pos, top_k, block
+        return step.new_empty(step.shape)
+
+    @register_fake("b70_qsa::kv_append_batch")
+    def _kv_batch_fake(k, v, pages, block_table, step, block_size, idx_block, idx_dim, has_pooled):
+        del k, v, block_table, step, block_size, idx_block, idx_dim, has_pooled
+        return pages.new_empty(pages.shape)
+
+    @register_fake("b70_qsa::indexer_append_batch")
+    def _idx_batch_fake(
+        raw, k_norm, tail, dead, block_pos, pages, block_table, cos, sin, step, mrope, pos_base, eps, block_size
+    ):
+        del raw, k_norm, tail, dead, block_pos, block_table, cos, sin, step, mrope, pos_base, eps, block_size
+        return pages.new_empty(pages.shape)
+
+    @register_fake("b70_qsa::index_scores_batch")
+    def _scores_batch_fake(q_idx, pages, dead, block_table, seq_slot, scores, step, bias, block_size, idx_block):
+        del q_idx, pages, dead, block_table, seq_slot, step, bias, block_size, idx_block
+        return scores.new_empty(scores.shape)
+
+    @register_fake("b70_qsa::topk_batch")
+    def _topk_batch_fake(scores, ids, step):
+        del scores, step
+        return ids.new_empty(ids.shape)
+
+    @register_fake("b70_qsa::kv_gather_batch")
+    def _gather_batch_fake(
+        ids, pages, block_table, seq_slot, k_out, v_out, step, block_size, idx_block, idx_dim, has_pooled
+    ):
+        del ids, pages, block_table, seq_slot, v_out, step, block_size, idx_block, idx_dim, has_pooled
+        return k_out.new_empty(k_out.shape)
+
+    @register_fake("b70_qsa::attend_batch")
+    def _attend_batch_fake(q, k_f16, v_f16, attn, step):
+        del q, k_f16, v_f16, step
+        return attn.new_empty(attn.shape)
+
+    @register_fake("b70_qsa::gate_batch")
+    def _gate_batch_fake(attn, q_full, out):
+        del attn, q_full
+        return out.new_empty(out.shape)
+
+    @register_fake("b70_qsa::union_build")
+    def _union_build_fake(ids, step, ulist, ucount):
+        del ids, step, ucount
+        return ulist.new_empty(ulist.shape)
+
+    @register_fake("b70_qsa::union_attend")
+    def _union_attend_fake(
+        q, pages, block_table, seq_slot, ulist, ucount, attn, step, block_size, idx_block, idx_dim, has_pooled
+    ):
+        del q, pages, block_table, seq_slot, ulist, ucount, step, block_size, idx_block, idx_dim, has_pooled
+        return attn.new_empty(attn.shape)
+
     _FAKES = True
 
 
@@ -169,3 +225,122 @@ def attend(q, k_f16, v_f16, attn, step) -> torch.Tensor:
 def gate(attn, q_full, out) -> torch.Tensor:
     _load()
     return torch.ops.b70_qsa.gate(_ready(attn), _ready(q_full), _ready(out))
+
+
+def write_step_batch(pos, step, top_k: int, block: int) -> torch.Tensor:
+    _load()
+    return torch.ops.b70_qsa.write_step_batch(_ready(pos), _ready(step), int(top_k), int(block))
+
+
+def kv_append_batch(k, v, pages, block_table, step, block_size: int, idx_block: int, idx_dim: int, has_pooled: int):
+    _load()
+    return torch.ops.b70_qsa.kv_append_batch(
+        _ready(k),
+        _ready(v),
+        _ready(pages),
+        _ready(block_table),
+        _ready(step),
+        int(block_size),
+        int(idx_block),
+        int(idx_dim),
+        int(has_pooled),
+    )
+
+
+def indexer_append_batch(
+    raw, k_norm, tail, dead, block_pos, pages, block_table, cos, sin, step, mrope, pos_base, eps: float, block_size: int
+):
+    _load()
+    return torch.ops.b70_qsa.indexer_append_batch(
+        _ready(raw),
+        _ready(k_norm),
+        _ready(tail),
+        _ready(dead),
+        _ready(block_pos),
+        _ready(pages),
+        _ready(block_table),
+        _ready(cos),
+        _ready(sin),
+        _ready(step),
+        _ready(mrope),
+        _ready(pos_base),
+        float(eps),
+        int(block_size),
+    )
+
+
+def index_scores_batch(q_idx, pages, dead, block_table, seq_slot, scores, step, bias, block_size: int, idx_block: int):
+    _load()
+    return torch.ops.b70_qsa.index_scores_batch(
+        _ready(q_idx),
+        _ready(pages),
+        _ready(dead),
+        _ready(block_table),
+        _ready(seq_slot),
+        _ready(scores),
+        _ready(step),
+        _ready(bias),
+        int(block_size),
+        int(idx_block),
+    )
+
+
+def topk_batch(scores, ids, step):
+    _load()
+    return torch.ops.b70_qsa.topk_batch(_ready(scores), _ready(ids), _ready(step))
+
+
+def kv_gather_batch(
+    ids, pages, block_table, seq_slot, k_out, v_out, step, block_size: int, idx_block: int, idx_dim: int, has_pooled: int
+):
+    _load()
+    return torch.ops.b70_qsa.kv_gather_batch(
+        _ready(ids),
+        _ready(pages),
+        _ready(block_table),
+        _ready(seq_slot),
+        _ready(k_out),
+        _ready(v_out),
+        _ready(step),
+        int(block_size),
+        int(idx_block),
+        int(idx_dim),
+        int(has_pooled),
+    )
+
+
+def attend_batch(q, k_f16, v_f16, attn, step):
+    _load()
+    return torch.ops.b70_qsa.attend_batch(
+        _ready(q), _ready(k_f16), _ready(v_f16), _ready(attn), _ready(step)
+    )
+
+
+def gate_batch(attn, q_full, out):
+    _load()
+    return torch.ops.b70_qsa.gate_batch(_ready(attn), _ready(q_full), _ready(out))
+
+
+def union_build(ids, step, ulist, ucount):
+    _load()
+    return torch.ops.b70_qsa.union_build(_ready(ids), _ready(step), _ready(ulist), _ready(ucount))
+
+
+def union_attend(
+    q, pages, block_table, seq_slot, ulist, ucount, attn, step, block_size: int, idx_block: int, idx_dim: int, has_pooled: int
+):
+    _load()
+    return torch.ops.b70_qsa.union_attend(
+        _ready(q),
+        _ready(pages),
+        _ready(block_table),
+        _ready(seq_slot),
+        _ready(ulist),
+        _ready(ucount),
+        _ready(attn),
+        _ready(step),
+        int(block_size),
+        int(idx_block),
+        int(idx_dim),
+        int(has_pooled),
+    )

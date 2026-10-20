@@ -21,6 +21,7 @@ from b70_gguf_xpu.prefill import load  # noqa: E402
 from b70_gguf_xpu.types import row_bytes  # noqa: E402
 
 IQ3, Q2 = 18, 42
+XSLM_OK = False
 H, F, E, TOPK = 2560, 640, 512, 10
 # C10 winner event ms and the GEMM-only model sums (reports/1C10_prefill_dq.md).
 C10_LAYER_MS = {512: 10.82, 4096: 26.76, 12288: 66.97}
@@ -139,6 +140,28 @@ def check_small(failures: int) -> tuple[int, bool]:
         failures = report(failures, ok, f"sgn={sgn} vs sgn=4 max_abs={mx:.3e} cols={cols[sgn]} want={want}")
         if sgn != 40 and not ok:
             hard_ok = False
+    os.environ["B70_PREFILL_XSLM"] = "1"
+    try:
+        y = layer_call(x, ids, gq, uq, dq, router)
+        torch.xpu.synchronize()
+        ycpu = y.float().cpu()
+        os.environ["B70_PREFILL_SPLIT"] = "1"
+        layer_call(x, ids, gq, uq, dq, router)
+        torch.xpu.synchronize()
+        sp = torch.ops.b70_gguf.prefill_split_us().tolist()
+        os.environ["B70_PREFILL_SPLIT"] = "0"
+        d = (ycpu - base).abs()
+        mx = float(d.max()) if d.numel() else 0.0
+        xcols = int(sp[7]) // 1000
+        xok = bool(torch.isfinite(ycpu).all()) and mx <= 1e-3 and base is not None
+        global XSLM_OK
+        XSLM_OK = xok
+        failures = report(failures, xok, f"xslm vs sgn=4 max_abs={mx:.3e} cols={xcols}")
+    except Exception as ex:
+        os.environ["B70_PREFILL_SPLIT"] = "0"
+        print(f"FAIL check xslm {type(ex).__name__}: {ex}", flush=True)
+        failures += 1
+    os.environ["B70_PREFILL_XSLM"] = "0"
     # bf16-weight reference, one token-slot at a time. fp16 DPAS vs bf16 mm.
     wg = torch.ops.b70_gguf.prefill_dequant(
         gq, IQ3, e * F, H, torch.empty((e * F, H), dtype=torch.bfloat16, device="xpu")
@@ -227,6 +250,31 @@ def time_sgn(gq, uq, dq, best: dict) -> None:
             prev = best.get(t)
             if cols == sgn * 16 and (prev is None or ev < prev[0]):
                 best[t] = (ev, sgn, wall)
+        os.environ["B70_PREFILL_XSLM"] = "1"
+        print(f"WARM xslm T={t}", flush=True)
+        try:
+            ev, wall = elapsed_both(lambda: layer_call(x, ids, gq, uq, dq, router), 1, iters)
+            os.environ["B70_PREFILL_SPLIT"] = "1"
+            layer_call(x, ids, gq, uq, dq, router)
+            torch.xpu.synchronize()
+            sp = torch.ops.b70_gguf.prefill_split_us().tolist()
+            os.environ["B70_PREFILL_SPLIT"] = "0"
+            cols = int(sp[7]) // 1000
+            mt = int(sp[7]) % 1000
+            print(
+                f"BENCH layer xslm=1 T={t} event_us={ev:.1f} wall_us={wall:.1f} "
+                f"tf={tflops_layer(t, ev):.2f} cols={cols} mt={mt} "
+                f"gu_us={sp[2]:.1f} down_us={sp[3]:.1f}",
+                flush=True,
+            )
+            prev = best.get(t)
+            adopt = XSLM_OK or "--bench-only" in sys.argv
+            if adopt and (prev is None or ev < prev[0]):
+                best[t] = (ev, f"xslm{cols}", wall)
+        except Exception as ex:
+            os.environ["B70_PREFILL_SPLIT"] = "0"
+            print(f"FAIL layer xslm T={t} {type(ex).__name__}: {ex}", flush=True)
+        os.environ["B70_PREFILL_XSLM"] = "0"
         del x, ids, router
         torch.xpu.empty_cache()
 
@@ -257,7 +305,8 @@ def dequant_gbps(gq, uq, dq) -> None:
 
 
 def onednn_ceilings() -> None:
-    import torch.nn.functional as F
+    # Do not name this F: F is the expert intermediate size.
+    import torch.nn.functional as tnnf
 
     print("BENCH onednn start", flush=True)
     for t, rows_per in ((4096, 80), (12288, 240)):
@@ -290,7 +339,7 @@ def onednn_ceilings() -> None:
         try:
 
             def gmm(x=x, w3=w3, offs=offs):
-                F.grouped_mm(x, w3, offs=offs)
+                tnnf.grouped_mm(x, w3, offs=offs)
 
             ev, wall = elapsed_both(gmm, 1, 1)
             print(
@@ -355,12 +404,75 @@ def onednn_ceilings() -> None:
     )
 
 
+def ref_debug() -> None:
+    """Where the bf16 reference disagrees with the fused kernel."""
+    e, t, topk = 4, 8, 2
+    gq = torch.from_numpy(fast_pack(IQ3, e * F, H, 3)).to("xpu")
+    uq = torch.from_numpy(fast_pack(IQ3, e * F, H, 4)).to("xpu")
+    dq = torch.from_numpy(fast_pack(Q2, e * H, F, 5)).to("xpu")
+    ids = torch.randint(0, e, (t, topk), device="xpu", dtype=torch.int32)
+    x = (torch.randn(t, H, device="xpu", dtype=torch.float16) * 0.001).contiguous()
+    router = torch.rand(t, topk, device="xpu", dtype=torch.float32)
+    os.environ["B70_PREFILL_SGN"] = "4"
+    os.environ["B70_PREFILL_SPLIT"] = "0"
+    y = layer_call(x, ids, gq, uq, dq, router).float()
+    wg = torch.ops.b70_gguf.prefill_dequant(
+        gq, IQ3, e * F, H, torch.empty((e * F, H), dtype=torch.bfloat16, device="xpu")
+    ).view(e, F, H)
+    wu = torch.ops.b70_gguf.prefill_dequant(
+        uq, IQ3, e * F, H, torch.empty((e * F, H), dtype=torch.bfloat16, device="xpu")
+    ).view(e, F, H)
+    wd = torch.ops.b70_gguf.prefill_dequant(
+        dq, Q2, e * H, F, torch.empty((e * H, F), dtype=torch.bfloat16, device="xpu")
+    ).view(e, H, F)
+    torch.xpu.synchronize()
+    idc = ids.cpu()
+    rc = router.cpu()
+
+    def acc_ref(x_row, w_cast):
+        out = torch.zeros(t, H, device="xpu", dtype=torch.float32)
+        for ti in range(t):
+            s = torch.zeros(H, device="xpu", dtype=torch.float32)
+            xv = x_row[ti]
+            for k in range(topk):
+                ee = int(idc[ti, k])
+                g = torch.mv(w_cast(wg[ee]), xv)
+                u = torch.mv(w_cast(wu[ee]), xv)
+                hid = torch.nn.functional.silu(g.float()) * u.float()
+                s = s + torch.mv(w_cast(wd[ee]), hid.to(xv.dtype)).float() * float(rc[ti, k])
+            out[ti] = s
+        return out
+
+    refs = {
+        "bf16": acc_ref(x.to(torch.bfloat16), lambda w: w),
+        "fp32": acc_ref(x.float(), lambda w: w.float()),
+        "fp16": acc_ref(x, lambda w: w.to(torch.float16)),
+    }
+    got = y.cpu().numpy()
+    for name, ref in refs.items():
+        torch.xpu.synchronize()
+        r = ref.cpu().numpy()
+        absd = np.abs(got - r)
+        scale = np.maximum(np.maximum(np.abs(got), np.abs(r)), 1e-6)
+        rel = absd / scale
+        gate = absd <= (5e-2 + 5e-2 * scale)
+        idx = int(absd.argmax())
+        print(
+            f"REF {name} max_abs={float(absd.max()):.4e} max_rel={float(rel.max()):.4e} "
+            f"med_abs={float(np.median(absd)):.4e} frac_gate={float(gate.mean()):.4f} "
+            f"at got={float(got.ravel()[idx]):.4e} ref={float(r.ravel()[idx]):.4e}",
+            flush=True,
+        )
+
+
 def main() -> int:
     assert torch.xpu.is_available()
     print(f"DEVICE {torch.xpu.get_device_name(0)} so={os.environ.get('B70_GGUF_SO', '')}", flush=True)
     load()
     wide = int(torch.ops.b70_gguf.prefill_wide_sgn().item())
     print(f"WIDE_SGN {wide}", flush=True)
+    if "--ref-debug" in sys.argv:
+        ref_debug()
     (torch.randn(64, 64, device="xpu", dtype=torch.bfloat16) @ torch.randn(64, 64, device="xpu", dtype=torch.bfloat16)).sum().item()
     torch.xpu.synchronize()
     failures = 0

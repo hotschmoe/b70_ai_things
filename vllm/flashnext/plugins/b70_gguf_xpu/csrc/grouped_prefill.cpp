@@ -412,8 +412,34 @@ void dispatch_eval16(sycl::queue& q, int type, const GemmArgs& a) {
 
 #include "prefill_sched.inl"
 
+// B70_PREFILL_XSLM=1 uses the C2 fp16 kernel: one X panel in SLM per K
+// step, shared by every subgroup in the work-group. choose_layout picks
+// the widest column strip that divides N and fits (MT>4 caps the group
+// at 512). The s64 path loads X from global once per subgroup, so a wider
+// strip does not cut those reads.
+int xslm_on() {
+    const char* e = std::getenv("B70_PREFILL_XSLM");
+    return (e && e[0] == '1') ? 1 : 0;
+}
+
+template <int MT>
+void launch_xslm(sycl::queue& q, int type, const GemmArgs& a) {
+    g_split.cols = a.lay.cols;
+    switch (type) {
+    case B70_Q4_K: launch_gemm<B70_Q4_K, MT, 0>(q, a); break;
+    case B70_IQ3_XXS: launch_gemm<B70_IQ3_XXS, MT, 0>(q, a); break;
+    case B70_Q2_0: launch_gemm<B70_Q2_0, MT, 0>(q, a); break;
+    default: throw std::runtime_error("b70 prefill xslm: Q4_K, IQ3_XXS, Q2_0 only");
+    }
+}
+
 void run_gemm(sycl::queue& q, int type, int mode, int mt, const GemmArgs& a) {
     if (mode == 0) {
+        if (xslm_on()) {
+            if (mt == 4) launch_xslm<4>(q, type, a);
+            else launch_xslm<16>(q, type, a);
+            return;
+        }
         launch_sched(q, type, a);
         return;
     }

@@ -73,6 +73,7 @@ icpx -fsycl -fPIC -shared -std=c++20 -O2 \
   -I/torch/include/torch/csrc/api/include \
   -I/pyinc \
   /src/qsa_kernels.cpp \
+  /src/qsa_batch.cpp \
   -L/torch/lib -L/venvlib \
   -Wl,-rpath,"$RPATH_VENV" \
   -Wl,-rpath,"$RPATH_TORCH" \
