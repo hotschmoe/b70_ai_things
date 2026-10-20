@@ -141,6 +141,24 @@ void ep_add_uncached(sycl::queue& q, float* y, const float* a, const float* b, i
     });
 }
 
+// O4: same sum, written as bf16 (RNE). Equal to fp32 add then .to(bf16).
+void ep_add_uncached_bf16(sycl::queue& q, uint16_t* y, const float* a, const float* b, int64_t n4) {
+    if (n4 <= 0) return;
+    constexpr size_t WG = 256;
+    const size_t groups = std::min<size_t>((size_t)((n4 + (int64_t)WG - 1) / (int64_t)WG), 64);
+    q.parallel_for<class b70_ep_add_uncached_bf16_k>(sycl::nd_range<1>(groups * WG, WG), [=](sycl::nd_item<1> it) {
+        for (int64_t i = (int64_t)it.get_global_id(0); i < n4; i += (int64_t)(groups * WG)) {
+            const uint32_t* bp = reinterpret_cast<const uint32_t*>(b) + (size_t)i * 4;
+            const sycl::float4 av = reinterpret_cast<const sycl::float4*>(a)[i];
+#pragma unroll
+            for (int j = 0; j < 4; ++j) {
+                const float v = av[j] + sycl::bit_cast<float>(load_uncached_u32(bp + j));
+                y[(size_t)i * 4 + j] = sycl::bit_cast<uint16_t>(sycl::ext::oneapi::bfloat16(v));
+            }
+        }
+    });
+}
+
 void ep_dispatch(sycl::queue& q, const int32_t* ids, const float* w, const uint16_t* x, int32_t* ids0,
                  int32_t* peer_ids, float* peer_w, uint16_t* peer_x, int n_ids, size_t x_bytes, int n0, int e1,
                  const int32_t* map0, const int32_t* map1, int nexp, uint32_t* done, uint32_t* peer_flag,

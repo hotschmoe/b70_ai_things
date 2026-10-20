@@ -4,7 +4,9 @@ import os
 import signal
 import time
 
-if os.environ.get("B70_X5_GDN_BF16") == "1" or os.environ.get("B70_X5_PACK_LINEAR") == "1":
+os.environ.setdefault("VLLM_ENABLE_V1_MULTIPROCESSING", "0")
+
+if any(os.environ.get(k) == "1" for k in ("B70_X5_GDN_BF16", "B70_X5_PACK_LINEAR", "B70_X5_Q8_LINEAR", "B70_X5_EVENTLESS_LAZY")):
     from x5_api import bootstrap
 
     bootstrap()
@@ -62,6 +64,11 @@ def main():
         open(prof.OUT + "/summary-" + tag + ".json", "w").write(json.dumps(summary, indent=2))
         ids = [list(o.outputs[0].token_ids) for o in out]
         open(prof.OUT + "/tokens-" + tag + ".json", "w").write(json.dumps(ids))
+    c1 = json.load(open(prof.OUT + "/tokens-c1.json"))[0]
+    c2 = json.load(open(prof.OUT + "/tokens-c2.json"))
+    batch_parity = [dict(identical=row == c1, first_mismatch=next(
+        (i for i, (x, y) in enumerate(zip(c1, row)) if x != y), None)) for row in c2]
+    open(prof.OUT + "/batch-parity.json", "w").write(json.dumps(batch_parity, indent=2))
     print("X5_PROFILE_DONE", flush=True)
     if prof.UT_SESSION:
         os.kill(os.getpid(), signal.SIGUSR1)

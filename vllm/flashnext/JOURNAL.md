@@ -7455,3 +7455,224 @@ cap (X3 used 65536 with 10 GB free); new card-1-only override
 B70_EP_PREFILL_C1_MAXPAD (default 16384 = ~290 MB), runtime key
 c1_maxpad. p4 queued: fast:32/16 at maxpad 16384 and 32768, fused
 chunk 4096 control, card 0 at maxpad 65536.
+
+## 2026-10-20 22:28 X5 -- late-load probe launch corrected
+
+CONFIG: late helper plus C-only stub, card1 pinned.
+COMMAND: x5_lazy_window.sh probe-r1, then CPU stub-only relink with
+compiler/clang (not icx), queued probe-r2.
+RESULT: r1 exit127 before workload: preload required libintlc.so.5
+before entrypoint library setup. Both native health checks pass. No
+replay or lifecycle evidence from r1. Compiler driver clang omits
+Intel runtime dependencies; verify NEEDED is libc only before r2.
+VERDICT: infrastructure correction, preserved r1 failure. Q4 EV1 also
+exit139, so all FOUR early EV serves fail teardown. Window now records
+actual wait status and propagates request/lifecycle gate failures.
+
+## 2026-10-20 22:31 X5 -- source audit correction
+
+CONFIG: CPU audit of original before/after manifests.
+COMMAND: compare every SHA256 key in completed quant arms.
+RESULT: stock IQ3 EV1 linear.py changed47cc6319->ebb1d9c9. IQ4
+ple_device.py changedfafd61fe->06ba1db9. Fused IQ3 and Q4 manifests
+match within each window. This corrects earlier overbroad source-
+stability wording; G2b audit was right. IQ3 0.14ms delta cannot be
+attributed to GDN alone. New stub now libc-only; r2 launch failed126
+on script execute permission, before GPU. chmod corrected, r3 queued.
+VERDICT: preserve diagnostics; require matched source and clean exit
+for retained recipe. No GPU reset or DD action.
+
+## 2026-10-20 22:36 X5 -- CPU candidate preparation during O4/O5 windows
+
+CONFIG: no GPU work; card1 replay probe queued behind priority pair.
+COMMAND: inspect Q4 serve-loader/shared-expert logs and pinned GGUF
+headers; prepare x5_pack_linear.py and x5_q8_linear.py, both off.
+RESULT: Q4 shared pack refused types0/0/0 because loader dequants
+Q8_0 to BF16. O3 kernels already support Q8_0. Known2D Q8 block
+projections: 257 tensors, 2871001088 BF16 bytes versus
+1525219328 packed bytes. This is weight-storage accounting, not
+measured transfer/latency. First candidate merges compatible projection
+rows in original order; second retains selected Q8 projection payloads
+and can enable existing shared fusion. Embeddings/router/conv unchanged.
+VERDICT: no speed claim yet. Trace selected Q4 before candidates;
+packed-Q8 changes accumulation/activation math and needs fresh PPL,
+coherence/repeat and MTP parity gates. Canonical local collector prepared
+using X4 code; no submission path, no CPU quiet held while GPU queued.
+
+## 2026-10-20 22:39 X5 -- late helper broad binding stalls; narrow replay binding
+
+CONFIG: late-load helper using Bsymbolic, libc-only stub, card1.
+COMMAND: probe-r3, Python/native stack read, stop owned container.
+RESULT: enters stub then spins in first graph.replay (x1 probe line30),
+before X1_EVENTLESS_REPLAY_ACTIVE. Python stack retained; native unwind
+failed UNW_EBADREG. Stopped finite failed probe; exit143, post-health
+queued. No numerical/RNG/lifecycle pass. No reset.
+VERDICT: broad Bsymbolic may bind SYCL weak/inline symbols locally.
+Rebuild with version-script localizing ONLY XPUGraphImpl::replay; all
+SYCL/Torch runtime symbols keep normal interposition. Queue r4 with
+120s body timeout inside container, never on lease wait. CPU MAX4.
+
+## 2026-10-20 22:40 X5 -- replay bridge recursion identified on CPU
+
+CONFIG: disassemble late helper wrapper, no new GPU work.
+COMMAND: objdump --disassemble=b70_x5_eventless_impl.
+RESULT: mov vtable(%rdi),rax; jmp *0x28(rax). The wrapper used virtual
+replay dispatch and returned to preload stub, an infinite tail-call
+cycle before the implementation body. This explains r3's CPU spin;
+Bsymbolic/SYCL binding was only a hypothesis. R4 cancelled while
+pre-health still queued behind F1, before GPU acquisition.
+VERDICT: qualify XPUGraphImpl::replay explicitly to suppress virtual
+dispatch, retain replay-only local symbol binding. CPU rebuild then
+probe-r5; inspect disassembly before accepting its gate.
+
+## 2026-10-20 22:41 G2b -- audit pass 25
+
+CONFIG: CPU only. No GPU, no server, no commit. Findings F234-F238.
+COMMAND: compared the 22:13 through 22:40 notes with the four x5 EV serve logs, bench/quality/repeat JSON, source SHA maps, f1/run-p3 probe and serve logs, and x5/eventless-lazy probe-r3 plus objdump of libx5_eventless_helper.so. git status in this clone and the fork.
+RESULT: all four 35B EV serves end gpu-run exit 139 after queueFinish/queueRelease and __cxa_finalize. IQ4 C1 itl_p50 11.015 ms, decode_tok_s 92.437, PPL 8.70159088. Q4 C1 itl_p50 10.957 ms, decode_tok_s 92.930, PPL 8.51682205. First id hotschmoe-dd on every arm. Card-1 health HEALTHY before and after. IQ4 ple_device.py changed during its window. F1 p3 identity hotschmoe-dev, census max_rows 5428 and max_padded_rows 32256, Level Zero error 40, HTTP 500, SERVE_RC 0. The 262144-row pad is not in the log. Window READY:1 22:22:36 is probe t0; the serve log READY hit is only VLLM_ENGINE_READY_TIMEOUT_S. r3 exits 143 with the Python stack in x1_eventless_probe.py:30. The helper on disk is a direct jmp to XPUGraphImpl::replay, not a vtable indirect jmp. Q8 byte totals were not in a log. HEAD 6d08fbf4, porcelain 27, only the known push .so. Fork 0a6170da8c, 749 insertions. Deferred at append: none.
+VERDICT: no Flash-Next promotion. The new ITLs are 35B proxy numbers with teardown exit 139 and the campaign name wrong. F1 p3 did not finish a prefill rate. r3 did not pass replay.
+
+## 2026-10-20 22:49 X5 -- qualified-call replay primitive passes normal exit
+
+CONFIG: libc-only stub425788b2; late helper SHA256
+b2668e593652a74eec46be295958ad6d0ff5b21b50591b28713e0ae641f8c4a7, localized/direct replay call;
+card1 pinned, reclaim0, no model.
+COMMAND: x5_lazy_window.sh PROBE_TAG=r5;2066replays and RNG under
+120s in-container body bound, no timeout around21600s lease queue.
+RESULT: exact replay values/RNG pass; RSS708988->751284KiB (+42296);
+normal Python return and process exit0,15s body incl entry checks.
+Native pre-health HEALTHY; post-health queued behind O4 short probe.
+VERDICT: bridge recursion fixed. No full-serving lifecycle or memory
+stability claim. Q4 full request/repeat/PPL/parity control auto-queues
+only after this post-health is HEALTHY. No DD action or reset.
+
+## 2026-10-20 22:45 O4 -- f7 bf16 GEMV epilogue: C1 16.68 ms; f7ut census; recipe files
+
+CONFIG: f6 + B70_GEMV_BF16=1 with B70_GGUF_SO=o4/_C.o4g.so (repo csrc +
+gemv_out). Recipe now in harness/o4_recipe.env; harness/o4_serve.sh is
+the HTTP serve window (identity, greedy, bench_latency) for O5/F1.
+COMMAND: o4_window.sh TAG=f7, f7ut (unitrace); raw o4/run-f7, run-f7ut.
+RESULT: gates pass, c2 same_text; C1/C2 token ids identical to f6.
+C1 step 16.68 ms (graph 15.80), C2 19.92 ms (graph 18.78). Health
+HEALTHY around both. Trace: card 0 2259 kernels/step (was 4827 at
+ringmlock), kernel sum 16.54 ms incl lm_head 0.77: gemm 2.30 (HC up 97,
+router 48, GDN b/a 72), dense GGUF 5.1 (Q6_K 1.86 at ~460 GB/s, Q5_K,
+IQ4_XS, Q4_K, IQ3_S 0.61), HC down bf_gemv 1.51, card-0 MoE+shared
+~3.1, TopKGating 0.61, GDN 0.72, ep_wait 0.34 (card 1 now marginally
+later than card 0), q8 quant 0.30, casts 0.33.
+VERDICT: GPU is ~fully busy; remaining wins are kernel time. Triton
+softmax top-k (xpu/topk_decode.py, B70_DECODE_TOPK=1) is 0.268 vs 0.551
+ms per 48 calls, same expert ids on 600 random cases, weights within 1-3
+ulp (not bitwise; libdevice exp tried). B70_LINEAR_CAT=1 fuses GDN b|a
+into one GEMM. f8 = f7 + both, queued.
+
+## 2026-10-20 22:50 F1 -- p4: card 1 on capped dq+bmm tiles; 2040-2280 tok/s
+
+CONFIG: p3 serve plus B70_EP_PREFILL_C1_MAXPAD (card-1 cap on padded
+rows per bucketed call), card 0 at B70_PREFILL_MAX_PAD_ROWS=65536, bf16
+return. Arms via the control file; one load, READY 22:43:05.
+COMMAND: TAG=p4 F1_ARMS="fast:32 maxpad 16384 (profile on, then off);
+fast:16 maxpad 16384; fast:32 maxpad 32768; fused chunk 4096 (control)"
+harness/f1_window.sh; raw f1/run-p4/.
+RESULT: health before/after HEALTHY. Gates 323/667 pass on every arm;
+32K filler math 323/667. Warm TTFT (tok/s), profile off:
+| arm | 8186 tok | 12283 tok | 32763 tok |
+| fast:32 maxpad 16384 | 3.68 s (2223) | 6.26 s (1961) | 16.92 s (1936) |
+| fast:16 maxpad 16384 | 4.21 s (1946) | 6.81 s (1805) | 18.26 s (1794) |
+| fast:32 maxpad 32768 | 3.59 s (2278) | 6.02 s (2040) | 16.46 s (1991) |
+| fused chunk 4096     | 4.52 s (1811) | 7.56 s (1624) | 20.36 s (1610) |
+Profile (fast:32/16384, card-1 events): card-1 experts 2.25-2.5 s per
+12288 chunk (47-52 ms/layer; 4.0-4.1 s on the fused path), card-0
+experts 1.27-1.55 s, card-0 wait+add 0.34 s (was 4.4 s), push 0.27 s.
+Card 1 after layer 0: 1.19 GiB free; no OOM at maxpad 32768. Card-1
+bucket census at 8186 tokens: 374 experts, 64204 slots, hottest expert
+5426 rows, 9 buckets, 13 calls at tile 32.
+VERDICT: card 1 on X3's bucketed dequant+bmm path with a 32-expert tile
+and a 32768 padded-row cap is the recipe: 2278 tok/s at 8K and 2040 at
+the 12288 chunk, above the 2000 target and X3's DP2 best (2615 at 12288)
+is still ahead; 32K is 1991 with dense FA. At 12288 the measured MoE
+pieces (push 0.27 + c0 experts 1.3 + wait 0.34 + shared 0.09 = 2.0 s)
+plus X3's dense census 2.34 s leave ~1.7 s unaccounted; p5 adds host
+timers and the inter-layer device gap, and an A/B of the push on a
+card-0 side stream, then the full 1K-128K sweep, decode and gates.
+
+## 2026-10-20 22:54 X5 -- corrected replay health closes; bounded Q4 queue
+
+CONFIG: card1 only, no CPU quiet while waiting.
+COMMAND: probe-r5 post-health; q4-lazy-control controller and deferred
+q4-lazy-trace controller.
+RESULT: native post-health HEALTHY15s. Full Q4 serve waiting since
+22:49 behind O4 f8 pair. Expected proxy serve body2-3min; trace3min.
+VERDICT: need bounded card1 gaps after priority pair work; each job
+releases its lease separately. No owned server running yet. Replay
+primitive and lifecycle exit0 are closed; API lifecycle remains open.
+
+## 2026-10-20 23:06 X5 -- Q4 late-load lifecycle fixed, C2 repeat gate FAIL
+
+CONFIG: q4-lazy-control, BF16 D3, O3g, late replay, no MTP.
+COMMAND: full window incl native post-health; inspect ALL gate RCs.
+RESULT: clean serve exit0, no worker force-kill, pre/post-health
+HEALTHY, source hashes unchanged. C1p50=10.9098ms,C2=12.9485/13.0183;
+PPL8.51682205. C1 repeat exact; C2 Paris differs at34, Fibonacci exact.
+Later old-baseline comparison passes all6 streams. Window gate_rc=3.
+Earlier commentary incorrectly generalized that later parity pass
+to all request gates; actual repeat fails and recipe is NOT qualified.
+VERDICT: preserve failure, no promotion. Original deferred trace and
+candidate controllers exited3 without GPU after gate rejected. Restart
+trace explicitly as diagnosis (not qualification), add C1-vs-C2 tokens
+comparison. Packed Q8 may remove batch-dependent dense BF16 kernels,
+but must pass fresh same-load repeat and MTP parity before retention.
+
+## 2026-10-20 23:13 X5 -- prepare complete MoE arithmetic consistency control
+
+CONFIG: CPU only while trace waits behind F1 p5 pair.
+COMMAND: inspect ops_interface.moe grouped T>8 dispatch and shared
+fusion T<=8 guard; prepare x5_canonical_moe.py, not wired/enabled.
+RESULT: a running decode row mixed with prefill can cross the dispatch
+boundary. X1 B70_MTP_CANONICAL_MOE chunks routed work only; shared
+expert still falls back. New opt-in TP1 wrapper chunks COMPLETE MoE
+apply into8, collects routed/shared outputs, and stores complete shared
+output for the outer runner. EP mapping bypasses it. No kernel change.
+VERDICT: known math-path inconsistency, not a proven complete cause
+of Q4 C2 mismatch. Needs fresh quality/repeat/MTP parity. Preserve
+current trace source; wire after trace, then trial combined packed-Q8/
+projection/consistency candidate in one load to reduce setup cost.
+Deferred candidate controller cancelled before GPU for this review.
+
+## 2026-10-20 23:30 F1 -- p5: qualification sweep 1K-128K, host budget; native card-1 op built
+
+CONFIG: p4 recipe (bf16 return, card 1 = X3 bucketed dq+bmm, tile 32,
+padded-row cap 32768; card 0 = same path, tile 64, cap 65536), plus host
+timers and an inter-layer device gap in the profile, and an opt-in push on
+a card-0 side stream (ctl key push=side; ids0 then computed in torch).
+Serve :18140 max_len 147456, batched 12288, seqs 2. READY 23:10:50.
+COMMAND: TAG=p5 harness/f1_window.sh, arms main/side x profile on/off,
+lengths 1024,8192,12288,32768,131072, 32K filler math, C1/C2 decode;
+raw f1/run-p5/. Build: cpu-run f1/build_bucket.sh ->
+f1/_C.f1bucket.so (sha 790230cb; C13 wide dequant + new
+b70_gguf::prefill_moe_bucketed from plugins/b70_gguf_xpu/csrc/bucket_moe.cpp).
+RESULT: health before/after HEALTHY. Gates 323/667 pass on all 4 arms,
+32K filler math 323/667, Paris coherence ok/same. Clean TTFT (profile
+off, push=main / push=side): 1018 tok 1.33 / 1.34 s (763 tok/s); 8186
+tok 3.57 / 3.57 s (2295 / 2293); 12283 tok 5.97 / 6.00 s (2059 / 2046);
+32763 tok 16.33 / 16.34 s (2006 / 2005); 131067 tok 93.5 / 93.5 s (1402).
+Decode C1 ITL p50 18.47 ms, C2 22.73 / 22.73 ms (O4 f4 unchanged).
+Profile at 12288 (first chunk): card-0 non-MoE device time between
+layers 1.93-1.96 s (41 ms/layer; X3 census 49 incl. glue), push 0.27 s,
+card-0 experts 1.16-1.19 s (24 ms/layer), shared 0.09, wait+add 0.36,
+card-1 experts 2.0-2.3 s device (42-48 ms/layer) with host_c1 1.9-2.3 s
+(40-48 ms/layer of Python in the 13-call bucket loop) and host_c0
+3.2-3.7 s, which is the card-0 bucket grouping .cpu() sync absorbing
+the dense trunk. 128K: the between-layers term grows 1.96 -> 7.9 s per
+chunk over the 11 chunks (dense FA over the growing context); MoE terms
+flat. push=side is neutral: the push is not on the critical path.
+VERDICT: 2000+ tok/s holds at 8K, 12288 and 32K on the sidecar with
+decode untouched; 128K is attention-bound at 1402 (QSA is the lever
+there, not experts). The remaining expert-side gap to X3's DP2 2615 is
+host launch time: one host thread drives both cards, and card 1's
+Python bucket loop (40-48 ms/layer) overlaps only card 0's 24 ms of
+experts. The native op moves that loop into C++ (device
+histogram/scan/scatter, one D2H, host plan, per chunk index_select +
+wide dequant + pad/inverse + 2 oneDNN bmm + swiglu + deterministic
+combine, no atomics). p6 queued: c1=native:32, c0=native:64 arms vs
+the fast:32 control, 1K-32K, gates, 32K coherence, decode.

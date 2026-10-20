@@ -12,10 +12,14 @@ export TMPDIR="$OUT/tmp" MAX_JOBS=4
 cp "$REPO/vllm/flashnext/harness/patches/x1_eventless.cpp" "$OUT/helper.cpp"
 cat >> "$OUT/helper.cpp" <<'CPP'
 extern "C" void b70_x5_eventless_impl(void* self) {
-    static_cast<at::xpu::XPUGraphImpl*>(self)->replay();
+    // Qualified call is essential: virtual dispatch returns to the stub.
+    static_cast<at::xpu::XPUGraphImpl*>(self)->at::xpu::XPUGraphImpl::replay();
 }
 CPP
-"$ONEAPI/bin/icx" --gcc-toolchain="$TC" -std=c11 -O2 -fPIC -shared "$REPO/vllm/flashnext/harness/patches/x5_eventless_stub.c" \
+cat > "$OUT/helper.map" <<'MAP'
+{ local: _ZN2at3xpu12XPUGraphImpl6replayEv; };
+MAP
+"$ONEAPI/bin/compiler/clang" --gcc-toolchain="$TC" -std=c11 -O2 -fPIC -shared "$REPO/vllm/flashnext/harness/patches/x5_eventless_stub.c" \
   -Wl,--as-needed -ldl -o "$OUT/libx5_eventless_stub.so"
 if [[ "${STUB_ONLY:-0}" == 1 ]]; then
   readelf -d "$OUT/libx5_eventless_stub.so" | rg NEEDED
@@ -28,9 +32,10 @@ fi
   -I"$TORCH/include" -I"$TORCH/include/torch/csrc/api/include" \
   -D_GLIBCXX_USE_CXX11_ABI=1 "$OUT/helper.cpp" \
   -L"$TORCH/lib" -L"$VENV/lib" -ltorch_xpu -ltorch_cpu -lc10_xpu -lc10 -lsycl \
-  -Wl,-Bsymbolic -Wl,-rpath,"$TORCH/lib" -Wl,-rpath,"$VENV/lib" -Wl,-rpath,"$ONEAPI/lib" \
+  -Wl,--version-script,"$OUT/helper.map" -Wl,-rpath,"$TORCH/lib" -Wl,-rpath,"$VENV/lib" -Wl,-rpath,"$ONEAPI/lib" \
   -o "$OUT/libx5_eventless_helper.so"
-# Bsymbolic is required: helper->replay must bind locally, not recurse into stub.
+# Localize only replay: its wrapper must not recurse into the preload stub.
+# Do not use Bsymbolic: SYCL's inline/weak runtime symbols must interpose normally.
 readelf -d "$OUT/libx5_eventless_stub.so" | rg NEEDED
 sha256sum "$OUT"/*.so
 echo X5_LAZY_EVENTLESS_BUILD_OK

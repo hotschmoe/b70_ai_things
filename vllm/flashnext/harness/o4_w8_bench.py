@@ -25,13 +25,13 @@ L = 96
 for name, N, K in (("down", 324, 10240), ("up", 10240, 320)):
     Ws = [torch.randn(N, K, device="xpu", dtype=torch.bfloat16) * 0.02 for _ in range(L)]
     Q = [o4.quantize_w8(w) for w in Ws]
-    for M in (1, 2, 4, 8):
+    for M in (1, 2, 4):
         x = torch.randn(M, K, device="xpu", dtype=torch.bfloat16)
         q, s = Q[0]
         deq = (q.float().reshape(N, K // 32, 32) * s.float()[..., None]).reshape(N, K)
         ref = (x.float() @ deq.t())
         bf = torch.nn.functional.linear(x, Ws[0]).float()
-        for ks in ((4, 2, 1) if name == "down" else (1, 2)):
+        for ks in ((4, 8, 16) if name == "down" else (0, -2, -8)):
             y = o4.w8_gemv(x, q, s, ks).float()
             err = ((y - ref).abs().max() / ref.abs().max()).item()
             qerr = ((ref - bf).abs().max() / bf.abs().max()).item()

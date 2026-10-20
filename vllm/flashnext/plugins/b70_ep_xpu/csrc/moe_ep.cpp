@@ -81,6 +81,7 @@ struct State {
     MoeFn moe = nullptr;
     Moe2Fn moe2 = nullptr;
     bool with_shared = false;
+    bool out_bf16 = false;
     ReserveFn reserve = nullptr;
     void* so = nullptr;
     Region inbox, psum, flag_in, flag_ret;
@@ -321,17 +322,21 @@ void ep_register_shared(int layer, const uint8_t* sg, int sgt, const uint8_t* su
     L.has_shared = sg != nullptr && su != nullptr && sd != nullptr;
 }
 
-void ep_moe_sh(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer) {
+void ep_moe_sh(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer,
+               bool bf16_out) {
     State& s = S();
     if (!s.moe2) throw std::runtime_error("moe_ep_sh: the MoE library has no b70_moe_layer2");
     s.with_shared = true;
+    s.out_bf16 = bf16_out;
     try {
         ep_moe(x, w, ids, y, T, topk, K, layer);
     } catch (...) {
         s.with_shared = false;
+        s.out_bf16 = false;
         throw;
     }
     s.with_shared = false;
+    s.out_bf16 = false;
 }
 
 void ep_register_map(int layer, const int32_t* map0, const int32_t* map1, int nexp) {
@@ -530,7 +535,10 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
     }
     if (y == nullptr) return;  // O4 split: ep_moe_end enqueues the wait and the sum.
     ep_wait(a, flag_ret, ctr0, spin, s.err0 + layer, 12);
-    ep_add_uncached(a, y, s.y0, static_cast<float*>(s.psum.local), n4);
+    if (s.out_bf16)
+        ep_add_uncached_bf16(a, reinterpret_cast<uint16_t*>(y), s.y0, static_cast<float*>(s.psum.local), n4);
+    else
+        ep_add_uncached(a, y, s.y0, static_cast<float*>(s.psum.local), n4);
     s.calls += 1;
 }
 

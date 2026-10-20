@@ -2,6 +2,9 @@
 # X1's Torch-08187d9e eventless replay, inside the existing single-card lease.
 set -euo pipefail
 SHIM=/mnt/vm_8tb/b70/build/vllm-flashnext/x1/eventless/libx1_eventless.so
+if [[ "${B70_X5_EVENTLESS_LAZY:-0}" == 1 ]]; then
+  SHIM=/mnt/vm_8tb/b70/build/vllm-flashnext/x5/eventless-lazy/libx5_eventless_stub.so
+fi
 test -f "$SHIM"
 echo X5_EVENTLESS_SHIM
 sha256sum "$SHIM"

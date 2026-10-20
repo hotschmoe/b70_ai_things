@@ -17,6 +17,8 @@ test -f "$WEIGHTS"
 sha256sum "$SO"
 ENV_ARGS=(--env "B70_D3_GDN=${B70_D3_GDN:-0}" --env "B70_FUSE_SHARED=${B70_FUSE_SHARED:-1}")
 ENV_ARGS+=(--env "B70_X5_PACK_LINEAR=${B70_X5_PACK_LINEAR:-0}")
+ENV_ARGS+=(--env "B70_X5_Q8_LINEAR=${B70_X5_Q8_LINEAR:-0}")
+ENV_ARGS+=(--env "B70_X5_EVENTLESS_LAZY=${B70_X5_EVENTLESS_LAZY:-0}")
 if [[ "${B70_X5_GDN_BF16:-0}" == 1 ]]; then
   ENV_ARGS+=(--env B70_D3_GDN=0 --env B70_X5_GDN_BF16=1
     --env "B70_GDN_SO=$B/x5/gdn-bf16/libb70_gdn_xpu.so")
@@ -31,7 +33,7 @@ ARGS=(vllm serve /mnt/cache/b70/devmodel/Qwen/Qwen3.6-35B-A3B
 if [[ "$MTP_TOKENS" != 0 ]]; then
   ARGS+=(--speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${MTP_TOKENS}}")
 fi
-if [[ "${B70_X5_GDN_BF16:-0}" == 1 || "${B70_X5_PACK_LINEAR:-0}" == 1 ]]; then
+if [[ "${B70_X5_GDN_BF16:-0}" == 1 || "${B70_X5_PACK_LINEAR:-0}" == 1 || "${B70_X5_Q8_LINEAR:-0}" == 1 || "${B70_X5_EVENTLESS_LAZY:-0}" == 1 ]]; then
   ARGS=(/opt/venv/bin/python "$REPO/vllm/flashnext/harness/x5_api.py" "${ARGS[@]:1}")
 fi
 if [[ "${B70_X5_EVENTLESS:-0}" == 1 ]]; then

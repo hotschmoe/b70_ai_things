@@ -20,6 +20,8 @@ _FUSE_SHARED = os.environ.get("B70_EP_FUSE_SHARED") == "1"
 # F1: B70_EP_PREFILL=1 routes T > 8 through prefill_ep (two-card prefill).
 _PF_ON = os.environ.get("B70_EP_PREFILL") == "1"
 _ZERO: dict = {}
+# O4: B70_EP_BF16_OUT=1 has the fused call write bf16 (moe_ep_shb, needs o4c+).
+_BF16_OUT = os.environ.get("B70_EP_BF16_OUT") == "1"
 
 
 def install() -> None:
@@ -257,7 +259,10 @@ def _make_class():
             ids = topk_ids if topk_ids.dtype == torch.int32 else topk_ids.to(dtype=torch.int32)
             if not ids.is_contiguous():
                 ids = ids.contiguous()
-            y = torch.ops.b70_ep.moe_ep_sh(xb, w, ids, int(self._layer_idx))
+            if _BF16_OUT and x.dtype == torch.bfloat16:
+                y = torch.ops.b70_ep.moe_ep_shb(xb, w, ids, int(self._layer_idx))
+            else:
+                y = torch.ops.b70_ep.moe_ep_sh(xb, w, ids, int(self._layer_idx))
             key = (tuple(x.shape), x.dtype)
             zero = _ZERO.get(key)
             if zero is None:

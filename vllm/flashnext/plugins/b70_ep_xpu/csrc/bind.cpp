@@ -136,6 +136,19 @@ at::Tensor moe_ep_sh_op(at::Tensor x, at::Tensor w, at::Tensor ids, int64_t laye
                      y.data_ptr<float>(), (int)x.size(0), (int)ids.size(1), (int)x.size(1), (int)layer);
     return y;
 }
+at::Tensor moe_ep_shb_op(at::Tensor x, at::Tensor w, at::Tensor ids, int64_t layer) {
+    need_xpu(x, "x");
+    need_xpu(w, "w");
+    need_xpu(ids, "ids");
+    TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2, "x must be bf16 [T, K]");
+    TORCH_CHECK(w.scalar_type() == at::kFloat && w.dim() == 2, "w must be fp32 [T, topk]");
+    TORCH_CHECK(ids.scalar_type() == at::kInt && ids.sizes() == w.sizes(), "ids must be int32 [T, topk]");
+    auto y = at::empty({x.size(0), x.size(1)}, x.options());
+    b70ep::ep_moe_sh(static_cast<const uint16_t*>(x.data_ptr()), w.data_ptr<float>(), ids.data_ptr<int32_t>(),
+                     static_cast<float*>(y.data_ptr()), (int)x.size(0), (int)ids.size(1), (int)x.size(1), (int)layer,
+                     true);
+    return y;
+}
 // O4 split: begin returns the fp32 output buffer; end fills it in place.
 at::Tensor moe_ep_begin_op(at::Tensor x, at::Tensor w, at::Tensor ids, int64_t layer) {
     need_xpu(x, "x");
@@ -199,6 +212,7 @@ TORCH_LIBRARY(b70_ep, m) {
     m.def("moe_ep(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
     m.def("ep_register_shared(int layer, Tensor sg, int sgt, Tensor su, int sut, Tensor sd, int sdt, Tensor sgi) -> Tensor");
     m.def("moe_ep_sh(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
+    m.def("moe_ep_shb(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
     m.def("moe_ep_begin(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
     m.def("moe_ep_end(Tensor(a!) y, int layer) -> ()");
     m.def("ep_capture_begin(int key) -> Tensor");
@@ -217,6 +231,7 @@ TORCH_LIBRARY_IMPL(b70_ep, XPU, m) {
     m.impl("moe_ep_begin", moe_ep_begin_op);
     m.impl("ep_register_shared", ep_register_shared_op);
     m.impl("moe_ep_sh", moe_ep_sh_op);
+    m.impl("moe_ep_shb", moe_ep_shb_op);
     m.impl("moe_ep_end", moe_ep_end_op);
 }
 

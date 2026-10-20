@@ -14,12 +14,15 @@ NAME=vllm-fn-x5-profile
 UT=/mnt/vm_8tb/b70/build/strata-ab/pti-gpu/tools/unitrace/build/unitrace
 "$REPO/bin/gpu-run" --card 1 "$REPO/bin/xpu-health" --card 1 > "$OUT/health-before.txt" 2>&1
 grep -q 'xpu-health: HEALTHY' "$OUT/health-before.txt"
+python3 "$REPO/vllm/flashnext/harness/x5_manifest.py" "$OUT/source-before.json"
 # Keep CPU quiet out of the queue. The profile process waits for a trigger
 # after loading; the host holds quiet from that trigger through completion.
 CMD=(/opt/venv/bin/python "$REPO/vllm/flashnext/harness/x5_profile.py")
 RECLAIM=500
 EXTRA=()
 EXTRA+=(--env "B70_X5_PACK_LINEAR=${B70_X5_PACK_LINEAR:-0}")
+EXTRA+=(--env "B70_X5_Q8_LINEAR=${B70_X5_Q8_LINEAR:-0}")
+EXTRA+=(--env "B70_X5_EVENTLESS_LAZY=${B70_X5_EVENTLESS_LAZY:-0}")
 if [[ "${UT_TRACE:-0}" == 1 ]]; then
   CMD=(bash -c "export LD_LIBRARY_PATH=$B/o4/zelayers:\$LD_LIBRARY_PATH; exec $UT -d --chrome-kernel-logging --teardown-on-signal 10 --session x5$TAG --follow-child-process 0 --output-dir-path $OUT/trace -o $OUT/trace/timing.txt /opt/venv/bin/python $REPO/vllm/flashnext/harness/x5_profile.py")
   EXTRA+=(--env "O4_UT_SESSION=x5$TAG")
@@ -46,7 +49,11 @@ cleanup() { docker stop -t 15 "$NAME" >/dev/null 2>&1 || true; wait "$SPID" 2>/d
 trap cleanup EXIT
 for ((i=0;i<7200;i++)); do
   a=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
-  if ((a < 8388608)); then cleanup; break; fi
+  if ((a < 8388608)) && [[ "$(docker inspect --format '{{.State.Running}}' "$NAME" 2>/dev/null || true)" == true ]]; then
+    echo ABORT_LOW_RAM
+    cleanup
+    break
+  fi
   if [[ -f "$OUT/profile-ready" ]] || ! kill -0 "$SPID" 2>/dev/null; then break; fi
   sleep 3
 done
@@ -79,6 +86,8 @@ PY
   if [[ "$QUIET_RC" != 0 ]]; then cleanup; fi
 fi
 wait "$SPID" || RC=$?
+echo "${RC:-0}" > "$OUT/process-exit-code.txt"
+python3 "$REPO/vllm/flashnext/harness/x5_manifest.py" "$OUT/source-after.json"
 cleanup
 trap - EXIT
 "$REPO/bin/gpu-run" --card 1 "$REPO/bin/xpu-health" --card 1 > "$OUT/health-after.txt" 2>&1

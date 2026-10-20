@@ -21,11 +21,18 @@ grep -q 'xpu-health: HEALTHY' "$OUT/health-before.txt"
 python3 "$REPO/vllm/flashnext/harness/x5_manifest.py" "$OUT/source-before.json"
 "$REPO/vllm/flashnext/harness/x5_serve_proxy.sh" > "$OUT/serve.log" 2>&1 &
 SPID=$!
-( while kill -0 "$SPID" 2>/dev/null; do
+( owned_start=0
+  while kill -0 "$SPID" 2>/dev/null; do
     available=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
-    if ((available < 8388608)); then
-      if [[ "$(docker inspect --format '{{.State.Running}}' "$NAME" 2>/dev/null || true)" == true ]]; then
+    if [[ "$(docker inspect --format '{{.State.Running}}' "$NAME" 2>/dev/null || true)" == true ]]; then
+      if ((owned_start == 0)); then owned_start=$SECONDS; fi
+      if ((available < 8388608)); then
         echo "ABORT_LOW_RAM $available"
+        docker stop -t 10 "$NAME" >/dev/null 2>&1 || true
+        break
+      fi
+      if ((SECONDS - owned_start > ${X5_MAX_WINDOW_SECONDS:-600})); then
+        echo ABORT_WINDOW_DEADLINE
         docker stop -t 10 "$NAME" >/dev/null 2>&1 || true
         break
       fi
@@ -34,12 +41,22 @@ SPID=$!
   done ) &
 WPID=$!
 cleanup() {
+  if [[ "${cleaned:-0}" == 1 ]]; then return 0; fi
+  cleaned=1
   kill "$WPID" 2>/dev/null || true
   wait "$WPID" 2>/dev/null || true
   docker stop -t 15 "$NAME" >/dev/null 2>&1 || true
-  wait "$SPID" 2>/dev/null || true
+  if wait "$SPID"; then serve_rc=0; else serve_rc=$?; fi
+  echo "$serve_rc" > "$OUT/serve-exit-code.txt"
+  echo "SERVE_EXIT_CODE=$serve_rc"
 }
 trap cleanup EXIT
+gate_rc=0
+record_rc() {
+  echo "${1}_RC=$2"
+  if [[ "$2" != 0 ]]; then gate_rc=$2; fi
+  return 0
+}
 ready=0
 for ((i=0;i<7200;i++)); do
   if curl -sf "http://127.0.0.1:$PORT/v1/models" > "$OUT/models.json"; then ready=1; break; fi
@@ -69,31 +86,38 @@ if ((ready)); then
   set +e
   "$REPO/bin/cpu-run" --quiet "$PY" "$REPO/vllm/flashnext/harness/x1_compare_greedy.py" \
     --url "http://127.0.0.1:$PORT" --out "$OUT/greedy.json" --respect-eos
-  echo GREEDY_RC=$?
+  record_rc GREEDY "$?"
   "$REPO/bin/cpu-run" --quiet "$PY" "$REPO/vllm/flashnext/harness/x1_compare_greedy.py" \
     --url "http://127.0.0.1:$PORT" --out "$OUT/repeat.json" --respect-eos --baseline "$OUT/greedy.json"
-  echo REPEAT_RC=$?
+  record_rc REPEAT "$?"
   "$REPO/bin/cpu-run" --quiet "$PY" "$REPO/vllm/flashnext/harness/bench_latency.py" \
     --base-url "http://127.0.0.1:$PORT" --model hotschmoe-dd --alias "$ALIAS" \
     --out "$OUT/bench.json" --decode-tokens 128 --skip-prefill --tag "X5-$TAG"
-  echo BENCH_RC=$?
+  record_rc BENCH "$?"
   if [[ "$MTP_TOKENS" == 0 ]]; then
     "$REPO/bin/cpu-run" --quiet "$PY" "$REPO/vllm/flashnext/harness/x5_quality.py" \
       --url "http://127.0.0.1:$PORT" --out "$OUT/quality.json"
-    echo QUALITY_RC=$?
+    record_rc QUALITY "$?"
     STOCK=${X5_COMPARE_BASELINE:-$B/x5/${QUANT,,}-mtp0-gdn0-ev${B70_X5_EVENTLESS:-0}/greedy.json}
     if [[ "${B70_X5_GDN_BF16:-0}" == 1 && -f "$STOCK" ]]; then
       "$REPO/bin/cpu-run" --quiet "$PY" "$REPO/vllm/flashnext/harness/x1_compare_greedy.py" \
         --url "http://127.0.0.1:$PORT" --out "$OUT/stock-parity.json" --respect-eos --baseline "$STOCK"
-      echo STOCK_PARITY_RC=$?
+      record_rc STOCK_PARITY "$?"
     fi
   else
     BASE=${X5_BASELINE:-$B/x5/${QUANT,,}-mtp0-gdn${B70_X5_GDN_BF16:-0}-ev${B70_X5_EVENTLESS:-0}/greedy.json}
     if [[ -f "$BASE" ]]; then
       "$REPO/bin/cpu-run" --quiet "$PY" "$REPO/vllm/flashnext/harness/x1_compare_greedy.py" \
         --url "http://127.0.0.1:$PORT" --out "$OUT/parity.json" --respect-eos --baseline "$BASE"
-      echo PARITY_RC=$?
+      record_rc PARITY "$?"
+    else
+      echo PARITY_MISSING_BASELINE
+      gate_rc=3
     fi
+  fi
+  if [[ "${X5_LMX:-0}" == 1 ]]; then
+    "$REPO/bin/cpu-run" --quiet "$PY" "$REPO/vllm/flashnext/harness/x5_lmx_local.py" "$OUT"
+    record_rc LOCALMAXXING "$?"
   fi
   curl -sf "http://127.0.0.1:$PORT/metrics" > "$OUT/metrics.txt"
   python3 "$REPO/vllm/flashnext/harness/x5_manifest.py" "$OUT/source-after.json"
@@ -102,6 +126,8 @@ fi
 cleanup
 trap - EXIT
 "$REPO/bin/gpu-run" --card "$CARD" "$REPO/bin/xpu-health" --card "$CARD" > "$OUT/health-after.txt" 2>&1
-echo "X5_WINDOW_DONE ready=$ready"
+echo "X5_WINDOW_DONE ready=$ready serve_rc=$serve_rc gate_rc=$gate_rc"
 grep -q 'xpu-health: HEALTHY' "$OUT/health-after.txt"
 test "$ready" = 1
+if [[ "$serve_rc" != 0 ]]; then exit "$serve_rc"; fi
+exit "$gate_rc"

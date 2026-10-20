@@ -116,7 +116,13 @@ def _make_hook(name: str):
                 "nreq": REC["nreq"],
                 "pos0": REC["pos0"],
                 "mod": name,
-                "h0": _h(t[:1]),
+                "h0": _h(t[:1]) + (
+                    _h(out[1][:1])
+                    if isinstance(out, (tuple, list)) and len(out) > 1 and isinstance(out[1], torch.Tensor)
+                    and out[1].dim() and out[1].shape[0] == nt
+                    else ""
+                ),
+                "hin": _h(inp[0][:1]) if (inp and isinstance(inp[0], torch.Tensor) and inp[0].dim() and inp[0].shape[0] == nt) else None,
                 "hreq": _h(t[: REC["rows0"]]),
             }
         )

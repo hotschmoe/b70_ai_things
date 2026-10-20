@@ -6410,3 +6410,58 @@ Evidence: x5/ud-iq3_xxs-mtp0-gdn1-ev1/health-after.txt now contains xpu-health H
 Verdict: OK that the IQ3 card-1 post-health line is now HEALTHY in 21s, which closes the open item in F228. OK that the IQ4 pre-health file is HEALTHY on card 1. No new latency. The campaign name and the linear.py mismatch in F228 are unchanged. The extra IQ4 health-after file is a health result only.
 
 Suggested fix: keep IQ4 latency off the record until its bench JSON is cited.
+
+
+## Pass 25 -- 2026-10-20 22:41 UTC
+
+Journal after the 22:08 addendum: X5 teardown and IQ4/Q4 numbers, F1 p3 OOM, X5 source correction, late-load r1/r3, and the CPU replay-binding notes through 22:40.
+
+### F234 -- four X5 eventless 35B serves exit 139 after request checks
+
+Claim: stock IQ3, fused IQ3, and IQ4 finish request gates and then exit 139 in queueFinish/queueRelease during finalizer teardown. The parent force-kills the worker about 5s after shutdown done. IQ4 C1 p50 is 11.02 ms, C2 p50 is 12.87/12.79 ms, PPL is 8.70159088, and the repeat passes. Q4_K_M C1 p50 is 10.96 ms, C2 p50 is 12.94/12.96 ms, PPL is 8.51682205 on 2044 tokens. Q4 is the selected four-bit candidate. A later note adds Q4 as the fourth exit-139 serve. Native post-health passes. No promotion.
+
+Evidence: each serve.log ends gpu-run exit 139 and contains queueFinish, queueRelease, and __cxa_finalize beside a sycl::_V1::queue vector destructor. Shutdown-done to force-kill timestamps are 5s on stock IQ3, IQ4, and Q4, and 4s on fused IQ3 (21:56:40 to 21:56:44). The words stream-pool are absent. Window logs still show client rc 0 and X5_WINDOW_DONE ready=1. IQ4 bench itl_p50_ms is 11.015152, C2 12.873609 and 12.787370, decode_tok_s 92.437, 1000/p50 = 90.784. PPL 8.701590882651692, scored_tokens 2044, same corpus prefix efd86268. Repeat identical true, first_mismatch all None. Q4 itl_p50_ms 10.957061, C2 12.944775 and 12.955760, decode_tok_s 92.930, 1000/p50 = 91.265. PPL 8.516822052463134, scored 2044, same corpus prefix. Repeat identical true. All four first ids are hotschmoe-dd with first_ok true and expect_first hotschmoe-dd. Coherence ok/same/mentions_paris true. mtp.enabled false. Card-1 health-before and health-after are HEALTHY on all four arms. DEVICE_LOST count is 0. Serve READY count is 0 aside from no clock line; Application startup complete is present.
+
+Verdict: OK on exit 139, the queueFinish/queueRelease/__cxa_finalize stack, the IQ4 and Q4 percentiles, both PPL values, 2044 tokens, repeat identity, and card-1 health. WRONG on the campaign name for every arm. The window rc does hide the 139, as the note says. UNVERIFIED the label "torch stream-pool"; the stack names a sycl::queue vector. The fused-IQ3 force-kill gap is 4s on the timestamps, not 5s. These are 35B proxy harness ITLs, not Flash-Next, and teardown failure blocks a stability promotion. 1000/p50 is 90.78 on IQ4 and 91.27 on Q4. Q4's lower PPL and similar p50 match the selection sentence as a request-level comparison only.
+
+Suggested fix: record gpu-run exit 139 next to the p50. Keep hotschmoe-dev first. Do not promote a recipe whose serve log ends 139.
+
+### F235 -- X5 source hashes and the late-load stub
+
+Claim: stock IQ3 EV1 linear.py changed 47cc6319 to ebb1d9c9. IQ4 ple_device.py changed fafd61fe to 06ba1db9. Fused IQ3 and Q4 are stable inside their windows. The IQ3 0.14 ms gap is not GDN-only. r1 exits 127 because libintlc.so.5 is missing, and both health checks pass. r2 exits 126 on script permission. The clang stub is libc-only. The r2 build succeeds in 21s.
+
+Evidence: source SHA maps match F227 and F228 for linear.py, and IQ4 ple_device.py is fafd61fe20a8 before and 06ba1db939fc after. Fused IQ3 and Q4 have no changed SHA keys. probe-r1/probe.log contains the libintlc.so.5 load error and gpu-run exit 127. exit-code.txt is 127. health-before and health-after are HEALTHY on card 1. launch-probe-r2.log says Permission denied on x5_lazy_window.sh and does not print 126. build-r2.log exits 0 in 21s and its NEEDED set includes libsvml, libirng, libimf, and libintlc.so.5. build-r4-clang.log NEEDED line is only libc.so.6, exit 0.
+
+Verdict: OK on the two source diffs, the two stable arms, and the agreement with F227/F228. OK on r1 exit 127, the missing libintlc, and both health lines. OK that the clang stub log is libc-only. The permission failure is real; the numeral 126 is not in the launch log. The 21s success is build-r2, which is not the libc-only stub. No new serving speed in this note.
+
+Suggested fix: cite build-r4-clang.log for the libc-only NEEDED line, and keep build-r2 separate.
+
+### F236 -- F1 p3 tile-32 prefill dies with Level Zero error 40
+
+Claim: p2 health-after is HEALTHY. p3 health-before is HEALTHY and READY is 22:22:36. The first 8186-token fast:32 request sees card 1 E=374, slots=64340, max_rows=5428, buckets=9. A 32-expert tile in an 8192-row bucket pads to 262144 rows and about 1.3 GB, and card 1 has 1.19 GiB free. Level Zero error 40, HTTP 500, serve rc 0.
+
+Evidence: f1/run-p2/health-after.txt is HEALTHY on cards 0 and 1, 33s exit 0. p3 health-before and health-after are HEALTHY on cards 0 and 1, 28s and 26s, exit 0. models.json and probe.json first id is hotschmoe-dev. Gates 323 and 667 match. The failing row is arm profile=1 ret=bf16 c1=fast:32, built 8186, prompt_tokens null, prefill_tok_s null, wall_ms 2112.250511, then HTTP 500. Serve log: card 1 census E=374, T=8186, slots=64340, max_rows=5428, buckets=9, tile=32, max_padded_rows=32256. Error text is level_zero error 40 UR_RESULT_ERROR_OUT_OF_RESOURCES. Window SERVE_RC:0 and PROBE_RC:1. The only serve.log READY hit is VLLM_ENGINE_READY_TIMEOUT_S. Window READY:1 22:22:36 matches probe t0. String 262144 is absent. A separate line says card1 free=1.19 GiB at T=12288, not on the T=8186 census line. 32*8192 = 262144, and 262144*2560*2 is 1.342e9 bytes, which is a derivation rather than a logged allocation.
+
+Verdict: OK on identity, gates, both health files, p2 post-health, the census fields, error 40, HTTP 500, and SERVE_RC 0. WRONG that the serve log shows an engine READY at 22:22:36. That clock is the harness flag at probe start. WRONG that this request's logged pad is 262144 rows. max_padded_rows is 32256. The 1.3 GB figure is not a logged byte count. The 1.19 GiB free line is real and is stamped T=12288. The 2112 ms wall has null token counts and is not a prefill rate. Not a decode ITL. The run died before the 12288 and 32768 rows.
+
+Suggested fix: quote max_padded_rows 32256. Call 22:22:36 probe t0, not engine READY. Drop 2112 ms from any rate table.
+
+### F237 -- X5 r3 stops in replay, and the helper on disk is a direct jmp
+
+Claim: probe-r3 enters the stub, spins in the first graph.replay at x1_eventless_probe.py line 30, before X1_EVENTLESS_REPLAY_ACTIVE, and exits 143. Native unwind fails UNW_EBADREG. Post-health was queued. The helper wrapper is a vtable load plus jmp *0x28, an infinite tail call. A later rebuild should call XPUGraphImpl::replay directly.
+
+Evidence: probe-r3/python-stack.txt shows replay at torch/xpu/graphs.py:107 called from x1_eventless_probe.py:30, under x5_lazy_probe.py. probe.log contains X5_LAZY_EVENTLESS_STUB_ACTIVE, gpu-run done in 99s exit 143, and zero hits for X1_EVENTLESS_REPLAY_ACTIVE, 2066, and UNW_EBADREG. exit-code.txt is 143. health-after HEALTHY count was 0 at this read. objdump of libx5_eventless_helper.so symbol b70_x5_eventless_impl is `e9 db fa ff ff` then `jmp 2370 <_ZN2at3xpu12XPUGraphImpl6replayEv>`. That is a direct jmp to the mangled replay symbol, not a vtable indirect jmp.
+
+Verdict: OK on the Python stack, the stub-active line, exit 143, and the absence of X1_EVENTLESS_REPLAY_ACTIVE in the probe log. UNVERIFIED UNW_EBADREG, which is not in probe.log. The current helper does not contain the vtable sequence in the note. That sequence was not saved beside the note, so the earlier binary is UNVERIFIED. The file now on disk already jumps straight at XPUGraphImpl::replay. No numerical pass and no speed. Post-health had not printed HEALTHY.
+
+Suggested fix: keep the objdump of the failing binary next to the vtable sentence. Re-disassemble before calling r5 qualified.
+
+### F238 -- hygiene, and the Q8 byte estimate
+
+Claim: Q4 shared pack is refused because the loader dequants Q8_0. There are 257 Q8 block projections, 2871001088 BF16 bytes versus 1525219328 packed bytes. That is storage accounting, not a latency. The repo has no new secret or binary.
+
+Evidence: those three numerals were not found in x5 logs or JSON at this pass. HEAD is 6d08fbf4. Cached diff is empty. Porcelain is 27 rows. The only binary row is the known push-allreduce .so. No secret-like names. vllm/flashnext/.gitignore still lists *.so. Fork HEAD remains 0a6170da8c, shortstat 12 files changed, 749 insertions(+), 48 deletions(-).
+
+Verdict: UNVERIFIED the 257-tensor and byte totals. OK that no speed was claimed for that accounting. OK that porcelain still has only the one known binary and no secret names. This audit made no host change.
+
+Suggested fix: write the tensor count and the two byte totals into the log line that computed them.

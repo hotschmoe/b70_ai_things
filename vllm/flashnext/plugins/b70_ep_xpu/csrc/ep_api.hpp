@@ -23,7 +23,8 @@ void ep_register_map(int layer, const int32_t* map0, const int32_t* map1, int ne
 void ep_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer);
 void ep_register_shared(int layer, const uint8_t* sg, int sgt, const uint8_t* su, int sut, const uint8_t* sd, int sdt,
                         const void* sgi, int sgi_dt);
-void ep_moe_sh(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer);
+void ep_moe_sh(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer,
+               bool bf16_out = false);
 void ep_moe_begin(const uint16_t* x, const float* w, const int32_t* ids, int T, int topk, int K, int layer);
 void ep_moe_end(float* y, int T, int K, int layer);
 void ep_capture_begin(int key);

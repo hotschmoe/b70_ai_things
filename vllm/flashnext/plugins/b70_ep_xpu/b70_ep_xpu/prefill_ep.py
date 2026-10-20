@@ -26,6 +26,7 @@ Env:
 from __future__ import annotations
 
 import os
+import time
 
 _ON = os.environ.get("B70_EP_PREFILL") == "1"
 _INIT = False
@@ -54,6 +55,13 @@ _LOGGED: set = set()
 PROF: dict = {}
 _EVENTS: list = []
 _LAST_LAYER = -1
+_HOST: dict = {}
+_PREV_END = None  # card-0 event at the end of the previous layer's wait+add
+# push=side: ep_dispatch on a dedicated card-0 stream so card 0's shared
+# expert and experts start while the 63 MB push is on the wire. ids0 is then
+# computed on the main stream in torch (the kernel's ids0 output is unused).
+_PUSH_SIDE = os.environ.get("B70_EP_PREFILL_PUSH", "main") == "side"
+_SIDE0 = None
 
 
 def enabled() -> bool:
@@ -124,6 +132,19 @@ def _experts(x, ids, w, gate, up, down, gt: int, ut: int, dt: int, h: int, f: in
 
     from b70_gguf_xpu import serve_prefill
 
+    if mode.startswith("native"):
+        # One C++ op for the whole bucketed layer (bucket_moe.cpp, in the
+        # B70_PREFILL_WIDE_SO library): one host sync per call.
+        from b70_gguf_xpu.prefill import load as _load
+
+        _load()
+        if gt != ut:
+            raise RuntimeError("prefill_moe_bucketed needs gate type == up type")
+        tile = int(mode.split(":", 1)[1]) if ":" in mode else 32
+        maxpad = _C1_MAXPAD if card == 1 else int(os.environ.get("B70_PREFILL_MAX_PAD_ROWS", "65536"))
+        y = torch.ops.b70_gguf.prefill_moe_bucketed(x, ids, w, gate, up, down, gt, dt, h, f, tile, maxpad)
+        _note(f"c{card}-native", f"card {card} experts: native bucketed op tile={tile} maxpad={maxpad}")
+        return y
     if mode.startswith("fast"):
         tile = None
         if ":" in mode:
@@ -158,7 +179,7 @@ def _experts(x, ids, w, gate, up, down, gt: int, ut: int, dt: int, h: int, f: in
 
 
 def _poll_ctl() -> None:
-    global _CTL_MTIME, _PROF, _RET_BF16, _C1_CHUNK, _C1, _C1_MAXPAD
+    global _CTL_MTIME, _PROF, _RET_BF16, _C1_CHUNK, _C1, _C1_MAXPAD, _PUSH_SIDE, _C0
     if not _CTL:
         return
     try:
@@ -182,10 +203,14 @@ def _poll_ctl() -> None:
             _C1_CHUNK = int(v)
         elif k == "c1":
             _C1 = v.lower()
+        elif k == "c0":
+            _C0 = v.lower()
         elif k == "c1_maxpad":
             _C1_MAXPAD = int(v)
+        elif k == "push":
+            _PUSH_SIDE = v.lower() == "side"
     _EVENTS.clear()
-    print(f"b70_ep: prefill ctl profile={int(_PROF)} ret={'bf16' if _RET_BF16 else 'fp32'} c1={_C1} c1_chunk={_C1_CHUNK} c1_maxpad={_C1_MAXPAD}", flush=True)
+    print(f"b70_ep: prefill ctl profile={int(_PROF)} ret={'bf16' if _RET_BF16 else 'fp32'} c0={_C0} c1={_C1} c1_chunk={_C1_CHUNK} c1_maxpad={_C1_MAXPAD} push={'side' if _PUSH_SIDE else 'main'}", flush=True)
 
 
 def apply(method, layer, x, topk_weights, topk_ids, shared_experts=None, shared_experts_input=None):
@@ -215,11 +240,33 @@ def apply(method, layer, x, topk_weights, topk_ids, shared_experts=None, shared_
     h = int(layer.b70_hidden_size)
     f = int(layer.b70_intermediate)
 
+    global _PREV_END, _SIDE0
+    t_host0 = time.perf_counter()
     if _PROF:
         s_disp = [_ev()]
-    ids0, x1, w1, ids1 = torch.ops.b70_ep.ep_prefill_dispatch(xb, w, ids, map0, map1, int(n0), int(e1), li)
-    if _PROF:
-        _mark("c0_dispatch_push", 0, s_disp)
+        if _PREV_END is not None:
+            # Non-MoE time since the previous layer's add: attention, GDN,
+            # HC, norms, router, plus any host gap on card 0.
+            _EVENTS.append(("c0_between_layers", 0, _PREV_END, s_disp[0]))
+    if _PUSH_SIDE:
+        if _SIDE0 is None:
+            _SIDE0 = torch.xpu.Stream(device=xb.device)
+        main0 = torch.xpu.current_stream(xb.device)
+        _SIDE0.wait_stream(main0)
+        with torch.xpu.stream(_SIDE0):
+            _, x1, w1, ids1 = torch.ops.b70_ep.ep_prefill_dispatch(xb, w, ids, map0, map1, int(n0), int(e1), li)
+            # Inputs live until the push kernel finishes on the side stream.
+            xb.record_stream(_SIDE0)
+            w.record_stream(_SIDE0)
+            ids.record_stream(_SIDE0)
+            if _PROF:
+                _mark("c0_dispatch_push", 0, s_disp)
+        ok = (ids >= 0) & (ids < int(map0.numel()))
+        ids0 = torch.where(ok, map0[ids.clamp(min=0).long()], torch.full_like(ids, -1))
+    else:
+        ids0, x1, w1, ids1 = torch.ops.b70_ep.ep_prefill_dispatch(xb, w, ids, map0, map1, int(n0), int(e1), li)
+        if _PROF:
+            _mark("c0_dispatch_push", 0, s_disp)
 
     # Shared expert on card 0 while card 1 receives and computes.
     if shared_experts is not None and method.mk_can_overlap_shared_experts:
@@ -230,6 +277,7 @@ def apply(method, layer, x, topk_weights, topk_ids, shared_experts=None, shared_
         if _PROF:
             _mark("c0_shared", 0, s_sh)
 
+    t_host1 = time.perf_counter()
     if _PROF:
         s_c0 = [_ev()]
     y0 = _experts(xb, ids0, w, layer.b70_w_gate, layer.b70_w_up, layer.b70_w_down, gt, ut, dt, h, f, _C0, 0)
@@ -238,6 +286,7 @@ def apply(method, layer, x, topk_weights, topk_ids, shared_experts=None, shared_
     if _PROF:
         _mark("c0_experts", 0, s_c0)
 
+    t_host2 = time.perf_counter()
     with torch.xpu.device(1):
         if _PROF:
             s_c1 = [_ev()]
@@ -264,13 +313,21 @@ def apply(method, layer, x, topk_weights, topk_ids, shared_experts=None, shared_
             print(f"b70_ep: prefill after layer 0 card1 free={free1/2**30:.2f} GiB "
                   f"reserved={torch.xpu.memory_reserved(1)/2**30:.2f} GiB T={t}", flush=True)
 
+    t_host3 = time.perf_counter()
     if _PROF:
         s_ret = [_ev()]
     y = torch.ops.b70_ep.ep_prefill_return(y1, y0, li)
     if _PROF:
-        _mark("c0_wait_add", 0, s_ret)
+        e_ret = _ev()
+        _EVENTS.append(("c0_wait_add", 0, s_ret[0], e_ret))
+        _PREV_END = e_ret
+        t_host4 = time.perf_counter()
+        for k, v in (("host_dispatch", t_host1 - t_host0), ("host_c0", t_host2 - t_host1),
+                     ("host_c1", t_host3 - t_host2), ("host_return", t_host4 - t_host3)):
+            _HOST[k] = _HOST.get(k, 0.0) + v * 1e3
         if li == _LAST_LAYER:
             _flush_profile(t)
+            _PREV_END = None
     return y.to(dtype=x.dtype)
 
 
@@ -287,7 +344,9 @@ def _flush_profile(t: int) -> None:
         acc[1] += 1
     _EVENTS.clear()
     parts = " ".join(f"{k}={v[0]:.1f}ms/{v[1]}" for k, v in sorted(sums.items()))
-    print(f"EP-PF PROFILE T={t} {parts}", flush=True)
+    hosts = " ".join(f"{k}={v:.1f}ms" for k, v in sorted(_HOST.items()))
+    _HOST.clear()
+    print(f"EP-PF PROFILE T={t} {parts} | host {hosts}", flush=True)
     PROF.clear()
     PROF.update({k: v[0] for k, v in sums.items()})
     PROF["T"] = t

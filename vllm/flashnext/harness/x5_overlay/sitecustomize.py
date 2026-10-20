@@ -6,6 +6,16 @@ from pathlib import Path
 
 _patches = Path(__file__).resolve().parents[1] / "patches"
 runpy.run_path(str(_patches / "sitecustomize.py"))
+if os.environ.get("B70_X5_EVENTLESS_LAZY") == "1":
+    import ctypes
+    import torch
+
+    if not hasattr(torch, "_x5_eventless_helper"):
+        torch._x5_eventless_helper = ctypes.CDLL(
+            "/mnt/vm_8tb/b70/build/vllm-flashnext/x5/eventless-lazy/libx5_eventless_helper.so",
+            mode=ctypes.RTLD_GLOBAL,
+        )
+        print("X5_EVENTLESS_HELPER_LOADED_AFTER_TORCH", file=sys.stderr, flush=True)
 if os.environ.get("B70_X5_GDN_BF16") == "1":
     # Same D3 wrapper and geometry, with BF16 guards matching the isolated
     # BF16 build. B70_D3_GDN=0 prevents loading the FP16 library first.
@@ -18,6 +28,10 @@ if os.environ.get("B70_X5_GDN_BF16") == "1":
     sys.modules[module.__name__] = module
     exec(compile(source, str(_patches / "d3_gdn.py"), "exec"), module.__dict__)
     module.install()
+if os.environ.get("B70_X5_Q8_LINEAR") == "1":
+    from x5_q8_linear import install
+
+    install()
 if os.environ.get("B70_X5_PACK_LINEAR") == "1":
     from x5_pack_linear import install
 

@@ -1,11 +1,12 @@
 # X5 -- Qwen3.6-35B-A3B proxy best-stack comparison
 
-In progress. Request-level identity/coherence/exact-repeat and health
-checks pass for completed eventless arms, but all three exit139 during
-SYCL queue finalization. They are diagnostic timings, not qualified
-serves. Earlier teardown summaries missed the child exit status; the
-raw logs are retained and the correction is appended to JOURNAL.md.
-No localmaxxing result has been submitted.
+In progress. No recipe is qualified yet. All three quant formats were
+request-benchmarked, but four early eventless serves exit139 during
+SYCL finalization. The late-loaded helper fixes full Q4 shutdown
+(exit0, healthy pre/post checks, stable source hashes), but that run
+fails same-load C2 exact repeat: Paris differs at token34. C1 repeat
+and a later old-baseline comparison pass; neither clears the C2
+failure. All timings below remain diagnostic. No submission.
 Non-speculative decode is the headline. Flash-Next MTP remains with O5;
 X1's implementation and findings are in reports/1X1_mtp.md.
 
@@ -54,12 +55,17 @@ ITL columns are SSE inter-chunk p50, not MTP effective token latency.
 | IQ3, stock GDN, eventless | 8.83 | 11.14 / 11.02 | 9.09554 | exact C1+C2 | HEALTHY / exit139 |
 | IQ3, BF16 fused GDN, eventless | 8.69 | 10.74 / 10.77 | 9.09554 | exact repeat and stock parity | HEALTHY / exit139 |
 | IQ4_XS, BF16 fused GDN, eventless | 11.02 | 12.87 / 12.79 | 8.70159 | exact C1+C2 | HEALTHY / exit139 |
+| Q4_K_M, BF16 fused GDN, eventless | 10.96 | 12.94 / 12.96 | 8.51682 | exact C1+C2 | HEALTHY / exit139 |
+| Q4_K_M, BF16 fused GDN, late helper | 10.91 | 12.95 / 13.02 | 8.51682 | C2 repeat FAIL at34 | HEALTHY / exit0 |
 
 C1 p90/p99=9.04/9.17ms,115.11tok/s,63completion tokens through EOS.
 C2 stream0 p99=71.60ms includes a concurrency-admission/prefill gap;
 this is not a steady-tail qualification. Eventless output also matches
 all initial ordinary-control C1/C2 token IDs from before that control's
-stall. Before/after source hashes match in the retained eventless arm.
+stall. The stock-IQ3 eventless window changed linear.py on disk during the
+run, and the IQ4 window changed ple_device.py. Fused-IQ3 and Q4
+source hashes match within their windows. The 0.14ms IQ3 difference
+is not an isolated GDN speedup; a matched source rerun is required.
 
 The ordinary reclaim500 arm passed the initial6-request greedy gate.
 X4 then completed4x96tokens in its first C1 round and timed out60s in
@@ -155,3 +161,23 @@ X5 needs a bounded card1 window after current O4/O5/F1 priority work.
 Stock proxy body is about2min plus health. Trace and every subsequent
 quant arm release the lease independently. CPU preparation is done,
 and the master does not hold CPUquiet while deferred or queued.
+
+## Late-load replay lifecycle investigation
+
+All four early EV1 API serves exit139 in Torch stream-pool/SYCL
+queue destruction despite completing request gates and native health.
+The original window discarded wait status; this is fixed and those
+results are not qualified. The late variant preloads only a libc C
+stub, then loads the same X1 replay body after normal Torch import.
+The wrapper must call XPUGraphImpl::replay with explicit qualification:
+virtual dispatch recurses into the stub (confirmed by disassembly in
+failed probe-r3). Preserve normal SYCL symbol interposition and bind
+only the implementation replay locally.
+
+Corrected probe-r5 passes2066exact replays, captured RNG advancement,
+and NORMAL Python return/exit0 in15s, with42,296KiB RSS growth. This
+is not a leak/stability claim. Pre/post-health pass. Full
+Q4 API lifecycle also exits0 cleanly, but its C2 repeat gate fails
+as detailed above. Constructor-ordering was a hypothesis; the late
+helper is a measured lifecycle fix, not proof of a precise UMD cause. The build/probe sources and every failed
+launch remain under harness/x5_* and x5/eventless-lazy/.

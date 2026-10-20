@@ -15,7 +15,7 @@ set +e
   --env "LD_PRELOAD=$B/x5/eventless-lazy/libx5_eventless_stub.so" \
   --env "PYTHONPATH=$B/vllm:$REPO/vllm/flashnext/harness" \
   --env B70_XPU_CG_RECLAIM=0 --env SYCL_CACHE_PERSISTENT=0 \
-  -- /opt/venv/bin/python "$REPO/vllm/flashnext/harness/x5_lazy_probe.py" > "$OUT/probe.log" 2>&1
+  -- timeout --signal=TERM --kill-after=10 120 /opt/venv/bin/python "$REPO/vllm/flashnext/harness/x5_lazy_probe.py" > "$OUT/probe.log" 2>&1
 RC=$?
 set -e
 echo "$RC" > "$OUT/exit-code.txt"
