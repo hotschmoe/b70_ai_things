@@ -349,3 +349,42 @@ prefill cache entry, and make the progress watchdog tolerate the previously
 observed139s healthy32K fixture phase. Use a bounded, decode-owned cache;
 do not evict workspaces referenced by captured graphs. Independent review
 is in reports/3A1_audit.md. DD stays down throughout this campaign.
+
+The fresh native/r2 QSA serving pair now closes operationally, with normal
+engine teardown, both-card HEALTHY, no new kernel faults and unchanged
+486-file source/SO/fixture identities. Actual r2 activation is12 persistent
+decode owners, B4/66048 score columns/cap2051, warmed before capture.
+Configured65536/chunk12288/4/no-spec/prefix-off is matched. Realized auto KV
+capacity changes234->233 blocks (567978->565551 tokens), so effective memory
+capacity is not identical. This is one fixed-order diagnostic pair.
+
+| C1 median ITL | Native ms | R2 ms |
+|---|---:|---:|
+| Short benchmark | 18.15 | 22.75 |
+| 4K | 30.173 | 28.780 |
+| 16K | 47.574 | 28.828 |
+| 32K | 70.833 | 28.918 |
+
+At32K C2 medians improve about76.94->34.64ms, but first-stream p99 remains
+about9s and mean387.35->346.68ms. Both arms fail strict repeat/reference
+gates; arithmetic and short coherence pass. Native prefill is unchanged,
+and full long-client duration only drops216->207s. Keep r2 opt-in: no
+universal speed, fidelity, stability or daily-driver qualification.
+See reports/3Q1_qsa.md and independent3A1_audit.md for full stream evidence.
+
+Next no-spec work: the retained default lacks both B70_EP_ROUTE and
+B70_DECODE_HC_Q8F. Earlier Lc enabled them (plus older FA/HC settings) and
+measured a gain; it is not today's canonical61.64tok/s recipe. Current
+F1EPc249cf94e already contains the route operation, so retest ONLY those
+two flags with original FA, F1 prefill and plan0/N1off before integrating
+new HC kernels. A separate M1 subgroup HC component is CPU-built and
+queued under root coordination; it has no serving qualification.
+
+HC component probe-r1 then fails before timing: existing_fused differs
+from original on a large_gate synthetic case, and its fail-fast assertion
+masks the new candidate comparison. Body17s, no leftover container,
+card1 post-health HEALTHY/source hashes unchanged. Keep this raw reject.
+Pause full route/Q8F serves until a bounded partial-report repair records
+all variants independently, mismatch magnitude and affected outputs.
+No kernel rebuild, relaxed exactness gate or speed result is authorized
+by this failure. Reports/3D1_decode.md owns the subsequent evidence.

@@ -867,3 +867,157 @@ component gain; preserve4K regression and model-pressure limits. Proceed
 only through parent's separately reviewed default-off serving pair.
 No serving speed, fidelity, stability,200K or fault-clearance claim.
 No additional GPU work queued; nativehealth and leases cleanly closed.
+
+## Fresh full native/R2 pair - operational PASS, strict fidelity FAIL
+
+CONFIG: source checkpointce380a0f, all486source/fork-diff/library identities
+frozen across both arms. Both cards, original O4+F1, QSA enabled, decode
+selector native versus fused R2 only; N1/D1/P1/oneDNN-deterministic flags0.
+Maxlen65536/chunk12288/maxseq4/TP1, noMTP/speculative_confignull, prefix
+cachefalse, compilation0/NONE, FULL_DECODE_ONLY captures1/2/4 and2warmups.
+Same exact4096/16384/32768 prompts/token IDs/Strata no-draft references,
+64outputs, two C1 requests and oneC2pair per fixture. Prefill stays native.
+The registered aliases are q1-native and q1-fused-r2, hotschmoe-dd first.
+
+COMMAND: both pin
+B70_Q1_FUSED_SO=/mnt/vm_8tb/b70/build/vllm-flashnext/q1/fused-r2/libq1_fused_r2.so
+with SHA23e456afdc5ab7bff44b40a45fe51744773d19fe2191eb6f3963f57871d69325.
+`B70_Q1_SELECTOR=native TAG=q1-selector-native-r1 bash harness/q1_selector_window.sh`,
+then `B70_Q1_SELECTOR=fused TAG=q1-selector-fused-r2-r1 bash harness/q1_selector_window.sh`
+with that explicitSO environment. Treatment starts only after control's
+operational/config/source/SO/health closure. No edits or extra GPU tests
+between arms;180s whole-fixture output budget, no extension/reset/retry.
+Timed clients hold cpu-run --quiet outside the serving lease. D1's cached
+CPU build waited for the control client to finish and ended before the
+R2 timed client, using the same CPU lock; no latency/build overlap.
+
+RESULT: native start18:32:49/READY18:36:44/classifierclosure18:41:13;
+R2 start18:41:57/READY18:45:17/classifierclosure18:49:38. Startup durations
+are observations, not a matched load-speed comparison. Both wrappers
+exit0 operational_complete=true, issues=[], source/extra/SO/config/activation
+all0. X6 exits1 for strict gates in both arms. Both arithmetic323/667,
+short coherence, aliases and12QSA page bindings pass. R2 has12distinct
+scope=decode owners, actual capacity4/columns66048/cap2051; all activation
+lines precede profiling-KV planning. FULLcaptures1/2/4 complete. Native
+has no selector-overlay activation. Decoder workspace ownership is live
+QsaBatch-scoped; prefill and foreign buffers retain the native selector.
+
+Fresh long-context ITL, milliseconds; pairs are C2stream0/stream1. C1 is
+solo1. This finite64output suite is a diagnostic, not the canonical512
+benchmark or a speed/fidelity promotion.
+
+| Context/arm | C1 p50/mean | C2 p50 | C2 mean | C2 p99 |
+|---|---:|---:|---:|---:|
+| 4096/native | 30.173/30.166 | 35.538/35.530 | 35.252/35.408 | 36.168/36.233 |
+| 4096/R2 | 28.780/28.790 | 34.378/34.348 | 34.140/34.254 | 35.172/35.259 |
+| 16384/native | 47.574/47.441 | 53.158/53.162 | 52.659/52.941 | 53.750/53.894 |
+| 16384/R2 | 28.828/28.707 | 34.568/34.568 | 34.333/34.334 | 35.142/35.303 |
+| 32768/native | 70.833/70.551 | 76.937/76.893 | 387.347/76.428 | 8990.109/77.945 |
+| 32768/R2 | 28.918/28.654 | 34.638/34.609 | 346.678/34.055 | 8981.122/35.351 |
+
+C1median falls4.6/39.4/59.2% at4K/16K/32K on this pair. Short24token
+benchmark regresses: C1p5018.151->22.749ms (+25.3%); C2p5022.592/22.594
+->27.253/27.253ms (+20.6%). Preserve that tradeoff. The earlier component
+used147456score columns, while this real serve uses66048; do not directly
+transfer its4K regression or memory estimate to this narrower serving
+shape. No hybrid tuning was added to this pair.
+
+Observed TTFT seconds and prompt_tokens/TTFT as prefill proxy. C1solo1;
+C2stream0/1. Proxy includes first-content behavior and is not an isolated
+prefill-kernel benchmark. Decode-only selection does not accelerate the
+native per-query-tile prefill score/top-k/union path.
+
+| Context/arm | C1 TTFT s | C1 prompt tok/s | C2 TTFT s | C2 prompt tok/s |
+|---|---:|---:|---:|---:|
+| 4096/native | 2.806 | 1459.7 | 5.630/5.651 | 727.5/724.9 |
+| 4096/R2 | 2.823 | 1451.2 | 5.650/5.671 | 725.0/722.3 |
+| 16384/native | 12.549 | 1305.7 | 24.563/24.592 | 667.0/666.2 |
+| 16384/R2 | 12.532 | 1307.4 | 24.581/24.609 | 666.5/665.8 |
+| 32768/native | 31.214 | 1049.8 | 43.005/62.803 | 762.0/521.8 |
+| 32768/R2 | 31.256 | 1048.4 | 43.037/62.818 | 761.4/521.6 |
+
+The first16KR2 solo TTFT is15.190s versus native13.057s; retain both
+cold and warm raw requests rather than hiding that variation. Warm
+TTFTs remain essentially unchanged, including32K at31.214/31.256s.
+No prefill improvement claim. Request-duration-derived phase estimates
+(sum two solo wall_ms plus max C2wall_ms) are native17.471/59.512/138.896s
+andR217.281/58.114/131.079s. They exclude tokenizer/thread/serialization
+and concurrent-origin skew; not exact complete phase walltimes. Complete
+long clients run216s/207s. Both remain within unchanged180s per-fixture
+publication budget; no stall is inferred from buffered log silence.
+
+Strict results: both arms repeat_gate=false and strata_gate=false,
+qualification_pass=false. Every24long stream has64completion tokens,
+64content chunks and63ITL samples, with matching usage/prompt counts.
+All arrival/ITL arrays are retained and internally consistent. Short
+bench output retains summaries only; no per-token arrays invented.
+
+| Context/arm | Solo0/1 vs Strata | C2stream0/1 vs Strata | Solo repeat | C2 vs solo0 |
+|---|---|---|---|---|
+| 4096/native | PASS/PASS | FAIL/FAIL | PASS | FAIL/FAIL |
+| 4096/R2 | PASS/PASS | FAIL/PASS | PASS | FAIL/PASS |
+| 16384/native | FAIL/FAIL | FAIL/FAIL | FAIL | PASS/FAIL |
+| 16384/R2 | FAIL/FAIL | FAIL/FAIL | FAIL | FAIL/FAIL |
+| 32768/native | FAIL/FAIL | FAIL/FAIL | PASS | PASS/PASS |
+| 32768/R2 | FAIL/FAIL | FAIL/FAIL | FAIL | PASS/PASS |
+
+Aligned native/R2 output exactness (solo0,solo1,C2s0,C2s1) is4K[T,T,F,F],
+16K[F,F,T,F],32K[T,F,T,T]. At32K all4native outputs are identical;
+R2solo0 and bothC2 match that text whileR2solo1 differs. At4K both arms'
+C1outputs match Strata; aggregatefailure must not be described as C1
+mismatch. Baseline nondeterminism/Strata drift limits attributing text
+variation uniquely to R2. Component integer-ID parity is strong evidence
+for the selector semantics, not general model correctness qualification.
+
+Tail:32KC2s0 first3arrival offsets native43.005/56.602/62.769s and
+R243.037/56.621/62.781s, giving first2gaps13.597/6.167s and13.584/6.160s.
+Other stream firstcontent is62.803/62.818s. This suggests the long gaps
+occur while the other request still awaits first content; each request
+has an independent time origin and launch skew is unmeasured, so this is
+not absolute overlap proof or scheduling causality. No stall/fault claim.
+The tail persists despite the much lower normal ITL; mean/tail must stay
+visible alongside medians.
+
+Source/fixture/SO maps match exactly across arms, including486file
+snapshots/head/diff/untracked state. Actual workload/config fields match
+apart from derived KV plan: native234blocks/567978tokens/concurrency8.6667
+versusR2233/565551/8.6296. Do not normalize away those differences. A
+quant_config same-class object repr differs only by process address,
+separately identified as address metadata in reviewed-summary.json.
+Profiling captures0.30/0.35GiB and availableKV8.55/8.49GiB; finalcaptures
+0.00/0.02GiB. R2workspace is activated before KV planning, consistent
+with the small realized-capacity reduction rather than an unaccounted
+post-planning allocation. This is planned capacity, not200K qualification.
+
+Both actual EngineCore processes drain/requestcomplete, managerstopped
+and HTTPshutdown normally; no forcedkill/engineerror. Bothnativepre/post
+HEALTHY (post35s each), source/SO checks unchanged, bothleasesfree.
+Read-only kerneljournal since18:32:49 and18:41:57 saved alongside full
+raw outputs; final66/65lines contain no new xeCAT/fault/reset. Native
+32Kread-only liveness observation found the client already complete and
+normal teardown, not a live stall; no signals/watchdog changes were used.
+
+Reproduction/evidence: tracked harness/q1_selector_window.sh and R2
+source/SO map; raw q1/full-q1-selector-native-r1 and
+q1/full-q1-selector-fused-r2-r1 plus corresponding x6 directories.
+CPUcomparison source q1/selector-pair-r1/compare.py SHA
+0fe9389b3c5a538b5bf4c88c75f0dace4d6db420d4eb7aac6f4d47f9840755d7;
+comparison.json preserves complete configs, removals, snapshots, per-output
+text/usage/arrays and cross-arm matrices; reviewed-summary.json retains
+realized-config differences, tail placement and duration caveats. No raw
+artifact rewritten. Parent owns future source checkpoints/GPU scheduling.
+
+VERDICT: one finite matched original-recipe serving pair completes
+operationally, with strong long-context decode improvement and a material
+short-decode regression. Strict fidelity/repeatability remain failed,
+prefill unchanged and C2tail unresolved. Default-off research only; no
+speed/stability promotion,200K or clearance of separate N1/CAT faults.
+No further QSA GPU work queued.
+
+Next hypothesis only: prefill still uses native tiled score/top-k and
+union attention. Before changing it, profile actualB32/64/256 shapes,
+individual GPU critical paths/readiness gaps and loaded VRAM headroom.
+A per-call bounded workspace with smaller query tiles could avoid global
+retention of transient prefill buffers; that is not implemented or timed.
+Parent priorities next remain HCcomponent and retained route/Q8F short
+controls; no additional QSA test or hook change is authorized here.

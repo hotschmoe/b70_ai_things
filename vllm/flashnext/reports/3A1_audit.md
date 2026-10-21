@@ -662,3 +662,275 @@ and transient-prefill ownership before a loaded serve, then require
 actual worker/activation, source/SO/config, coherence and lifecycle
 evidence. No GPU permission, numerical pass or serving readiness is
 implied by this CPU-only review.
+
+## QSA selector preload fixes prepared and CPU-checked in scratch
+
+CONFIG: parent explicitly authorized scratch replacements under
+q1/selector-review-r2 while the D1 serving sources remained frozen.
+No GPU work, build, actual selector execution or campaign source edit
+by A1. Root later ported the reviewed production files after its freeze
+release. This stage supersedes the two unresolved preload issues above.
+
+COMMAND: implement q1_selector_hook.py, q1_selector_outcome.py and
+q1_selector_serve.sh in scratch; run nine focused stdlib fake CPU checks,
+real multiprocessing-spawn/API-import checks, Bash syntax and an offline
+historical-outcome classification. Independently compare root's three
+ported production files byte-for-byte with the checked scratch copies.
+
+RESULT: scope now follows QsaRunner._decode via thread-local batch owner,
+and selection requires exact identity of owner.scores/ids/step. The
+_prefill wrapper clears that scope and restores it in finally, even
+when called inside decode. This is necessary because _prefill's unpooled
+fallback itself calls QsaBatch.run_decode; wrapping that batch method or
+checking batch-size<=4 alone would not reliably preserve native prefill.
+Direct topk calls, transient tiny prefill tails and foreign buffers stay
+native. The scope follows the existing runner dispatch; it does not add
+host reads of device request metadata.
+
+Each persistent QsaBatch owns one selector/workspace plus its exact buffer
+references. No global pointer dictionary retains dead batches. Replaced
+buffers/shapes fail closed instead of evicting or rebinding a workspace
+that a captured graph may own. Same-owner repeated warmups reuse one
+workspace; a fresh batch gets separate state. Keys remain alive with the
+owner, and graph memory ownership still requires actual worker validation.
+No workspace cache is created by the prefill path.
+
+Fused mode lazily imports the ported q1_fused_r2.selector, preserving its
+measured loader and namespace. Default native mode does not patch methods;
+the hook/API pre-worker path imports only stdlib. No FakeTensor kernels
+are added for compilation0/FULL capture; other compilation modes remain
+outside this candidate's qualification.
+
+The wrapper now uses a180s whole-fixture output-progress budget and
+rejects configured values below180. The historical native32K phase is
+approximately139s. A budget stop is explicitly an operational failure,
+not a deadlock diagnosis. The prepared native/fused aliases are q1-native
+and q1-fused-r2; root registered them. Fused mode requires the r2 loader
+port, explicit SO path, and exact match to the measured-library digest
+in q1_fused_r2/measured-source-sha256.json:
+23e456afdc5ab7bff44b40a45fe51744773d19fe2191eb6f3963f57871d69325.
+The real measured SO independently hashes to that value. Selector/API/
+wrapper/fixture/reference/manifest sources are explicitly hashed, in
+addition to broad campaign identity and candidate SO before/after checks.
+
+Operational outcome is separated from strict repeat/reference status.
+The classifier requires all native lifecycle/source/health/error markers,
+identity/arithmetic, the complete fixture sequence and all12content
+streams with authoritative usage. Prompt counts come from frozen fixture
+token-ID lengths, not the target label. Requested output counts come
+from each fixture's max_tokens, and content chunks must be positive,
+without assuming one chunk per token. Missing/partial data fails closed.
+An expected completed strict rejection is retained as false parity flags
+and qualification_pass=false; it does not become a healthy-fidelity claim.
+Outer source/SO/config/actual activation and watchdog checks remain
+mandatory for operational success.
+
+Nine CPU checks pass: persistent workspace reuse, tiny prefill native,
+nested prefill native, exception owner restoration, replaced-buffer
+failure, thread-local owners, owner/workspace garbage collection, spawn
+native/no-Torch and spawn fused/no-Torch. The spawn checks import the
+actual API shim as __mp_main__ and exercise fresh fake target-module
+imports; no Torch module or device operation is loaded. Historical
+x6/flashnext-ista-iq3-xxs-ep-qsa-q1-r1 classifies operational_complete=true,
+strict_repeat=false, strict_strata_reference=false, qualification_pass=false,
+with no issues. This preserves the earlier independently audited outcome.
+
+Root ported production files as harness/q1_selector_hook.py,
+q1_selector_outcome.py and q1_selector_window.sh. All three are
+independently byte-identical to the checked scratch replacements.
+Root separately adapted the CPU check to write fake-runtime artifacts
+outside the repository and reran its nine checks successfully. Scratch
+cpu-result.json, spawn-{native,fused}.json and historical-outcome.json
+preserve A1's original CPU evidence. ASCII and shell syntax checks pass.
+
+VERDICT: the concrete preload issues are addressed in reviewable code
+and targeted CPU regressions. Root owns the new matched full-model GPU
+grant, actual spawn/graph activation, memory, source/config and teardown/
+health evidence. No serving benefit or actual worker integration pass
+is inferred from these CPU-only checks.
+
+## QSA selector pair native-arm audit - healthy diagnostic baseline
+
+CONFIG: CPU-only review after native arm closure; fused-r2 treatment
+is starting and sources remain frozen. Raw q1/full-q1-selector-native-r1
+and x6/flashnext-ista-iq3-xxs-ep-qsa-q1-selector-native-r1. No new test,
+GPU call, heavy CPU work, source change or commit.
+
+COMMAND: independently recompute saved content-arrival/usage/ITL summaries
+and per-output reference equality; inspect actual server-info and
+activation intent, source/SO/fixture/config/health/kernel/lifecycle
+evidence. Compare the native manifest with treatment's initial manifest.
+
+RESULT: operational_complete=true, strict_repeat=false,
+strict_strata_reference=false and qualification_pass=false agree with
+the raw completed client and lifecycle. Stable hotschmoe-dd is first;
+registered research alias is qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-q1-native.
+Actual config has speculation null,prefix cache false,maxlen65536,
+chunk12288,maxseq4,TP1. Native mode is configured and produces no fused
+selector activation marker. Explicit candidate-SO hash23e456... is
+recorded/unchanged for pair identity; native mode does not execute it.
+
+All12requests have64content arrivals,64authoritative completion tokens,
+matching4096/16384/32768fixture usage/hash and63individual ITLs. Every
+TTFT, p50, p99, mean and saved ITL recomputes from the arrays. The native
+second-solo C1 p50 is30.173296/47.574053/70.832722ms at4K/16K/32K;
+C2p50 is35.537847/35.530343,53.157973/53.162010 and
+76.937344/76.892548ms per stream. Short64-token benchmark C1p50 is
+18.150536ms, C2 22.591668/22.594013ms. These are diagnostic baseline
+observations; no treatment gain is available at this cutoff.
+
+At32K, C2stream0 has mean387.346937ms,p99 8990.108941ms and
+decode2.581665tok/s, despite p50 76.937344ms. Its first content is at
+43.005214s, then gaps13.597015s and6.166521s. The other stream's
+first content is62.803493s and its mean is76.427946ms. Those gaps
+overlap the other request awaiting its first token. This is consistent
+with a scheduling/interference hypothesis; it does not identify GPU,
+engine, host or client causation. Report p99/mean and full decode rate
+alongside median; a median-only claim would hide the dominant tail.
+The complete32Kfixture phase takes138.896s, below the corrected180s
+phase-output budget. No watchdog stop occurs.
+
+Reference text match vectors [C1first,C1repeat,C2first,C2second] are
+4K[T,T,F,F],16K[F,F,F,F],32K[F,F,F,F]. C1 repeats match at4K/32K but
+not16K; C2-versus-first-solo vectors are [F,F],[T,F],[T,T]. This is
+known baseline repeat/reference failure, not successful fidelity from
+operational completion. All outputs are truncated64-token reasoning
+prefixes, not answer-quality verdicts.
+
+Actual serving score width follows QsaRunner._limits and QsaBatch:
+ceil(65536/2752)=24blocks, already aligned for the default128token
+block-table alignment, giving66048score columns. The147456environment
+value is the fallback when runtime maxlen is absent. Component fixtures
+used147456columns; the loaded-serving shape is therefore different.
+Native has no selector marker reporting columns, so66048 is source plus
+live-config/block-size derivation here; treatment activation must confirm
+its actual shape before using component timing as a serving predictor.
+
+All486source entries verify bad=[]; treatment's starting486-file ledger
+is byte-identical. The native QSA before/after ledger and seven explicit
+selector/API/wrapper/fixture/reference/manifest entries pass. Twelve QSA
+layers bind, identity/arithmetic/Paris coherence pass, SERVE_RC0 and
+ENGINE_ERROR_RC0 with empty error log. Actual XPUWorker cleanup, stopped
+engine manager and completed FastAPI shutdown appear; native pre/post
+health is HEALTHY on both cards. Kernel summary captures journalctl rc0,
+66lines and no matching fault/reset entries during this arm. Metrics
+connection refusal observed after client completion coincides with
+normal shutdown, not a stalled request.
+
+VERDICT: native arm closes as a healthy finite diagnostic baseline,
+while strict repeat/reference qualification remains false. Preserve
+large32KC2tails and the66048-versus147456shape distinction in the later
+pair assessment. No full-model stability, fidelity or speed promotion
+is established by this single arm.
+
+## Final QSA native/fused-r2 serving-pair audit - context tradeoff
+
+CONFIG: CPU-only audit after both selector arms close. Raw directories:
+q1/full-q1-selector-{native-r1,fused-r2-r1} and corresponding
+x6/flashnext-ista-iq3-xxs-ep-qsa-q1-selector-* directories. One fresh
+process per arm, native first. Same original QSA and native prefill;
+fused-r2 replaces only persistent runner-decode selection. No GPU call,
+new test, heavy CPU work, production source change or commit by A1.
+
+COMMAND: independently recompute all24stream arrivals/usage/ITLs,
+percentiles/means/rates and text-reference flags; compare all saved
+source/SO/fixture ledgers and serialized live configs; inspect actual
+activation order, lifecycle/native health and captured kernel journals.
+
+RESULT: both wrappers report operational_complete=true, strict_repeat=false,
+strict_strata_reference=false,qualification_pass=false. Their underlying
+X6 armRC1 is the completed strict-parity reject; it does not conceal an
+engine error. All486source entries and seven explicit extra identity
+entries match byte-for-byte across arms and verify unchanged afterward.
+Native QSA ledgers match within each arm. Both pin unchanged fused-r2 SO
+23e456afdc5ab7bff44b40a45fe51744773d19fe2191eb6f3963f57871d69325.
+Frozen fixture text hashes, token-ID/usage counts and reference artifact
+identity agree across the pair. Stable hotschmoe-dd is first; the two
+registered research aliases distinguish native and fused-r2.
+
+Actual treatment activation has12unique workspace owners, all
+scope=decode,batch4,columns66048,cap2051, before the first graph-capture
+completion line; no prefill-sized selector workspace appears. This
+confirms real worker import/patch/warmup integration, rather than flag
+intent or component-only activation. The persistent score width66048
+matches the live65536context/block2752 geometry and differs from the
+147456columns used in the prior isolated component profile.
+
+Configured runtime parameters match: speculation null,prefix cache false,
+maxlen65536,chunk12288,maxseq4,TP1. The full serialized live configs are
+not identical: realized GPU blocks234->233, planned KV tokens
+567978->565551 (2427fewer) and computed maximum concurrency
+8.666667->8.629630. First graph reservation is0.30->0.35GiB. These
+are observed treatment-associated footprint/capacity changes, not a
+measured200K capability. Other serialized differences are instance IDs
+and the quant-config object's repr address. Do not describe all actual
+configuration as identical or ignore this capacity cost.
+
+All24responses have64observed content arrivals,64authoritative completion
+tokens, matching4096/16384/32768prompt usage and63saved ITLs. First
+arrival equals TTFT; every saved interval, p50/p90/p99, mean and full
+decode rate recomputes from the arrays. No empty-content wall fallback
+or early completion occurs. The observed ITL tradeoff is:
+
+| Fixture | Native C1 p50 ms | Fused C1 p50 ms | C1 latency change | Native C2 p50 ms | Fused C2 p50 ms |
+| --- | ---: | ---: | ---: | --- | --- |
+| Short64-token bench | 18.150536 | 22.748984 | +25.335% | 22.591668/22.594013 | 27.253158/27.253047 |
+| 4K, second solo | 30.173296 | 28.779576 | -4.619% | 35.537847/35.530343 | 34.378046/34.348109 |
+| 16K, second solo | 47.574053 | 28.827638 | -39.405% | 53.157973/53.162010 | 34.567697/34.568429 |
+| 32K, second solo | 70.832722 | 28.917990 | -59.174% | 76.937344/76.892548 | 34.637872/34.609147 |
+
+Short C2 latency regresses20.634/20.621percent. Long C2 medians improve
+approximately3.26/3.33percent at4K,34.97/34.98percent at16K and
+54.98/54.99percent at32K. These are matched finite diagnostic observations,
+not canonical512-token benchmark or global serving qualification.
+
+The32KC2tail persists. First-stream native/fused mean is
+387.346937/346.677597ms, p99 8990.108941/8981.121534ms and full decode
+rate2.581665/2.884524tok/s. Its median improvement therefore does not
+remove the approximately9s p99 or establish uniformly low latency.
+The second stream mean76.427946->34.054738ms and p99
+77.945226->35.350924ms improves much more consistently. Native first
+stream's two huge initial gaps overlap the other stream awaiting first
+content; the candidate retains a similar pattern. This supports an
+interference/scheduling investigation, not a causal GPU diagnosis.
+
+Observed first-content TTFT remains nearly unchanged in the warmed
+second-solo and C2 requests, consistent with native prefill remaining
+in use. C1 TTFT native->fused is2.806044->2.822570s at4K,
+12.548501->12.531559s at16K and31.213743->31.255721s at32K.
+C2 pairs are5.630264/5.650698->5.649624/5.670908s,
+24.563141/24.592380->24.581406/24.609363s and
+43.005214/62.803493->43.037261/62.817860s. The first16Ksolo is an
+exception:13.057397->15.189530s (+2.132133s), with no proven cause in
+this audit. Do not claim that every prefill timing is unchanged.
+
+Whole long-client logs are216s native and207s fused. Summing observed
+request phases (two solo walls plus maximum C2 wall per fixture) gives
+215.879313->206.473348s,9.405964s saved. Long-context decode improves
+substantially while prefill/TTFT and C2tail occupy much of this short
+64-output workload. Do not substitute a large token-median reduction
+for its much smaller end-to-end client-duration change.
+
+Strict reference/repeat evidence remains mixed. At4K native Strata-text
+matches [T,T,F,F], fused [T,T,F,T]; at16K/32K none of the four outputs
+in either arm matches its single Strata reference. Native C1 repeats are
+[T,F,T] across context
+sizes; fused [T,F,F]. These are baseline and candidate failures, not a
+fidelity fix. Without full-model selected-ID/intermediate comparisons,
+the text differences do not isolate selector causation. All saved
+outputs are64-token reasoning prefixes and do not qualify answer quality.
+
+Both arms bind all12QSA layers, pass identity/arithmetic/Paris coherence,
+complete engine-manager/API shutdown without a forced kill, record
+SERVE_RC0/ENGINE_ERROR_RC0 with empty engine-error logs, and pass native
+both-card pre/post health. Neither phase watchdog fires. Captured kernel
+journals have readRC0 and no matching fault/reset entries in the arm
+windows. These establish finite operational closure and intact recorded
+identity; they do not establish global stability or fault clearance.
+
+VERDICT: fused-r2 is a measured context-dependent decode candidate:
+short decode regresses,16K/32K medians improve markedly, C2tails and
+strict fidelity/repeat failures persist, planned KV capacity drops one
+block. Keep this tradeoff explicit. One fixed-order process pair with
+two C1 streams and one C2 pair per context is not a repeated statistical
+campaign, promotion, quality or external-submission qualification.

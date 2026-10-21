@@ -9863,3 +9863,80 @@ bash-n PASS. Compilation0/directgraph needs noDynamo fake registrations.
 VERDICT: component-only PASS, no full-model pressure/fidelity/stability
 or fault-clearance claim; parent reviews default-off API/shape cache and
 matched full native/r2 serving pair. No Q1GPU or source changes queued.
+
+## 2026-10-21 A1 -- QSA selector preload fixes CPU-pass; root ports
+
+CONFIG: explicitparentscratch-onlyauthorization q1/selector-review-r2;
+noGPU/build/actualselector/campaignsourceeditsbyA1.
+COMMAND: fixdecodeownerscope/cache,180sphasebudget,operationalvsstrict
+classifier;9targetedstdlibfakeCPUchecks+realspawn/APIimports,Bash-n,
+historicalQSAoutcome;compareportedproductionfilesbyte-for-byte.
+RESULT: QsaRunner._decodeauthorizesexactpersistentbuffers;_prefill
+clearsscopeincludingnested/tinytails. Oneworkspace/liveQsaBatch,no
+globalcache/rebindingeviction;bufferreplacementfailsclosed. NineCPU
+checkspass/noTorch. Historicaloperationaltrue/strictrepeatfalse/
+stratafalse/qualificationfalse. Explicitfused-r2SOdigest23e456...
+matchmeasuredmanifest;fullsource/config/activation/healthgatesretained.
+Rootportedhook/outcome/q1_selector_window.sh,allthreebyteidentical,
+adaptedCPUartifactpath+reran9checks.
+VERDICT: pre-loadissuesresolvedinreviewablecode;actualfullworker/
+graph/memory/servequalificationpendingrootGPUgrant. 3A1auditdetails.
+
+## 2026-10-21 A1 -- selector native-arm independent audit
+
+CONFIG: CPUonly completedq1-selector-native-r1;fusedtreatmentloading,
+sourcesfrozen,noGPU/newtests/heavyCPU/sourceedits/commit.
+COMMAND: recompute12streamarrival/usage/ITL/referenceflags;inspect
+liveconfig/source/SO/kernel/engine/nativehealthclosure.
+RESULT: operationaltrue/strictrepeatfalse/stratafalse/qualificationfalse.
+All12streams64arrivals+usage,allITLsummariesrecompute. 32KC2firststream
+p5076.937ms/mean387.347/p998990.109,firstgaps13.597s+6.167s overlap
+otherstreamTTFT62.803s. Whole32Kphase138.896s<180sbudget.486source
+bad[],treatmentinitialledgeridentical,SO23e456...unchanged;normal
+enginecleanup/error0/nativeprepostbothHEALTHY,kernelnomatchingfault.
+VERDICT: healthyfinitebaseline,notfidelity. Realservingwidth66048
+source/config-derivedvscomponent147456;awaittreatmentactivation+
+closurebeforepairclaims. Fulltables/limitsin3A1audit.
+
+## 2026-10-21 A1 -- final QSA selector serving-pair independent audit
+
+CONFIG: CPUonly afterbothnative/fused-r2close;nonewtests/GPU/heavyCPU/
+productionedits/commit. Onefixedorderprocesspair,nativeprefillboth.
+COMMAND: recompute24streamusage/arrivals/ITLs/percentiles/rates/TTFT;
+comparesource486+7extra/SO/fixtures/config/activation/health/kernel.
+RESULT: bothoperationaltrue/strictrepeatfalse/stratafalse/qualfalse;
+allidentitiesmatch.12actualfusedownersB4/cols66048/cap2051beforecapture.
+RealizedKV234->233blocks/567978->565551tokens;graph0.30->0.35GiB.
+C1p50 short18.150536->22.748984ms(+25.335%);4K30.173296->28.779576
+(-4.619%);16K47.574053->28.827638(-39.405%);32K70.832722->28.917990
+(-59.174%).32KC2firstmean387.347->346.678ms/p998990.109->8981.122;
+tailpersists. WarmTTFTnearlyunchanged,first16Ksolo+2.132soutlier.
+Longclient216->207s;allarrays/usage/source/config/normalengine/native
+healthclosurespass,kernelnomatchingfault/reset.
+VERDICT: context-dependentdecodegainwithshortregression,oneblockKV
+cost,largeC2tails+nondeterminism;nostability/quality/promotion/external
+claim. Fulltables/TTFT/limitsinreports/3A1_audit.md.
+
+## 2026-10-21 18:50 Q1 -- full native/R2 pair operational PASS, strict FAIL
+
+CONFIG: ce380a0f sourcefreeze across both arms, bothcards/originalO4F1,
+QSAon/noN1D1P1/MTP/prefix,65536/12288/4/TP1,mode0/FULL1,2,4; samefixtures
+4K16K32K64outputs/C1twice+C2. Decode-only native vsR2SO23e456... pinnedboth.
+COMMAND: B70_Q1_SELECTOR=native TAG=q1-selector-native-r1 thenfused
+TAG=q1-selector-fused-r2-r1, explicitB70_Q1_FUSED_SO, q1_selector_window.sh.
+RESULT: bothoperationaltrue/config/source486/extra/SO/activation0, normal
+EngineCore/APIteardown/nativepostbothHEALTHY35s; bothleasesfree. Kernel
+journals66/65lines/newxeCAT-fault-reset0. R212decodeownersB4/66048/2051,
+profile+finalcapturePASS. C1p50native/R24K30.173/28.780,16K47.574/28.828,
+32K70.833/28.918ms; shortC118.151->22.749ms regresses25.3%. WarmTTFT
+unchanged~2.8/12.5/31.2s; prefillnative.32KC2tail~13.6+6.16s persists.
+All24longstreams64outputs/64chunks/63ITLs+arrays/usage exactcounts. Strict
+repeat/StratafalseBOTHarms, qualificationfalse;4K C1matchesStratabotharms.
+Sources/SOs/fixturesEXACT; derivedKV234->233blocks/567978->565551tokens,
+profilecapture0.30->0.35GiB/availableKV8.55->8.49GiB recorded, nothidden.
+CPUrawcomparison preserved q1/selector-pair-r1; report3Q1 fulltables,
+per-outputexactness/TTFT/prefillproxy/tails/config/health/timinglimits.
+VERDICT: finite operational researchPASS only; longdecodebenefit/short
+regression, no fidelity/stability/200K/fault-clearance promotion. NoQSA
+GPUqueued. NextprefillB32/64/256 criticalpath+VRAM hypothesisonly; parent
+owns HCcomponent and retained route/Q8F short controls next.

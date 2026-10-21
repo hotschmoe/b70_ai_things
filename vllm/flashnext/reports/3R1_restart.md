@@ -252,3 +252,28 @@ reviewed hook must select only persistent decode-owned buffers, retaining
 one workspace per batch and keeping native prefill. Watchdog must allow
 the historical139s full32K fixture phase. Measure fresh native and r2
 serving arms with identical sources/configuration, SOs and fixture IDs.
+
+The native/r2 serving pair now completes operationally. All486 source
+files and explicit SO/fixture identities match; both engines shut down
+normally, pre/post native health passes, and saved kernel windows show
+no new fault/reset entries. Both strict repeat/reference gates fail.
+R2 activates12 decode-owned B4/66048/cap2051 selectors before capture.
+Configured workload/compilation is matched; automatic KV planning loses
+one block,234->233 (567978->565551 tokens), an actual memory cost.
+
+C1 median ITL native->r2: short18.15->22.75ms;4K30.173->28.780;
+16K47.574->28.828;32K70.833->28.918.32K C2 medians improve about
+76.94->34.64ms, but first-stream p99 remains about9s and mean387.35->
+346.68ms. Warm32K solo TTFT31.214->31.256s does not improve: prefill
+remains native. Whole long-client216->207s. Keep this context-dependent
+option opt-in, distinct from a qualified stable serving recipe.
+
+Setup reflection: the pair reused measured binaries and existing exact
+Strata fixtures, omitted redundant F1 probes, and kept DD down. CPU-only
+HC compilation waited behind the native quiet client, completed36s in
+the gap, and did not overlap timed requests. A separate HC component
+then failed its existing-fused large-gate exactness gate before timing;
+body17s, container gone, card1 HEALTHY and all source hashes unchanged.
+Preserve that reject and quantify the masked candidate comparison before
+running full fusion serves. Do not count an incomplete numerical gate
+as a performance result or silently relax it.
