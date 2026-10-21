@@ -27,7 +27,7 @@ B70_AGENT=Q1 "$R/bin/cpu-run" --quiet \
  "$R/vllm/flashnext/harness/xpu-run.sh" --card 1 --name "vllm-fn-q1-topk-$TAG" --memory 12g \
  --env "PYTHONPATH=$S:$R/vllm/flashnext/plugins/b70_qsa_xpu" \
  --env "Q1_TOPK_ROOT=$BUILD" --env PYTHONDONTWRITEBYTECODE=1 --env PYTHONUNBUFFERED=1 \
- --env "Q1_UT_SESSION=q1topk$TAG" --env "Q1_PROFILE_OUT=$OUT" \
+ --env "Q1_UT_SESSION=q1topk${BASHPID}" --env "Q1_PROFILE_OUT=$OUT" \
  --env B70_QSA=0 --env SYCL_CACHE_PERSISTENT=0 \
  -- bash "$S/inner.sh" > "$OUT/run.log" 2>&1
 BODY=$?

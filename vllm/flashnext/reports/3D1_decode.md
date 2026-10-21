@@ -474,3 +474,80 @@ native graph wait, the next bounded step is a focused native queue trace,
 not a kernel rewrite. Body deadline while phases advance is budget expiry,
 not evidence of lost liveness. Finite success would not qualify stability
 or speed and would not establish N1 or plan16 as the unique cause.
+
+## N1-original liveness run: EngineCore SIGSEGV, not a completed sequence
+
+CONFIG: original c7b FA, plan0, N1 r2 flag1 (SO c90919594b0e2b355073e2b398ac76755a3ace5eb0094d014a72a05a411246d0), no P1/extra route/Q8F,
+no speculation,TP1,maxlen131072/chunk12288/maxseq4,capture1/2/3/4/8,
+O4+F1 original recipe. Model alias hotschmoe-dd first, registered detailed
+alias second. Parent authorized both cards after P1 pair closure/Q1 port.
+All campaign harness/plugins/registry frozen before445-file snapshot.
+
+COMMAND: TAG=n1-liveness-r1 bash harness/d1_n1_diagnostic.sh.
+Started17:48:16, READY17:51:49, native pre/post health inside lifecycle.
+Exact original greedy->promotion->bench->F1->initial N1 callback sequence
+prepared; entire postREADY client body bounded120s, lifecycle outside.
+Raw build/vllm-flashnext/f1/merged-n1-liveness-r1.
+
+RESULT: parent CPU review caught two real monitor defects before launch:
+kwargs-only GDN calls and cross-thread global-LIFO cleanup. Fixed before
+port: all metadata accepts positional/kwargs; all metadata/log writes are
+best-effort, unknown objects become type names without str/repr/int/bool;
+per-native-TID token stacks and per-thread progress replace shared LIFO.
+CPU regression source/tests verify kwargs-only actual GDN signature,
+metadata/sink failure preserving one original call and exception identity,
+and overlapping threads finishing out of global order. Eight new harness
+files ported byte-identical from scratch. CPU regression PASS, shell
+syntax and original-client/lifecycle equivalence checks PASS.
+
+Live extension initialization and coarse activation PASS. Actual API
+server-info.json proves speculative_config=null,maxlen131072,TP1; live
+logs confirm originalFA2/SYCL GDN and expected graph configuration. All
+four effective O4/F1 SO pins matched original N1 run. Initial arithmetic
+323/667 PASS. Before detail/F1, promotion exact-repeat hit HTTP500 after
+EngineCore unexpected death at17:52:11. Last810th execute entry isT6,
+scheduled[1,5],newreq1;809 execute returns. Serve log ends native eager
+pre-JIT T6 layers0..5 after a completed card1 key1 refinalize500. No
+metadata errors, no Python monitor exception, no UR40 exception and no
+>=8s active-phase witness. Historical T21/F1/callback failure was NOT
+reached; F1 and callback subsequently fail against the dead engine.
+
+Saved /proc data independently identifies the primary process signal:
+hostPID/TID68426 maps NSpid107. At17:52:11.298941, stat field52 exit_code11
+is Linux waitstatus SIGSEGV11 (os.waitstatus_to_exitcode=-11). Prior field52
+is0; previous sample main-thread wchan=do_exit. Field38=17 is parent
+SIGCHLD, not this terminating signal. Native PC is unknown. Docker kill15
+at17:52:12.788 and container exit143 at17:52:14.989 are later cleanup,
+not the primary EngineCore signal. Kernel interval has no OOM/xe/segfault
+entry; no fresh /var/crash record and coredumpctl is unavailable.
+
+Two timed C stack dumps were produced. An earlier momentary sample shows
+the main thread inside ep_submit; it does not show a sustained blocked
+submit. Final dump truncates in the monitor watcher while reading pathlib,
+with implausible printed line196608. Monitoring contribution remains an
+explicit confound. No native PC/coredump proves where SIGSEGV originated.
+Both errors banks were not sampled because the8s trigger never fired;
+do not describe absent error samples as zero device errors.
+
+The original d1-localization.json has a FALSE SUCCESS classification:
+client-body shell returned0 despite recorded GATE3/BENCH1/PROBE1/CALLBACK1.
+Preserve that raw artifact. Corrected offline classifier in scratch first
+checks fatal-engine and individual RCs, and decodes saved process status.
+It writes d1-localization-corrected.json: engine failure;SIGSEGV, lastphase
+gap4.458s,0long-phase witnesses. This supersedes the raw classification.
+Exact raw/parsed witnesses: d1-engine-exit-witness.json and
+ d1-failure-witness.json; Docker/kernel events also preserved.
+
+Closure: EngineCore unexpected SIGSEGV, outer SERVE_RC143,
+ENGINE_ERROR_RC1, strict armRC1. NativepreHEALTHY27s and nativepostHEALTHY29s
+both cards. WINDOW_DONE; SOURCE_RC0 (445files,bad=[]), N1_RC0,
+PRIVATE_RC0, effective SO checks0. No reset. Both GPU leases released;
+Q1 owns next component slot after parent grant. Actual server initialization
+and breadcrumbs work, but this is not a clean or successful serving arm.
+
+VERDICT: no speed/stability qualification and no N1/allocator/FA-plan
+causality. The observed T6 eager-prejit surface is a localization clue,
+not a cause. No further N1 full load until reviewed native-fault capture
+can identify a PC/core and separate monitor contribution. No unrelated
+stress was added. During Q1 source freeze, classifier repair remains
+scratch-only; port only after root releases that freeze.

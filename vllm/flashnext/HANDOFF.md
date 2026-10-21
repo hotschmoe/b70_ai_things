@@ -304,3 +304,23 @@ Next: instrumented N1-original reproduction via d1_n1_diagnostic.sh, then
 the isolated QSA top-k/whole-chain profile via q1_topk/window.sh. Both
 source ports are ready; shared harness/plugins/registry stay frozen during
 each active serve. DD remains down, as explicitly directed by the user.
+
+The instrumented N1 run failed earlier than the historical stall point:
+EngineCore SIGSEGV during the promotion repeat, last scheduled batch
+T6=[1 decode,5 prefill]. Saved /proc wait status11 proves signal11;
+container exit143 is later cleanup. No native PC or cause is available.
+Hooks were installed/armed without metadata errors, but no >=8s phase
+witness occurred; F1 and the historical callback were never reached.
+Native post-health and all445 source/SO/private checks pass. The original
+classifier mislabeled shell-body RC0 as successful requests; preserve the
+raw output and use the corrected offline classification. N1 stays off.
+
+QSA profile-r1 was rejected before execution by an invalid unitrace
+session label. After the label-only fix, profile-r2 passes63 adversarial
+key cases, six M1/M2/context shapes, canaries, changed-input graph replay,
+normal exit/source checks and native pre/post health. At32K M1, top-k is
+about4.02ms of a4.64ms chain (~87%). Replacing its reduction tree saves
+only about4-5us versus an identically built copied tree. Native-vs-copy
+differences are build-context confounded; no serving gain is established.
+Next QSA candidate is exact parallel selection using upstream Torch int64
+topk/sort, preserving packed-key ties, dynamic width and ascending IDs.

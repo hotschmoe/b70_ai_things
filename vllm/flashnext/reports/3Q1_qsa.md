@@ -433,3 +433,129 @@ Component inputs are seeded populated fixtures, not saved real-model
 activations. Full-model pressure and serving gates remain separate.
 No GPU until parent grants the post-N1 card1 window; shared sources now
 frozen for D1's N1 diagnostic, reports/JOURNAL only.
+
+## Top-k profile-r1 - unitrace launcher rejection
+
+CONFIG: authorized physicalcard1/logical0 component window, unchanged
+candidate/native libraries,240s body cap. No full serve.
+COMMAND: Q1_PROFILE_TAG=profile-r1 bash harness/q1_topk/window.sh.
+RESULT: nativepreHEALTHY; unitrace rejects session q1topkprofile-r1
+because its session argument must be alphanumeric. Python probe never
+started, so no numerical, graph or timing data. Body exit1 after12s;
+container gone normally, nativepostHEALTHY, all source/SO hashes unchanged.
+Window closed17:55:05 and card1 released. Raw q1/topk-r1/profile-r1.
+VERDICT: launcher configuration failure, not a numerical reject or GPU
+fault. Preserve raw attempt; propose PID-based alphanumeric session and
+fresh profile-r2 only after parent source/retry grant. No rebuild needed.
+
+## Top-k profile-r2 - exact component PASS, minimal reduction benefit
+
+CONFIG: physicalcard1/logical0, same compiled candidate and native QSA,
+real capacity4 with active M1/M2, contexts4096/16384/32768. Populated
+seeded int8 KV/fp16 scales/f32 index rows; not real-model activations or
+full-model VRAM pressure. Entire one-layer QSA decode graph is captured.
+Only launcher change from preserved failedr1: session uses q1topk${BASHPID}.
+
+COMMAND: Q1_PROFILE_TAG=profile-r2 bash harness/q1_topk/window.sh.
+Fresh source hashes, default native prehealth, CPU quiet outside one-card
+GPU lease. Candidate SHA remains
+`eb83f79dbc6256e9a99d9b8871b6a174a06209e13885336773df57d3f81f84e9`.
+Native QSA SHA: `2ee734458f9ed0ac0ebd827c409c3771ba315fab15dfdf004bd19da24f67bf71`.
+Container image: `sha256:ea234fbf7123cba58b387f4046a0c32192dd5b6febead3684dbd8690882bf572`.
+
+RESULT: start17:56:30; new sessionq1topk71277 accepted; numerical63cases
+PASS across native/copied-tree/group (189comparisons). Every real-shape
+chain passes integer-key ID references, inactive canaries, exact gated
+output parity and changed-input top-k plus whole-chain graph replay.
+No numerical rejection or runtime fault. Body0, container leftover0,
+nativepre/postHEALTHY, sourcecheck0; closed/card1released17:57:20.
+
+Graph event averages below are milliseconds per layer,12replays each.
+Top-k alone and whole-chain capture are distinct measurements. These are
+component timings, not serving claims.
+
+| Context/active | Native top-k/chain | Copied tree top-k/chain | Group top-k/chain |
+|---|---:|---:|---:|
+| 4096/1 | 0.7416/1.1710 | 0.4698/1.0839 | 0.4653/1.0796 |
+| 4096/2 | 0.8062/1.5575 | 0.4646/1.1100 | 0.4601/1.1045 |
+| 16384/1 | 2.0988/2.5911 | 1.6062/2.2211 | 1.6036/2.2167 |
+| 16384/2 | 2.1214/2.6561 | 1.6349/2.2863 | 1.6307/2.2812 |
+| 32768/1 | 4.0246/4.6392 | 3.2762/3.8930 | 3.2719/3.8883 |
+| 32768/2 | 3.9763/4.6361 | 3.2280/3.8891 | 3.2239/3.8846 |
+
+The actual reduction substitution saves only about4-5us per layer against
+its copied-tree control, approximately0.1-0.5% of chain time here. This
+is not a compelling serving candidate. The copied tree itself differs
+substantially from the existing native binary. The tracked native build
+recipe is O2/intel_gpu_bmg_g31; isolated build is O3/spir64_gen with
+-device bmg and a smaller compilation unit. The native-to-copy difference
+is confounded by build context and must not be attributed to group reduce.
+No full model serve is justified for this minimal candidate.
+
+Native uninstrumented trace critical path, mean of3replays per phase:
+
+| Context/active | Chain span ms | Top-k ms | Attention ms | Gather ms | Index score ms | Within-chain gaps ms |
+|---|---:|---:|---:|---:|---:|---:|
+| 4096/1 | 1.1663 | 0.5505 | 0.4884 | 0.0745 | 0.0315 | 0.0086 |
+| 4096/2 | 1.1912 | 0.5454 | 0.4959 | 0.0963 | 0.0313 | 0.0091 |
+| 16384/1 | 2.5856 | 1.9695 | 0.4876 | 0.0746 | 0.0318 | 0.0089 |
+| 16384/2 | 2.6480 | 1.9985 | 0.4960 | 0.0982 | 0.0318 | 0.0091 |
+| 32768/1 | 4.6348 | 4.0166 | 0.4884 | 0.0746 | 0.0323 | 0.0089 |
+| 32768/2 | 4.6301 | 3.9685 | 0.4979 | 0.0983 | 0.0397 | 0.0089 |
+
+Trace contains exactly54complete11-operation replays, three for each of
+18known shape/variant phases. Every replay's top-k symbol validates the
+variant assignment. Host log and GPU trace clocks have an offset, so
+phase assignment uses complete ordered operation structure, not naive
+host-walltime bounds. All raw trace events are retained. AtM1 top-k is
+47/76/87% of measured chain span at4K/16K/32K. Attention stays near0.488ms,
+gather0.075ms, score0.032ms, and internal readiness gaps near9us. Top-k,
+not index scoring or transfer gaps, is the dominant rising component cost
+on these populated inputs. A12-layer multiplication is only a projection:
+M1 native chain14.0/31.0/55.6ms, top-k6.6/23.6/48.2ms. This is not an
+observed model critical path or an explanation of every full-serve gap.
+
+Auxiliary uncaptured per-op event spans include Python/host launch delay
+and are much larger than device kernel durations; use them only as
+readiness diagnostics, not kernel-time attribution. Native unitrace
+above has no per-op event overlay or per-op host synchronization.
+Raw q1/topk-r1/profile-r2 contains result.json, trace/python.34.json,
+trace-summary.json, source/SO manifests, image ID, run/window/health logs.
+
+VERDICT: numerical/capture component PASS; preserve candidate as research,
+no serving/fidelity/pressure-liveness qualification. Minimal group reduce
+has little benefit over same-build tree. Next CPU-prepared candidate is
+an exact packed-int64 parallel selector using upstream Torch XPU topk and
+ascending-ID sort before investing in multi-bit SYCL radix. No new GPU
+or full serve follows without a separate coordinated grant.
+
+## Torch packed-key parallel selector - CPU prepared
+
+CONFIG: next exact selector uses upstream Torch topk and stable sort,
+no custom GPU build. Reinterpret raw f32 bits, apply native order_f32,
+pack unsigned64score/index key and XOR sign bit to signed int64 ordering.
+Mask logical cells>=device n to signedMIN, strictly below valid keys.
+Select fixed2051 descending keys, mask ranks>=device width before stable
+ascending-ID sort, then guarded copy preserving IDs beyond width. Width0
+and inactive rows remain canaries. Score columns fixed147456 in every
+real-shape native/Torch arm; do not benchmark only the active prefix.
+
+COMMAND: CPU test under bin/cpu-run, hostPy312/existing Torch packages;
+future coordinated GPU command:
+`Q1_PROFILE_TAG=profile-r1 bash /mnt/vm_8tb/b70/build/vllm-flashnext/q1/torch-r1/window.sh`.
+Physicalcard1/logical0, default nativepre/posthealth, CPUquiet outsidelease,
+240s body cap and source/identity/container closure. Expected2-4min.
+All new candidate/probe/window files remain scratch; campaign unchanged.
+
+RESULT: CPU oracle66cases PASS in3s: original63adversarial cases plus
+3padded147456-column mixed-width/context cases. Raw NaN/Inf/signedzero,
+integer-key ordering, clamps and tail/inactive canaries exact. AST/ASCII/
+bash-n PASS. Per4x147456 int64 intermediate4.7MB; multiple full-width
+bit/mask passes require tens of MB plus topk/sort workspace. CPU checks
+cannot establish Torch XPU int64/topk/stable-sort support or graph capture;
+those are the first capability gates inside the proposed GPU window.
+Whole-chain/gated parity and changed-input replay remain required.
+
+VERDICT: CPU-ready design only; await explicit GPU grant. Parallel topk
+is worth a bounded capability/profile check before a complex multi-bit
+SYCL radix implementation. No full serve, pressure/fidelity or speed claim.

@@ -9627,3 +9627,105 @@ preposthealthpass. Bucket44outputs/11groups allreferenceexact.
 VERDICT: observedmatchedTTFTbenefitvalidforsinglefixedorderpair;
 servingtextvariesbotharms,nopromotion/external/stabilityorquality
 claim. Fulltables/limitsinreports/3A1_audit.md.
+
+## 2026-10-21 A1 -- N1 diagnostic audit corrects shell-success classifier
+
+CONFIG: CPUonly raw n1-liveness-r1;N1r2/originalFA/plan0/noP1/noMTP,
+maxlen131072/chunk12288;noGPU/sourceedits/newrequests/tests/commit.
+COMMAND: inspectprivateprefix/suffix/clientsequence,liveconfig,maps,
+workerhooks/phases/stacks/proc andcompletedclosure.
+RESULT:16hooksinstalled+armed,zerometadataerrors,N1SO/nativeGDN/c7bFA
+mapped. Unexpectedengineexit17:52:11duringpromo96tokenrepeat,BEFORE
+bench/F1/firstcallback17*19. Callbackidentityresetonly. LastmixedT6
+execute[1,5]hasnoreturn4.458s;305execute/297samplereturnslast10s,
+no8switness/noT21/noerrorbankreads. ep_submitstackaloneisnotstall.
+Clientshellrc0mislabels'finite request sequence completed'butactual
+gate3/bench1/probe1/callback1,serve143/engineerror1. No120stimeout.
+PosthealthbothHEALTHY/source445bad[]/N1+privatechecks0;overallwindow1.
+VERDICT: instrumentationworks;earlyenginefailureunlocalized,historical
+callbackstallnotreproduced. Classifierlabelmustnotimplyrequestsuccess.
+Report3A1_audit.mdhasfullscope/limits;rootnotifiedimmediately.
+
+## 2026-10-21 A1 -- actual N1 EngineCore SIGSEGV found in saved proc
+
+CONFIG: CPUonly followup on alreadyclosed n1-liveness-r1,nonewtest/GPU.
+COMMAND: parsefinalsaved /proc/task/stat forhostPID68426,NSpid107,
+atwall_ns1792605131298940821 in d1-liveness/proc/proc.jsonl.
+RESULT: statfield52(exit_code/Linuxwaitstatus)=11,prior0;FD0/threads1/
+addressspace0duringexit. Waitstatus11meansSIGSEGV(signal11),notnormal
+exit11. Field38=17isSIGCHLDnotification,notterminationsignal.
+VERDICT: actualEngineCoreSIGSEGVevidencedindependentlyofouterSERVE143;
+originatingnativeoperation/PCstillunlocalized. Rootnotifiedimmediately;
+3A1reportaddendumupdated.
+
+## 2026-10-21 17:55 Q1 -- top-k profile CLI rejection, healthy closure
+
+CONFIG: physicalcard1/logical0, same component source/SO,240s cap.
+COMMAND: Q1_PROFILE_TAG=profile-r1 bash harness/q1_topk/window.sh.
+RESULT: unitrace rejects nonalphanumeric session before Python starts;
+no numerical/graph/timing data. Body1, normal container exit, sourcecheck0,
+nativepre/postHEALTHY, card1 released17:55:05. Rawprofile-r1 preserved.
+VERDICT: launcher-only failure, no GPU fault. PID-session correction and
+freshprofile-r2 await parent grant; no rebuild or serving claim.
+
+## 2026-10-21 17:59 D1 -- N1-original monitor run SIGSEGV; native post-health clean
+
+CONFIG: parent-authorized originalFA/plan0/N1r2,131072/chunk12288,
+noP1/noMTP, bothcards,445-source freeze. CPU-reviewed kwargs/thread-token
+monitor fixes ported before launch.120s client bound, lifecycle outside.
+COMMAND: TAG=n1-liveness-r1 bash harness/d1_n1_diagnostic.sh.
+RESULT: READY17:51:49,323/667pass; EngineCore SIGSEGV17:52:11 during
+promotion repeat beforeF1/callback. Laststep810T6[1,5],809returns,
+EP eagerprejit layers0..5; nativePCunknown, noUR40/no8sphasewitness.
+Savedprocfield52=11 independently provesSIGSEGV; container143latercleanup.
+TimedCstackdump truncation is instrumentationconfound. Raw classifier
+false-success(body0) superseded by offline corrected fatal/clientRC verdict.
+Arm1, SERVE143/ENGINE_ERROR1, nativepre/postbothHEALTHY, all445source/
+N1/private/effectiveSOchecks0. WINDOW_DONE/GPUreleased, noreset.
+VERDICT: failed diagnostic, no speed/stability/causalclaim. No N1GPUretry
+until reviewed nativefaultcapture. Q1 next; classifierrepair scratch-only
+during its sourcefreeze. See3D1 and raw d1-engine-exit-witness.json.
+
+## 2026-10-21 17:57 Q1 -- top-k exact component PASS, reduction gain tiny
+
+CONFIG: card1/logical0, capacity4/activeM1,M2 at4K/16K/32K, populated
+paged state, original/native plus uniquely named copied-tree/group.
+COMMAND: Q1_PROFILE_TAG=profile-r2 bash harness/q1_topk/window.sh.
+RESULT:189adversarial variant comparisons, all6real shapes, integer IDs,
+canaries, changed-input top-k/whole-chain capture, exact gated outputs PASS.
+Body0/container gone/prepostHEALTHY/sourceunchanged; released17:57:20.
+Native M1trace chain1.166/2.586/4.635ms, top-k0.551/1.969/4.017ms;
+top-k47/76/87% of chain.54complete11-op traces,3per18phases validated.
+Group saves only4-5us/layer vs same-buildtree; native-vs-copy build-confounded.
+VERDICT: no full serve for minimal gain; exact component only, no model
+fidelity/pressure/liveness claim. Next scratch CPU plan is Torch XPU signed
+int64 mapped packed-key topk plus stable ascending-ID guarded output.
+
+## 2026-10-21 A1 -- independent QSA top-k component profile audit
+
+CONFIG: CPUonly profile-r2 review,physicalcard1 completed17:57:20;
+noGPU/newtests/sourceedits/commit.
+COMMAND: inspectoracle/probe/build;reconstruct594rawGPUevents into
+54complete11operationreplays;recomputealltracespans/opmeans/gaps.
+RESULT:63oracleinvocationsx3variants=189checks,6shapechains exactIDs/
+inactivecanaries/nativegatedparity/changedinputreplaypass. Body0/
+containerleftover0/30sourcechecksOK/nativeprepostHEALTHY. 32KM1
+eventchain4.639184/3.892956/3.888264ms(native/tree/group),topk4.024640/
+3.276181/3.271923ms. Samebuildtree->group4.258ustopk/4.692uschain;
+nativeO2/g31vsisolatedO3/spir64_gen-bmgconfounds~0.75msnative->copy.
+Trace32KM1 nativechain4.634833ms/topk4.016631ms,gaps8.866us;all
+derivedsummarymeansmatchraw. profile-r1launcherrejectbeforeprobe.
+VERDICT:componentnumerical/capture/lifecyclepass,tinyreductiongain;
+no serving/pressure/fidelity/stabilityclaim. 3A1reportrecordsinput/
+canary/measurementlimitsandbuildconfound;newTorchselectorCPUonly.
+
+## 2026-10-21 18:00 Q1 -- Torch exact parallel selector CPU ready
+
+CONFIG: scratch upstream Torch int64 packed-key topk2051, signed-XOR
+mapping, invalidcellMIN, devicewidthmask, stableascendingID guardedwrite.
+Native/Torch profile both use147456scorecols/capacity4/M1,M2 at4K/16K/32K.
+COMMAND: cpu-run hostPy312 cpu_test.py; prepare scratch torch-r1/window.sh.
+RESULT:66CPU cases exact/3s, AST/ASCII/bash-n PASS; no build/GPU. Multiple
+fullwidth int64 passes/tensMB temporaries plus topk workspace expected.
+VERDICT: CPU ready only; Torch XPU int64/stable-sort/capture untested,
+explicit card1grant required. No fullserve or speed/fidelity claim.

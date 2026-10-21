@@ -197,3 +197,21 @@ original results/exceptions when diagnostics fail, and avoid coercions
 that could touch GPU data. Sources are ported and reviewed before load.
 The next finite run uses the original N1 sequence with phase/stack capture;
 QSA's minimal integer-reduction candidate/profile follows it.
+
+N1 instrumentation ran successfully but the engine SIGSEGV occurred
+earlier, during promotion repeat: last executeT6 scheduled[1,5]. Saved
+/proc main-thread wait status11 identifies SIGSEGV before DockerTERM;
+container143 is cleanup only. No native PC/cause is localized. There was
+no >=8s no-return witness and the historical F1/callback point was never
+reached. Sources445/N1/private hashes and both-card post-health pass.
+The original offline classifier confused shell-body RC0 with successful
+requests; a separate corrected classification preserves that raw error.
+N1 remains disabled. Further reproduction needs native fault capture.
+
+QSA profile-r1 rejected the trace label before workload execution; a
+label-only fix and fresh profile-r2 then pass exact key/canary/replay
+gates and native pre/post health. The actual captured32K M1 chain spends
+about4.02/4.64ms in top-k. A group reduction saves only4-5us versus a
+copied tree compiled identically; the larger native-to-copy difference
+changes compiler settings, so it cannot be credited to the reduction.
+The next bounded candidate uses exact upstream int64 selection/sort.

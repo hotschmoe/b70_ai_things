@@ -404,3 +404,193 @@ three fixtures, with all required experiment closure passing. Retain
 the default-off treatment as a measured prefill candidate. No strict
 determinism, shelf promotion, external submission or broader stability
 claim is established by this pair.
+
+## N1 instrumented original-FA diagnostic audit - early engine failure
+
+CONFIG: CPU-only audit of f1/merged-n1-liveness-r1 after its finite
+closure. N1 r2 enabled, original c7b FA, plan0, no P1 overlay, no QSA,
+maxlen131072/chunk12288/capture1,2,3,4,8, TP1 sidecar. All445source
+entries remain frozen during the serve. No GPU action, build, additional
+HTTP request, test, source edit or commit by A1.
+
+COMMAND: inspect d1_n1_diagnostic.sh, actual private lifecycle snapshot,
+builder/classifier/monitor and callback; compare private prefix/suffix/
+client body to its captured merged source. Audit actual live server-info,
+EngineCore phase/stack/proc evidence, request status and closure checks.
+
+RESULT: the private lifecycle prefix and teardown/health suffix are
+byte-identical to captured merged-source.sh. The client body is identical
+after removing the added detail-arm marker. The hyperparameters and
+greedy -> promotion -> bench -> F1 8K twice+long math sequence match the
+historical N1 request sequence. The diagnostic limits the callback to
+identity plus its first Gate.greedy(17,19), rather than the full repeat
+and canonical suites. A120s timeout bounds the client body only; teardown
+and native health remain outside. Diagnostic hooks change execution
+overhead, so this is not a performance measurement or an exact runtime
+reproduction of the uninstrumented historical serve.
+
+Actual worker integration succeeds: EngineCore107 emits monitor_ready,
+installs16hooks and writes armed-107.json with coarse mode. There are
+zero metadata_error events, including no recurrence of the prior
+kwargs/cross-thread bookkeeping defects. This confirms supported worker
+extension initialization/arming in a real model process; detailed-layer
+execution was not reached before failure.
+
+Actual server-info proves speculative_config=null,prefix cache=false,
+maxlen131072,chunk12288,TP1 and capture sizes1/2/3/4/8. N1 library SHA
+recomputes c90919594b0e2b355073e2b398ac76755a3ace5eb0094d014a72a05a411246d0.
+Initial process maps contain that N1 library, installed native GDN and
+original c7b FA libraries. The private D1 plan and P1 libraries are not
+the configured paths. No D1-plan activation marker appears.
+
+The engine exits unexpectedly at17:52:11 during the promotion96-token
+repeat, before the later benchmark/F1/historical first-callback arithmetic
+request can run successfully. Initial identity and323/667 pass. Promotion
+repeat receives HTTP500; later needle/identity calls reset connections.
+Bench fails at identity, F1probe fails, and the truncated callback reaches
+only its failing identity call. Therefore this run never issues the
+historical stalled callback's17*19 request. It does not reproduce that
+particular no-return boundary, nor measure N1 whole-model determinism.
+
+The last observed inference phase is execute step810, mixedT6 with
+scheduled[1,5], entered without a logged return. Its gap to client-end
+is4.457990s, below the8s watchdog threshold. Last10s contain3545phase
+events,305execute returns and297sample returns. One actual graph
+instantiate call returns in3.759213ms. There is no mixedT21 event,
+long_active_phase witness or host-error-bank read. No zero-error-bank
+claim is available.
+
+Periodic faulthandler samples include a main-thread stack in ep_submit.
+Nearby phase counters continue advancing, so that sampled common path
+does not establish a blocked EP submission. The next stack dump ends
+partway through the watcher thread. The external proc observer has22
+samples over20.990s; final thread/FD counts collapse as the process exits.
+Denied syscall fields are saved as PermissionError. These CPU samples
+do not provide device completion or a causal native failure location.
+The serve log has EngineDeadError but no originating UR/native exception
+trace; the cause of the unexpected engine exit remains unlocalized here.
+
+Actual engine termination signal is recoverable from the final saved
+proc sample, independently of the outer container's143status. In
+d1-liveness/proc/proc.jsonl at wall_ns1792605131298940821, host PID/TID
+68426 maps to container NSpid107. Its saved task stat field52
+(exit_code, Linux wait status) is11, after prior samples had0; FDcount0,
+one remaining thread and zero address space accompany the exit transition.
+Wait status11 means signal11/SIGSEGV, not a normal exit status11. Stat
+field38=17 is the parent-notification SIGCHLD field and must not be
+mistaken for the termination signal. Thus a real EngineCore SIGSEGV is
+evidenced; its originating native operation/program counter is not.
+
+Concrete reporting defect: d1-client-end.json records client_rc0 because
+the clients shell completes status assignments despite individual command
+failures. The classifier consequently prints "finite request sequence
+completed; no stability qualification". That is shell-body completion,
+not successful request completion. The actual status file is GREEDY0,
+GATE3,BENCH1,PROBE1,CALLBACK1; SERVE_RC143 and ENGINE_ERROR_RC1. This
+classifier label must not override the failed engine and HTTP evidence.
+Nor did the120s deadline expire: the body ended after the early failure.
+
+Closure: overall D1_WINDOW_RC1; native post-health both cards HEALTHY,
+source445verify bad=[], N1/source hash check0 and private manifest check0.
+These protect evidence identity and establish recovered card health;
+normal engine teardown did not pass. No reset or speed/stability claim
+follows from this audit.
+
+VERDICT: real worker instrumentation/arming passes; the serving run
+fails early engine qualification before its intended historical stall
+point. Neither timeout nor >=8s no-return evidence supports a deadlock
+claim here. Preserve original classifier output with the correction
+above; root owns cause localization and any next bounded experiment.
+
+## QSA top-k component profile audit - reduction benefit is small
+
+CONFIG: CPU-only audit of q1/topk-r1/profile-r2 after closure17:57:20.
+Physicalcard1/logical0, seeded populated paged QSA fixtures, capacity4,
+active1/2 at4096/16384/32768. Native library plus isolated copied manual
+tree and group-reduction variants load together. No actual model load,
+loaded-model VRAM pressure or serving test. No GPU/new test/source edit
+or commit by A1. The earlier profile-r1 is preserved separately.
+
+COMMAND: review oracle/probe/C++ and build/window source; verify saved
+component result, source/SO/image/native health and teardown; independently
+parse raw unitrace GPU events into complete replay chains and recompute
+every span/kernel/top-k/gap mean in trace-summary.json.
+
+RESULT: profile-r1 rejects its hyphenated unitrace session before Python
+probe execution. Body1, no numerical/performance output, native pre/post
+health and source checks pass. It is a launcher failure, not a GPU fault.
+profile-r2 uses an alphanumeric PID session, same compiled candidate;
+body0, no leftover container, native pre/post HEALTHY,30source/SO checks
+all OK, closed17:57:20. Candidate SHA256 recomputes
+eb83f79dbc6256e9a99d9b8871b6a174a06209e13885336773df57d3f81f84e9;
+ported C++ is byte-identical to built scratch source. Runtime is
+Torch2.14.0+xpu, B70, imageea234fbf7123cba58b387f4046a0c32192dd5b6febead3684dbd8690882bf572.
+
+There are63oracle invocations for each of three variants,189comparisons.
+The list has61unique names because n1/width1 is deliberately emitted
+twice for both input families. Independent unsigned64key full-sort
+selection checks packed float-bit ordering, lower-ID ties and ascending
+emission; cases include NaN payloads, signed zero, infinities, extremes,
+zero/negative width and count clamps. Full4x2051ID arrays are compared,
+including inactive/unused canary slots. These are within-tensor canaries,
+not external allocation guards or a general memory-safety proof.
+
+All six actual-shape components pass exact selected IDs against the
+integer-key oracle, gated output parity versus native, changed-score
+top-k graph replay and whole-chain replay after query/indexer/K/V/raw
+changes plus a new append position. The full QSA chain comparison is
+native parity, not an independent model-quality or FP32 attention oracle.
+Fixture geometry24/2/256,indexer4x128,compress4,budget2048,cap2051,
+block2752 matches the intended component. Pages contain seeded signed
+int8KV, positive fp16 scales and finite f32 pooled state; they are not
+captured real-model activations.
+
+At32K/M1, saved event averages over12graph replays per arm independently
+give these milliseconds:
+
+| Measurement | Native | Copied tree | Group reduction |
+| --- | ---: | ---: | ---: |
+| Top-k only | 4.024640 | 3.276181 | 3.271923 |
+| Whole one-layer chain | 4.639184 | 3.892956 | 3.888264 |
+
+The controlled copied-tree to group difference is4.257833us top-k and
+4.691750us chain here. Across the six shapes, chain differences are
+4.36..5.54us/layer; top-k differences2.66..4.50us. The tracked native
+build recipe uses O2/intel_gpu_bmg_g31; the isolated build uses O3,
+spir64_gen/-device bmg and a smaller compilation unit. Therefore the
+rough0.75ms native-to-copy32K difference is confounded by build context
+and cannot be assigned to group reduction. Both copied variants share
+one binary/build; their small difference is the relevant reduction
+comparison. Single-run, fixed variant ordering and short averaging do
+not establish a robust production gain at this microsecond scale.
+
+The raw trace contains594GPU operation events. Independently partitioning
+them by complete11-operation structure yields54replays, three for each
+of18shape/variant phases; each top-k symbol confirms native/tree/group.
+All reconstructed summary means match. Ordered trace structure, rather
+than naive host-walltime timestamps, is needed because the host/GPU
+clocks have an offset.
+
+Native M1 device chain spans at4K/16K/32K are1.166333/2.585583/4.634833ms;
+top-k contributes0.550520/1.969479/4.016631ms, approximately47/76/87percent.
+Attention remains0.488368/0.487569/0.488437ms, gather approximately0.075ms,
+index score approximately0.032ms, within-chain gaps approximately9us.
+At32K/M1 trace top-k tree/group is3.269514/3.265104ms and chain
+3.888500/3.883000ms. This independently corroborates top-k as the rising
+cost on these fixtures and the small group-reduction improvement.
+
+Auxiliary uncaptured per-operation event boundaries are substantially
+larger and include host submission/readiness effects. They cannot replace
+the uninstrumented captured trace as kernel-time attribution. Event
+averages and trace spans are distinct: for example4K/M2 native event
+chain1.557539ms versus trace1.191250ms; do not silently merge these
+measurement methods. A twelve-layer sum is a projection, not measured
+model critical-path latency or proof of the full serving overhead cause.
+
+VERDICT: numerical/capture/lifecycle component gates pass. The reduction
+substitution provides only a small same-build component improvement;
+native-to-copy timing is build-confounded. Preserve the profile and
+prioritize a selector algorithm change before a costly model load.
+No serving speed, fidelity, loaded-pressure liveness, fault clearance,
+promotion or external claim follows from this component window. The
+next upstream Torch selector is CPU preparation only at this cutoff.
