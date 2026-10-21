@@ -991,3 +991,71 @@ Q8F is default-off, strict failure remains recorded, and graph/timing,
 full-model pressure and serving qualification remain absent. Keep the
 full-route/Q8F serves paused pending root's explicit qualification plan;
 no gate was relaxed and no additional test was run by this audit.
+
+
+## 2026-10-21 19:10 retained-route control - clients complete, teardown reject
+
+CONFIG: frozen retained-default control `d1/existing_route_q8f/
+d1-existing-control-r1` with actual serving evidence in
+`f1/merged-d1-existing-control-r1`. Both-card original FA/F1EPc/O4HC,
+N1off/plan0/QSAoff, Q8on/Q8Foff/EP_ROUTEoff; identical one-return observer
+prepared for both arms. Treatment has not been audited or compared here.
+
+COMMAND: CPU-only read of observer/config/client/closure/source/SO/kernel
+artifacts; independently reconstruct canonical content arrivals and output
+text from saved SSE events, verify511saved intervals and calculate
+511/(last-first arrival) for512-token requests. No tests/GPU/source edits.
+
+RESULT: actual observer PID108 records w8_gemv return12564917052567ns,
+profile capture return12567885055005ns and full capture return
+12577600188957ns. Thus native op return precedes full capture in the same
+worker. No treatment op return or observer error is saved. This proves a
+host native-call return, not device synchronization or every-step dispatch.
+
+Live JSON config is maxlen131072/chunk12288/maxseq4/TP1, speculation null,
+prefix false, compilation mode0/FULL_DECODE_ONLY[2,0], capture sizes
+[1,2,3,4,8]; actual GPU blocks231. Stable hotschmoe-dd identity and registered
+research alias, arithmetic323/667,8K/32Kneedle and final identity checks
+pass. exact_repeat alone fails, yielding gateRC3. Bench/probe/canonicalRC0;
+all postREADY phases complete134.307s within240s without interruption.
+
+All eight canonical requests (warmup+three measured per suite) have
+512authoritative completion tokens,512content arrivals and511intervals.
+Saved SSE events reconstruct each array and output exactly; rates and
+intervals recompute. Per-request metric deltas isolate one success,
+512generated tokens and zero prefix hits. Live speculation null establishes
+no-spec configuration; no speculative counter activity is recorded.
+Canonical prompt hashes match payload text. Both local validations are
+true, diagnostic_only=true,ranking_eligible=false,submitted=false.
+
+Measured reasoning rates61.528795818/61.473709266/61.544383592tok/s have
+median61.528795818 (iteration1),16.252552755ms/token. Code rates
+61.828317052/61.789047152/61.791000597 have median61.791000597
+(iteration3),16.183586450ms/token. Warmups61.517091714/61.803230433
+are excluded. These canonical512-token rates remain below retained
+historical Strata reasoning66.2/code65.9tok/s by7.056/6.235percent.
+Strata was not remeasured in this window; neither short64-token p50 nor
+historical MTP performance substitutes for this no-spec comparison.
+
+Closure fails a concrete gate. At19:09:51 EngineCore receivesSIGTERM,
+reports requests complete/resource teardown/exiting busy loop, and
+XPUWorker cleanup is done19:09:52. At19:09:56 the manager force-kills the
+still-live EngineCorePID108 after its5s allowance. This is the sole
+engine-errors.txt match. SERVE_RC0/API exit does not establish normal
+EngineCore termination. ENGINE_ERROR_RC1,HARNESS_RC1,OPERATIONAL_RC1 and
+operational_complete=false correctly preserve this teardown rejection.
+No request stall, native runtime failure or zero-sign causation is proven
+by that shutdown message.
+
+Window closes19:10:32UTC. Native both-card pre/post health isHEALTHY;
+all502source entries verify with bad=[], all10private hashes and all4
+SO hashes pass unchanged. Captured kernel journal has Docker network
+events and no matching GPU fault/reset entry. Those checks remain finite
+health/identity observations; they do not override the force-killed process.
+
+VERDICT: completed client measurements, strict repeatFAIL and graceful
+process-teardownFAIL are separate facts. This control is not operationally
+qualified under the prepared gate, and cannot supply a normal-teardown or
+matched stable-pair claim. Parent must decide next action from the actual
+shutdown evidence before any separately authorized treatment. No treatment
+speed, global stability, promotion or external submission is established.

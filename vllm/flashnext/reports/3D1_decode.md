@@ -682,3 +682,88 @@ peer region without a native rebuild or new tensor copy. It is a source-
 backed discriminator (ELF exports ep_touch_pages/ep_transport_warmup),
 not a reason for another blind full N1 load. No extended instrumentation
 work or GPU job is queued. Q1 is now sole GPU owner under root scheduling.
+
+
+## HC short-decode candidate: finite gate rejects signed zero, no timing
+
+CONFIG: CPU saved-Ld census of506 stable1938-kernel card0 steps. Original
+HCup97calls1.249625ms +collapse0.158ms, HCdown1.2315ms; route topk/dispatch/
+bump0.84075ms combined; source-mapped PLEstage103kernels0.3095ms. Trace
+absolute times are instrumented. Current canonical control61.642817/
+61.800831 uses ORIGINAL Q8 HC with Q8F and EP_ROUTE absent (saved actual
+recipe-args SHA251940ee...). Existing Lc route+Q8F is a separate research
+candidate, not the current default; its old -.54ms cannot be counted as
+a new kernel gain. F1EPc249cf94e contains route schema/host/device symbols
+and prefill support, so that existing candidate needs no oldO4e swap/build.
+
+COMMAND: prepared M1-only up+collapse subgroup-local scratch candidate,
+same LPR8 row/chunk/FMA/XOR reductions and BF16 points, no crossSG SLM.
+CPU81920ownership checks PASS. CPUbuild waited currentQ1quiet lock, active
+36s, SO84b64b232579423e6b7e55f1eb0bd0a2611ffaa01ba410f003eb241b17dcb2d9.
+Root granted TAG=probe-r1 then reporting-only repaired TAG=probe-r2,
+physicalcard1/logical0,120s bound+nativepre/post/quietCPU+lease. Raw
+B/d1/hc_subgroup_r1/{probe-r1,probe-r2}. OriginalR1source preserved45fb9bb5.
+No kernel or SO change between runs. Proposed96distinct-weight timings
+were conditional on strict original/existing/new comparison gate.
+
+RESULT: R1body17s exit1 stops beforetiming on adversarial largegate weight1;
+normalcontainerexit, nativepostHEALTHY15s, SOURCE0. Root-reviewed R2removes
+failfast reporting ONLY; body16s exit1 with ALL9case comparisons saved,
+normalcontainerexit/nativepostHEALTHY14s/SOURCE0. Leases fullyreleased
+18:52:17/18:55:55. One mismatch at largegate weight1,h386: original+0
+BF16=0x0000, existingfused/newcandidate-0 BF16=0x8000. count1/maxabs0/
+orderedBF16ULP1/allfinite. Existingfused/newcandidate match in all9cases.
+AffectedCPU payload41723bytes, stdlib raw-storage bits independently
+confirm signedzero (no CPUFTZ ambiguity). No per-weight/graph timing ran.
+Rawr1/r2 remainunchanged; no retry/modelserve/reset afterclosure.
+
+VERDICT: strict COMPONENT_FAIL and timingSKIPPED retained. Newsubgroup
+speed UNMEASURED; no bitexact/promotion claim. Sources ported separately to
+harness/d1_hc_subgroup with measured-source-sha256.json; kernel/frozenR1
+source byteidentical, currentreplay/build/window/CPUoutput path changes
+only. CPUownership/ASCII/AST/bash PASS afterport, no rebuild/GPU. Parent
+ported and reviewed final existing-route/Q8F finite diagnostic wrapper:
+identical one-return nativeop observer in BOTHarms,240s postREADY clients,
+one promo/minimalF1/shortbench/canonicalonly, all statuses distinct. That
+fullpair remains root-granted work; no D1 serve queued independently.
+
+
+## Retained-default flag-pair control: requests complete, teardown rejected
+
+CONFIG: root CONTROL grant only; production freeze at campaignc215a49f.
+Retained O4/F1, Q8F/EP_ROUTE absent, originalc7bFA, N1off/plan0, noP1/QSA/
+HC_FUSE/FA8/speculation. Identical defaultoff opobserver intended for both
+arms. Server config actually recorded: TP1,maxlen131072,chunk12288,maxseq4,
+prefixoff,speculative_confignull,mode0,FULL_DECODE_ONLY[2,0],caps1/2/3/4/8.
+
+COMMAND: ARM=control TAG=d1-existing-control-r1 bash
+harness/d1_existing_route_q8f/window.sh. Bothcards, started19:04:06,
+READY19:07:36. Onepromo,shortbench,minimalF1(1024/repeat1/coherence1024/
+decode0), canonicalcallbackonly. PostREADY240sbound, phaseprogresssaved.
+RawB/d1/existing_route_q8f/d1-existing-control-r1 and
+B/f1/merged-d1-existing-control-r1. No other GPU work or code edits.
+
+RESULT: nativeprebothHEALTHY28s. Actualw8_gemv op_return12564917052567
+before fullcapture_return12577600188957, sameworkerPID108; no treatment
+ops observed, branchproofPASS. Promoidentity/math/8K32Kneedles/identity-
+afterPASS; exactrepeatFAIL=>gateRC3 preserved. bench/probe/canonicalRC0.
+All4phases complete134.3066spostREADY; boundnotexpired. Canonicalvalid
+reasoning61.5/code61.8tok/s, warmup+3samples each saved, rankingeligible
+false/no submission. No speed improvement or strict-repeat qualification.
+
+Normal request processing completed, then shutdown rejected: API SIGTERM
+19:09:51; EngineCore prints request processing complete/resource teardown;
+XPUWorker shutdown done19:09:52. API5sdeadline then forcekills remaining
+EngineCorePID108 at19:09:56. SERVE_RC0 cannot hide this. ENGINE_ERROR_RC1,
+HARNESS_RC1, OPERATIONAL_RC1; outcomeoperational_completefalse with ONLY
+engineerror/fatal-evidence issues. This is observed teardown failure, not
+an inference-time no-progress stall or proof of a kernel/allocator cause.
+
+Containerabsent, nativepostbothHEALTHY30s, kerneljournal since19:04:06
+clean ofGPUfault/reset/OOM. Broadsource502bad[], private/SOchecks0. Both
+leases fullyreleased19:10:32. No reset/retry/treatment queued byD1.
+
+VERDICT: finite canonical diagnostic completed; control is NOT operationally
+clean due forcedEngineCore cleanup, and strictrepeat rejects. Preserve all
+raw statuses; parent must decide any treatment separately. No code changes
+between intendedarms and no claim of successful promotion/control closure.

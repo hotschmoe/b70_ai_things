@@ -401,3 +401,19 @@ rebuild or relaxed gate. Cause of the zero sign remains unproven.
 This does not establish a nonzero arithmetic error or runtime invalidity;
 the retained route/Q8F diagnostic serving retest can proceed after its
 bounded client and branch-observation CPU checks, without a bitexact claim.
+
+Retained-default control d1-existing-control-r1 now completes all clients
+in134.307s: canonical reasoning61.528796/code61.791001 tok/s, warmup+3x512
+per suite; identity/math/8K32K retrieval pass, exact repeat fails. Actual
+ordinary w8_gemv returns before full capture in the same worker; fused/route
+calls are absent. Actual config,502 sources, private helpers/four SOs and
+both-card pre/post health pass; kernel log has no new fault/reset.
+
+Operational closure nevertheless FAILS: SIGTERM19:09:51, worker cleanup
+done19:09:52, manager force-kills remaining EngineCore at19:09:56. Container
+RC0 does not clear ENGINE_ERROR_RC1. No treatment arm was authorized/run.
+The effective5s grace comes from vllm/platforms/xpu.py converting config0
+to5; source log and live config agree. Worker cleanup is not final process
+exit. Next bounded control uses supported --shutdown-timeout30 plus outer
+Docker45s to distinguish slow finalization from an exit hang. Preserve the
+original reject; no runtime-fault, cause, stability or timeout-fix claim.

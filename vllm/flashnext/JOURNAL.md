@@ -9976,3 +9976,38 @@ VERDICT: strictFAIL/timingSKIPPED; no newHCspeed/bitexact claim orGPUretry.
 Port harness/d1_hc_subgroup preserves kernel+R1source and measuredSOidentity;
 CPUownership/ASCII/AST/bashPASS, no rebuild. Parentreviewed/ported trimmed
 existingflag diagnosticpair; no D1servequeued. Report3D1_decode.md.
+
+
+## 2026-10-21 19:11 D1 -- flag-pair control requests complete, forced teardown reject
+
+CONFIG: retaineddefault, N1/plan0, originalFA, noQ8F/route; freeze502sources.
+COMMAND: ARM=control TAG=d1-existing-control-r1 d1_existing_route_q8f/window.sh,
+bothcards19:04:06, READY19:07:36,240spostREADY clientbound.
+RESULT: actualconfig+originalw8_gemv prefullcapture proofPASS; promoidentity/
+math/needlesPASS exactrepeatFAIL, bench/probe/canonical0; allphases134.3s.
+Canonicalvalid61.5/61.8tok/s completewarm+3 each. TeardownAPI5sdeadline
+forcekills remainingEngineCore afterrequestcomplete/XPUshutdown done;
+ENGINE_ERROR1 despiteSERVE0. HARNESS1/OPERATIONAL1 preserved.
+VERDICT: finite diagnostic only, notcleancontrol. Nativepre/postbothHEALTHY
+28/30s, source502bad[]/private/SO0, kernelclean, containerabsent/released
+19:10:32. No treatment/reset/retryqueued; rootdecidesnext. Report3D1.
+
+
+## 2026-10-21 19:10 A1 -- retained control canonical complete, teardown FAIL
+
+CONFIG: CPU-only independent audit d1/existing_route_q8f/d1-existing-control-r1
+and f1/merged-d1-existing-control-r1; sourcefreeze, noGPU/tests/sourceedits.
+COMMAND: verify actualpre-capture branch/config; reconstruct saved SSE
+arrivals/text/ITLs, canonical warm+3 rates; read closure/health/source/kernel.
+RESULT: actualw8_gemv return before fullcapturePID108, no forbiddenops;
+131072/12288/4/TP1/specnull/prefixfalse/mode0/caps1,2,3,4,8,blocks231.
+Only promoexactrepeatFAIL; bench/probe/canonicalRC0,client134.307s<240s.
+All8canonical outputs512tokens/chunks/511ITLs; isolated1request/512tokens,
+prefixhits0. Warmexcluded medians61.528795818reasoning/61.791000597code,
+below historicalStrata66.2/65.9, notnewStrataqualification. EngineCore
+cleanupdone19:09:52 but processforcekilled19:09:56; ENGINE_ERROR1,
+operationalfalse despite SERVE0. BothposthealthHEALTHY/source502bad[]/
+private10+SO4OK; kernellogonlyDockernet/no matchingGPUfault. Closed19:10:32.
+VERDICT: completedfiniteclientrates do not override strictrepeat or
+process-teardownfail. Urgentclosurefinding sentparent before treatmentGO.
+No normalteardown/stablepair/promotion claim. Full detail in3A1_audit.md.
