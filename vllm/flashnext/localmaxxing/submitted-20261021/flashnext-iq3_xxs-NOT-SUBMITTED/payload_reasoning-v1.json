@@ -1,0 +1,97 @@
+{
+ "engineName": "vllm",
+ "backend": "xpu",
+ "hardware": {
+  "cpu": "AMD Ryzen Threadripper 1950X 16-Core Processor",
+  "gpuCount": 2,
+  "gpuName": "Intel Arc Pro B70",
+  "hwClass": "DISCRETE_GPU",
+  "os": "Linux",
+  "ramGb": 128,
+  "vramGb": 32
+ },
+ "batchSize": 1,
+ "benchmarkMode": "remote",
+ "hfId": "ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-GGUF",
+ "quantization": "IQ3_XXS",
+ "engineVersion": "0.32.1rc1.dev94+g5fd62688f",
+ "engineCommit": "cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95",
+ "engineBuild": "b70-lmx-20261021 (vllm fork b70/lmx-20261021, O4 sidecar decode recipe)",
+ "engineRepository": "https://github.com/vllm-project/vllm",
+ "engineFlags": {
+  "commandSnippet": "# vLLM (fork branch b70/lmx-20261021 @ cfd2b6ffdb8f) + out-of-tree b70_gguf_xpu / b70_ep_xpu / b70_o4_xpu plugins, 2x Arc Pro B70, expert-parallel sidecar (card 1 runs 374 of 512 experts per layer), no speculative decoding\nB70_GGUF=1 B70_EP=1 B70_EP_SPLIT=profile B70_EP_Q0=138 B70_XPU_CG_RECLAIM=500 B70_PLE_DEVICE=1 B70_DECODE_HC=triton B70_DECODE_HC_GEMV=1 B70_DECODE_LEAN=1 B70_GEMV_BF16=1 B70_EP_SHARED_OVERLAP=1 B70_EP_FUSE_SHARED=1 B70_EP_BF16_OUT=1 B70_DECODE_TOPK=1 B70_LINEAR_CAT=1 B70_DENSE_GEMV=1 B70_DECODE_HC_Q8=1 B70_PLE_FUSED=1 B70_IQ3S_ROW=1 \\\nvllm serve Qwen3.8-Flash-Next (hf config) --load-format b70_gguf --quantization b70_gguf (GGUF Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-0000{1,2}-of-00002.gguf; PLE table in host RAM) \\\n  --tensor-parallel-size 1 --dtype bfloat16 --max-model-len 131072 --max-num-seqs 4 --max-num-batched-tokens 2048 \\\n  --gpu-memory-utilization 0.98 --language-model-only --attention-backend FLASH_ATTN --no-enable-prefix-caching --mamba-cache-mode align \\\n  --compilation-config '{\"mode\":0,\"cudagraph_mode\":\"FULL_DECODE_ONLY\",\"cudagraph_capture_sizes\":[1,2,3,4,8]}'  (no --speculative-config)",
+  "concurrency": 1,
+  "temperature": 0,
+  "stream": true,
+  "maxTokens": 512,
+  "warmup": 1,
+  "iterations": 3,
+  "mode": "remote",
+  "servedModel": "hotschmoe-dd",
+  "prefixCacheBust": "leading_nonce_per_request",
+  "promptSource": "canonical:reasoning-v1",
+  "specDecoding": false,
+  "mtpEnabled": false
+ },
+ "metricSource": "remote_endpoint",
+ "timingSource": "client_observed_http",
+ "samples": [
+  {
+   "iteration": 1,
+   "tokSOut": 61.267059836940746,
+   "ttftMs": 2313.516771,
+   "outputTokens": 512,
+   "promptTokens": 346,
+   "draftN": null,
+   "draftAccepted": null
+  },
+  {
+   "iteration": 2,
+   "tokSOut": 61.2837338600679,
+   "ttftMs": 2315.241749,
+   "outputTokens": 512,
+   "promptTokens": 347,
+   "draftN": null,
+   "draftAccepted": null
+  },
+  {
+   "iteration": 3,
+   "tokSOut": 61.29791093000891,
+   "ttftMs": 2290.762817,
+   "outputTokens": 512,
+   "promptTokens": 343,
+   "draftN": null,
+   "draftAccepted": null
+  }
+ ],
+ "tokSOut": 61.3,
+ "tokSOutSource": "inter_token",
+ "ttftMs": 2315.24,
+ "ttftSource": "stream_first_token",
+ "outputTokens": 512,
+ "promptTokens": 347,
+ "prefillTokens": 0,
+ "prompt": "You are helping a small robotics club plan a weekend build. Work through each part carefully and show your reasoning.\n\n1. The club has 7 members and a budget of 412 dollars. A motor driver costs 18.50, a microcontroller 23.75, and each member wants one of each plus a shared 3D-printer spool at 27.90. After buying everything, they split the remainder evenly on batteries priced at 6.35 each. How many batteries can they buy in total, and how much money is left over?\n\n2. Two members disagree about wheel size. Alice says a larger wheel gives more torque at the ground; Ben says it gives more speed. Explain who is right, what tradeoff is actually involved, and how gear ratio changes the answer.\n\n3. Write a short, plain-English procedure (six to nine steps) for safely testing a new motor circuit for the first time, including what to check before applying power.\n\n4. Finally, propose one creative feature for the robot that would be unusual for a club project, and give two concrete risks with how you would mitigate each.\n\nAnswer all four parts in order with clear headings.",
+ "promptSha256": "9000edaadb16fc77ab78b39917245a03d4d7585c3ba770cb045a47a0e0683445",
+ "promptSample": "You are helping a small robotics club plan a weekend build. Work through each part carefully and show your reasoning.\n\n1. The club has 7 members and a budget of 412 dollars. A motor driver costs 18.50, a microcontroller 23.75, and each member wants one of each plus a shared 3D-printer spool at 27.90. After buying everything, they split the remainder evenly on batteries priced at 6.35 each. How many batteries can they buy in total, and how much money is left over?\n\n2. Two members disagree about wheel size. Alice says a larger wheel gives more torque at the ground; Ben says it gives more speed. Explain who is right, what tradeoff is actually involved, and how gear ratio changes the answer.\n\n3. Write a short, plain-English procedure (six to nine steps) for safely testing a new motor circuit for the first time, including what to check before applying power.\n\n4. Finally, propose one creative feature for the robot that would be unusual for a club project, and give two concrete risks with how you would mitigate each.\n\nAnswer all four parts in order with clear headings.",
+ "outputSha256": "ebfcf3185d7d378f7c81d5feaa7011a3482891476f3debabe35b116e5dc1fd08",
+ "outputSample": "We need answer user's four parts. Need solve math carefully. Let's parse.\n\nPart1: 7 members, budget 412. Motor driver 18.50, microcontroller 23.75, each member wants one of each plus shared 3D-printer spool 27.90. After buying everything, split remainder evenly on batteries priced 6.35 each. How many batteries can they buy in total, and how much money left over?\n\nNeed interpret: each member wants one motor driver and one microcontroller? \"one of each\" likely one motor driver and one microcontroller per member. Plus shared spool. Total cost = 7*(18.50+23.75)+27.90 = 7*42.25 +27.90 = 295.75+27.90=323.65. Remainder = 412-323.65=88.35. Batteries 6.35 each. 88.35/6.35 =? 6.35*13=82.55; *14=88.90 too high. So 13 batteries, leftover 88.35-82.55=5.80. \"split the remainder evenly on batteries\" maybe each member gets same number? 13 total not evenly split among 7. Could mean they use remainder to buy batteries, not necessarily evenly per member? Phrase: \"After buying everything, they split the remainder evenly on batteries priced at 6.35 each.\" Could mean they divide remainder equally among members to buy batteries? If each member gets equal share of remainder, each share = 88.35/7 = 12.6214, can buy 1 battery each? total 7 batteries leftover 44.35? But \"How many batteries can they buy in total\" likely total from remainder, not per member. \"split the remainder evenly on batteries\" maybe means spend remainder on batteries evenly? Hmm.\n\nLet's examine wording: \"After buying everything, they split the remainder evenly on batteries priced at 6.35 each.\" Could mean they take the remainder and use it to buy batteries, splitting the remainder evenly among batteries? Not likely. Maybe \"split the",
+ "engineTimingsRaw": {
+  "usage": {
+   "prompt_tokens": 347,
+   "total_tokens": 859,
+   "completion_tokens": 512
+  },
+  "nativeTimings": null,
+  "prometheusCounterDeltas": {
+   "vllm:request_success_total": 1.0,
+   "vllm:generation_tokens_total": 512.0,
+   "vllm:prompt_tokens_total": 347.0,
+   "vllm:prefix_cache_hits_total": 0.0
+  },
+  "provenance": "vLLM server usage and isolated global metric deltas; not per-request engine timings"
+ },
+ "contextLength": 131072,
+ "modelRevision": "main",
+ "notes": "Two Intel Arc Pro B70 (32 GB each, Xe2, kernel 7.1, Compute Runtime 26.22). vLLM 0.32 main + thin XPU fork (local branch b70/lmx-20261021, commit cfd2b6ffdb8f, based on vLLM main 5fd62688, not pushed) with out-of-tree plugins: GGUF IQ/Q2_0 SYCL kernels and an expert-parallel sidecar (card 0 runs the model and 138 of 512 experts per layer, card 1 the other 374; one vLLM worker, no oneCCL), fused decode hyper-connection/PLE/top-k kernels, hyper-connection weights rounded to Q8_0 copies (as in our Strata runs; the bf16-exact path measures ~16.2 ms/token vs 15.25), PLE table in pinned host RAM, full-decode XPU graphs, BF16 activations. This decode recipe does not yet include our faster sidecar prefill path, so TTFT is higher than in the Strata runs. No speculative decoding: no --speculative-config, server config speculative_config=null, zero draft tokens in the server counters, one token per forward pass. max_model_len 131072, prefix cache off, greedy (temperature 0), thinking on (server default; reasoning tokens counted as output), 512 max tokens, 1 warmup + 3 timed iterations with a new leading cache-bust nonce, median decode-rate sample. Client-observed HTTP streaming (lmx remote method); engineTimingsRaw holds vLLM usage plus isolated Prometheus counter deltas (vLLM has no per-request timings object). promotion gate: all checks pass except exact_repeat (detail follows). "
+}

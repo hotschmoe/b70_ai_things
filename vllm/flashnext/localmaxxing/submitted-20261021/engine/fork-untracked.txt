@@ -1,0 +1,6 @@
+vllm/models/qwen4_exp/gguf/mtp_loader.py
+vllm/models/qwen4_exp/gguf/mtp_ple.py
+vllm/models/qwen4_exp/gguf/ple_device.py
+vllm/models/qwen4_exp/gguf/ple_fast.py
+vllm/models/qwen4_exp/xpu/hc_decode.py
+vllm/models/qwen4_exp/xpu/topk_decode.py

@@ -1,0 +1,9 @@
+gpu-run: card 0 busy (held by: O5 pid=3958092 since=2026-10-21 03:21:19 cmd: /mnt/vm_8tb/github/b70_ai_things/bin/xpu-health); waiting up to 14400s ...
+gpu-run: card 1 busy (held by: X5 pid=3964428 since=2026-10-21 03:22:09 cmd: /mnt/vm_8tb/github/b70_ai_things/bin/xpu-health --card 1); waiting up to 14400s ...
+gpu-run: [L1] acquired card(s) 0 1 -> /mnt/vm_8tb/b70/build/vllm-flashnext/lmx-l1/frozen-repo/bin/xpu-health
+=== probe card 0 (img=vllm-xpu-env:int8g-v0251 timeout=60s) ===
+  card 0: OK
+=== probe card 1 (img=vllm-xpu-env:int8g-v0251 timeout=60s) ===
+  card 1: OK
+xpu-health: HEALTHY (cards 0 1)
+gpu-run: [L1] done in 27s (exit 0)

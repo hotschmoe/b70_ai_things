@@ -205,8 +205,78 @@ card-0 wait (1.8-2.0 s). Card 0 native helps at 12288 (its own Python
 bucket loop was host-bound there) and hurts below 8192 where its fused
 kernel is cheaper, hence `c0=auto`.
 
+### 4.6 p7 -- final recipe, 1K-128K (c0 auto:64, c1 native:32, bf16, cap 32768)
+
+| prompt tokens | TTFT | input tok/s | p1 (first path) |
+| ---: | ---: | ---: | ---: |
+| 1018 | 1.10 s | 924 | 1256 |
+| 8186 | 3.36 s | 2434 | 1761 |
+| 12283 | 4.89 s | 2511 | -- |
+| 32763 | 13.99 s | 2342 | 1491 |
+| 131067 | 82.6 s | 1587 | 1118 |
+
+Gates 323/667 pass, 32K filler math 323/667, decode C1 ITL p50 18.49 ms
+and C2 22.70/22.71 ms per stream (= O4 f4), health HEALTHY before and
+after, 0 flag timeouts. The 1K point is slower than p1 because the
+native card-1 op pays a fixed per-chunk cost (13 chunks x 3 index_select
++ dequant of the whole card-1 pack) that the fused kernel does not; a
+T-threshold for card 1 (fused below ~2K) is a one-line follow-up.
+
+Budget at the 12288 chunk (p7 profile arm, per chunk, 48 layers):
+
+| piece | ms | note |
+| --- | ---: | --- |
+| card-0 non-MoE between layers | 1920 | attention, GDN, HC, norms, router (41 ms/layer; X3 census 49 incl. glue) |
+| dispatch push, card 0 | 272 | 63 MB posted write at 11 GB/s |
+| card-0 shared expert | 93 | overlapped with card 1 |
+| card-0 experts (native, 138) | 1020-1240 | 21-26 ms/layer |
+| card-1 experts (native, 374) | 1710-2030 | 36-42 ms/layer, device; host 260-370 ms |
+| card-0 wait + add | 1300-1600 | card 1 minus card 0 experts |
+| TTFT, clean | 4890 | 2511 tok/s |
+
+### 4.7 Bench same-text check
+
+bench_latency's two-identical-requests check on the 6-token Paris prompt
+returned same=false in p6 and p7 (one token differs at position 14, both
+texts coherent; p1-p5 same=true). A 6-token prompt never enters the
+prefill path (T <= 8 is the decode kernel), and X1 recorded the same
+no-MTP same-load repeatability failure on this stack (JOURNAL 20:16). It
+is reported here, not attributed to the prefill change, and X4's
+exact-repeat gate is the place to settle it.
+
 X3's DP2/EP layout measured 2615 tok/s at 12288 (JOURNAL 21:36). There
 each card runs 256 experts with ~10 GB of headroom, so both halves use the
 dequant+bmm path. The sidecar's card 1 (374 experts, 1.19 GiB free) is the
 difference, not the transport: the sidecar's push+return at 12288 costs
 272 ms + ~0.5 s hidden inside the wait, against X3's padded RS 421 ms.
+
+## 5. Merged recipe for the localmaxxing serve (O4 decode + F1 prefill)
+
+`harness/f1_prefill_delta.env` is the flags delta on top of
+`harness/o4_recipe.env`; `harness/f1_merged_serve.sh` is a copy of O4's
+`o4_serve.sh` that appends the delta, serves `--max-num-batched-tokens
+12288 --max-model-len 131072`, and runs O4's greedy gate, bench_latency
+and `f1_probe.py`. `B70_EP_SO` in the delta points at
+`f1/b70_ep_C.f1c.so`, built from the shared `b70_ep_xpu/csrc` tree so it
+carries O4's `moe_ep.cpp` state (bf16 out, fused shared) and F1's
+`prefill_ep.cpp`. Verification window m1: see JOURNAL (F1, 2026-10-21).
+
+## 6. Next levers (measured, not done)
+
+1. Card 1 device time 36-42 ms/layer against a ~10-15 ms floor
+   (0.6 GB of packed experts at 280 GB/s + ~0.6 TFLOP of bf16 bmm). The
+   stage profile (`B70_BUCKET_PROFILE=1`, `f1/_C.f1bucket2.so`, sha
+   958e5d06) splits it into gather/dequant/pad/bmm/swiglu/combine per
+   chunk; expected suspects are the 13 per-chunk `index_select` copies
+   of packed rows and the two bucket-padded bmm on 32-expert batches.
+   Payoff up to ~0.8 s per 12288 chunk (card 0 then waits ~0).
+2. Overlap card 1 with card 0's next-layer trunk: not possible across
+   layers (the residual depends on y); sub-slicing within the MoE phase
+   does not change the card-1 sum, so it only helps once card 1 is no
+   longer the longer side.
+3. Expert rebalance (more experts on card 0) conflicts with the 2x200K
+   KV target: card 0 is at 396K tokens of KV with 138 experts.
+4. 32K-128K: the between-layers term grows 1.9 -> 7.9 s per chunk with
+   dense FA; the QSA indexer prefill (X3's helpers, B70_QSA=1 +
+   B70_PREFILL_QSA=1) is the lever there, unqualified on the sidecar.
+5. 1K prompts: card-1 fused below a T threshold (p1 was 1256 vs 924).

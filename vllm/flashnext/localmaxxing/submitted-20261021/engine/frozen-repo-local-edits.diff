@@ -1,0 +1,172 @@
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/o4_serve.sh vllm/flashnext/harness/o4_serve.sh
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/o4_serve.sh	2026-10-21 00:27:26.359800538 +0000
++++ vllm/flashnext/harness/o4_serve.sh	2026-10-21 02:08:34.078679809 +0000
+@@ -10,7 +10,7 @@
+ # O4_RECIPE (env file, default harness/o4_recipe.env), O4_SERVE_EXTRA
+ # ("K=V ..." appended), SKIP_HEALTH_BEFORE=1, SERVE_ARGS_EXTRA.
+ set -uo pipefail
+-REPO=/mnt/vm_8tb/github/b70_ai_things
++REPO=/mnt/vm_8tb/b70/build/vllm-flashnext/lmx-l1/frozen-repo
+ H=$REPO/vllm/flashnext/harness
+ B=/mnt/vm_8tb/b70/build/vllm-flashnext
+ TAG="${TAG:?TAG}"
+@@ -35,7 +35,7 @@
+   echo "HEALTH_BEFORE_RC:$?"
+   grep -q "xpu-health: HEALTHY" "$OUT/health-before.txt" || { echo "health before failed"; echo WINDOW_DONE; exit 3; }
+ fi
+-PYPATH="$B/c7b-fa-overlay:$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_ep_xpu:$REPO/vllm/flashnext/plugins/b70_qsa_xpu:$REPO/vllm/flashnext/plugins/b70_o4_xpu"
++PYPATH="$B/c7b-fa-overlay:/mnt/vm_8tb/b70/build/vllm-flashnext/vllm-lmx-20261021:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_ep_xpu:$REPO/vllm/flashnext/plugins/b70_qsa_xpu:$REPO/vllm/flashnext/plugins/b70_o4_xpu"
+ CFG='{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,3,4,8]}'
+ ( while true; do a=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
+     if [ "$a" -lt "$HARD_KB" ]; then echo "ABORT_LOW_RAM $a"; docker stop -t 5 "$NAME" >/dev/null 2>&1; exit 0; fi
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/o5_compare.py vllm/flashnext/harness/o5_compare.py
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/o5_compare.py	2026-10-21 02:10:19.677012359 +0000
++++ vllm/flashnext/harness/o5_compare.py	2026-10-20 20:35:32.141068382 +0000
+@@ -4,10 +4,8 @@
+   python3 o5_compare.py <ref tokens-*.json> <arm tokens-*.json> [...]
+ 
+ Reports, per phase and prompt, whether the ids are identical and the first
+-differing index. The GATE is arm vs reference (MTP on vs off) at C1 and at
+-C2; exit 0 only if that matches. C1 vs C2 inside one arm is printed as a
+-diagnostic only (C2 prefills two different prompts in one batch, so its
+-prefill numerics differ from C1's; that is not an MTP on/off effect).
++differing index. Also checks C1 vs C2 inside each arm (batch invariance
++across rows/T without MTP). Exit 0 only if everything matches.
+ """
+ 
+ from __future__ import annotations
+@@ -40,7 +38,8 @@
+         for p, seqs in c2.items():
+             for s in seqs:
+                 d = first_diff(c1[p][0], s)
+-                print(f"diag {arm['tag']}: c1 vs c2 '{p[:32]}' diff_at={d}")
++                ok &= d is None
++                print(f"{arm['tag']}: c1 vs c2 '{p[:32]}' diff_at={d}")
+     ref = arms[0]
+     for arm in arms[1:]:
+         for phase in ("c1", "c2"):
+@@ -51,7 +50,7 @@
+                     d = first_diff(x, y)
+                     ok &= d is None
+                     print(f"{ref['tag']} vs {arm['tag']} {phase} '{p[:32]}'#{i} diff_at={d} n={len(x)}")
+-    print("PARITY (on vs off, C1 and C2)", "PASS" if ok else "FAIL")
++    print("PARITY", "PASS" if ok else "FAIL")
+     return 0 if ok else 1
+ 
+ 
+Only in /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness: o5_q8_bench.py
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/patches/d3_attn.py vllm/flashnext/harness/patches/d3_attn.py
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/patches/d3_attn.py	2026-10-20 08:51:24.135664213 +0000
++++ vllm/flashnext/harness/patches/d3_attn.py	2026-10-21 02:13:39.741602910 +0000
+@@ -28,7 +28,7 @@
+ 
+ def install() -> None:
+     global _LOGGED
+-    sys.path.insert(0, "/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/plugins/b70_gdn_xpu")
++    sys.path.insert(0, "/mnt/vm_8tb/b70/build/vllm-flashnext/lmx-l1/frozen-repo/vllm/flashnext/plugins/b70_gdn_xpu")
+     import b70_gdn_xpu
+ 
+     b70_gdn_xpu.register()
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/patches/d3_gdn.py vllm/flashnext/harness/patches/d3_gdn.py
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/patches/d3_gdn.py	2026-10-20 09:46:12.376125814 +0000
++++ vllm/flashnext/harness/patches/d3_gdn.py	2026-10-21 02:13:39.740970915 +0000
+@@ -29,7 +29,7 @@
+ 
+ def install() -> None:
+     global _LOGGED
+-    sys.path.insert(0, "/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/plugins/b70_gdn_xpu")
++    sys.path.insert(0, "/mnt/vm_8tb/b70/build/vllm-flashnext/lmx-l1/frozen-repo/vllm/flashnext/plugins/b70_gdn_xpu")
+     import b70_gdn_xpu
+ 
+     b70_gdn_xpu.register()
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/patches/x5_gdn_ragged.py vllm/flashnext/harness/patches/x5_gdn_ragged.py
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/patches/x5_gdn_ragged.py	2026-10-21 02:15:15.321036928 +0000
++++ vllm/flashnext/harness/patches/x5_gdn_ragged.py	2026-10-21 01:59:50.810089902 +0000
+@@ -11,17 +11,6 @@
+     src = src.replace(before, after)
+ 
+ 
+-change('''  item.barrier(sycl::access::fence_space::local_space);
+-  return parts[0];
+-}''', '''  item.barrier(sycl::access::fence_space::local_space);
+-  const float result = parts[0];
+-  // Every subgroup must finish reading before the next reduction reuses
+-  // parts[0]. The q sum is immediately followed by the k sum.
+-  item.barrier(sycl::access::fence_space::local_space);
+-  return result;
+-}''')
+-
+-
+ change('template <bool IsSpec>\nvoid launch_decode(', r'''
+ // Snapshot the three input history rows before any value-head group writes
+ // shared q/k history. Work-groups have no cross-group barrier. Only this
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/x5_gdn_ragged_probe.py vllm/flashnext/harness/x5_gdn_ragged_probe.py
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/x5_gdn_ragged_probe.py	2026-10-21 02:15:15.325037049 +0000
++++ vllm/flashnext/harness/x5_gdn_ragged_probe.py	2026-10-21 01:59:50.813089993 +0000
+@@ -109,12 +109,6 @@
+                 state_exact=torch.equal(actual_s, expected_s),
+                 conv_exact=torch.equal(actual_c, expected_c),
+                 padding_exact=bool(torch.all(page[:, cb+sb:] == 90).item()))
+-            if not all(row[k] for k in ('core_exact', 'out_exact', 'state_exact', 'conv_exact', 'padding_exact')):
+-                row.update(core_maxabs=(core.float()-expected_core.float()).abs().max().item(),
+-                    out_maxabs=(output.float()-expected_out.float()).abs().max().item(),
+-                    state_maxabs=(actual_s-expected_s).abs().max().item(),
+-                    conv_maxabs=(actual_c.float()-expected_c.float()).abs().max().item())
+-                print(json.dumps(row), flush=True)
+             assert all(row[k] for k in ('core_exact', 'out_exact', 'state_exact', 'conv_exact', 'padding_exact')), row
+             graph = torch.xpu.XPUGraph()
+             with torch.xpu.graph(graph):
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/x5_serve_proxy.sh vllm/flashnext/harness/x5_serve_proxy.sh
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/x5_serve_proxy.sh	2026-10-21 01:54:11.492856214 +0000
++++ vllm/flashnext/harness/x5_serve_proxy.sh	2026-10-21 02:27:54.688007231 +0000
+@@ -1,7 +1,7 @@
+ #!/usr/bin/env bash
+ # X5 single-card quant/MTP comparison. xpu-run owns and pins the GPU lease.
+ set -euo pipefail
+-REPO=/mnt/vm_8tb/github/b70_ai_things
++REPO=/mnt/vm_8tb/b70/build/vllm-flashnext/lmx-l1/frozen-repo
+ B=/mnt/vm_8tb/b70/build/vllm-flashnext
+ QUANT=${QUANT:-UD-IQ3_XXS}
+ MTP_TOKENS=${MTP_TOKENS:-0}
+@@ -18,7 +18,7 @@
+   echo 'X5 ragged verification requires BF16 GDN'; exit 2
+ fi
+ sha256sum "$SO"
+-ENV_ARGS=(--env "B70_D3_GDN=${B70_D3_GDN:-0}" --env "B70_FUSE_SHARED=${B70_FUSE_SHARED:-1}")
++ENV_ARGS=(--env "B70_GGUF_CPU_DEQUANT=$REPO/vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu/libdequant_cpu.so" --env "B70_D3_GDN=${B70_D3_GDN:-0}" --env "B70_FUSE_SHARED=${B70_FUSE_SHARED:-1}")
+ ENV_ARGS+=(--env "B70_X5_PACK_LINEAR=${B70_X5_PACK_LINEAR:-0}")
+ ENV_ARGS+=(--env "B70_X5_Q8_LINEAR=${B70_X5_Q8_LINEAR:-0}")
+ ENV_ARGS+=(--env "B70_X5_CANONICAL=${B70_X5_CANONICAL:-0}")
+@@ -57,7 +57,7 @@
+ fi
+ exec "$REPO/vllm/flashnext/harness/xpu-run.sh" --card "$CARD" --name "$NAME" --port "$PORT" \
+   --env B70_GGUF=1 --env "B70_GGUF_PATH=$WEIGHTS" --env "B70_GGUF_SO=$SO" \
+-  --env "PYTHONPATH=$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_x5_xpu" \
++  --env "PYTHONPATH=/mnt/vm_8tb/b70/build/vllm-flashnext/vllm-lmx-20261021:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_x5_xpu" \
+   --env "B70_XPU_CG_RECLAIM=$RECLAIM" \
+   --env B70_GGUF_REF=0 --env B70_EAGER_QK=0 --env B70_PREFILL=0 \
+   --env SYCL_CACHE_PERSISTENT=0 --env "SYCL_CACHE_DIR=$B/cache/sycl-x5" \
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/xpu-entrypoint.sh vllm/flashnext/harness/xpu-entrypoint.sh
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/xpu-entrypoint.sh	2026-10-20 06:10:30.514291493 +0000
++++ vllm/flashnext/harness/xpu-entrypoint.sh	2026-10-21 02:08:34.071903931 +0000
+@@ -20,7 +20,7 @@
+ # lookup because the container ld cache does not list these bind mounts.
+ export LD_LIBRARY_PATH="/host-umd:/usr/local/lib:${VENV_LIB}:${TORCH_LIB}"
+ export PYTHONNOUSERSITE=1
+-export PYTHONPATH="/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/patches${PYTHONPATH:+:${PYTHONPATH}}"
++export PYTHONPATH="/mnt/vm_8tb/b70/build/vllm-flashnext/lmx-l1/frozen-repo/vllm/flashnext/harness/patches${PYTHONPATH:+:${PYTHONPATH}}"
+ 
+ # ZE_AFFINITY_MASK is the only device pin. Do not also set
+ # ONEAPI_DEVICE_SELECTOR to the same index: the Level Zero loader filters
+diff -ru -x __pycache__ /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/xpu-run.sh vllm/flashnext/harness/xpu-run.sh
+--- /mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/harness/xpu-run.sh	2026-10-20 06:10:30.710297291 +0000
++++ vllm/flashnext/harness/xpu-run.sh	2026-10-21 02:09:00.286487763 +0000
+@@ -427,6 +427,8 @@
+     -v "${VENV}:/opt/venv"
+     -v "${VENV}:${VENV}"
+     -v "${REPO}:${REPO}"
++    -v "${REPO}/vllm/flashnext/plugins/b70_memory_xpu:/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/plugins/b70_memory_xpu:ro"
++    -v "${REPO}/vllm/flashnext/plugins/b70_lowbit_xpu:/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/plugins/b70_lowbit_xpu:ro"
+     -v /mnt/cache:/mnt/cache
+     -v "${B70}:${B70}"
+     -v "${ENTRYPOINT}:/opt/xpu-entrypoint.sh:ro"

@@ -1,0 +1,6 @@
+# vLLM (fork branch b70/lmx-20261021 @ cfd2b6ffdb8f) + out-of-tree b70_gguf_xpu / b70_ep_xpu / b70_o4_xpu plugins, 2x Arc Pro B70, expert-parallel sidecar (card 1 runs 374 of 512 experts per layer), no speculative decoding
+B70_GGUF=1 B70_EP=1 B70_EP_SPLIT=profile B70_EP_Q0=138 B70_XPU_CG_RECLAIM=500 B70_PLE_DEVICE=1 B70_DECODE_HC=triton B70_DECODE_HC_GEMV=1 B70_DECODE_LEAN=1 B70_GEMV_BF16=1 B70_EP_SHARED_OVERLAP=1 B70_EP_FUSE_SHARED=1 B70_EP_BF16_OUT=1 B70_DECODE_TOPK=1 B70_LINEAR_CAT=1 B70_DENSE_GEMV=1 B70_DECODE_HC_Q8=1 B70_PLE_FUSED=1 B70_IQ3S_ROW=1 \
+vllm serve Qwen3.8-Flash-Next (hf config) --load-format b70_gguf --quantization b70_gguf (GGUF Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-0000{1,2}-of-00002.gguf; PLE table in host RAM) \
+  --tensor-parallel-size 1 --dtype bfloat16 --max-model-len 131072 --max-num-seqs 4 --max-num-batched-tokens 2048 \
+  --gpu-memory-utilization 0.98 --language-model-only --attention-backend FLASH_ATTN --no-enable-prefix-caching --mamba-cache-mode align \
+  --compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,3,4,8]}'  (no --speculative-config)

@@ -1,0 +1,5 @@
+51f304b431db82cd6cde1b6591c5caa19dd4184766a018eef615dac2068ce17c  /mnt/vm_8tb/b70/build/vllm-flashnext/x5/q8-fast/libb70_x5_xpu.so
+2bb3661f2b445ba57b3af0db5dbca192550bb22ebefac24d2a7f0a1953aae328  /mnt/vm_8tb/b70/build/vllm-flashnext/x5/gdn-bf16/libb70_gdn_xpu.so
+425788b21e86565665ddef1d5f72581c9e62fd25c70d26ffaca7560462e46d6a  /mnt/vm_8tb/b70/build/vllm-flashnext/x5/eventless-lazy/libx5_eventless_stub.so
+b2668e593652a74eec46be295958ad6d0ff5b21b50591b28713e0ae641f8c4a7  /mnt/vm_8tb/b70/build/vllm-flashnext/x5/eventless-lazy/libx5_eventless_helper.so
+38f7176ac290cb264268185c864da2dea1fcc36d07535fff021fb636d6538dcc  /mnt/vm_8tb/b70/build/vllm-flashnext/lmx-l1/frozen-repo/vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu/_C.o3g.so

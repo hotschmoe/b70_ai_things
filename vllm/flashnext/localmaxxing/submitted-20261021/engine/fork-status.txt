@@ -1,0 +1,19 @@
+ M tests/models/qwen4_exp/test_b70_gguf_mapping.py
+ M vllm/_xpu_ops.py
+ M vllm/distributed/device_communicators/xpu_communicator.py
+ M vllm/models/qwen4_exp/gguf/embedding.py
+ M vllm/models/qwen4_exp/gguf/linear.py
+ M vllm/models/qwen4_exp/gguf/mapping.py
+ M vllm/models/qwen4_exp/gguf/moe.py
+ M vllm/models/qwen4_exp/gguf/ops_interface.py
+ M vllm/models/qwen4_exp/gguf/ple.py
+ M vllm/models/qwen4_exp/gguf/serve_loader.py
+ M vllm/models/qwen4_exp/xpu/model.py
+ M vllm/models/qwen4_exp/xpu/mtp.py
+ M vllm/v1/worker/gpu/model_runner.py
+?? vllm/models/qwen4_exp/gguf/mtp_loader.py
+?? vllm/models/qwen4_exp/gguf/mtp_ple.py
+?? vllm/models/qwen4_exp/gguf/ple_device.py
+?? vllm/models/qwen4_exp/gguf/ple_fast.py
+?? vllm/models/qwen4_exp/xpu/hc_decode.py
+?? vllm/models/qwen4_exp/xpu/topk_decode.py

@@ -1,101 +1,101 @@
 {
-  "backend": "xpu",
-  "batchSize": 1,
-  "benchmarkMode": "remote",
-  "contextLength": 131072,
-  "engineBuild": "b70-lmx-20261021 (vllm fork b70/lmx-20261021, X5 35B recipe)",
-  "engineCommit": "cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95",
-  "engineFlags": {
-    "commandSnippet": "# vLLM (fork branch b70/lmx-20261021 @ cfd2b6ffdb8f) + out-of-tree b70_gguf_xpu / b70_x5_xpu plugins, one Arc Pro B70, no speculative decoding\nB70_D3_GDN_SPEC=0 B70_X5_BATCH_LINEAR=0 B70_X5_CANONICAL=1 B70_X5_EVENTLESS=1 B70_X5_EVENTLESS_LAZY=1 B70_X5_GDN_BF16=1 B70_X5_GDN_MIXED=0 B70_X5_GDN_RAGGED=0 B70_X5_PACK_LINEAR=1 B70_X5_Q8_FAST=1 B70_X5_Q8_LINEAR=1 MAX_LEN=131072 MTP_TOKENS=0 QUANT=UD-IQ3_XXS X5_LMX=1 B70_GGUF=1 B70_FUSE_SHARED=1 B70_PREFILL=0 \\\nvllm serve Qwen/Qwen3.6-35B-A3B --load-format b70_gguf --quantization b70_gguf (GGUF Qwen3.6-35B-A3B-UD-IQ3_XXS.gguf) \\\n  --tensor-parallel-size 1 --dtype bfloat16 --max-model-len 131072 --max-num-seqs 2 --max-num-batched-tokens 1024 \\\n  --gpu-memory-utilization 0.90 --language-model-only --attention-backend FLASH_ATTN --no-enable-prefix-caching \\\n  --compilation-config '{\"mode\":0,\"cudagraph_mode\":\"FULL_DECODE_ONLY\",\"cudagraph_capture_sizes\":[1,2,3,4,6,8]}'  (no --speculative-config)",
-    "concurrency": 1,
-    "iterations": 3,
-    "maxTokens": 512,
-    "mode": "remote",
-    "mtpEnabled": false,
-    "prefixCacheBust": "leading_nonce_per_request",
-    "promptSource": "canonical:reasoning-v1",
-    "servedModel": "hotschmoe-dd",
-    "specDecoding": false,
-    "stream": true,
-    "temperature": 0,
-    "warmup": 1
+ "backend": "xpu",
+ "batchSize": 1,
+ "benchmarkMode": "remote",
+ "contextLength": 131072,
+ "engineBuild": "b70-lmx-20261021 (vllm fork b70/lmx-20261021, X5 35B recipe)",
+ "engineCommit": "cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95",
+ "engineFlags": {
+  "commandSnippet": "# vLLM (fork branch b70/lmx-20261021 @ cfd2b6ffdb8f) + out-of-tree b70_gguf_xpu / b70_x5_xpu plugins, one Arc Pro B70, no speculative decoding\nB70_D3_GDN_SPEC=0 B70_X5_BATCH_LINEAR=0 B70_X5_CANONICAL=1 B70_X5_EVENTLESS=1 B70_X5_EVENTLESS_LAZY=1 B70_X5_GDN_BF16=1 B70_X5_GDN_MIXED=0 B70_X5_GDN_RAGGED=0 B70_X5_PACK_LINEAR=1 B70_X5_Q8_FAST=1 B70_X5_Q8_LINEAR=1 MAX_LEN=131072 MTP_TOKENS=0 QUANT=UD-IQ3_XXS X5_LMX=1 B70_GGUF=1 B70_FUSE_SHARED=1 B70_PREFILL=0 \\\nvllm serve Qwen/Qwen3.6-35B-A3B --load-format b70_gguf --quantization b70_gguf (GGUF Qwen3.6-35B-A3B-UD-IQ3_XXS.gguf) \\\n  --tensor-parallel-size 1 --dtype bfloat16 --max-model-len 131072 --max-num-seqs 2 --max-num-batched-tokens 1024 \\\n  --gpu-memory-utilization 0.90 --language-model-only --attention-backend FLASH_ATTN --no-enable-prefix-caching \\\n  --compilation-config '{\"mode\":0,\"cudagraph_mode\":\"FULL_DECODE_ONLY\",\"cudagraph_capture_sizes\":[1,2,3,4,6,8]}'  (no --speculative-config)",
+  "concurrency": 1,
+  "iterations": 3,
+  "maxTokens": 512,
+  "mode": "remote",
+  "mtpEnabled": false,
+  "prefixCacheBust": "leading_nonce_per_request",
+  "promptSource": "canonical:reasoning-v1",
+  "servedModel": "hotschmoe-dd",
+  "specDecoding": false,
+  "stream": true,
+  "temperature": 0,
+  "warmup": 1
+ },
+ "engineName": "vllm",
+ "engineRepository": "https://github.com/vllm-project/vllm",
+ "engineTimingsRaw": {
+  "nativeTimings": null,
+  "prometheusCounterDeltas": {
+   "vllm:generation_tokens_total": 512,
+   "vllm:prefix_cache_hits_total": 0,
+   "vllm:prompt_tokens_total": 303,
+   "vllm:request_success_total": 1
   },
-  "engineName": "vllm",
-  "engineRepository": "https://github.com/vllm-project/vllm",
-  "engineTimingsRaw": {
-    "nativeTimings": null,
-    "prometheusCounterDeltas": {
-      "vllm:generation_tokens_total": 512,
-      "vllm:prefix_cache_hits_total": 0,
-      "vllm:prompt_tokens_total": 303,
-      "vllm:request_success_total": 1
-    },
-    "provenance": "vLLM server usage and isolated global metric deltas; not per-request engine timings",
-    "usage": {
-      "completion_tokens": 512,
-      "prompt_tokens": 303,
-      "total_tokens": 815
-    }
+  "provenance": "vLLM server usage and isolated global metric deltas; not per-request engine timings",
+  "usage": {
+   "completion_tokens": 512,
+   "prompt_tokens": 303,
+   "total_tokens": 815
+  }
+ },
+ "engineVersion": "0.32.1rc1.dev94+g5fd62688f",
+ "hardware": {
+  "cpu": "AMD Ryzen Threadripper 1950X 16-Core Processor",
+  "gpuCount": 1,
+  "gpuName": "Intel Arc Pro B70",
+  "hwClass": "DISCRETE_GPU",
+  "os": "Linux",
+  "ramGb": 128,
+  "vramGb": 32
+ },
+ "hfId": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+ "id": "cmvhi9x0k033rrf01tej20yt5",
+ "metricSource": "remote_endpoint",
+ "modelRevision": "5bc3e238d916f48a861bac2f8a1990a0e9b7e98d",
+ "notes": "One Intel Arc Pro B70 (32 GB, Xe2, kernel 7.1, Compute Runtime 26.22). vLLM 0.32 main + thin XPU fork (local branch b70/lmx-20261021, commit cfd2b6ffdb8f, based on vLLM main 5fd62688, not pushed) with our out-of-tree GGUF XPU plugin (custom SYCL MoE/GEMV kernels for Q4_K/IQ formats, BF16 GDN kernel, Q8 linear path), BF16 activations, full-decode XPU graphs. Unsloth Dynamic GGUF loaded by the plugin (MTP head present in the file but unused). No speculative decoding: no --speculative-config, server config speculative_config=null, zero draft tokens in the server counters, one token per forward pass. max_model_len 131072, prefix cache off, greedy (temperature 0), thinking on (server default; reasoning tokens counted as output), 512 max tokens, 1 warmup + 3 timed iterations with a new leading cache-bust nonce, median decode-rate sample. Client-observed HTTP streaming (lmx remote method); engineTimingsRaw holds vLLM usage plus isolated Prometheus counter deltas (vLLM has no per-request timings object). promotion gate: all checks pass except exact_repeat (detail follows). Gate detail: exact repeat is bitwise identical across both C1 passes (4 prompts x 96 forced tokens) and across both C2 passes, but one prompt decoded inside a 2-request batch diverges from its single-stream tokens at token 80 (deterministically, same in both C2 rounds): known batch-shape variance of the decode kernels (M=1 vs M=2 GDN/MoE paths), not run-to-run nondeterminism. This submission is single-stream (C1), where repeats are exact. ",
+ "outputSample": "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Context:** Small robotics club planning a weekend build.\n   - **Part 1:** Math problem. 7 members, budget $412. Costs: motor driver $18.50, microcontroller $23.75, each member wants one of each (so 7 motor drivers, 7 microcontrollers), plus a shared 3D-printer spool $27.90. After buying everything, split remainder evenly on batteries at $6.35 each. Find: total batteries bought, money left over.\n   - **Part 2:** Physics/Engineering question. Alice: larger wheel = more torque at ground. Ben: larger wheel = more speed. Explain who's right, tradeoff, and how gear ratio changes it.\n   - **Part 3:** Procedure: 6-9 steps, plain English, safely testing a new motor circuit for the first time, including pre-power checks.\n   - **Part 4:** Creative feature proposal (unusual for club project), two concrete risks, mitigation for each.\n   - **Format:** Clear headings, answer all four parts in order.\n\n   - **Constraint Check:** The prompt starts with a nonce/cache-bust string. I should ignore it as it's just a system artifact. I need to follow the instructions carefully.\n\n2.  **Part 1: Math Calculation**\n   - Budget: $412.00\n   - Costs per member (7 members):\n     - Motor driver: $18.50 \u00d7 7 = $129.50\n     - Microcontroller: $23.75 \u00d7 7 = $166.25\n   - Shared item:\n     - 3D printer spool: $27.90\n   - Total initial cost: $129.50 + $166.25 + $27.90 = $323.65\n   - Remainder: $412.00 - $323.65 = $88.35\n   - Battery cost: $6.35 each\n   - Number of batteries: $88.35 / $6.35 = 13.913... \u2192 They can buy 13 batteries (must be",
+ "outputSha256": "6976b6cf4d5dc868b1851ceb8871c035eecc66591c7016de94e63936afb853fe",
+ "outputTokens": 512,
+ "prefillTokens": 0,
+ "prompt": "You are helping a small robotics club plan a weekend build. Work through each part carefully and show your reasoning.\n\n1. The club has 7 members and a budget of 412 dollars. A motor driver costs 18.50, a microcontroller 23.75, and each member wants one of each plus a shared 3D-printer spool at 27.90. After buying everything, they split the remainder evenly on batteries priced at 6.35 each. How many batteries can they buy in total, and how much money is left over?\n\n2. Two members disagree about wheel size. Alice says a larger wheel gives more torque at the ground; Ben says it gives more speed. Explain who is right, what tradeoff is actually involved, and how gear ratio changes the answer.\n\n3. Write a short, plain-English procedure (six to nine steps) for safely testing a new motor circuit for the first time, including what to check before applying power.\n\n4. Finally, propose one creative feature for the robot that would be unusual for a club project, and give two concrete risks with how you would mitigate each.\n\nAnswer all four parts in order with clear headings.",
+ "promptSample": "You are helping a small robotics club plan a weekend build. Work through each part carefully and show your reasoning.\n\n1. The club has 7 members and a budget of 412 dollars. A motor driver costs 18.50, a microcontroller 23.75, and each member wants one of each plus a shared 3D-printer spool at 27.90. After buying everything, they split the remainder evenly on batteries priced at 6.35 each. How many batteries can they buy in total, and how much money is left over?\n\n2. Two members disagree about wheel size. Alice says a larger wheel gives more torque at the ground; Ben says it gives more speed. Explain who is right, what tradeoff is actually involved, and how gear ratio changes the answer.\n\n3. Write a short, plain-English procedure (six to nine steps) for safely testing a new motor circuit for the first time, including what to check before applying power.\n\n4. Finally, propose one creative feature for the robot that would be unusual for a club project, and give two concrete risks with how you would mitigate each.\n\nAnswer all four parts in order with clear headings.",
+ "promptSha256": "9000edaadb16fc77ab78b39917245a03d4d7585c3ba770cb045a47a0e0683445",
+ "promptTokens": 303,
+ "quantization": "Unsloth-Dynamic-IQ3_XXS",
+ "samples": [
+  {
+   "draftAccepted": null,
+   "draftN": null,
+   "iteration": 1,
+   "outputTokens": 512,
+   "promptTokens": 303,
+   "tokSOut": 121.84630034462218,
+   "ttftMs": 719.658763
   },
-  "engineVersion": "0.32.1rc1.dev94+g5fd62688f",
-  "hardware": {
-    "cpu": "AMD Ryzen Threadripper 1950X 16-Core Processor",
-    "gpuCount": 1,
-    "gpuName": "Intel Arc Pro B70",
-    "hwClass": "DISCRETE_GPU",
-    "os": "Linux",
-    "ramGb": 128,
-    "vramGb": 32
+  {
+   "draftAccepted": null,
+   "draftN": null,
+   "iteration": 2,
+   "outputTokens": 512,
+   "promptTokens": 303,
+   "tokSOut": 120.87984504820012,
+   "ttftMs": 719.217722
   },
-  "hfId": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
-  "id": "cmvhi9x0k033rrf01tej20yt5",
-  "metricSource": "remote_endpoint",
-  "modelRevision": "5bc3e238d916f48a861bac2f8a1990a0e9b7e98d",
-  "notes": "One Intel Arc Pro B70 (32 GB, Xe2, kernel 7.1, Compute Runtime 26.22). vLLM 0.32 main + thin XPU fork (local branch b70/lmx-20261021, commit cfd2b6ffdb8f, based on vLLM main 5fd62688, not pushed) with our out-of-tree GGUF XPU plugin (custom SYCL MoE/GEMV kernels for Q4_K/IQ formats, BF16 GDN kernel, Q8 linear path), BF16 activations, full-decode XPU graphs. Unsloth Dynamic GGUF loaded by the plugin (MTP head present in the file but unused). No speculative decoding: no --speculative-config, server config speculative_config=null, zero draft tokens in the server counters, one token per forward pass. max_model_len 131072, prefix cache off, greedy (temperature 0), thinking on (server default; reasoning tokens counted as output), 512 max tokens, 1 warmup + 3 timed iterations with a new leading cache-bust nonce, median decode-rate sample. Client-observed HTTP streaming (lmx remote method); engineTimingsRaw holds vLLM usage plus isolated Prometheus counter deltas (vLLM has no per-request timings object). promotion gate: all checks pass except exact_repeat (detail follows). Gate detail: exact repeat is bitwise identical across both C1 passes (4 prompts x 96 forced tokens) and across both C2 passes, but one prompt decoded inside a 2-request batch diverges from its single-stream tokens at token 80 (deterministically, same in both C2 rounds): known batch-shape variance of the decode kernels (M=1 vs M=2 GDN/MoE paths), not run-to-run nondeterminism. This submission is single-stream (C1), where repeats are exact. ",
-  "outputSample": "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Context:** Small robotics club planning a weekend build.\n   - **Part 1:** Math problem. 7 members, budget $412. Costs: motor driver $18.50, microcontroller $23.75, each member wants one of each (so 7 motor drivers, 7 microcontrollers), plus a shared 3D-printer spool $27.90. After buying everything, split remainder evenly on batteries at $6.35 each. Find: total batteries bought, money left over.\n   - **Part 2:** Physics/Engineering question. Alice: larger wheel = more torque at ground. Ben: larger wheel = more speed. Explain who's right, tradeoff, and how gear ratio changes it.\n   - **Part 3:** Procedure: 6-9 steps, plain English, safely testing a new motor circuit for the first time, including pre-power checks.\n   - **Part 4:** Creative feature proposal (unusual for club project), two concrete risks, mitigation for each.\n   - **Format:** Clear headings, answer all four parts in order.\n\n   - **Constraint Check:** The prompt starts with a nonce/cache-bust string. I should ignore it as it's just a system artifact. I need to follow the instructions carefully.\n\n2.  **Part 1: Math Calculation**\n   - Budget: $412.00\n   - Costs per member (7 members):\n     - Motor driver: $18.50 × 7 = $129.50\n     - Microcontroller: $23.75 × 7 = $166.25\n   - Shared item:\n     - 3D printer spool: $27.90\n   - Total initial cost: $129.50 + $166.25 + $27.90 = $323.65\n   - Remainder: $412.00 - $323.65 = $88.35\n   - Battery cost: $6.35 each\n   - Number of batteries: $88.35 / $6.35 = 13.913... → They can buy 13 batteries (must be",
-  "outputSha256": "6976b6cf4d5dc868b1851ceb8871c035eecc66591c7016de94e63936afb853fe",
-  "outputTokens": 512,
-  "prefillTokens": 0,
-  "prompt": "You are helping a small robotics club plan a weekend build. Work through each part carefully and show your reasoning.\n\n1. The club has 7 members and a budget of 412 dollars. A motor driver costs 18.50, a microcontroller 23.75, and each member wants one of each plus a shared 3D-printer spool at 27.90. After buying everything, they split the remainder evenly on batteries priced at 6.35 each. How many batteries can they buy in total, and how much money is left over?\n\n2. Two members disagree about wheel size. Alice says a larger wheel gives more torque at the ground; Ben says it gives more speed. Explain who is right, what tradeoff is actually involved, and how gear ratio changes the answer.\n\n3. Write a short, plain-English procedure (six to nine steps) for safely testing a new motor circuit for the first time, including what to check before applying power.\n\n4. Finally, propose one creative feature for the robot that would be unusual for a club project, and give two concrete risks with how you would mitigate each.\n\nAnswer all four parts in order with clear headings.",
-  "promptSample": "You are helping a small robotics club plan a weekend build. Work through each part carefully and show your reasoning.\n\n1. The club has 7 members and a budget of 412 dollars. A motor driver costs 18.50, a microcontroller 23.75, and each member wants one of each plus a shared 3D-printer spool at 27.90. After buying everything, they split the remainder evenly on batteries priced at 6.35 each. How many batteries can they buy in total, and how much money is left over?\n\n2. Two members disagree about wheel size. Alice says a larger wheel gives more torque at the ground; Ben says it gives more speed. Explain who is right, what tradeoff is actually involved, and how gear ratio changes the answer.\n\n3. Write a short, plain-English procedure (six to nine steps) for safely testing a new motor circuit for the first time, including what to check before applying power.\n\n4. Finally, propose one creative feature for the robot that would be unusual for a club project, and give two concrete risks with how you would mitigate each.\n\nAnswer all four parts in order with clear headings.",
-  "promptSha256": "9000edaadb16fc77ab78b39917245a03d4d7585c3ba770cb045a47a0e0683445",
-  "promptTokens": 303,
-  "quantization": "Unsloth-Dynamic-IQ3_XXS",
-  "samples": [
-    {
-      "draftAccepted": null,
-      "draftN": null,
-      "iteration": 1,
-      "outputTokens": 512,
-      "promptTokens": 303,
-      "tokSOut": 121.84630034462218,
-      "ttftMs": 719.658763
-    },
-    {
-      "draftAccepted": null,
-      "draftN": null,
-      "iteration": 2,
-      "outputTokens": 512,
-      "promptTokens": 303,
-      "tokSOut": 120.87984504820012,
-      "ttftMs": 719.217722
-    },
-    {
-      "draftAccepted": null,
-      "draftN": null,
-      "iteration": 3,
-      "outputTokens": 512,
-      "promptTokens": 304,
-      "tokSOut": 120.43210216206487,
-      "ttftMs": 721.285552
-    }
-  ],
-  "submissionId": "cmvhi9x0k033rrf01tej20yt5",
-  "submissionStatus": "approved",
-  "submittedAt": "2026-10-21T02:41:23.300Z",
-  "timingSource": "client_observed_http",
-  "tokSOut": 120.9,
-  "tokSOutSource": "inter_token",
-  "ttftMs": 719.22,
-  "ttftSource": "stream_first_token"
+  {
+   "draftAccepted": null,
+   "draftN": null,
+   "iteration": 3,
+   "outputTokens": 512,
+   "promptTokens": 304,
+   "tokSOut": 120.43210216206487,
+   "ttftMs": 721.285552
+  }
+ ],
+ "submissionId": "cmvhi9x0k033rrf01tej20yt5",
+ "submissionStatus": "approved",
+ "submittedAt": "2026-10-21T02:41:23.300Z",
+ "timingSource": "client_observed_http",
+ "tokSOut": 120.9,
+ "tokSOutSource": "inter_token",
+ "ttftMs": 719.22,
+ "ttftSource": "stream_first_token"
 }

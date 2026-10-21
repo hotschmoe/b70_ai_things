@@ -3,3 +3,4 @@
 35b-ud-iq3_xxs code-v1: id cmvhibbft033urf01uqycd7eu APPROVED verified=True tokSOut=122.1 ttftMs=576.73 issues=[] submitted 2026-10-21T02:42:28Z
 35b-ud-q4_k_m reasoning-v1: id cmvhix9xu033yrf01fma4faax APPROVED verified=True tokSOut=97 ttftMs=562.58 issues=[] submitted 2026-10-21T02:59:32Z
 35b-ud-q4_k_m code-v1: id cmvhiyocc0341rf01lm0dd1k9 APPROVED verified=True tokSOut=97.2 ttftMs=448.62 issues=[] submitted 2026-10-21T03:00:38Z
+flashnext-iq3_xxs (O4 s4 recipe, 131072): measured 61.3 / 61.5 tok/s, valid packets, NOT SUBMITTED (orchestrator: below our Strata no-spec 66.2 / 65.9). Draft payloads kept in flashnext-iq3_xxs-NOT-SUBMITTED/.

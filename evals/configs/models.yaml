@@ -1596,3 +1596,155 @@ models:
     calibration: ista-gsq-rco
     serve_cmd: ""
     notes: "Won the 20261014 langs/sysadmin A/B on a0116b27/v0.1.43.1. Current bounded serving qualification: clean upstream 296b59d2/v0.1.44.1, split27, two200k, MTP4, parking16384 MiB/4 entries; strata/flash-next/serve-iq3xxs-200k.json. Exact weights in model-lock-ista-iq3.json. Verify live identity/config before graded use; new backend has short coherence/retrieval checks, no full quality re-eval or multi-day soak qualification."
+
+  - label: x1-qwen36-35b-ud-iq3xxs-vllm-mtp0
+    served_model_id: qwen3.6-35b-a3b-ud-iq3-xxs-mtp0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ3_XXS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: MTP_TOKENS=0 vllm/flashnext/harness/x1_serve_proxy.sh
+    notes: X1 short-context FULL_DECODE_ONLY proxy diagnostic, not a qualified shelf.
+  - label: x1-qwen36-35b-ud-iq3xxs-vllm-mtp2
+    served_model_id: qwen3.6-35b-a3b-ud-iq3-xxs-mtp2
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ3_XXS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: MTP_TOKENS=2 vllm/flashnext/harness/x1_serve_proxy.sh
+    notes: X1 native nextn MTP depth2 diagnostic, not a qualified shelf.
+  - label: x1-flashnext-ista-iq3xxs-vllm-rt-mtp2
+    served_model_id: qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-vllm-rt-mtp2
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_XXS
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: vllm/flashnext/harness/x1_serve_flashnext.sh
+    notes: X1 Strata rt MTP sidecar diagnostic, not a qualified shelf.
+  - label: x1-flashnext-ista-iq3xxs-vllm-rt-mtp0
+    served_model_id: qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-vllm-rt-mtp0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_XXS
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: MTP_TOKENS=0 vllm/flashnext/harness/x1_serve_flashnext.sh
+    notes: X1 position-ring PLE control for the rt MTP comparison, not a qualified shelf.
+
+  - label: x3-qwen36-35b-ud-iq3xxs-prefill
+    served_model_id: qwen3.6-35b-a3b-ud-iq3-xxs
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ3_XXS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: SERVED_NAME=hotschmoe-dd vllm/flashnext/harness/serve_qwen36_gguf.sh
+    notes: X3 matched GGUF prefill dispatch diagnostic. Flags and measured status in vllm/flashnext/reports/1X3_prefill.md. Unqualified shelf.
+
+  - label: x3-flashnext-ista-iq3xxs-prefill
+    served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-x3-prefill
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_XXS
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: vllm/flashnext/harness/serve_flashnext_prefill.sh
+    notes: X3 stock DP2/EP prefill candidate, MTP off. Per-op budget in vllm/flashnext/reports/1X3_prefill.md. Unqualified shelf.
+
+  - label: x2-flashnext-ista-gsq-rco-iq3xxs-memory
+    served_model_id: qwen3.8-flash-next-iq3-xxs
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_XXS
+    activations: b70-gguf-xpu-bf16
+    calibration: ISTA-GSQ-RCO
+    serve_cmd: vllm/flashnext/memory/run_window.sh
+    notes: X2 memory probes only; raw subdirectories distinguish BF16 and rejected FP8 token/head KV. No shelf or latency qualification. See vllm/flashnext/reports/1X2_kv_budget.md.
+
+  - label: x5-qwen36-35b-ud-iq3_xxs-mtp0
+    served_model_id: qwen3.6-35b-a3b-ud-iq3_xxs-x5-mtp0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ3_XXS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-IQ3_XXS MTP_TOKENS=0 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: x5-qwen36-35b-ud-iq3_xxs-mtp2
+    served_model_id: qwen3.6-35b-a3b-ud-iq3_xxs-x5-mtp2
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ3_XXS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-IQ3_XXS MTP_TOKENS=2 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: x5-qwen36-35b-ud-iq3_xxs-mtp3
+    served_model_id: qwen3.6-35b-a3b-ud-iq3_xxs-x5-mtp3
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ3_XXS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-IQ3_XXS MTP_TOKENS=3 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: x5-qwen36-35b-ud-iq4_xs-mtp0
+    served_model_id: qwen3.6-35b-a3b-ud-iq4_xs-x5-mtp0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ4_XS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-IQ4_XS MTP_TOKENS=0 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: x5-qwen36-35b-ud-iq4_xs-mtp2
+    served_model_id: qwen3.6-35b-a3b-ud-iq4_xs-x5-mtp2
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ4_XS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-IQ4_XS MTP_TOKENS=2 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: x5-qwen36-35b-ud-iq4_xs-mtp3
+    served_model_id: qwen3.6-35b-a3b-ud-iq4_xs-x5-mtp3
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-IQ4_XS-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-IQ4_XS MTP_TOKENS=3 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: x5-qwen36-35b-ud-q4_k_m-mtp0
+    served_model_id: qwen3.6-35b-a3b-ud-q4_k_m-x5-mtp0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-Q4_K_M-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-Q4_K_M MTP_TOKENS=0 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: x5-qwen36-35b-ud-q4_k_m-mtp2
+    served_model_id: qwen3.6-35b-a3b-ud-q4_k_m-x5-mtp2
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-Q4_K_M-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-Q4_K_M MTP_TOKENS=2 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: x5-qwen36-35b-ud-q4_k_m-mtp3
+    served_model_id: qwen3.6-35b-a3b-ud-q4_k_m-x5-mtp3
+    primary_client_id: hotschmoe-dd
+    family: qwen3.6-35b-a3b
+    weights: Unsloth-Qwen3.6-35B-A3B-UD-Q4_K_M-GGUF
+    activations: b70-gguf-xpu-bf16
+    serve_cmd: QUANT=UD-Q4_K_M MTP_TOKENS=3 vllm/flashnext/harness/x5_serve_proxy.sh
+    notes: X5 single-card comparison diagnostic. Not a qualified shelf.
+
+  - label: l1-flashnext-ista-iq3xxs-sidecar-lmx-mtp0
+    served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-vllm-sidecar-mtp0
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_XXS
+    activations: b70-gguf-xpu-bf16
+    calibration: ISTA-GSQ-RCO
+    serve_cmd: vllm/flashnext/localmaxxing/l1/l1_window_flashnext.sh
+    notes: L1 localmaxxing no-spec run of O4's sidecar decode recipe (EP, card 1 = remote experts), frozen fork branch b70/lmx-20261021. See vllm/flashnext/reports/2L1_localmaxxing.md. Not a qualified shelf.

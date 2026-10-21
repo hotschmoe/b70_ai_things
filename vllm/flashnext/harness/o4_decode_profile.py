@@ -240,6 +240,10 @@ def finish_steps(tag: str, steps: list[dict]) -> dict:
                 "min": round(min(vals), 3),
                 "max": round(max(vals), 3),
             }
+    if dec:
+        b = max(1, len(dec) // 8)
+        log(f"BUCKETS {tag} step_ms by position: " + " ".join(
+            f"{i}:{statistics.median([r['step_ms'] for r in dec[i:i + b]]):.2f}" for i in range(0, len(dec), b)))
     log(f"SUMMARY {tag} " + json.dumps(summ))
     return summ
 
@@ -315,12 +319,25 @@ def main() -> None:
     # Warm one request (first-use paths), not recorded.
     llm.generate([prompt], SamplingParams(temperature=0.0, max_tokens=8, ignore_eos=True), use_tqdm=False)
 
-    for tag, n in (("c1", 1), ("c2", 2)):
+    runs = (("c1", 1), ("c2", 2))
+    lmx = os.environ.get("O4_LMX") == "1"
+    if lmx:
+        # lmx shape: canonical prompts as chat (thinking at the server
+        # default), 512 tokens, no EOS stop; c2 = two reasoning streams.
+        here = "/mnt/vm_8tb/github/b70_ai_things/vllm/flashnext/localmaxxing"
+        texts = {k: open(f"{here}/{k}-v1.txt").read() for k in ("reasoning", "code")}
+        runs = (("c1", 1), ("c1code", 1), ("c2", 2))
+    for tag, n in runs:
         STEPS.clear()
         STATE["last_end"] = None
         STATE["record"] = True
         t = time.perf_counter()
-        outs = llm.generate([prompt] * n, spt, use_tqdm=False)
+        if lmx:
+            text = texts["code" if tag == "c1code" else "reasoning"]
+            convs = [[{"role": "user", "content": f"[O4 nonce {i}]\n" + text}] for i in range(n)]
+            outs = llm.chat(convs, spt, use_tqdm=False)
+        else:
+            outs = llm.generate([prompt] * n, spt, use_tqdm=False)
         wall = time.perf_counter() - t
         STATE["record"] = False
         summ = finish_steps(tag, list(STEPS))

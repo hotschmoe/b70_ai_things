@@ -1,11 +1,12 @@
 # X5 -- Qwen3.6-35B-A3B on one B70
 
-Fixed-kernel quant measurements are complete. IQ3 is fastest at8.12ms
-C1 p50; Q4_K_M is the preferred4-bit recipe at10.37ms, with lower
+Fixed-kernel quant measurements are complete. IQ3 is fastest at 8.12 ms
+C1 p50; Q4_K_M is the preferred 4-bit recipe at 10.37 ms, with lower
 matched prefix PPL than IQ4_XS. All three pass identity,
 coherence, exact repeat, source, normal exit and native pre/post health.
-MTP2 exact on/off/repeat/source gates pass; posthealth and depth3
-remain pending. No submission or rank-win claim.
+Both MTP depths pass every gate. Depth 3 gives 5.67 ms effective C1
+latency; depth 2 gives lower C2 latency on the short matched benchmark.
+No submission or rank-win claim.
 
 Raw root: /mnt/vm_8tb/b70/build/vllm-flashnext/x5/.
 The Flash-Next MTP implementation and Strata sidecar findings are in
@@ -105,29 +106,35 @@ corpus SHAefd86268d53e85efd67b67fcdf4846c7a4c56bc57cff41d00e3d7e4b57e17c46.
 
 ## MTP qualification
 
-Corrected depth2 matches all576raw token IDs across4C1+2C2 against
-noSpec, and passes exact same-load repeat. Source SHA maps match
-noSpec exactly; identity/coherence/source gates and normal exit0 pass.
-Native posthealth is pending behind other leased work. Depth3 pending.
+Corrected depths 2 and 3 each match all 576 raw token IDs across
+4 C1 + 2 C2 responses against noSpec, and pass exact same-load repeat.
+Source SHA maps match noSpec exactly; identity/coherence/source gates
+and normal exit 0 pass. Native pre/post health passes for both depths.
 
 | Draft depth | C1 effective ms/token | C2 effective ms/token/stream | Bench acceptance | Gate |
 | --- | ---: | --- | --- | --- |
 | 0 | 10.1616 | 11.2885 /11.2765 | n/a | PASS |
-| 2 | 6.6182 | 9.9137 /8.5302 | 91/120=75.83% | posthealth pending |
-| 3 | pending | pending | pending | pending |
+| 2 | 6.6182 | 9.9137 /8.5302 | 91/120=75.83% | PASS |
+| 3 | 5.6736 | 11.0375 /9.0111 | 98/159=61.64% | PASS |
 
 Effective latency is1000/decode_tok_s. Depth2 wire-chunk p50 is
-17.9341ms C1 and23.0351/23.0406ms C2; one chunk carries multiple
+17.9341ms C1 and23.0351/23.0406ms C2. Depth 3 wire-chunk p50 is
+17.8525 ms C1 and 27.5076/27.5768 ms C2; one chunk carries multiple
 accepted tokens. The short latency benchmark stops at EOS/128tokens.
 Acceptance is specific to these prompts, not a universal estimate.
 The serving log proves target FULL T3/T6 and native draft capture,
-plus real ragged T1/T2 verification using the fused kernel.
+plus real ragged T1/T2 verification using the fused kernel. Depth 3
+also completes FULL_DECODE_ONLY with the same graph-size list.
 
 Spec windows also collect unranked512-token canonical packets.
-Depth2 reasoning/code rates are147.1/141.8tok/s, with acceptance
-85.714/80.203% and mean accepted length2.714/2.604. Both local/API
-dry-run validations pass; ranking_eligible=false and no submission.
+Depth 2 reasoning/code rates are 147.1/141.8 tok/s, with acceptance
+85.714/80.203% and mean accepted length 2.714/2.604. Depth 3 reaches
+181.7/163.5 tok/s, acceptance 79.912/67.653% and mean accepted length
+3.397/3.030. All four local/API dry-run validations pass;
+ranking_eligible=false and no submission.
 These are separate workloads from the short completion benchmark.
+Choose depth 3 for measured C1 workloads; depth 2 is the measured C2
+choice. These finite prompt samples do not establish a universal depth.
 
 For a fresh matched reproduction, retain the new noSpec token file:
 
@@ -136,6 +143,9 @@ MTP_TOKENS=0 TAG=q4-fixed-nospec \
   bash vllm/flashnext/harness/x5_recipe_35b.sh
 X5_BASELINE=/mnt/vm_8tb/b70/build/vllm-flashnext/x5/q4-fixed-nospec/greedy.json \
   MTP_TOKENS=2 TAG=q4-fixed-mtp2 \
+  bash vllm/flashnext/harness/x5_recipe_35b.sh
+X5_BASELINE=/mnt/vm_8tb/b70/build/vllm-flashnext/x5/q4-fixed-nospec/greedy.json \
+  MTP_TOKENS=3 TAG=q4-fixed-mtp3 \
   bash vllm/flashnext/harness/x5_recipe_35b.sh
 ```
 
@@ -218,6 +228,8 @@ dry-run validates without creating a database entry. Historical packets
 in the old lazy-GDN tag are superseded and must not be the final recipe.
 Public Arc entries mix card counts, context and short/unverified output;
 this report does not claim a leaderboard win from unlike methods.
+Only the noSpec packets are eligible for the requested non-speculative
+ranking. MTP packets remain separate diagnostic variants.
 
 ## Lifecycle and limits
 
@@ -233,8 +245,10 @@ its missing paged config falls back to a capture-invalid D2H reference.
 A scoped native batch-invariant dense control passed at11.30ms C1,
 PPL8.52856, but did not fix C2 MTP by itself and is off in the final
 fast recipe. Historical MTP C1-only parity/speed rows are unqualified.
-NoSpec/MTP final health, source and teardown evidence must close
-before promotion. No shelf promotion, commits/pushes, DD start or
+All five final windows closed with HEALTHY native pre/post checks,
+unchanged source manifests and normal serve exit 0. The detached
+controller reports X5_FINAL_ALL_DONE at 2026-10-21 03:37:12 UTC.
+No shelf promotion, commits/pushes, DD start or
 GPU reset. Other agents' dirty changes are preserved.
 
 Claude fable-5.1 and claude-5.5 CLI consultations returned

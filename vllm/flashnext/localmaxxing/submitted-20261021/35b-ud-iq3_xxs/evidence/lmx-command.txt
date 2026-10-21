@@ -1,0 +1,6 @@
+# vLLM (fork branch b70/lmx-20261021 @ cfd2b6ffdb8f) + out-of-tree b70_gguf_xpu / b70_x5_xpu plugins, one Arc Pro B70, no speculative decoding
+B70_D3_GDN_SPEC=0 B70_X5_BATCH_LINEAR=0 B70_X5_CANONICAL=1 B70_X5_EVENTLESS=1 B70_X5_EVENTLESS_LAZY=1 B70_X5_GDN_BF16=1 B70_X5_GDN_MIXED=0 B70_X5_GDN_RAGGED=0 B70_X5_PACK_LINEAR=1 B70_X5_Q8_FAST=1 B70_X5_Q8_LINEAR=1 MAX_LEN=131072 MTP_TOKENS=0 QUANT=UD-IQ3_XXS X5_LMX=1 B70_GGUF=1 B70_FUSE_SHARED=1 B70_PREFILL=0 \
+vllm serve Qwen/Qwen3.6-35B-A3B --load-format b70_gguf --quantization b70_gguf (GGUF Qwen3.6-35B-A3B-UD-IQ3_XXS.gguf) \
+  --tensor-parallel-size 1 --dtype bfloat16 --max-model-len 131072 --max-num-seqs 2 --max-num-batched-tokens 1024 \
+  --gpu-memory-utilization 0.90 --language-model-only --attention-backend FLASH_ATTN --no-enable-prefix-caching \
+  --compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,3,4,6,8]}'  (no --speculative-config)

@@ -8566,3 +8566,117 @@ identical. b2v eff means are 9.8995 and 13.225. MTP2 wire itl is 17.93413 ms.
 VERDICT: no speed promotion. The 35B rows are proxy harness ITLs.
 The W3 row is a Flash-Next packet rate with the wrong first id.
 Not verified in this pass: none
+
+## 2026-10-21 00:40 F1 -- p7: final recipe qualified 1K-128K; decode unchanged
+
+CONFIG: O4 f4 base + F1 prefill: bf16 return, c0=auto:64 (fused DPAS
+below DQ_T 8192, native bucketed op above), c1=native:32, card-1 padded
+row cap 32768, card-0 cap 65536, chunk 12288, max_len 147456, seqs 2.
+Libraries EP f1/b70_ep_C.f1.so (3d7b231c), MoE o4/_C.o4pin-o3g.so
+(38f7176a), wide+bucket f1/_C.f1bucket.so (790230cb). READY 00:20:56.
+COMMAND: TAG=p7 harness/f1_window.sh (profile arm, then clean arm);
+raw f1/run-p7/.
+RESULT: health before/after HEALTHY. Gates 323/667 pass (both arms), 32K
+filler math 323/667 (prompt 32788). Clean TTFT: 1018 tok 1.10 s (924
+tok/s); 8186 tok 3.36 s (2434); 12283 tok 4.89 s (2511); 32763 tok
+13.99 s (2342); 131067 tok 82.6 s (1587). Decode C1 ITL p50 18.49 ms
+(54.2 tok/s), C2 22.70/22.71 ms per stream = O4 f4 base. Profile at the
+12288 chunk: push 0.27 s, card-0 experts 1.02-1.24 s, card-0 wait+add
+1.3-1.6 s, card-1 experts 1.71-2.03 s device, host_c1 0.26-0.37 s,
+between-layers 1.92 s (first chunk) rising to 7.9 s at 128K context.
+Same-text check on the 6-token Paris prompt again differs by one token
+(decode path, X1's repeatability finding; both texts coherent). 0 flag
+timeouts; SERVE_RC 0.
+VERDICT: the sidecar prefill reaches 2434 tok/s at 8K and 2511 at the
+12288 chunk (X3 DP2: 2615) with O4's decode intact; 32K 2342 and 128K
+1587 on dense FA. The card-1 device time (36-42 ms/layer, ~10-15 ms of
+dequant+GEMM floor) is the next lever; the stage-profile build
+(f1/_C.f1bucket2.so, B70_BUCKET_PROFILE=1) is ready but its window is
+deferred behind L1. Next: merged O4+F1 recipe for the localmaxxing
+serve (harness/f1_prefill_delta.env + harness/f1_merged_serve.sh).
+
+## 2026-10-21 03:40 UTC X5 -- all final proxy windows closed; Q4 noSpec and MTP2/3 qualified
+
+CONFIG: official Qwen3.6-35B-A3B, physical card1/logical0, TP1,
+BF16/FULL_DECODE_ONLY/installed FLASH_ATTN, maxlen4096/maxseq2.
+O3g 38f7176a, alignedQ8 51f304b4, fixed GDN R3 84dad4e8;
+BIO0/mixed1/ragged1/spec1, packed projections, canonical TP1 MoE,
+late eventless replay. Fixed stack, no CCL topology override.
+COMMAND: detached harness/x5_final_windows.sh; each window uses
+bin/gpu-run --card 1 plus device pin, native xpu-health before/after,
+21600s queue timeout, owned600s serve/RAM8GiB guard; measurement
+clients under bin/cpu-run --quiet outside the GPU lease queue.
+localmaxxing/validate_dry.sh on both MTP3 canonical payloads.
+Final CPU-only ASCII/AST/bash-n checks on42 own source/report files.
+RESULT: all5 final windows pass identity/coherence/exact C1+C2
+repeat/unchanged source/normal serve exit0/native pre+post HEALTHY.
+NoSpec C1 SSEp50 /C2 SSEp50 ms and prefix PPL:
+IQ3 8.1166 /10.2861,10.3282 /9.055633;
+IQ4 10.9075 /11.6587,11.6468 /8.764780;
+Q4 10.3716 /11.5693,11.5573 /8.508228.
+Both MTP depths match all576 baseline raw token IDs (4C1+2C2);
+noSpec/MTP2/MTP3 source SHA maps exactly match. Depth2 effective
+C1 6.6182ms,C2 9.9137/8.5302,bench acceptance91/120=75.83%;
+depth3 C1 5.6736ms,C2 11.0375/9.0111,accept98/159=61.64%.
+Depth3 wire p50 17.8525ms C1,27.5076/27.5768 C2 (multi-token
+chunks; do not call these per-token effective latency).
+Canonical512-output median reasoning/code rates: noSpec94.8/94.9,
+MTP2 147.1/141.8,MTP3 181.7/163.5tok/s. Depth3 canonical acceptance
+79.912/67.653%,mean accepted length3.397/3.030. Both MTP3 local and
+API dryrun validations valid=true,verification.verified=true,
+verification.issues=[]; ranking_eligible=false. All six Q4 canonical
+packets validated without submission; only noSpec is ranking-eligible.
+Controller X5_FINAL_ALL_DONE 2026-10-21T03:37:12Z. No own controller,
+GPU/CPU job or container remains; DD is inactive. Final gate summary:
+/mnt/vm_8tb/b70/build/vllm-flashnext/x5/final-qualified-summary.json.
+VERDICT: select Q4_K_M for the4-bit noSpec recipe (faster/lower
+matched prefix PPL than IQ4); IQ3 is fastest lower-bit alternative.
+Select MTP3 for measured C1, MTP2 for measured C2. Report and runnable
+recipe: reports/1X5_proxy35b.md,harness/x5_recipe_35b.sh. Context4096,
+finite prompts/windows; no200K/RAM-eviction/soak/leaderboard-win claim.
+GDN R3 local read-complete barrier fixes the inherited reduction race;
+please port deliberately to shared D3 after review of r2/r3 evidence.
+No shelf promotion, git commit/push, DD start or GPU reset performed.
+Other agents' changes preserved. Claude consultation attempts failed
+before a model responded; no responding model IDs or advice invented.
+
+## 2026-10-21 03:55 O4 -- per-token growth with position; lmx-shape windows queued (L1 gaps only)
+
+CONFIG: L1 03:30: s4 at max_len 131072 on the lmx suites 61.3/61.5 tok/s,
+inter-chunk mean 16.3 ms rising 15.9 -> 16.7 ms over 512 tokens.
+COMMAND: re-read o4/run-f14/steps-c1.jsonl (max_len 2048, 96 tokens) by
+16-step buckets.
+RESULT: the card-0 graph also grows at max_len 2048: 14.31 -> 14.46 ms
+over 96 tokens (~1.5 us per KV token per step, i.e. ~0.13 us per token per
+full-attention layer), the same slope as L1's 0.8 ms over 512 tokens. So
+max_len is not the cause; the FA paged decode (12 layers, split count
+picked at capture from the capture batch, O5 03:06) is the suspect: with
+one split a head's whole KV runs in one work-group.
+o4_decode_profile.py gained O4_LMX=1 (canonical reasoning/code prompts as
+chat, thinking at the default, 512 tokens, per-position step buckets) and
+o4_window.sh/o4_serve.sh take O4_FA_OVERLAY (O5's fa-overlay with
+B70_FA_KV_SPLITS). Windows queued behind L1 (o4/l1_gap.sh): La = f14
+recipe at max_len 131072, lmx shape; Lb = La + B70_FA_KV_SPLITS=8; Lc =
+Lb + B70_EP_ROUTE (o4e) + B70_DECODE_HC_Q8F (fused Q8 HC down+act and
+up+collapse, bitwise equal to the f14 kernels at T=1..8 on card 1,
+harness/o4_hcq8_fuse_test.py; 48 mixes 1.64 -> 1.22 ms at T=1).
+F1: f1/b70_ep_C.f1c.so (03:34) is built from the shared csrc tree and
+carries O4's route/skip-fill code too; the final lmx serve will be O4
+recipe + harness/f1_prefill_delta.env with that EP library.
+VERDICT: pending.
+
+## 2026-10-21 03:52 L1 -- W3b max_len control: 40960 == 131072 (61.3 / 61.5); Flash-Next not submitted; cards released
+
+CONFIG: as W3 but max_model_len 40960 (KV 450,560).
+COMMAND: l1_window_flashnext.sh TAG=w3b-fn-40k.
+RESULT: health HEALTHY before/after, integrity unchanged; gate same as W3
+(C2 batch-shape divergence now on prompt 1 at token 1, identical in both C2
+rounds). lmx reasoning-v1 61.3 tok/s (TTFT 2315 ms), code-v1 61.5 (1448
+ms); per-64-token mean ITL 15.92 -> 16.73 ms (reasoning), 15.81 -> 16.60
+(code), same as at 131072 to within 0.05 ms.
+VERDICT: max_model_len does not cost decode; 131072 is free. The gap to
+O4's 15.25 ms is context-position drift (~+0.8 ms over 512 tokens with a
+~300-token prompt) that a 64-token short-prompt bench does not see.
+Per orchestrator, Flash-Next is NOT submitted (61.3 < Strata 66.2); valid
+draft packets kept in localmaxxing/submitted-20261021/flashnext-iq3_xxs-
+NOT-SUBMITTED/. Both cards released; L1 standing by.
