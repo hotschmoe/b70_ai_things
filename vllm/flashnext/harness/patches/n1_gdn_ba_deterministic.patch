@@ -1,0 +1,16 @@
+--- a/vllm/models/qwen4_exp/xpu/model.py
++++ b/vllm/models/qwen4_exp/xpu/model.py
+@@ -700,6 +700,13 @@
+                 gqa_interleaved_layout=False,
+                 reduce_results=True,
+             )
++            # N1: opt-in, fixed reduction order at every token-batch size.
++            # Scope the override to GDN b|a; other dense projections retain
++            # their existing paths. The plugin preserves O4 decode math.
++            if os.environ.get("B70_GDN_BA_DETERMINISTIC") == "1":
++                from b70_n1_xpu import install_gdn_ba
++
++                install_gdn_ba(self.linear_attn.in_proj_ba)
+         elif self.layer_type in _FULL_ATTENTION_LAYER_TYPES:
+             self.self_attn = Qwen3NextAttention(
+                 config,

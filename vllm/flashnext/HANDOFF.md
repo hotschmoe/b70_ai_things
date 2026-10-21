@@ -197,3 +197,29 @@ Lessons learned:
 4. Relaunch owners for threads 1-4 in section 6, Opus or Fable for the
    critical ones. Point each at its report and the last JOURNAL entries.
 5. Restart hotschmoe-dd when the GPU session ends.
+
+## 9. Resumed session (2026-10-21, after 16:00 UTC)
+
+The user resumed this campaign with Sol 6.1 agents and explicitly authorized
+startup serving down for research. AGENTS.md now reflects active vLLM work.
+Owners are D1 decode, N1 GDN determinism, and Q1 QSA. Their current reports
+are reports/3D1_decode.md, reports/3N1_determinism.md, reports/3Q1_qsa.md;
+orchestrator recovery evidence is reports/3R1_restart.md. Consult the latest
+campaign JOURNAL entries for live GPU ownership and subsequent results.
+
+Post-outage native and compiled collective health passed. The unchanged
+merged recipe reproduced C1 15.17 ms and C2 about 19.6 ms, passed identity,
+arithmetic and 8K/32K needles, and failed strict exact repeat. No promotion.
+
+Several runs marked pending above actually finished before the outage:
+Ld's trace and F1 q2 stage profile completed with post-health; the first
+QSA tiny engine test failed, then worker-config binding was repaired at
+05:28. The resumed Q1 tiny test passes all 12 real pooled cache bindings,
+FULL graph initialization and C1/C2 generation. Full-model QSA remains
+unqualified. Read the new reports before repeating any recovered work.
+
+The merged serve harness now keeps hotschmoe-dd first, defaults to maxlen
+131072, supports optional promotion gates and an integrated pre-teardown
+callback, and propagates failed checks. For canonical suites, use the
+metadata shim (harness/d1_api.py); ordinary vllm serve does not expose the
+collector's required /server_info endpoint on this pinned version.

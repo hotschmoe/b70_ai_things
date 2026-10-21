@@ -12,10 +12,11 @@ Targets for the Flash-Next serving stack, for one or two users:
 - Context: 200k per stream at concurrency 2.
 - KV eviction to system RAM under load, restored without recompute.
 
-Backend focus is Strata (upstream head, small measured changes, no long-lived
-fork). vLLM stays parked and ready to port, not active work. The 27B INT4
-AutoRound vLLM endpoint remains the fallback daily driver. Measured status
-against these targets lives in docs/20261013_flashnext_goals.md.
+Active research is the vLLM Flash-Next campaign (resumed by user, 2026-10-21):
+see vllm/flashnext/HANDOFF.md and BRIEF.md. Keep the fork thin and rebaseable.
+Strata remains the qualified daily driver and matched baseline. The 27B INT4
+AutoRound vLLM endpoint remains the fallback. Measured historical target
+status lives in docs/20261013_flashnext_goals.md.
 
 Priority (user, 2026-10-15): once true eviction-to-RAM recovery without
 recompute works, prioritize concurrency, decode and MTP. Cached-prefix
@@ -48,11 +49,12 @@ recompute works, prioritize concurrency, decode and MTP. Cached-prefix
 
 ## Current scope
 
-Flash-Next on two B70s, Strata backend (user direction, 2026-10-13). Targets
-are in the "Flash-Next goals" section above. Work on upstream Strata head with
-small measured changes; no long-lived fork, no admission/receipt/source-plan
-machinery, one JOURNAL entry per stage. NVMe is /mnt/cache; /mnt/vm_8tb is
-SATA.
+Flash-Next on two B70s, active vLLM campaign (user direction, 2026-10-21).
+Targets are in the "Flash-Next goals" section above. Prefer upstream features
+and out-of-tree plugins, then small default-off fork changes; no long-lived
+divergent fork or admission/receipt/source-plan machinery. Campaign evidence
+is in vllm/flashnext/JOURNAL.md, one entry per stage. NVMe is /mnt/cache;
+/mnt/vm_8tb is SATA.
 
 - DAILY DRIVER since 2026-10-16: hotschmoe-dd.service = Strata night-final-v3 (strata/flash-next/dd/README.md;
   C1 ~141, C2 ~92/stream, prefill ~2200 tok/s, image input on; docs/20261016_night_lab.md). It holds both GPU leases: stop it
@@ -67,7 +69,7 @@ SATA.
 - Model comparison: docs/20261013_flashnext_iq3_vs_27b_ab_brief.md, run with
   evals/abfast (Pi 1.2.0). The no-substitution rule is dropped.
 - Paused: the UD-Q4_K_XL RAM-spill campaign. Its evidence is in
-  docs/flashnext_udq4xl_paused/. vLLM for Flash-Next is parked, ready to port.
+  docs/flashnext_udq4xl_paused/. This is separate from the active vLLM campaign.
 
 Archive rules, GPU leases, identity and qualification gates still apply. The
 backend and model lists below describe the retained dense-model stack.
@@ -75,7 +77,7 @@ backend and model lists below describe the retained dense-model stack.
 Backends:
 
 - sglang is the primary serving and new-development backend.
-- vLLM is a paused baseline plus the Steve transfer/control workspace.
+- vLLM Flash-Next is active; dense-model baselines and Steve controls remain retained.
 - llama.cpp and ZML were removed from the live tree on 2026-08-26.
 - Do not restore quarantined backend code or ABI-specific binaries into a new
   PyTorch/backend stack. Port the relevant source or finding deliberately.

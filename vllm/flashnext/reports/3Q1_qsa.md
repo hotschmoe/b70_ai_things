@@ -1,0 +1,101 @@
+# Q1 - QSA real serving integration
+
+## CONFIG -> COMMAND -> RESULT -> VERDICT
+
+CONFIG: resume X6 after the power outage. Own b70_qsa_xpu and x6/q1
+harnesses. No GPU, builds, DD lifecycle, commits or submissions yet.
+Preserve the shared fork WIP; root owns post-outage health and baseline.
+
+COMMAND: inspect HANDOFF.md, BRIEF.md, last campaign milestones, X6
+report/scripts and retained x6/tiny.log. Run existing CPU nested serve
+and KV-spec tests with UV CPython 3.12.13 and campaign venv packages.
+
+RESULT: QSA_SERVE_OK and QSA_SPEC_OK. The pre-outage synthetic engine
+did run and exited 1 at 05:25:41 during V2 graph-memory profiling:
+attention metadata existed but the runner could not bind QSA pages.
+Native pre/post card-1 health passed in that old window. Current source
+has a more useful expected/actual page diagnostic than the failed log.
+No x6/strata-references.json exists; the reference window was queued.
+
+VERDICT: component graph and CPU spec gates do not establish real-engine
+integration. Retry the bounded synthetic engine before full Flash-Next.
+The tiny harness now asserts all 12 live uint8 page aliases after engine
+init and C1/C2 generation, and refuses a private-pool fallback.
+
+## Prepared bounded window
+
+CONFIG: physical card 1 pinned by xpu-run, random dummy 48-layer model,
+12 QSA 24/2/256 layers, narrow trunk/experts, PLE off, no EP, maxlen
+4096, chunk 128, FULL_DECODE_ONLY captures 1/2. No latency/quality claim.
+
+COMMAND: `Q1_TAG=tiny-r1 bash /mnt/vm_8tb/b70/build/vllm-flashnext/q1/tiny-window.sh`.
+180-second Python alarm; 240-second outer timeout; native pre/post
+card-1 health. Expected 2-4 minutes. Raw files under q1/tiny-r1.
+
+RESULT: prepared, syntax checked, waiting for root authorization after
+its baseline and the bounded D1/N1 probes. No GPU touched by Q1.
+
+VERDICT: preserve sources while baseline is loaded. Only after the tiny
+gate passes, request coordinated Strata references and full QSA serve.
+
+CPU planner cross-check: q1/cpu-planner.py uses the current fork's real
+DefaultKVCacheConfigBuilder and allocate_kv_cache with 48 layers, including
+36 GDN state fixtures and 12 QSA layers. At block 2752/page 3258368 and
+two minimal blocks it returns all 12 contiguous uint8 views accepted by
+as_pages. Q1_CPU_PLANNER_OK; raw q1/cpu-planner.log. Existing CPU serve
+and spec tests also pass with the fork first on PYTHONPATH; source path
+and serve results are recorded in q1/cpu-tests.log, and the independent
+spec process in q1/cpu-fork-spec.log. Running those two test scripts in
+one interpreter fails the spec fixture's expected byte slope because the
+serve fixture deliberately leaves the backend's class-wide indexer
+geometry set to its small 32-wide geometry. The intended independent
+test processes pass; this is not evidence of a real-model failure.
+
+Both model_hook.py and its CPU test were last modified at 05:28:15,
+after the 05:25 tiny failure. Current code retains the worker config
+from KV-spec collection and reads its late-aligned block size outside
+the config context. That may already repair the old mismatch; only the
+bounded real-engine retry can establish that.
+
+Prepared reference window: q1/strata-window.sh, both cards, <=8-minute
+timeout plus native health, no service lifecycle. Its research config
+q1/strata-reference-config.json preserves the frozen Strata model and
+QSA settings but sets --spec 0 and STRATA_BATCH_MTP=0, removing the MTP
+model/draft arguments. It writes q1/strata-references.json for the exact
+existing x6/reference-prompts.json token fixtures. Not run or authorized
+yet; this is a correctness reference, with no latency comparison claim.
+
+Prepared full serve: q1/serve-window.sh uses the O4+F1 no-MTP recipe,
+maxlen 65536/chunk 12288 and required q1 Strata references. The x6 serve
+and probe now propagate failed greedy/latency/repeat/reference/source/
+teardown/health gates to a nonzero window status. Fixture hashes and
+reference token counts are checked. The wrapper runs the short bench
+and 4K/16K/32K solo-repeat/C2 reference gates, skipping the redundant F1
+128K diagnostics on the first QSA integration window. Syntax and diff
+whitespace checks pass. Not started; the root's recovered baseline still
+fails strict repeat, so an eventual N1 determinism flag can be supplied
+through O4_SERVE_EXTRA before interpreting a QSA exact-repeat result.
+
+## 16:23 - synthetic full-engine integration passes
+
+CONFIG: tiny-r1 exactly as prepared above, physical card 1/logical 0,
+unchanged QSA plugin/kernel/fork, no performance measurement. Root gave
+explicit authorization after D1/N1 closed their bounded windows.
+
+COMMAND: `Q1_TAG=tiny-r1 bash /mnt/vm_8tb/b70/build/vllm-flashnext/q1/tiny-window.sh`.
+
+RESULT: TINY_RC 0 / HEALTH_RC 0. Native card-1 health HEALTHY before and
+after; all source hashes unchanged; no crash or reset. V2 graph-memory
+profiling binds 12 real QSA layers with two pages each and captures FULL
+sizes 1/2. Final allocation rebinds all 12 layers to uint8
+[109,1,1,3258368] at block 2752 and captures FULL 1/2 again. Live alias
+assertions pass after initialization and after generation. Both C1 and
+C2 return eight tokens per request; X6_TINY_FULL_DECODE_OK. Raw
+q1/tiny-r1/{tiny.log,summary.json,health-before.txt,health-after.txt,
+source-after-check.txt}. Card released to root at 16:23 UTC.
+
+VERDICT: real KV-planner/profiling/final-capture lifecycle now passes.
+The existing 05:28 worker-config repair suffices for the old tiny
+failure; no speculative source change was required. This remains a
+random-weight integration gate. Flash-Next coherence, reference match,
+latency and full-model memory behavior remain unmeasured with QSA.

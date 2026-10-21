@@ -14,8 +14,8 @@ REPO=/mnt/vm_8tb/github/b70_ai_things
 H=$REPO/vllm/flashnext/harness
 B=/mnt/vm_8tb/b70/build/vllm-flashnext
 TAG="${TAG:?TAG}"
-export B70_AGENT=X6 B70_GPU_LOCK_TIMEOUT=21600
-python3 "$H/x6_priority_wait.py"
+export B70_AGENT="${B70_AGENT:-X6}" B70_GPU_LOCK_TIMEOUT=21600
+[ "${X6_PRIORITY_WAIT:-1}" = 0 ] || python3 "$H/x6_priority_wait.py"
 PORT="${PORT:-18156}"
 MODE=qsa
 [ "${X6_QSA:-1}" = 0 ] && MODE=dense
@@ -24,6 +24,10 @@ OUT="$B/x6/flashnext-ista-iq3-xxs-ep-$MODE-$TAG"
 NAME="vllm-fn-x6-$TAG"
 HARD_KB=8388608
 mkdir -p "$OUT"
+REFERENCES="${X6_REFERENCES:-$B/x6/strata-references.json}"
+if [ "${X6_REQUIRE_REFERENCES:-0}" = 1 ] && [ ! -s "$REFERENCES" ]; then
+  echo "ABORT missing required Strata references: $REFERENCES"; exit 5
+fi
 exec > >(tee -a "$OUT/window.log") 2>&1
 echo "=== O4 serve $TAG $(date -u +%H:%M:%S) ==="
 RECIPE="${O4_RECIPE:-$H/o4_recipe.env}"
@@ -54,7 +58,7 @@ if [ "$AVAIL_KB" -lt 60000000 ]; then
   echo "ABORT MemAvailable under 60 GB before a Flash-Next load"; echo WINDOW_DONE; exit 4
 fi
 if [ "${SKIP_HEALTH_BEFORE:-0}" != 1 ]; then
-  B70_AGENT=X6 B70_GPU_LOCK_TIMEOUT=21600 "$REPO/bin/gpu-run" "$REPO/bin/xpu-health" > "$OUT/health-before.txt" 2>&1
+  B70_AGENT="$B70_AGENT" B70_GPU_LOCK_TIMEOUT=21600 "$REPO/bin/gpu-run" "$REPO/bin/xpu-health" > "$OUT/health-before.txt" 2>&1
   echo "HEALTH_BEFORE_RC:$?"
   grep -q "xpu-health: HEALTHY" "$OUT/health-before.txt" || { echo "health before failed"; echo WINDOW_DONE; exit 3; }
 fi
@@ -64,7 +68,7 @@ CFG='{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,
     if [ "$a" -lt "$HARD_KB" ]; then echo "ABORT_LOW_RAM $a"; docker stop -t 5 "$NAME" >/dev/null 2>&1; exit 0; fi
     sleep 2; done ) &
 WD=$!
-B70_AGENT=X6 B70_GPU_LOCK_TIMEOUT=21600 timeout --signal=TERM --kill-after=30 40m \
+B70_AGENT="$B70_AGENT" B70_GPU_LOCK_TIMEOUT=21600 timeout --signal=TERM --kill-after=30 40m \
 "$H/xpu-run.sh" --card both --memory 100g --name "$NAME" --port "$PORT" \
   --env B70_GGUF=1 --env B70_EP=1 --env B70_QSA=${X6_QSA:-1} --env B70_PREFILL_QSA=1 --env B70_PREFILL_QSA_BATCH=256 --env B70_PREFILL_QSA_APPEND=batch --env B70_QSA_MAX_CELLS=147456 \
   --env "B70_GGUF_PATH=/mnt/cache/b70/qwen3.8-flash-next/ista-gsq-rco/IQ3_XXS/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_XXS-00001-of-00002.gguf" \
@@ -93,7 +97,7 @@ for i in $(seq 1 360); do
      && grep -q "$ALIAS" "$OUT/models.json"; then ready=1; echo "READY $(date -u +%H:%M:%S)"; break; fi
   sleep 5
 done
-GREEDY_RC=2; BENCH_RC=2
+GREEDY_RC=2; BENCH_RC=2; PROBE_RC=0; X6_PROBE_RC=2
 if [ $ready = 1 ]; then
   awk '/MemAvailable:|AnonPages:/{print}' /proc/meminfo > "$OUT/rss-ready.txt"
   PORT=$PORT OUT=$OUT X6_ALIAS=$ALIAS python3 - <<'PY'
@@ -114,29 +118,38 @@ PY
   GREEDY_RC=$?
   echo "GREEDY_RC:$GREEDY_RC"
   if [ $GREEDY_RC = 0 ]; then
-    B70_AGENT=X6 B70_CPU_LOCK_TIMEOUT=900 "$REPO/bin/cpu-run" --quiet python3 "$H/bench_latency.py" \
+    B70_AGENT="$B70_AGENT" B70_CPU_LOCK_TIMEOUT=900 "$REPO/bin/cpu-run" --quiet python3 "$H/bench_latency.py" \
       --base-url "http://127.0.0.1:$PORT" --model hotschmoe-dd --alias "$ALIAS" \
       --decode-tokens "${DECODE:-64}" --prefill "${PREFILL:-1024}" --tag "f1-merged-$TAG" --timeout 600 --out "$OUT/bench.json"
     BENCH_RC=$?
-    F1_MODEL=hotschmoe-dd F1_BASE="http://127.0.0.1:$PORT" F1_OUT="$OUT/probe.json" F1_ALIAS="$ALIAS" \
+    if [ "${X6_F1_DIAGNOSTICS:-1}" = 1 ]; then
+      F1_MODEL=hotschmoe-dd F1_BASE="http://127.0.0.1:$PORT" F1_OUT="$OUT/probe.json" F1_ALIAS="$ALIAS" \
       F1_LENGTHS="${F1_LENGTHS:-8192,32768,131072}" F1_REPEAT="${F1_REPEAT:-1}" F1_DECODE="${F1_DECODE:-1}" \
       F1_COHERENCE_LEN="${F1_COHERENCE_LEN:-32768}" F1_NEEDLE_LENS="${F1_NEEDLE_LENS:-32768,131072}" "$REPO/bin/cpu-run" --quiet /usr/bin/python3 "$H/f1_probe.py" > "$OUT/probe.log" 2>&1
-    echo "PROBE_RC:$? $(date -u +%H:%M:%S)"; grep -E "^F1 " "$OUT/probe.log" | sed 's/"usage.*//' | cut -c1-170
+      PROBE_RC=$?
+      echo "PROBE_RC:$PROBE_RC $(date -u +%H:%M:%S)"; grep -E "^F1 " "$OUT/probe.log" | sed 's/"usage.*//' | cut -c1-170
+    fi
   fi
 fi
 if [ $ready = 1 ] && [ $GREEDY_RC = 0 ]; then
   REF_ARGS=()
-  [ -f "$B/x6/strata-references.json" ] && REF_ARGS=(--references "$B/x6/strata-references.json")
-  B70_AGENT=X6 "$REPO/bin/cpu-run" --quiet python3 "$H/x6_probe.py" --base-url "http://127.0.0.1:$PORT" --out "$OUT/x6-probe.json" --alias "$ALIAS" --prompts "$B/x6/reference-prompts.json" "${REF_ARGS[@]}" > "$OUT/x6-probe.log" 2>&1
-  echo "X6_PROBE_RC:$?"
+  [ -f "$REFERENCES" ] && REF_ARGS=(--references "$REFERENCES")
+  B70_AGENT="$B70_AGENT" "$REPO/bin/cpu-run" --quiet python3 "$H/x6_probe.py" --base-url "http://127.0.0.1:$PORT" --out "$OUT/x6-probe.json" --alias "$ALIAS" --prompts "$B/x6/reference-prompts.json" "${REF_ARGS[@]}" > "$OUT/x6-probe.log" 2>&1
+  X6_PROBE_RC=$?
+  echo "X6_PROBE_RC:$X6_PROBE_RC"
 fi
 echo "BENCH_RC:$BENCH_RC"
 docker stop -t 20 "$NAME" >/dev/null 2>&1 || true
-wait $SP; echo "SERVE_RC:$?"
+wait $SP; SERVE_RC=$?; echo "SERVE_RC:$SERVE_RC"
 kill $WD 2>/dev/null
 grep -E "PLE device|mlock|fused into|Traceback|Error" "$OUT/serve.log" | tail -n 8
-B70_AGENT=X6 B70_GPU_LOCK_TIMEOUT=21600 "$REPO/bin/gpu-run" "$REPO/bin/xpu-health" > "$OUT/health-after.txt" 2>&1
-echo "HEALTH_AFTER_RC:$?"; tail -n 2 "$OUT/health-after.txt"
+B70_AGENT="$B70_AGENT" B70_GPU_LOCK_TIMEOUT=21600 "$REPO/bin/gpu-run" "$REPO/bin/xpu-health" > "$OUT/health-after.txt" 2>&1
+HEALTH_AFTER_RC=$?
+echo "HEALTH_AFTER_RC:$HEALTH_AFTER_RC"; tail -n 2 "$OUT/health-after.txt"
 manifest > "$OUT/source-after.sha256"
-if cmp -s "$OUT/source-before.sha256" "$OUT/source-after.sha256"; then echo SOURCE_UNCHANGED; else echo SOURCE_DRIFT; fi
+SOURCE_RC=0
+if cmp -s "$OUT/source-before.sha256" "$OUT/source-after.sha256"; then echo SOURCE_UNCHANGED; else echo SOURCE_DRIFT; SOURCE_RC=1; fi
 echo WINDOW_DONE
+[ "$ready" = 1 ] && [ "$GREEDY_RC" = 0 ] && [ "$BENCH_RC" = 0 ] && \
+  [ "$PROBE_RC" = 0 ] && [ "$X6_PROBE_RC" = 0 ] && [ "$SERVE_RC" = 0 ] && \
+  [ "$HEALTH_AFTER_RC" = 0 ] && [ "$SOURCE_RC" = 0 ]

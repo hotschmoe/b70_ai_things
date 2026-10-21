@@ -8980,3 +8980,185 @@ VERDICT: queue a bounded <=3min one-card integration test to catch
 real KV-planner/capture lifecycle failures before expensive full-model
 loads. Pair Strata/QSA windows remain below O4/O5/F1 priority. No DD
 service changes, no commit, no reset.
+
+## 2026-10-21 16:12 ORCHESTRATOR -- resume after power outage
+
+CONFIG: user resumes vLLM Flash-Next campaign and requests Sol 6.1 agents.
+Existing root/fork dirty work preserved. D1 decode, N1 GDN determinism, Q1
+QSA integration run independently on gpt-6.1-sol high; CPU prep only until
+root finishes post-outage health and merged-recipe qualification.
+COMMAND: read HANDOFF/BRIEF/campaign journal; stop startup DD with user
+authorization; inspect lease holders and recovered raw artifacts.
+RESULT: fallback startup exited before intervention; Strata acquired lease
+and required explicit container stop during systemd shutdown. D1 recovered
+completed Ld trace; Q1 recovered tiny integration failure after handoff's
+last recorded result. These supersede the handoff's pending descriptions.
+VERDICT: root owns both cards first for native/compiled-collective health,
+then merged O4+F1 gates/latency. Next bounded priority D1 > N1 > Q1; only
+one full Flash-Next process, no overlapping heavy CPU during timing.
+Merged harness now keeps hotschmoe-dd first and optionally records full
+promotion gate via RUN_PROMO_GATE=1. Gate failure remains explicit and
+diagnostic timing is not promotion. No external submissions in this stage.
+
+## 2026-10-21 D1 -- recovered complete Ld trace; FA owns short-context growth
+
+CONFIG: CPU-only; O4 Ld f14/no-spec maxlen131072,512 traced reasoning
+tokens. Recovered full raw trace + preexisting segmented pickles.
+COMMAND: cpu-run python3 harness/d1_trace_growth.py o4/run-Ld/steps.pkl
+--output d1/Ld-growth.json (absolute paths in reports/3D1_decode.md).
+RESULT: card0 early64->late64 graph20.837->21.693ms; XeFMHAFw kernel
+sum0.912->1.741ms (+829us), EPwait+200us, other families <=1.8us each.
+Ld RUN_RC0/gates323+667/C2same/teardown/posthealthHEALTHY survived.
+Native Xe2 kMinBlocksForSplit32 on tile64 suppresses all splits below
+2048KV, explaining why fixed-splits8 did not remove lmx-shape growth.
+VERDICT: prepare card1 <=180s FA-vs-upstreamTriton graph microprobe,
+no model load/native build. Root authorization pending. No speed claim,
+GPU touch, DD lifecycle, shared FA source edit, commit or submission.
+
+## 2026-10-21 16:11 Q1 -- recovered tiny integration failure; bounded retry ready
+
+CONFIG: CPU-only resume of X6, no GPU/build/DD/commit/submission. Root
+owns fresh-boot health and merged-recipe requalification. Preserve WIP.
+COMMAND: inspect retained x6/tiny.log and reference artifacts; existing
+CPU test_qsa_serve.py and test_kv_spec.py; syntax-check q1/tiny-window.sh.
+RESULT: QSA_SERVE_OK/QSA_SPEC_OK. Pre-outage tiny engine actually failed
+at05:25 during V2 minimal-KV graph profiling: metadata existed but QSA
+pages did not bind. Its native pre/post health passed. No completed
+Strata reference JSON exists. Current source adds page-geometry details.
+VERDICT: card1 tiny-r1 ready,180s body/240s timeout plus native health,
+expected2-4min, waiting explicit root authorization after baseline and
+D1/N1 probes. Harness asserts12real uint8 aliases after init+C1/C2.
+No full-model QSA or long-context qualification claimed.
+
+## 2026-10-21 16:10 N1 -- deterministic GDN b|a candidate CPU-prepared
+
+CONFIG: priority2, no GPU authorization yet. Isolated b70_n1_xpu plugin;
+default-off B70_GDN_BA_DETERMINISTIC hook only in fork xpu/model.py.
+COMMAND: inspect O5 p0g/p0h and GGUF _dense; cpu-run/MAX_JOBS4 build;
+py_compile and bash-n for new n1 primitive harness.
+RESULT: p0h never loaded (RAM guard), so oneDNN deterministic switch
+remains unverified. New tiled-eight kernel preserves O4 per-row BF16
+FMA/reduction/KS, adds independent token tiles to grid. CPU build30s
+exit0; SHA dd893593b5a0ffc1a54bc1ad3dbd6e38032ae3aadd1f864f1540c680651576fa.
+VERDICT: prepared only. Request card1 primitive <=2min plus health after
+D1 and root baseline; wait for explicit authorization. No shared plugin
+edits, systemd, commit or submission. Report reports/3N1_determinism.md.
+
+## 2026-10-21 16:12 ORCHESTRATOR -- reboot health and recovered stage profile
+
+CONFIG: fixed kernel 7.1.0-070100-generic, existing host UMD/runtime;
+no stack updates. Native health image vllm-xpu-env:int8g-v0251; compiled
+collective image adc915d266ea, P2P disabled, shape4x5120 BF16.
+COMMAND: bin/gpu-run bin/xpu-health; bin/gpu-run bin/xpu-collective-health;
+CPU parse f1/merged-q2/serve.log BUCKET_PROF lines, grouped by T/E.
+RESULT: both per-card probes HEALTHY; COLLECTIVE_HEALTH_OK,10 compiled
+iterations. Raw restart-20261021/health-before.log,collective-before.log.
+Recovered q2 completed normally before outage, with posthealth HEALTHY.
+At actual T12283/card1 E374,48 layer samples: median dequant13.35ms,
+bmm1 9.43,bmm2 5.405,combine9.80,gather4.415,pad2.35,swiglu1.615.
+Mean stage sum47.271ms (synchronized instrumentation; not clean timing).
+At8186/card1, mean40.542ms. Card0 T12283 mean27.184ms. T12288
+synthetic profile rows excluded from the real-request comparison.
+VERDICT: no redundant q2 rerun. Card1 dequant plus combine are material
+next prefill candidates. Full q2 recovered summary at restart-20261021/
+f1-q2-recovered-summary.json. Fable/Opus consultations attempted via
+claude-fable-5-1 and claude-opus-5-5,each timed out35s exit124 with no
+response/modelID; no Claude advice or approval claimed. Sol owners
+continue evidence-driven probes. Merged baseline starts with maxlen131072,
+chunk12288,stable first ID,registered research alias,promo gate enabled.
+
+## 2026-10-21 16:19 D1 -- native compact FA plan16 passes component probe
+
+CONFIG: physicalcard1,real24/2/256 BF16,page1600,maxK131072; nativeFA
+vs nativecompactplans4/8/16 and upstreamTriton normal/grouped. No model.
+COMMAND: D1_TAG=fa-probe-1 bash harness/d1_fa_window.sh; rootauthorized
+after baseline posthealth. CPUquiet outside XPUlease; body67s.
+RESULT: nativecompactplans24/24 FP32reference cases pass. Plan16 graph
+us atKV512/900/1024/1536:28.75/34.00/34.66/48.09 versus native
+94.34/163.88/174.18/252.11. Not bitwiseFA. Wholeprobeexit1 from3
+upstreamnormal tolerancefailures atKV128; groupedpass butslower.
+Pre/posthealthHEALTHY,normalexit,nocrash/reset,card1released.
+VERDICT: selectplan16 for matched fullmodelcontrol/candidate512suite
+windows. No fullmodel speedclaim. Baseline livecollector yielded no data
+because /server_info404; integrated d1_api+d1_lmx_callback prepared.
+Rawd1/fa-probe-1; report3D1_decode.md. No sharedFAedit/nativebuild.
+
+## 2026-10-21 16:21 ORCHESTRATOR -- post-outage baseline closes, strict gate fails
+
+CONFIG: unchanged merged O4+F1, maxlen131072,chunk12288,maxseq4,
+noMTP,firstID hotschmoe-dd plus registered o4 research alias.
+COMMAND: TAG=restart-r1 MAX_LEN=131072 MAX_BATCHED=12288 DECODE=64
+PREFILL=1024 F1_LENGTHS=8192,12288 F1_COHERENCE_LEN=8192 F1_REPEAT=1
+F1_DECODE=0 RUN_PROMO_GATE=1 SKIP_HEALTH_BEFORE=1 merged serve.
+RESULT: ready16:15:33,identity/323/667/coherence/8K+32Kneedles PASS;
+exact-repeat FAIL: C1 repeats all match, C2 differs fromC1 and one
+prompt varies acrossC2rounds. C1 ITLp50 15.1669ms,C2 19.5596/19.6108.
+First 8186-token prefill4327ms/1892tok/s;12283 5048ms/2433tok/s.
+Normal serve exit0, posthealth both HEALTHY. Four effective SO hashes
+and tracked fork diff unchanged. Detailed report reports/3R1_restart.md.
+Canonical client refused /server_info404 before measurement; no512token
+rate fromthiswindow. Original shell returned0 despite recorded gateRC3.
+VERDICT: shortdecode reproduced; no qualification/promotion. Harness now
+propagates requestedgatefailure,hashes effective SO overrides,keeps
+stable ID,maxlendefault131072,and supports metadata shim+integrated
+callback beforeteardown. D1boundedprobe thenN1primitive thenQ1tiny;
+prepare matched512token control/candidate,sourcefrozen during eachwindow.
+AGENTS activebackend updated to user-resumed vLLM campaign; Strata DD
+and fallback retained. No routine DDrestore betweenpreparedwindows.
+
+## 2026-10-21 16:32 N1 -- primitive p1 dispatch fails; native health passes
+
+CONFIG: root-authorized physicalcard1/logical0, original N1 library +
+O4 loaded for exact reference. No fullmodel load.
+COMMAND: TAG=p1 harness/n1_primitive_window.sh; raw n1/run-p1/.
+RESULT: first N1 call fails L0error30 INVALID_KERNEL_ARGUMENT_INDEX,
+bodyexit1/34s; no numerical output. Nativepre/post HEALTHY; card1
+released for Q1. No crash/reset.
+VERDICT: do not enableN1 in model serve. Suspect copied SYCL kernel
+class bf_gemv_k collision with O4 (different captured-argument layout);
+source renamed n1_bf_gemm_k pending isolated CPUrebuild and GPUretry.
+
+## 2026-10-21 16:22 N1 -- unique SYCL namespace rebuild ready
+
+CONFIG: N1 kernel/helpers/entry now namespace b70_n1_impl; class
+n1_bf_gemm_k; O4 shared source untouched. Root approved CPU rebuild.
+COMMAND: cpu-run/MAX_JOBS4 build -> n1/build-r2.log; binary symbol scan.
+RESULT: build26s exit0; SHA c90919594b0e2b355073e2b398ac76755a3ace5eb0094d014a72a05a411246d0.
+All18 N1 kernel metadata strings are unique vsO4. p1 andO4 shared exact
+getKernelParamDesc/getDeviceKernelInfo symbols, confirming a real symbol
+collision (retry must prove this explains dispatch failure).
+VERDICT: CPUready, GPUretry afterQ1 requires root authorization.
+TIMESTAMP CORRECTION: prior N1p1 entry header16:32 was a transcription
+error; p1 window actually closed16:21:12UTC per window.log mtime.
+
+## 2026-10-21 16:23 Q1 -- real-engine QSA tiny gate passes; card1 released
+
+CONFIG: random48layer dummy model,12QSA24/2/256 layers,physicalcard1
+pinned/logical0,block2752,chunk128,maxlen4096,FULL_DECODE_ONLY1/2.
+Unchanged plugin/kernel/fork; no latency or model-quality measurement.
+COMMAND: root-authorized Q1_TAG=tiny-r1 q1/tiny-window.sh;180s alarm,
+240s outer timeout,native card1 pre/post health,source-hash check.
+RESULT: minimal2page profiling and final109page allocations both bind
+all12uint8QSA layers and captureFULL1/2. Pagebytes3258368; live aliases
+asserted afterinit+generation. C1/C2 return8tokens/request;
+X6_TINY_FULL_DECODE_OK,TINY_RC0,HEALTH_RC0,pre/postHEALTHY,sources
+unchanged,no crash/reset. Rawq1/tiny-r1;card1released/rootnotified.
+VERDICT: current05:28worker-config repair passes actual engine lifecycle
+that failed pre-outage. No new kernel/fork change needed. Next is a
+coordinated both-card noSpecStrata reference window,then realFlash-Next
+QSA serve/exact4K16K32K gates,after root's model-window priorities.
+
+## 2026-10-21 16:25 N1 -- primitive p2 PASS, oneDNN nondeterminism reproduced
+
+CONFIG: physicalcard1/logical0, r2 namespace-unique kernel, actualGDN
+beta|alpha N96K2560 atlayers0/2/14,seeds5/17; nofullmodel load.
+COMMAND: TAG=p2 harness/n1_primitive_window.sh; raw n1/run-p2/.
+RESULT: nativepre/post HEALTHY; normalexit0; 72shape cases pass exact
+O4 rowparity/repeat/shift/reverse; 48changedinput graphreplays exact.
+OneDNN M20 only83/100 identical-input repeats match, confirming true
+projection nondeterminism independent of GDNstate. HotloopM12288 new
+3.848ms vsoneDNN0.141ms (notE2E). Script1.675s/container34s.
+VERDICT: primitive PASS, fullmodel pending. Card1 released toD1.
+Minimal seven-line hookpatch harness/patches/n1_gdn_ba_deterministic.patch
+preserves inherited modelWIP. Sharedmodel/N1hooksource frozen forD1
+matchedfullmodel control/plan16 pair,N1offbotharms. No heavybuilds.

@@ -1748,3 +1748,13 @@ models:
     calibration: ISTA-GSQ-RCO
     serve_cmd: vllm/flashnext/localmaxxing/l1/l1_window_flashnext.sh
     notes: L1 localmaxxing no-spec run of O4's sidecar decode recipe (EP, card 1 = remote experts), frozen fork branch b70/lmx-20261021. See vllm/flashnext/reports/2L1_localmaxxing.md. Not a qualified shelf.
+
+  - label: o4-flashnext-ista-iq3xxs-merged-research
+    served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_XXS
+    activations: b70-gguf-xpu-bf16
+    calibration: ISTA-GSQ-RCO
+    serve_cmd: vllm/flashnext/harness/f1_merged_serve.sh
+    notes: O4 decode plus F1 sidecar prefill research recipe, MTP off. Registered for identity gates; no shelf promotion. See vllm/flashnext/reports/2F1_prefill.md.

@@ -31,6 +31,21 @@ def with_indexer(self, vllm_config, layer_type, prefix=''):
 
 Qwen4ExpDecoderLayer.__init__ = with_indexer
 
+def inspect_qsa(model):
+    rows = []
+    for layer in model.modules():
+        runner = getattr(layer, 'qsa_runner', None)
+        if runner is None:
+            continue
+        cache = runner.cache_layer.kv_cache
+        assert runner.batch is not None and runner.buf is None
+        assert cache.dtype == torch.uint8 and runner.batch.pages.data_ptr() == cache.data_ptr()
+        assert runner._cache_token == runner._cache_id()
+        rows.append(dict(name=runner.cache_layer.layer_name, shape=list(cache.shape),
+                         block=runner.batch.block_size, dtype=str(cache.dtype)))
+    assert len(rows) == 12, rows
+    return rows
+
 @torch.inference_mode()
 def main():
     signal.alarm(180)
@@ -40,11 +55,13 @@ def main():
               mamba_cache_mode='align', enforce_eager=False,
               compilation_config=dict(mode=0, cudagraph_mode='FULL_DECODE_ONLY',
                                       cudagraph_capture_sizes=[1,2], cudagraph_num_of_warmups=2))
+    print('X6_TINY_BOUND', json.dumps(llm.apply_model(inspect_qsa)), flush=True)
     params = SamplingParams(temperature=0, max_tokens=8, ignore_eos=True)
     for n in (1,2):
         out = llm.generate([dict(prompt_token_ids=[1,2,3,4])] * n, params, use_tqdm=False)
         assert len(out) == n and all(len(r.outputs[0].token_ids) == 8 for r in out)
         print('X6_TINY_GENERATE_OK', n, [r.outputs[0].token_ids for r in out], flush=True)
+    llm.apply_model(inspect_qsa)
     print('X6_TINY_FULL_DECODE_OK', flush=True)
     llm.llm_engine.engine_core.shutdown()
     signal.alarm(0)
