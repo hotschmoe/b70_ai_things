@@ -57,7 +57,8 @@ runs flag0 and flag1. Build via cpu-run/harness/p1_bucket_build.sh.
 Before serving, the parent must grant the bounded card1 integration gate:
 `TAG=bucket-r1 bash vllm/flashnext/harness/p1_bucket_gate_window.sh`.
 It requires original-repeat, original-versus-overlay0 and original-versus-
-overlay1 exact at real shapes/types. This gate is not yet measured.
+overlay1 exact at real shapes/types. Gate bucket-r1 passes all44 exact output comparisons, including original
+repeat and original-versus-overlay0/1, with native pre/post health clean.
 
 The optional Python hook requires B70_P1_BUCKET_OVERLAY=1 and is installed
 explicitly by harness/p1_api.py, including spawned EngineCore. It intercepts
@@ -66,4 +67,9 @@ model/plugin edit or automatic vLLM entrypoint is installed. The parent
 schedules harness/p1_serve.sh twice with host flag0/1 and one frozen
 P1_PREFILL_FIXTURES path. The wrapper also passes flags separately to the
 container and enforces source/fixture/activation/content/lifecycle checks.
-No full serving performance result exists yet.
+Matched serving pair p1-control-r1/p1-selected-r1 observes3.15..4.27percent
+lower first-content TTFT on frozen8K/12K/32K fixtures. Sources/SOs/fixtures
+match, long math and native pre/post health pass, normal teardown. Strict
+fixture text repeatability remains unqualified in both arms; this is not
+DD/shelf promotion or broad stability evidence. Details are recorded in
+measured-serving-r1.json and ../../reports/3P1_prefill.md.

@@ -282,3 +282,25 @@ original repeat, overlay flag0 and overlay flag1, including T12283.
 Body51s, normal exit, unchanged sources/SOs, native pre/post HEALTHY.
 The same-binary full-serving flag0/1 pair is now queued/running; keep
 all campaign harness/plugin source frozen until BOTH arms close.
+
+P1's matched full-serving pair has now PASSED and released both GPUs.
+Observed first-content TTFT, warmup excluded and three samples per size:
+
+| Actual prompt tokens | Flag0 ms | Flag1 ms | Reduction |
+|---:|---:|---:|---:|
+| 8189 | 3341.403 | 3198.826 | 4.27% |
+| 12285 | 4876.350 | 4678.923 | 4.05% |
+| 32765 | 13949.494 | 13509.475 | 3.15% |
+
+Both arms pass identity, content/usage checks, long arithmetic, actual
+no-speculation/prefix-off configuration, normal engine teardown and native
+health. All 431 source files, SOs, fork snapshots and fixture identities
+match; only selected-dequant flag differs. Short decode is effectively
+unchanged. This is one fixed-order diagnostic pair; both arms still have
+nonrepeatable continuations. Keep P1 opt-in, no daily-driver promotion.
+Sources: plugins/b70_p1_xpu and harness/p1_*; report3P1_prefill.md.
+
+Next: instrumented N1-original reproduction via d1_n1_diagnostic.sh, then
+the isolated QSA top-k/whole-chain profile via q1_topk/window.sh. Both
+source ports are ready; shared harness/plugins/registry stay frozen during
+each active serve. DD remains down, as explicitly directed by the user.

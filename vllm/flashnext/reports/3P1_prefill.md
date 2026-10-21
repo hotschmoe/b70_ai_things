@@ -467,3 +467,123 @@ reports/JOURNAL remain writable. Control starts flag0/TAGp1-control-r1,
 maxlen65536, same frozen fixture path p1/matched-r1/fixtures.json.
 Treatment is conditional on complete control success, native health and
 identical source/SO/fixture identities. No DD restore between windows.
+
+
+## 2026-10-21 17:39 -- matched control PASS; selected arm starts
+
+CONFIG: both cards, maxlen65536/chunk12288/maxseq4, originalFA/QSAoff,
+noMTP, same overlay binary with selected0. Sources frozen after bucket gate.
+
+COMMAND: `B70_PREFILL_SELECTED_DQ=0
+P1_PREFILL_FIXTURES=/mnt/vm_8tb/b70/build/vllm-flashnext/p1/matched-r1/fixtures.json
+TAG=p1-control-r1 MAX_LEN=65536 bash harness/p1_serve.sh`.
+Read-only GET/server_info and GET/metrics before and after callback.
+
+RESULT: complete wrapper passes, including actual card1 selected0 activation,
+short identity/arithmetic/coherence,12 streaming fixture requests (warm+3
+samples each), both32K long math checks, full source/P1 SO/fork diff/fixture
+checks, SERVE_RC0/ENGINE_ERROR_RC0, normal teardown and native post-health
+both HEALTHY. P1_ARM_PASSED:0. First served name hotschmoe-dd, registered
+research alias unchanged. Runtime metadata explicitly proves
+speculative_config=null, enable_prefix_caching=false,maxlen65536,
+max_batched12288,maxseq4,TP1. Readonly proof at17:36:11 before callback;
+metrics-after callback captured17:38:18 (59387bytes).
+
+Control first-nonempty-content TTFT medians (three measured samples;
+request wall is separate,16output tokens):
+
+| Target | Actual prompt tokens | TTFT ms | Input tok/s |
+| ---: | ---: | ---: | ---: |
+| 8192 | 8189 | 3341.403 | 2450.8 |
+| 12288 | 12285 | 4876.350 | 2519.3 |
+| 32768 | 32765 | 13949.494 | 2348.8 |
+
+Short decode C1 ITLp50=15.2146ms; C2=19.5567/19.5149ms per stream.
+Bench coherence reports same=true,Paris valid; this is not the full strict
+promotion repeat suite. Frozen fixture SHA256
+`d3811e41588b9f28ae94c0a5fbf0967876172921e966abbabb71680b72cb349a`.
+Raw control under f1/merged-p1-control-r1 and p1/full-p1-control-r1.
+
+VERDICT: control qualifies the matched comparison, not promotion. Immediately
+start selected1/TAGp1-selected-r1 with identical fixture path, sources,
+binaries,maxlen and all other flags. No source edits or builds between arms.
+Do not claim end-to-end benefit from control alone.
+
+
+## 2026-10-21 17:46 -- matched selected-DQ serving pair closes PASS
+
+CONFIG: two fresh sequential world-size1/EP-sidecar servers on both B70s,
+originalFA/QSAoff/noMTP, BF16 activation, identical ISTA GSQ-RCO IQ3_XXS
+GGUF files and aliases, maxlen65536/chunk12288/maxseq4. Same generated
+bucket and selected-DQ binaries in both arms; only selected0->1 changed.
+All campaign harness/plugin source frozen across arms, native pre/post
+health each arm, no heavy CPU outside the quiet measurement protocol.
+
+COMMAND: authorized bucket gate first, then harness/p1_serve.sh with
+B70_PREFILL_SELECTED_DQ=0/TAGp1-control-r1 and1/TAGp1-selected-r1,
+same frozen fixture path. Each target uses one warmup+3measured requests,
+16output-token cap, prefix cache off. TTFT is observed first nonempty
+content event; request wall and all content arrival arrays are stored
+separately. No max1 wall fallback was used in this comparison.
+
+RESULT: both P1_ARM_PASSED markers present. Both short arithmetic gates,
+Paris coherence,12 streamed requests per arm and both32K long math gates
+pass. Long math uses32791 prompt tokens and returns323/667 exactly in
+both arms. Both normal SERVE_RC0/ENGINE_ERROR_RC0; native pre/post both
+HEALTHY; no watchdog stop, reset, DD restore, or source edit between arms.
+Actual card1 selected flag activation is recorded in each EngineCore.
+Full431-file source manifests and explicit P1 SO/source manifests are
+byte-identical between arms, external fork HEAD/binary diff unchanged,
+fixture SHA/tokenization identical. Hash checks after each arm all pass.
+
+Runtime GET/server_info in each arm proves speculative_config=null,
+prefix caching=false,maxlen65536,chunk12288,maxseq4,TP1. The complete
+serialized configs differ only by generated instance_id and the Python
+address in quant_config's object repr (same B70GGUFConfig class); all
+other serialized fields match. Both pre-callback and post-callback metrics
+were captured. This is stronger no-spec evidence than missing draft counters.
+
+| Actual prompt tokens | Control first-content TTFT ms | Selected TTFT ms | Reduction | Control tok/s | Selected tok/s |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 8189 | 3341.403 | 3198.826 | 4.267% | 2450.8 | 2560.0 |
+| 12285 | 4876.350 | 4678.923 | 4.049% | 2519.3 | 2625.6 |
+| 32765 | 13949.494 | 13509.475 | 3.154% | 2348.8 | 2425.3 |
+
+Measured sample ranges do not overlap:
+- 8189tokens: control3340.898..3346.080ms; selected3198.272..3207.971ms.
+- 12285tokens: control4870.249..4884.626ms; selected4677.460..4693.876ms.
+- 32765tokens: control13941.318..13957.275ms; selected13508.582..13520.149ms.
+
+Short decode C1 ITLp50 control15.2146ms versus selected15.1589ms;
+C2 control19.5567/19.5149ms versus selected19.5521/19.5627ms per stream.
+The hook only touches eager card1 native prefill; do not attribute the
+small short-decode differences to selected-DQ. No canonical512-token suite
+or speculative decode was measured here.
+
+Strict fixture text repeatability is NOT qualified. Across warm+3 requests,
+control has2/2/2 unique completion texts for8K/12K/32K, while selected has
+1/2/3. Per-position completion hashes differ across arms. Both arms have
+within-arm variation; existing whole-serving nondeterminism remains open.
+This result does not establish that selection caused or repaired it.
+The raw component and bucket gates were bit-exact, and sampled long math
+and ordinary short coherence pass, but those do not prove strict full-model
+exact repeat or broad long-context fidelity.
+
+Raw matched summary is build/p1/matched-r1/summary.json, runtime config
+diff alongside it. Detailed stream content_arrival_ms/itl_samples_ms,
+completion text, counts, wall and usage are retained in each arm's
+f1/merged-<tag>/p1-prefill.json. Source/fork/fixture/activation artifacts are
+under p1/full-<tag>/. Complete fixed fixture SHA256 remains
+`d3811e41588b9f28ae94c0a5fbf0967876172921e966abbabb71680b72cb349a`.
+
+VERDICT: this matched process pair observes3.15..4.27percent lower first-
+content TTFT from eliminating packed copies, with exact component/bucket
+checks and clean sampled lifecycle. Keep the selected-only candidate opt-in
+for research; no shelf/DD promotion. The experiment is one fixed-order
+control-then-treatment pair, three warmed samples per target, not an
+interleaved stability study. No QSA/200K/MTP/canonical-suite claim. The
+12K saving197.4ms is consistent in scale with the earlier material gather
+budget, but q2 profiling used different prompts/instrumentation and does
+not give a direct per-stage attribution for these runs. No further GPU
+work is justified to repeat unchanged passing gates. Both GPU leases
+released to root; DD remains down per user direction.

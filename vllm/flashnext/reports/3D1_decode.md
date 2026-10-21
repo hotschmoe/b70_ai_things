@@ -376,3 +376,101 @@ remains operationally clean but fails strict repeatability. Full plan16 is
 rejected for serving; component speed and low-VRAM stress results remain
 conditional. Parent's lifecycle review separately detects fatal EngineCore
 errors even when the shell/outer serve process returns0.
+
+## CPU-only loaded-context liveness localization prepared
+
+CONFIG: parent schedules Q1/P1 GPU work first. No D1 GPU work, builds,
+DD lifecycle or shared source changes. Plan16 remains disabled/unqualified.
+This stage prepares an instrumented N1-original reproduction after parent
+releases the source freeze and explicitly grants both cards.
+
+COMMAND: inspect original r2 failure-witness.json, original N1 n1-env.json
+and stall snapshots; map current EP/PLE/GDN/graph source; CPU-only compile,
+mock activation/exception tests and byte-equivalence review of private
+merged lifecycle snapshot. Scratch source is under build/vllm-flashnext/d1.
+
+RESULT: original N1 stall evidence has 78 threads and 173% aggregate CPU,
+but no individual-thread/native/Python stack. It cannot locate the stall.
+The resource exception surfaced in PLEHistory.conv at mtp_ple.py:175,
+before current-step GDN/FA. This does not identify the originating fault.
+
+Actual critical paths, fork root build/vllm-flashnext/vllm/vllm:
+
+- v1/worker/gpu/model_runner.py:1742 execute_model prepares state/metadata,
+  executes eager/full graph; sample_tokens:2132 is a separate boundary.
+- models/qwen4_exp/xpu/model.py:777 invokes PLE before attention;
+  ple_device.py device_stage reads the pinned host table, and T21 uses
+  eager PLEHistory.conv instead of the <=8-row fused tail.
+- _xpu_ops.py:181/265 dispatches the installed native _xpu_C.gdn_attention;
+  the enabled path is not an inferred D3/R3 kernel.
+- EP hooks.py sets pending{key,sent}; native moe_ep.cpp:478 prepares and
+  occasionally refinalizes the private card1 graph. Card0 instantiate then
+  occurs in patches/d1_graph.py:60, followed by private-card1 submit and
+  card0 replay. Host returns do not prove device completion.
+- Mixed T21 routes through F1 prefill_ep.py:223, with card0/card1 Torch
+  streams and separate regions/counters, not the decode private-card1
+  queue. Dispatch:274, card0/card1 experts, return:326 are useful boundaries.
+  The available pf_sync_op waits q1 then q0 but current apply does NOT call
+  it; do not infer an actual blocking wait from this unused API.
+- Decode and F1 expose separate host-USM error arrays. ep_read_errors
+  (moe_ep.cpp:508) and ep_prefill_errors (prefill_ep.cpp:262) read existing
+  malloc_host words and produce CPU data without queue waits/copies.
+  Error11 means waiting for input;12 waiting for return. Zero errors do
+  not prove queue progress. Device counters cannot be dereferenced on CPU.
+
+Scratch d1_liveness.py uses the supported worker-extension init hook.
+Unarmed, all inference method identities remain unchanged; no per-layer
+wrapper/stat/timer or Torch import is introduced. One daemon checks arm
+once per second. After an idle explicit arm it installs16 host-only hooks
+and writes armed-PID.json; clients wait this handshake. Coarse hooks cover
+execute/sample, graph/reclaim and EP prepare/submit; detail adds PLE,
+GDN outer forward, FA forward and F1/expert boundaries. Late wrapping the
+GDN outer forward matters because CustomOp caches its backend callable
+at construction. No device events or synchronization are added. C-level
+faulthandler dumps every10s even if the GIL is held. The Python watchdog
+records >=8s active-phase gaps, both host-error arrays, and Python stacks.
+External d1_proc_watch.py records per-thread CPU/wchan/syscall, fd count,
+limits and initial mappings; denied proc fields are preserved as errors.
+
+CPU evidence: liveness-cpu-check{,-2,-3}/result.json PASS: unarmed identity,
+no Torch import, activation handshake, all16 targets, preexisting GDN
+coverage, T21 host metadata, exception propagation and stack unwind.
+Classifier fixtures distinguish timeout during advancing phases from a
+>=8s call without a return. n1-diagnostic-prepared-r2/cpu-validation.json
+checks original prefix and teardown/health suffix byte-identical, and
+client sequence identical after removing the detail-arm marker. Final
+portable-path snapshot is n1-diagnostic-prepared-r3; shell syntax passes.
+Actual worker initialization and HTTP/GPU integration remain UNTESTED.
+
+VERDICT: instrument the previously failing N1-original recipe once,
+not an unrelated original-FA reload or a persistent-buffer workaround.
+After source-freeze release, port the seven operational scratch files
+plus classifier into campaign harness, then rebuild a private snapshot.
+Use original c7b FA, plan0, N1 r2 flag1,131072/chunk12288/capture1,2,3,4,8,
+no MTP/extra route/Q8F. Keep original greedy->promotion gate (including
+8K/32K needles)->bench->F1 8K twice+long math sequence. F1_NEEDLE_LENS is
+empty, matching raw n1-env; no extra random stress. Arm coarse at READY,
+detail immediately before F1. Callback performs exactly N1 initial
+identity and Gate.greedy(17,19) request, then stops. The first historical
+callback began ~73s after READY. Bound the entire client body to120s
+(+5s TERM kill grace), with teardown and native health OUTSIDE that bound.
+Expected total ~6min including ~3min load and native health. Future command:
+
+TAG=n1-liveness-r1 bash /mnt/vm_8tb/b70/build/vllm-flashnext/d1/d1_n1_diagnostic.sh
+
+Parent will update command to the ported harness path before granting GPU.
+The wrapper captures broad source/SO/private manifests and verifies after
+closure. Preserve requested strict gate failures, actual EngineCore fatal/
+forcekill status, no-MTP API metadata, native health and all raw stacks.
+No GPU work is queued now. No reset unless parent handles a health failure.
+
+Discriminators: no-return ep_prepare localizes graph finalization before
+submit; instantiate localizes card0 graph rebuilding; ep_submit localizes
+private-card1 submission; later graph/sample boundaries plus both EP
+error banks distinguish decode transport from eager F1 transport. A PLE
+exception still permits asynchronous earlier failure. Captured FA/GDN/EP
+cannot be separated by host breadcrumbs alone: if stack points to a
+native graph wait, the next bounded step is a focused native queue trace,
+not a kernel rewrite. Body deadline while phases advance is budget expiry,
+not evidence of lost liveness. Finite success would not qualify stability
+or speed and would not establish N1 or plan16 as the unique cause.

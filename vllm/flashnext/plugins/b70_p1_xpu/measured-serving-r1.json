@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-21",
+  "experiment": "p1-matched-r1",
+  "status": "sampled_lifecycle_and_matched_latency_pass_strict_repeat_unqualified",
+  "model_aliases": [
+    "hotschmoe-dd",
+    "qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4"
+  ],
+  "max_model_len": 65536,
+  "max_num_batched_tokens": 12288,
+  "max_num_seqs": 4,
+  "speculative_config": null,
+  "prefix_caching": false,
+  "control_flag": 0,
+  "selected_flag": 1,
+  "warmups": 1,
+  "measured_samples": 3,
+  "completion_token_cap": 16,
+  "fixture_sha256": "d3811e41588b9f28ae94c0a5fbf0967876172921e966abbabb71680b72cb349a",
+  "selected_dq_so_sha256": "0ebb5837a9467e5186566243684becc27cd5047bb0064e079763788b6dfcdbbd",
+  "bucket_so_sha256": "36d11c6f7a5fbc4223bfa0ea219cd152bdc08cf3cc062232d9604b9dfaee57db",
+  "base_bucket_sha256": "cc0374a7a46108aaa37a4b1c86f170ab7d6e7663fe451aabcd0b208e7b800abd",
+  "rows": [
+    {
+      "tokens": 8189,
+      "control_ttft_ms": 3341.4030820003973,
+      "selected_ttft_ms": 3198.826496000038,
+      "saved_ms": 142.57658600035938,
+      "reduction_pct": 4.2669675732448065,
+      "control_tok_s": 2450.766878175468,
+      "selected_tok_s": 2560.0013036780547,
+      "control_samples": [
+        3341.4030820003973,
+        3346.080135000193,
+        3340.8979899995757
+      ],
+      "selected_samples": [
+        3198.2715379999718,
+        3207.9707510001754,
+        3198.826496000038
+      ],
+      "control_unique_texts": 2,
+      "selected_unique_texts": 1
+    },
+    {
+      "tokens": 12285,
+      "control_ttft_ms": 4876.349747999484,
+      "selected_ttft_ms": 4678.923307000332,
+      "saved_ms": 197.42644099915196,
+      "reduction_pct": 4.048652192762548,
+      "control_tok_s": 2519.3024772351296,
+      "selected_tok_s": 2625.604053312842,
+      "control_samples": [
+        4870.249110999794,
+        4876.349747999484,
+        4884.626108999328
+      ],
+      "selected_samples": [
+        4677.460048999819,
+        4693.8755009996385,
+        4678.923307000332
+      ],
+      "control_unique_texts": 2,
+      "selected_unique_texts": 2
+    },
+    {
+      "tokens": 32765,
+      "control_ttft_ms": 13949.494368999694,
+      "selected_ttft_ms": 13509.474830000727,
+      "saved_ms": 440.0195389989676,
+      "reduction_pct": 3.1543762616717763,
+      "control_tok_s": 2348.830655311383,
+      "selected_tok_s": 2425.334841828062,
+      "control_samples": [
+        13941.317515999799,
+        13949.494368999694,
+        13957.274715000494
+      ],
+      "selected_samples": [
+        13509.474830000727,
+        13520.148879000772,
+        13508.581706999394
+      ],
+      "control_unique_texts": 2,
+      "selected_unique_texts": 3
+    }
+  ],
+  "source_manifest_files": 431,
+  "source_and_so_manifest_match": true,
+  "normal_teardown_and_native_pre_post_health": true,
+  "strict_serving_text_repeat": false,
+  "raw_summary": "/mnt/vm_8tb/b70/build/vllm-flashnext/p1/matched-r1/summary.json"
+}

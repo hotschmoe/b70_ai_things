@@ -326,7 +326,9 @@ cache geometry, and the historical QSA arm has no individual arrivals.
 Observed QSA C1 p50 cost above original FA is12.41/23.39/38.17ms per
 token at4K/16K/32K, or1.70/1.97/2.17x total ITL. This is a diagnostic
 cost curve, not an accepted speed comparison. QSA int8 increases planned
-KV capacity, but the real serve is currently slower on these fixtures.
+KV capacity from345553 to567978tokens at these settings (FA8.53GiB and
+QSA8.55GiB available KV); this is planned capacity, not qualified200K
+serving. The real QSA serve is currently slower on these fixtures.
 
 Dense32KC2stream0 arrival offsets begin20.399s,25.774s,28.276s: gaps of
 5374.92ms then2502.12ms after its first and second content chunks. The
@@ -383,3 +385,51 @@ validator paths. Default rerun against current artifacts exits5 with all
 four reference/config/log hashes unchanged. Syntax/AST/ASCII pass. Future
 reference command: `Q1_REFERENCE_DIR=/mnt/vm_8tb/b70/build/vllm-flashnext/q1-reference-fresh bash harness/q1_strata_reference.sh`.
 Existing canonical references remain unchanged under q1 for current controls.
+
+## Isolated top-k reduction candidate - CPU preparation
+
+CONFIG: native QSA topk_batch uses64full-context unsigned-key radix scans
+and a256-thread manual reduction. First candidate changes only that
+reduction to sycl::reduce_over_group.64passes, packed score/index bit
+semantics, ties, prefix selection, clamps and serial ascending-ID output
+remain intact. All copied kernels have explicit unique names under
+b70_q1_topk_r1; native and copied tree/group variants load together.
+No shared QSA/model/kernel source changes. Build/library/tmp/results stay
+under /mnt/vm_8tb/b70/build/vllm-flashnext/q1/topk-r1.
+
+COMMAND: B70_AGENT=Q1 MAX_JOBS=4 bin/cpu-run bash
+vllm/flashnext/harness/q1_topk/build.sh. This is an offline BMG AOT build
+using the existing oneAPI2026.1/compiler and torch ABI. CPU oracle command
+is in harness/q1_topk/README.md and uses host Python3.12 with existing venv
+packages. Future GPU command, ONLY after a coordinated grant:
+`Q1_PROFILE_TAG=profile-r1 bash vllm/flashnext/harness/q1_topk/window.sh`.
+Physical card1 and matching device pin; expected2-4min with240s body cap,
+native pre/post health, quiet CPU lock outside GPU lease, source/SO hash
+checks, no-overwrite output and actual container teardown.
+
+RESULT: CPU build exit0 in57s; candidate SHA256
+`eb83f79dbc6256e9a99d9b8871b6a174a06209e13885336773df57d3f81f84e9`.
+CPU oracle63cases PASS: independent full unsigned-key sort versus radix
+selection, ties preferring lower ID, NaN payloads, signed zero, infinities,
+extremes, width/n clamps and inactive canaries. AST/ASCII/bash-n PASS.
+Seven source/build/profile/oracle/window/README files ported under
+harness/q1_topk before D1/N1 source freeze; CPP byte-identical to the built
+scratch source and compiled native library unchanged. GPU not yet run.
+
+Prepared GPU validation measures native/copied-tree/group top-k alone and
+complete captured one-layer QSA decode chains at4K/16K/32K, capacity4 with
+active M1/M2, real24/2/256 geometry, indexer4x128,compress4,budget2048,
+cap2051,block2752. Deterministic page fixtures contain signed int8 KV,
+positive fp16 scales and finite f32 pooled rows. Exact selected IDs,
+inactive canaries, gated outputs and changed-input graph replay must pass.
+Native unitrace logs uninstrumented whole-chain replays. Auxiliary event
+boundaries report all operations plus commit_length and prior gaps with no
+host wait between operations. Interpret those boundaries alongside the
+uninstrumented trace because event insertion can perturb scheduling.
+
+VERDICT: CPU-ready only. No kernel speed, serving improvement, model
+fidelity, loaded-model pressure/liveness or fault-clearance claim.
+Component inputs are seeded populated fixtures, not saved real-model
+activations. Full-model pressure and serving gates remain separate.
+No GPU until parent grants the post-N1 card1 window; shared sources now
+frozen for D1's N1 diagnostic, reports/JOURNAL only.

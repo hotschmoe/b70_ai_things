@@ -308,3 +308,99 @@ VERDICT: real Flash-Next QSA integration and teardown/health/source
 closure pass. Exact-text reference and repeat qualification fail, with
 the causal and quality limits above. No promotion or speed/stability
 qualification follows from the clean engine closure.
+
+## Final P1 matched serving pair audit - first-content TTFT improves
+
+CONFIG: CPU-only independent audit after both P1 arms close. Raw:
+p1/run-bucket-r1, p1/full-p1-{control,selected}-r1,
+f1/merged-p1-{control,selected}-r1 and p1/matched-r1/summary.json.
+Control first, selected second; one fresh serving process per arm.
+Both use the same P1 bucket/selected libraries and overlay, original FA,
+QSA/N1/oneDNNdet off, maxlen65536/chunk12288/maxseq4, no speculation,
+prefix cache off. The selected-DQ flag0->1 is the treatment change.
+No GPU/build/new test, shared harness/plugin edit, commit or submission.
+
+COMMAND: independently recompute all24request content-arrival/usage
+checks, warmup exclusion, medians, input rates, absolute/percent latency
+deltas, fixture hashes and output-text variation; compare complete
+source/P1 hash manifests, fork snapshots and live server-info configs;
+review component and full-engine source/activation/health/teardown.
+
+RESULT: bucket.json contains44outputs in11layer/T groups, each with
+original reference, original repeat, overlay control and selected arm;
+all are exact_original=true/maxabs0. This is33nontrivial equality checks
+plus11reference outputs. Real weights/types and synthetic routes cover
+T33/129 at five layers and T12283 at layer8. Its leased native pre/post
+card1 health, identity checks and normal component exit pass. Isolated
+single-call wall numbers are not used to qualify serving latency.
+
+Both full-arm431-file source-identity manifests are byte-identical,
+as are explicit14-entry P1 SO/source hash manifests, fork HEAD and full
+binary tracked patches. After each arm, source verify has bad=[];
+P1/native SO checks pass. Treatment fixture-before/after checks pass,
+as does cross-arm fixture identity. The frozen fixture SHA256 recomputes
+as d3811e41588b9f28ae94c0a5fbf0967876172921e966abbabb71680b72cb349a;
+all three prompt SHA256s recompute, and live tokenization assertions
+and usage agree at8189/12285/32765 actual prompt tokens. Requested
+targets8192/12288/32768 are not the rate numerators.
+
+Actual server-info confirms speculative_config=null,
+enable_prefix_caching=false,max_model_len65536,max_batched12288,
+maxseq4,TP1 in both arms. Comparing the full serialized live configs
+finds only different instance IDs and the quant-config object's memory
+address. Both actual card1 activation markers show tile32/maxpad32768,
+selected0 and selected1 respectively; this is not merely flag intent.
+
+Each fixture has one warmup followed by three measured requests per arm.
+All24requests have16nonempty content arrivals,16completion usage tokens,
+15saved ITLs, monotonically increasing arrivals and nonempty text.
+TTFT equals the first saved content timestamp exactly, and separate wall
+time follows the final content event. No wall fallback or early output
+termination appears. All saved ITL samples recompute from the arrivals.
+
+| Actual prompt tokens | Control median ms | Selected median ms | Saved ms | TTFT reduction | Selected input tok/s |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 8189 | 3341.403082 | 3198.826496 | 142.576586 | 4.266968% | 2560.001304 |
+| 12285 | 4876.349748 | 4678.923307 | 197.426441 | 4.048652% | 2625.604053 |
+| 32765 | 13949.494369 | 13509.474830 | 440.019539 | 3.154376% | 2425.334842 |
+
+Control rates are2450.766878/2519.302477/2348.830655tok/s. Throughput
+increases are4.457153/4.219484/3.257118percent, which differ from the
+latency reductions above. All three measured sample ranges are separated:
+control3340.898..3346.080 versus selected3198.272..3207.971ms at8K;
+4870.249..4884.626 versus4677.460..4693.876ms at12K;
+13941.318..13957.275 versus13508.582..13520.149ms at32K. These
+independent calculations agree with matched-r1/summary.json.
+
+Short identity/arithmetic323/667 and Paris coherence pass in each arm;
+both separate32K-context math requests also return323/667, using32791
+chat prompt tokens. Short64-token decode C1p50 changes15.214564 to
+15.158917ms; C2 streams19.556688/19.514938 to19.552129/19.562719ms.
+These small decode differences do not establish a decode improvement.
+The strict promotion repeat suite was deliberately not run; GATE_RC2
+means disabled here, not a failed execution.
+
+Both P1_ARM_PASSED markers exist, each underlying window returns0,
+callbacks return0, SERVE_RC0 and ENGINE_ERROR_RC0. Engine-error files
+are empty. Both logs show XPUWorker shutdown done and completed engine
+manager/API shutdown without force killing. Both-card native pre/post
+health is HEALTHY per arm; no monitor-stop artifact exists. Thus the
+matched timing comparison has actual configuration/coherence/identity/
+source/activation/engine/health closure, unlike failed earlier arms.
+
+Limits: one fixed-order process pair and three samples per size do not
+separate treatment from all order or session effects. The measured
+endpoint is HTTP first-content TTFT, including normal serving overhead,
+not isolated prefill kernel time. Whole-model output equivalence remains
+unqualified: control has2distinct texts at each size; selected has1/2/3
+distinct texts at8K/12K/32K across its four requests. Cross-arm hashes
+are not all equal. Component arithmetic parity and sampled model
+coherence do not resolve the known baseline nondeterminism. No matched
+C2-prefill, canonical512 decode,200K, eviction or quality result follows.
+
+VERDICT: the completed matched experiment supports an observed
+3.15..4.27percent first-content TTFT reduction from selected-DQ on these
+three fixtures, with all required experiment closure passing. Retain
+the default-off treatment as a measured prefill candidate. No strict
+determinism, shelf promotion, external submission or broader stability
+claim is established by this pair.

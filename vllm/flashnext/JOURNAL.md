@@ -9525,3 +9525,105 @@ source/SO identities unchanged,noreset.
 VERDICT: freeze all campaign harness/plugins now. Root-authorized control
 starts bothcards,maxlen65536,flag0,TAGp1-control-r1,shared frozenfixtures;
 flag1 follows only if complete control/source/health succeeds. No DDrestore.
+
+## 2026-10-21 17:37 Q1 -- QSAoff matched control closes; drift not unique toQSA
+
+CONFIG: originalO4/F1/c7bFA,N1/D1off,QSA/prefillQSAoff,maxlen65536,
+chunk12288,capt1/2/4,maxseq4; exactsame4K16K32Kfixtures,64outputs,
+C1twice+C2; client addsarrivals/ITLsamples/wallmetadataonly.
+COMMAND: rootauthorizedQ1_QSA0/q1-dense-control-r1 q1_serve.sh;
+17:23:06start,17:27:11ready,nativepre/posthealth,quietHTTPclients.
+RESULT: runtimeFLASH/noQSAgate,ID,323/667,shortcoherencePASS.
+Stratasolo0/1+C2s0/1:4K=[T,F,T,T],16K/32K=[F,F,F,F]. Allsolorepeat
+FAIL.4Kshared1uniquetextwithQSA(theStrata match);16K/32Knoshared
+completetextsbetweenarms.32KdenseC2s0gapsafterfirst2chunks5374.92ms,
+2502.12ms,whileotherstreamawaitsfirstcontent(28.309s). No causalproof.
+Every12streamretains64arrivals/63ITLs. Probe1;backend/greedy/bench/
+serve/engineerror/health0,SOURCE_UNCHANGED,normalEngineCoredrain+
+managerstop,container341s exit0,nativebothHEALTHY,noreset. Free17:30:10.
+VERDICT: baseline16/32KStratadrift+nondeterminism reproduceQSAoff;
+QSAchangescontinuationsbutisnotestablishedunique cause ofgatefailure.
+No canonicalspeed/promotionclaim. DiagnosticC1p50QSAcost+12.41/
+23.39/38.17ms at4/16/32K(1.70/1.97/2.17xFA). FullTTFT/C2means/tails
+andper-outputmatchesin3Q1report;q1/dense-control-r1-summary.json.
+CPUplanrankstopk64nradixscans,thenscores,thengather/SIMTattend;notatimed
+attribution. ParentP1ownsnextGPUwindows;Q1campaignsourcesfrozen.
+
+## 2026-10-21 17:39 D1 -- CPU-only loaded-context localization ready
+
+CONFIG: Q1/P1 source/GPU freeze; no new D1 GPU activity or shared-source edit.
+COMMAND: map actual PLE/GDN/FA/decodeEP/F1EP paths; prepare scratch late-arm
+worker extension, CPU proc observer and bounded N1-original diagnostic
+snapshot. CPU mocks/syntax/client-sequence/lifecycle byte checks.
+RESULT: PASS CPU checks only. Unarmed inference methods unchanged;16 host
+hooks activated after idle handshake,8s active-phase witness/10s C stack
+watchdog, both existing CPU-only EP error banks. Mixed T21 uses F1 Torch
+queues, distinct from private-card1 decode graph. Actual worker/HTTP/GPU
+integration untested. Prepared n1-diagnostic-prepared-r3, see3D1 report.
+VERDICT: after P1 closure/root grant, port then run exact historical N1
+originalFA/plan0 sequence through first callback math.120s postREADY body
+(+5s TERM grace), teardown/native health outside bound; expected~6min total.
+Deadline alone is not a stall. No blind plan rerun/persistent-buffer fix,
+GPU queue, reset, publication or speed/stability qualification.
+
+## 2026-10-21 17:39 P1 -- full control PASS, selected arm starts
+
+CONFIG: bothcards,maxlen65536,originalFA/QSAoff/noMTP;overlay selected0.
+COMMAND: p1_serve.sh TAGp1-control-r1; frozen warm+3samples fixtures.
+RESULT: source/SO/fork/fixture/activation/content checks pass; actual
+server_info proves speculative_config null,prefix false,65536/12288/4/TP1.
+8189/12285/32765tokens TTFT3341.4/4876.3/13949.5ms;decodeC1 15.2146ms,
+C2 19.5567/19.5149. Both longmath pass;normalteardown/noengineerror,
+posthealthbothHEALTHY. Before/after callback metrics saved.
+VERDICT: P1_ARM_PASSED0;immediate authorized selected1 with samefixtures,
+sources/SOs/maxlen;no edits/build between arms,no promotion claim.
+
+## 2026-10-21 17:47 Q1 -- isolated top-k group-reduction CPU ready
+
+CONFIG: first candidate only replaces manual256-thread radix count tree
+with reduce_over_group;64scans/pack-key/ties/prefix/serial output unchanged.
+Unique b70_q1_topk_r1 kernel namespace; scratch build, no live QSA edits.
+COMMAND: cpu-run/MAX_JOBS4 offline BMG AOT build; hostPy312 CPU oracle;
+port7files to harness/q1_topk before D1/N1 source freeze.
+RESULT: build57s/exit0; library SHA eb83f79dbc6256e9a99d9b8871b6a174a06209e13885336773df57d3f81f84e9;
+CPU oracle63cases/AST/ASCII/bash-n PASS, CPP identical and SO unchanged.
+Prepared native/tree/group isolated+captured-chain profile at4K/16K/32K,
+activeM1/M2/capacity4/real geometry/populated paged fixtures; no GPU yet.
+VERDICT: CPU ready only, no serving/fidelity/pressure/fault-clearance claim.
+Parent grants card1 after N1 closes; source freeze now respected.
+
+## 2026-10-21 17:46 P1 -- matched selected-DQ first-content TTFT improvement
+
+CONFIG: bothcards,originalFA/QSAoff/noMTP,65536/12288/maxseq4; same
+bucket/P1 binaries,flag0/1; one warmup+3samples frozen fixtures.
+COMMAND: sequential p1_serve control then selected; actual first nonempty
+content TTFT,16-token cap,source/SO/fork/fixture/activation checks.
+RESULT:8189tokens3341.403->3198.826ms(-4.267%);12285tokens
+4876.350->4678.923ms(-4.049%);32765tokens13949.494->13509.475ms
+(-3.154%). Both longmath gates pass. Full431-file and P1 manifests equal,
+fixtureSHA/tokenizationequal; actualruntime specnull/prefixfalse/configsame
+exceptinstanceid/objectaddress. Both normalteardown,noengineerror,pre/post
+HEALTHY,noreset/watchdog. C1 15.2146->15.1589ms,C2~19.5ms unchangedscope.
+VERDICT: sampled matched latency result,not promotion. Strict completion
+repeat remains unqualified within BOTH arms (unique texts control2/2/2,
+selected1/2/3), despite exact component/bucket outputs and coherent math.
+One fixed-order process pair,not stability study; noQSA/200K/MTPclaim.
+Bothcards releasedtoroot,DD remainsdown,no further P1 GPU queued.
+
+## 2026-10-21 A1 -- final independent P1 matched-pair audit
+
+CONFIG: CPUonly aftercontrol+selectedclose;sharedsourcefrozen;noGPU/
+build/newtests/commit. OriginalFA/QSAoff/N1off/noMTP,prefixoff,
+maxlen65536/chunk12288/maxseq4,onefreshprocessperarm,controlfirst.
+COMMAND: recompute24requestarrivalarrays/usage,warmexclude,medians,
+fixturehashes,latencydeltas;compare431source/SO/fork/config/health.
+RESULT: 8189tokens3341.403082->3198.826496ms (-4.266968%);12285
+4876.349748->4678.923307(-4.048652%);32765 13949.494369->13509.474830
+(-3.154376%). Allsample rangesseparate;16actualcontent+usageeach,
+nofallback/earlytermination. Actualconfigs specnull/prefixfalsematch;
+431source+14P1hashentries/fork/fixturesmatch,card1selected0/1active.
+Botharmsmath/coherence/callback/normalengineteardown/error0/native
+preposthealthpass. Bucket44outputs/11groups allreferenceexact.
+VERDICT: observedmatchedTTFTbenefitvalidforsinglefixedorderpair;
+servingtextvariesbotharms,nopromotion/external/stabilityorquality
+claim. Fulltables/limitsinreports/3A1_audit.md.

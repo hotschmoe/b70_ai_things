@@ -178,3 +178,22 @@ Both arms use the same binary and maxlen65536/chunk12288; sources stay
 frozen across the pair. The new client records observed first-content
 TTFT, wall time and individual arrival/ITL samples separately. It does
 not substitute request completion for missing content.
+
+P1's pair subsequently passes in full. Warm-excluded first-content
+medians control->selected are3341.403->3198.826ms at8189 prompt tokens,
+4876.350->4678.923ms at12285, and13949.494->13509.475ms at32765:
+latency reductions4.27/4.05/3.15percent. All24 requests across both arms
+produce16 content events and16 usage tokens. Long arithmetic passes in
+both, actual config is no-speculation/prefix-off, source/SO/fork/fixture
+identities match, and EngineCore teardown plus native health pass. Short
+decode means remain effectively unchanged. This is one fixed-order pair;
+continuations are not strict repeats in either arm. Keep the optimization
+opt-in and distinguish this measured diagnostic gain from promotion.
+
+Before the next N1 reproduction, root review caught two monitor defects:
+the real GDN call passes hidden_states by keyword, and main/card1 threads
+cannot share a single active-phase LIFO. CPU checks now cover both, keep
+original results/exceptions when diagnostics fail, and avoid coercions
+that could touch GPU data. Sources are ported and reviewed before load.
+The next finite run uses the original N1 sequence with phase/stack capture;
+QSA's minimal integer-reduction candidate/profile follows it.
