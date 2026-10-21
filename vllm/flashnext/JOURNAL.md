@@ -9466,3 +9466,62 @@ promotion,stabilityorspeedclaim. NeedidenticalQSAoffcontrolfirst. Source
 portsq1_serve.sh/q1_strata_reference.sh+json/q1_validate_references.py;
 rawoutputsunchanged. Parentnowauthorizesnextdensecontrolundernewuser
 continuation; DDstop/leasesfreeconfirmedbyroot, nochildDDlifecycle.
+
+## 2026-10-21 17:24 P1 -- isolated selected-DQ bucket overlay CPU-ready
+
+CONFIG: root-approved generated overlay, same binary flag0/1, no shared
+source edits; Q1 original-FA/QSA-disabled control first. CPU-only.
+COMMAND: frozen-source generator + cpu-run/MAX_JOBS4/disk TMPDIR build;
+metadata compare, syntax/ASCII and CPU spawn/card0-passthrough smoke.
+RESULT: build21s exit0; p1/_C.p1bucket.so SHA256
+36d11c6f7a5fbc4223bfa0ea219cd152bdc08cf3cc062232d9604b9dfaee57db.
+All24 kernel metadata strings unique vs F1/P1selected; base source hash
+cc0374a7 unchanged. Generator fails on base/anchor drift. Explicit P1 API
+hook intercepts only card1 native experts; default off, no vLLM entrypoint.
+VERDICT: one-card original/repeat/overlay0/overlay1 real-weight bucket gate
+ready,44 outputs,<=180s body+health, awaiting root GPU grant. If passes,
+matched full serve pair after Q1 control, root-owned frozen fixture client,
+expected10..14min. No serving/GPU result or new speed claim. Report3P1.
+
+## 2026-10-21 17:29 P1 -- matched serving wrapper prepared, no GPU yet
+
+CONFIG: Q1 original-FA control first; parent owns prefill client/callback.
+COMMAND: add p1_serve.sh only; bash syntax/ASCII review, no execution.
+RESULT: host/container flag+fixture bindings, actual card1 activation gate,
+full source/P1 SO/common source hashes, fork HEAD/diff beforeafter, content
+identity and normal teardown/post-health checks prepared. After READY,
+120s without client-file progress stops/fails arm; server stats excluded.
+VERDICT: bucket gate then matched flag0/1 await root grant. Default
+maxlen65536 matches Q1 control, chunk12288; originalFA/QSAoff/N1off equal.
+Expected5..7min per full arm. No full-model or new speed result.
+
+## 2026-10-21 17:31 ORCHESTRATOR -- control narrows attribution; P1 queued
+
+CONFIG: same 4K/16K/32K fixtures and maxlen65536/chunk12288, QSA disabled,
+original FA, N1/D1 off; canonical Strata references unchanged. Q1 owns the
+finite full control. P1 follows on card1 for real-weight bucket validation,
+then both cards for same-binary flag0/1 serving at maxlen65536.
+COMMAND: Q1_QSA=0 Q1_TAG=q1-dense-control-r1 bash harness/q1_serve.sh;
+consult requested claude-fable-5-1 and claude-opus-5-5 again at this decision.
+RESULT: original-FA control completes with normal EngineCore teardown,
+both-card native post-health HEALTHY, unchanged sources; exact repeat and
+16K/32K Strata text parity fail here too. QSA is not established as the
+unique cause. Q1 saves individual content arrivals/ITLs for this control.
+Both Claude CLI requests time out after30s, exit124, no output/model ID;
+raw restart-20261021/consult-r2. No advice attributed to unavailable models.
+VERDICT: advance P1 only through original/overlay0/overlay1 exact bucket
+gate, then matched full arms with frozen code/SOs/fixtures. Preserve
+actual first-content TTFT and tails. D1 prepares host phase/stack monitoring
+for one loaded-context reproduction of the N1 stall after the P1 pair.
+Strata stays down per user; no promotion or external submission.
+
+## 2026-10-21 17:32 P1 -- bucket integration PASS, matched control starts
+
+CONFIG: root-granted card1, real E374 weights, synthetic routes;44outputs
+across11 real shape/type groups, original/repeat/overlay0/overlay1.
+COMMAND: TAG=bucket-r1 p1_bucket_gate_window.sh.
+RESULT:44/44 exact,maxabs0;body51s exit0,pre/post HEALTHY,normalteardown,
+source/SO identities unchanged,noreset.
+VERDICT: freeze all campaign harness/plugins now. Root-authorized control
+starts bothcards,maxlen65536,flag0,TAGp1-control-r1,shared frozenfixtures;
+flag1 follows only if complete control/source/health succeeds. No DDrestore.

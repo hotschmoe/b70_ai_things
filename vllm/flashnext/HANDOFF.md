@@ -269,3 +269,16 @@ do not restore Strata between tests. A daily-driver restoration had just
 started and was stopped again before readiness. Continue the matched
 QSA-disabled control, P1 serving integration and loaded-context liveness
 localization under coordinated GPU leases.
+
+The QSA-disabled original-FA long-fixture control subsequently completed
+with normal teardown, unchanged sources and both-card post-health. It
+also fails solo exact repeats and 16K/32K Strata text parity. This prevents
+attributing those failures uniquely to QSA. Individual stream arrivals
+now show a long C2 gap while the other stream awaits first content; the
+cause remains unproven. See 3Q1_qsa.md for the per-output comparison.
+
+P1's real-weight bucket integration gate passes44 bit-exact outputs:
+original repeat, overlay flag0 and overlay flag1, including T12283.
+Body51s, normal exit, unchanged sources/SOs, native pre/post HEALTHY.
+The same-binary full-serving flag0/1 pair is now queued/running; keep
+all campaign harness/plugin source frozen until BOTH arms close.

@@ -271,3 +271,115 @@ from vllm/flashnext. References: `bash harness/q1_strata_reference.sh`;
 QSA: `Q1_QSA=1 Q1_TAG=q1-r1 bash harness/q1_serve.sh`; dense control:
 `Q1_QSA=0 Q1_TAG=q1-dense-control-r1 bash harness/q1_serve.sh`.
 GPU commands require the parent-coordinated pair lease and DD stopped.
+
+## 17:30 - QSA-disabled control reproduces fidelity/repeat failures
+
+CONFIG: original O4+F1/c7b Flash Attention, QSA/prefill-QSA off, N1/D1/
+oneDNN-det0, otherwise same maxlen65536/chunk12288/capture1,2,4/maxseq4,
+same fixture IDs and64outputs. No prefix cache/MTP. Root reconfirmed DD
+stopped and both leases free. Mandatory native pre-health was retained.
+
+COMMAND: `Q1_QSA=0 Q1_TAG=q1-dense-control-r1 bash harness/q1_serve.sh`
+from vllm/flashnext. Start17:23:06,ready17:27:11. Root's shared client
+adds arrival offsets/individual ITL samples/wall time only; request body,
+sampling and existing timing summaries are unchanged. Per-output Strata
+booleans are now saved directly as strata_solo_exact/strata_c2_exact.
+Original QSA raw JSON/client version remains preserved by the prior
+checkpoint and source manifest; it lacks the new arrival arrays.
+
+RESULT: runtime Flash Attention selection and FLASH_ATTN cache block-size
+lines present; zero QSA registration/binding lines. Registered dense alias,
+stable hotschmoe-dd first,323/667 and short coherence pass. All12finite
+long streams complete64outputs,64content chunks and63individual ITLs.
+
+| Prompt | Solo0/solo1 vs Strata | C2stream0/1 vs Strata | Solo repeat | C2 vs solo0 |
+|---|---|---|---|---|
+| 4096 | PASS/FAIL | PASS/PASS | FAIL | PASS/PASS |
+| 16384 | FAIL/FAIL | FAIL/FAIL | FAIL | FAIL/FAIL |
+| 32768 | FAIL/FAIL | FAIL/FAIL | FAIL | FAIL/FAIL |
+
+At4K both backends match Strata on3/4streams, but the failed streams and
+failed texts differ. At16K both backends produce3unique texts with no
+shared complete continuation between the arms. At32K QSA produces one
+repeated text across4outputs; dense produces3unique texts, none equal to
+that QSA text. Thus attention changes the continuation, while the exact
+fidelity/repeat failure is already present with QSA disabled. No unique
+QSA causality, baseline correctness, or QSA determinism benefit is proven.
+
+Diagnostic latency for the same serving settings/fixtures follows. This
+is NOT the canonical512-token benchmark or a fidelity/speed promotion.
+There are2solo requests and oneC2 pair per length. TTFT is observed first
+content in seconds; C1 uses solo1. Other columns are milliseconds; pairs
+are C2stream0/stream1. Every stream has64content chunks, so TTFT is not a
+request-wall fallback. The two arms differ in attention semantics and
+cache geometry, and the historical QSA arm has no individual arrivals.
+
+| Context/backend | C1 TTFT s | C2 TTFT s | C1 p50/mean ms | C2 p50 ms | C2 mean ms | C2 p99 ms |
+|---|---:|---|---|---|---|---|
+| 4K original FA | 2.125 | 4.215/4.236 | 17.81/17.80 | 22.89/22.89 | 22.85/22.79 | 23.38/23.43 |
+| 4K QSA | 2.807 | 5.630/5.651 | 30.22/30.23 | 35.65/35.65 | 35.35/35.50 | 36.18/36.25 |
+| 16K original FA | 7.033 | 13.474/13.499 | 24.21/24.07 | 29.15/29.15 | 28.97/28.95 | 29.79/29.95 |
+| 16K QSA | 12.531 | 24.564/24.592 | 47.60/47.52 | 53.25/53.24 | 52.72/53.02 | 53.83/54.03 |
+| 32K original FA | 14.112 | 20.399/28.309 | 32.67/32.39 | 37.23/37.22 | 160.76/36.75 | 3593.79/38.07 |
+| 32K QSA | 31.321 | 43.078/62.838 | 70.84/70.57 | 77.10/77.12 | 386.78/76.49 | 8972.91/78.56 |
+
+Observed QSA C1 p50 cost above original FA is12.41/23.39/38.17ms per
+token at4K/16K/32K, or1.70/1.97/2.17x total ITL. This is a diagnostic
+cost curve, not an accepted speed comparison. QSA int8 increases planned
+KV capacity, but the real serve is currently slower on these fixtures.
+
+Dense32KC2stream0 arrival offsets begin20.399s,25.774s,28.276s: gaps of
+5374.92ms then2502.12ms after its first and second content chunks. The
+other stream's first content is28.309s. The long gaps therefore overlap
+the other stream awaiting first content. That supports a scheduling/
+interference hypothesis only; neither engine causality nor absence of
+client/network contribution is proven. QSA's old aggregate tail cannot
+be placed without arrival samples. Raw arrays remain in the dense JSON.
+
+Closure: probe1 due fidelity/repeat; backend/greedy/bench/serve/engine-error/
+post-health0,SOURCE_UNCHANGED. Actual EngineCore drains and manager stops
+normally; no forced kill. Container exits0 after341s; both native health
+probes HEALTHY. Both leases free by17:30:10; no reset or retry. Raw
+x6/flashnext-ista-iq3-xxs-ep-dense-q1-dense-control-r1; derived comparison
+q1/dense-control-r1-summary.json preserves text hashes, exact cross-arm
+matches and largest-gap placement without changing raw results.
+
+VERDICT: the matched control narrows interpretation: baseline repeatability
+and long-context fidelity still require work with QSA off. QSA remains
+unqualified, and no speed/stability promotion is supported. Parent now
+owns subsequent P1 GPU windows; Q1 is CPU-only with all shared source frozen.
+
+## Ranked QSA profiling plan - CPU review only
+
+1. Measure topk_batch first: qsa_batch.cpp:680 uses one256-thread group
+   per query,64full-context radix scans with reductions/barriers, then
+   thread0 scans the context again to emit ordered IDs. That is a concrete
+   source candidate for the rising context-dependent cost, not a timed
+   attribution. Profile actual M1/M2 captured decode at4K/16K/32K before
+   changing it. An exact multi-pass/radix or pooled-cell implementation
+   must preserve pack_key ordering/ties, forced open-block priority and
+   ascending output-ID order; require exact IDs and graph replay first.
+2. Measure index_scores_batch at the same shapes: it performs serial
+   four-head x128 dots per pooled cell and writes repeated token scores.
+   Capture query/pool/score/selected-ID evidence on identical inputs
+   before attributing continuation drift or reducing arithmetic precision.
+3. Measure kv_gather_batch dequant plus attend_batch, then projection/
+   side-state/gate overhead. Geometry is24query/2KV heads,dim256,indexer
+   4x128,compress4,budget2048,cap2051,real block2752 and12full layers.
+   The SIMT attention path has only one group per query/head and scalar
+   dot/value loops; compare selected-KV tiling/GQA reuse only after timing.
+
+Rank the summed12-layer captured critical path, including readiness and
+cross-operation gaps, with real paged state and loaded-model VRAM pressure.
+Avoid per-op synchronizations that manufacture a new execution path. Keep
+component numerical/capture checks and loaded-pressure health/lifecycle
+checks distinct; existing low-VRAM probes did not reproduce prior liveness
+failures. No profiling code, build or GPU run is authorized by this plan.
+
+Reference-port preservation fix: q1_strata_reference.sh now rejects existing
+reference/window/config/engine log artifacts before any mkdir/copy/GPU
+call. A fresh absolute Q1_REFERENCE_DIR controls config/log/output and
+validator paths. Default rerun against current artifacts exits5 with all
+four reference/config/log hashes unchanged. Syntax/AST/ASCII pass. Future
+reference command: `Q1_REFERENCE_DIR=/mnt/vm_8tb/b70/build/vllm-flashnext/q1-reference-fresh bash harness/q1_strata_reference.sh`.
+Existing canonical references remain unchanged under q1 for current controls.

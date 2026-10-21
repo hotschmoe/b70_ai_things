@@ -45,3 +45,25 @@ shapes, then call this primitive on gate/up/down original packs with
 sel and expert_rows F/F/H, replacing their three index_selects. It needs
 an explicit load and one experimental flag; no bucket/combine follow-on
 is part of this plugin. That hook has not been installed or measured.
+
+An isolated bucket-serving experiment is also prepared. The frozen-source
+`generate_bucket_overlay.py` checks the original F1 source hash and exact
+edit anchors, then emits a small native overlay into the disk build tree.
+All duplicated kernels use namespace b70_p1_bucket, and the new op is
+b70_p1::prefill_moe_bucketed. It preserves plan, bmm and combine and switches
+only packed gather versus direct selected dequant. The same overlay binary
+runs flag0 and flag1. Build via cpu-run/harness/p1_bucket_build.sh.
+
+Before serving, the parent must grant the bounded card1 integration gate:
+`TAG=bucket-r1 bash vllm/flashnext/harness/p1_bucket_gate_window.sh`.
+It requires original-repeat, original-versus-overlay0 and original-versus-
+overlay1 exact at real shapes/types. This gate is not yet measured.
+
+The optional Python hook requires B70_P1_BUCKET_OVERLAY=1 and is installed
+explicitly by harness/p1_api.py, including spawned EngineCore. It intercepts
+only card1 native experts; B70_PREFILL_SELECTED_DQ defaults to0. No shared
+model/plugin edit or automatic vLLM entrypoint is installed. The parent
+schedules harness/p1_serve.sh twice with host flag0/1 and one frozen
+P1_PREFILL_FIXTURES path. The wrapper also passes flags separately to the
+container and enforces source/fixture/activation/content/lifecycle checks.
+No full serving performance result exists yet.

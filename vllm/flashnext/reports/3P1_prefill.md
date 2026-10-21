@@ -283,3 +283,187 @@ recipe. Existing strict serving nondeterminism must remain explicit.
 VERDICT: finite selected-only checkpoint is ready for root review/commit.
 No additional setup is justified for unchanged code. The serving-hook
 candidate remains a subsequent experiment, not a promotion.
+
+
+## 2026-10-21 17:24 -- isolated serving overlay CPU-built, GPU gate pending
+
+CONFIG: user explicitly continues the vLLM campaign; root authorizes an
+isolated generated P1 overlay, same-binary flag0/1 arms, CPU-only build.
+No shared fork or original plugin file edited. Q1's original-FA,
+QSA-disabled long-fixture control has GPU priority. No DD restore.
+
+COMMAND: read current bucket and prefill dispatch; add
+`plugins/b70_p1_xpu/generate_bucket_overlay.py` and explicit
+`b70_p1_xpu/serving.py`; build via
+`B70_AGENT=P1 MAX_JOBS=4 P1_TMPDIR=/mnt/vm_8tb/b70/build/vllm-flashnext/p1/tmp
+bin/cpu-run bash vllm/flashnext/harness/p1_bucket_build.sh`.
+Run Python/bash syntax, ASCII, frozen source hash, native metadata and
+CPU spawn-hook checks. No GPU access.
+
+RESULT: generated source is based on frozen bucket SHA256
+`cc0374a7a46108aaa37a4b1c86f170ab7d6e7663fe451aabcd0b208e7b800abd`;
+generator requires this hash and exactly one occurrence of every edit
+anchor, then emits only to disk build/p1. It changes the native namespace,
+adds a boolean op argument and typed-dispatch helpers, conditionally
+skips three gathers, and uses selected-DQ on original packs F/F/H,
+modes1/2/0. Grouping, host bucket planning, scratch shape, bmm, swiglu,
+combine and queue ordering are copied unchanged. No bucket source copy
+is tracked. P1 op namespace differs from F1, and all duplicated SYCL
+kernels are under b70_p1_bucket.
+
+Generated source SHA256
+`3cdff51b9fb8f4ad68477183fb542bcf1ccfc36c722387074acad7f11abc7b69`.
+CPU build21s exit0; binary p1/_C.p1bucket.so207264bytes, SHA256
+`36d11c6f7a5fbc4223bfa0ea219cd152bdc08cf3cc062232d9604b9dfaee57db`.
+All24 templated metadata strings use b70_p1_bucket and share no names
+with F1's129 or selected-DQ's105. The overlay invokes existing registered
+F1/P1 dequant through cached typed dispatcher handles, avoiding a new
+hard DT_NEEDED dependency on either extension. ABI/compiler unchanged.
+
+The optional hook only intercepts card1 with mode native; every other
+call goes to original _experts. `B70_P1_BUCKET_OVERLAY=1` explicitly
+installs it; unset is default off. `B70_PREFILL_SELECTED_DQ=0/1` selects
+gather+F1C13 versus original-pack+P1selectedC13 on the same bucket binary.
+Top-level installation in harness/p1_api.py runs in both API and spawned
+EngineCore before model construction. CPU spawn smoke passes both flag
+values and card0 passthrough, without importing torch or touching GPU;
+actual EngineCore hook proof still requires serve logs. Explicit load of
+both libraries happens on first intercepted native call. Nothing is
+installed as an automatic vLLM entrypoint.
+
+Raw CPU evidence: build/p1/build-bucket-r1.log,
+bucket-namespace-check.json, hook-cpu.log. Shared original bucket hash
+remains unchanged. Selected primitive binary still sha0ebb5837.
+
+VERDICT: CPU implementation ready. Do not serve until the original-vs-
+overlay control gate below passes. No new speed or stability claim.
+
+### Prepared bounded integration gate
+
+COMMAND (not yet executed):
+`TAG=bucket-r1 bash vllm/flashnext/harness/p1_bucket_gate_window.sh`.
+Physicalcard1/logical0,12GiB host cap,180s body alarm,210s outer timeout,
+expected1..2min body plus native pre/post health. No model or PLE load.
+
+The gate uses actual card1 traffic-snake gate/up/down packs for layers
+0/1/8/12/35, covering all five gate and both down types. T33/129 plus
+layer8 T12283, real H2560/F640/E374/topk10/tile32/maxpad32768, synthetic
+skewed routes explicitly labeled. Each of11 shape/type groups compares
+original, original repeat, overlay flag0, and overlay flag1 bit-exact:
+44 outputs. This checks the overlay qualifies as a control before using
+it in a matched serving pair; original-repeat failure must remain explicit.
+Record original/control/selected shapes, bytes, output error and wall
+only as diagnostics. Preserve failure, then post-health; no reset by P1.
+
+### Proposed matched full serving pair after gate
+
+Use unchanged merged maxlen131072/chunk12288/maxseq4/noMTP, original FA
+and QSA off exactly as Q1's preceding control; retain its other effective
+flags. Explicit wrapper paths/flags for both arms:
+
+```
+F1_API_WRAPPER=$H/p1_api.py
+F1_PYPATH_PRE=$REPO/vllm/flashnext/plugins/b70_p1_xpu
+O4_SERVE_EXTRA="<same baseline flags> B70_P1_BUCKET_OVERLAY=1 B70_PREFILL_SELECTED_DQ=0"
+```
+
+Treatment changes only selected flag0->1. Both libraries keep the same
+paths and hashes in both arms. Parent owns p1_prefill_probe.py and
+p1_prefill_callback.sh, using identical frozen tokenized8K/12288/32K
+fixtures, warmup+3 samples,16 output tokens with natural continuation.
+Measure first nonempty content arrival, content arrival arrays and wall
+separately; require equal prompt token counts and content. No max1 wall
+fallback. Two long math coherence checks, mandatory existing short decode
+bench, /v1/models first hotschmoe-dd + registered research alias, and
+P1_BUCKET_HOOK_INSTALLED/P1_BUCKET_APPLIED selected flag proof are gates.
+Disable redundant old long probe using F1_LENGTHS=',' F1_COHERENCE_LEN=0
+F1_DECODE=0; root's callback supplies the matched prefill evidence.
+
+Before the pair, snapshot/verify d1_source_identity.py (all campaign code,
+dirty fork and effective baseline libraries), plus explicit SHA256s for
+both P1 SOs and generated bucket cpp/json outside the repository.
+Freeze source/SOs across both arms and verify after each. Normal API and
+EngineCore teardown, native post-health, no engine-error trace and matching
+identity remain mandatory. Existing strict serving nondeterminism is
+reported separately; this is a diagnostic experiment, not promotion.
+
+Expected cost per full arm:90..180s load (PLE26.8GiB host pin), roughly
+60..120s clients/bench, health and teardown; reserve5..7min each,10..14min
+for the pair after the bounded bucket gate. Only one Flash-Next process;
+no DD restore between prepared windows. Root must authorize each GPU stage.
+
+### Full serving wrapper ready (still not executed)
+
+Root's callback/client are present. Added only P1-owned
+`harness/p1_serve.sh`: source manifest includes all effective campaign
+sources through d1_source_identity.py plus explicit original bucket,
+C13/decode common source, generator, selected native source/header,
+loader/hook, generated cpp/json and both P1 SO hashes. The external fork
+HEAD and complete binary tracked diff are saved and compared before/after;
+full source manifest also covers its untracked source files.
+
+The wrapper exports the host selected flag and frozen fixture path for the
+callback, and separately passes B70_P1_BUCKET_OVERLAY=1 and selected0/1
+into the container. Both arms use p1_api.py and the same P1 SO paths.
+Activation requires P1_BUCKET_APPLIED with the correct selected flag from
+an actual card1 native call. Source identity, fixture hash, short identity/
+arithmetic, root callback content/row count, normal serve exit, native
+post-health and no engine-error are required. Once READY, client evidence
+files must advance at least every120s; server periodic statistics do not
+reset the monitor. A monitor-initiated stop is always an arm failure;
+F1 owns teardown/post-health afterward. No reset or DD lifecycle is added.
+
+Default maxlen is65536 to match Q1's preceding original-FA control;
+root can override131072 identically in both arms. Chunk12288/maxseq4,
+originalFA, QSAoff, N1off, oneDNNdetoff are explicit and equal. This
+supersedes the earlier131072 default proposal for this pair only.
+
+Prepared commands (root must grant GPU stages first):
+
+```
+TAG=bucket-r1 bash vllm/flashnext/harness/p1_bucket_gate_window.sh
+B70_PREFILL_SELECTED_DQ=0 P1_PREFILL_FIXTURES=/mnt/vm_8tb/b70/build/vllm-flashnext/p1/matched-r1/fixtures.json TAG=p1-control-r1 bash vllm/flashnext/harness/p1_serve.sh
+B70_PREFILL_SELECTED_DQ=1 P1_PREFILL_FIXTURES=/mnt/vm_8tb/b70/build/vllm-flashnext/p1/matched-r1/fixtures.json TAG=p1-selected-r1 bash vllm/flashnext/harness/p1_serve.sh
+```
+
+Bash syntax/ASCII checks pass. No GPU run, no full model or extra build
+was executed for this wrapper. Source must remain frozen between arms.
+
+Root reviewed/approved p1_serve.sh layout. Final pre-gate addition:
+treatment requires a passed control marker (P1_CONTROL_TAG defaults to
+p1-control-r1), byte-compares the complete source identity and explicit
+P1 hash manifests, and checks callback fixtureSHA plus target/promptSHA/
+prompt-token equality across arms. These compare source/identity only;
+flag, env, tag and output locations are recorded separately. Maxlen65536
+is fixed for the requested pair. No collective health is added for this
+world-size1 sidecar; native per-card pre/post health remains per arm.
+Freeze all harness/plugin files after the bucket gate and across both
+serving arms; root owns starts. The treatment preflight and pair checks
+fail closed if control is missing or sources/fixtures differ.
+
+
+## 2026-10-21 17:32 -- bucket gate PASS; control source freeze starts
+
+CONFIG: root-authorized physicalcard1/logical0; standalone integration,
+E374/topk10/H2560/F640/tile32/maxpad32768, real card1 traffic-snake weights,
+synthetic skewed routes. Types sampled at layers0/1/8/12/35, T33/129 plus
+layer8 T12283. Same original F1 serving bucket binary as the matched arms.
+
+COMMAND: `TAG=bucket-r1 bash harness/p1_bucket_gate_window.sh`.
+
+RESULT:44/44 output comparisons bit-exact, maxabs0: original reference,
+original repeat, overlay flag0 and overlay flag1 at11 shape/type groups.
+Body51s exit0/P1_BUCKET_GATE_OK; native pre/post HEALTHY; all five
+source/SO hash checks pass, normal teardown, no reset. Raw
+build/p1/run-bucket-r1/{bucket.json,bucket.log,identity-*,health-*}.
+The single-call wall numbers include launch/setup and are gate diagnostics,
+not latency qualification. Standalone free-memory conditions differ from
+an actual loaded card1.
+
+VERDICT: original-versus-overlay0 exact gate qualifies this overlay as the
+matched control. Root authorized immediate both-card control+selected pair.
+All campaign harness/plugin sources frozen after the gate at17:32UTC;
+reports/JOURNAL remain writable. Control starts flag0/TAGp1-control-r1,
+maxlen65536, same frozen fixture path p1/matched-r1/fixtures.json.
+Treatment is conditional on complete control success, native health and
+identical source/SO/fixture identities. No DD restore between windows.

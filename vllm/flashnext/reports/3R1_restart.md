@@ -158,3 +158,23 @@ remained502 before readiness; no identity/arithmetic smoke completed.
 Stop the service again and keep research ownership. Q1 prepares the same
 long-fixture control with QSA disabled; P1 prepares a default-off serving
 hook; D1 prepares loaded-context/EP liveness localization on CPU.
+
+## Continued campaign: original-FA control and P1 integration
+
+Q1's QSA-disabled control completed at17:30:10 with normal EngineCore
+drain, unchanged sources and both-card native post-health HEALTHY. It
+also fails solo exact repeats and16K/32K exact Strata text parity; these
+failures are not unique to QSA. Individual32K C2 arrivals show the first
+stream's long gaps while the other stream awaits first content. This is
+an observed overlap, not a scheduling root cause. Q1 records the complete
+per-output matrix and diagnostic latency comparison in3Q1_qsa.md.
+
+P1's isolated native bucket overlay then passes44 bit-exact outputs
+against the original operation, covering original repeat and flags0/1,
+five real quant pairs and a T12283 prefill. Body51s, exit0, unchanged
+sources/SOs, native pre/post HEALTHY. Its full serving control starts
+next, followed by treatment only if control/source/fixture gates pass.
+Both arms use the same binary and maxlen65536/chunk12288; sources stay
+frozen across the pair. The new client records observed first-content
+TTFT, wall time and individual arrival/ITL samples separately. It does
+not substitute request completion for missing content.
