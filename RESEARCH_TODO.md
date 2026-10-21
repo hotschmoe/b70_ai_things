@@ -1,5 +1,16 @@
 # RESEARCH_TODO.md -- clean-stack work order
 
+## Next research item as of 2026-10-21
+
+[Flash-Next C4 decode tests and time budget](docs/20261021_flashnext_c4_next.md):
+MTP0/1 with target/draft/attention/card-wait profiling, conditional fixed
+attention splits16/8, then dynamic-depth completion tails. Budget2-3 hours;
+first decision45-75 minutes. Strata is being restored for daily use at the
+user's request; stop it before resuming research. Current aggregate PP/TG
+and cold wall results are in the [README](README.md#flash-next-serving-and-next-research).
+
+## Retained clean stack work order
+
 Updated 2026-08-26. Work top to bottom. Do not mix environment refresh,
 performance changes, and model changes in one comparison.
 

@@ -3,6 +3,32 @@
 This repository is the clean working set for serving and kernel research on
 two Intel Arc Pro B70 cards.
 
+## Flash Next serving and next research
+
+Daily driver: [Strata Flash-Next IQ3_XXS](strata/flash-next/dd/README.md),
+served as `hotschmoe-dd`. Active research is the thin vLLM Flash-Next fork;
+Qwen3.8-27B AutoRound INT4 remains the fallback.
+
+Next: [C4 MTP comparison, profiling and time budget](docs/20261021_flashnext_c4_next.md).
+Budget2-3 hours, first decision45-75 minutes. Compare MTP0/1, conditionally
+tune attention splits16/8, then test dynamic-depth completion tails.
+
+Measured2026-10-21 on two B70s: four identical cold19798-token prompts,
+512 output tokens each, thinking off; all rates aggregate tok/s.
+
+| Recipe | Cold effective PP | Steady C4 TG | Cold output per wall second | Cold batch wall s |
+|---|---:|---:|---:|---:|
+| Strata Flash-Next IQ3_XXS, MTP depth1 | 1739.5 | 188.5 | 38.84 | 52.74 |
+| vLLM Flash-Next IQ3_XXS, MTP1 | 2262.3 | 121.4 | 39.44 | 51.92 |
+| vLLM Qwen3.8-27B AutoRound INT4, MTP3 | 722.4 | 161.4 | 16.75 | 122.29 |
+
+Effective PP includes scheduling/overlapping decode. Steady TG covers only
+all-four decode overlap; Strata required a separate cached replay for that
+column. Its cold wall and PP remain cold. Medians of two measured batches,
+one excluded warmup. [Full evidence and configuration](vllm/flashnext/reports/20261021_c4_compare.md),
+[JSON results](vllm/flashnext/reports/20261021_c4_compare.json),
+[model choice research](vllm/flashnext/reports/20261021_model_choice_research.md).
+
 ## Current scope
 
 Primary backend: sglang.
