@@ -8680,3 +8680,37 @@ O4's 15.25 ms is context-position drift (~+0.8 ms over 512 tokens with a
 Per orchestrator, Flash-Next is NOT submitted (61.3 < Strata 66.2); valid
 draft packets kept in localmaxxing/submitted-20261021/flashnext-iq3_xxs-
 NOT-SUBMITTED/. Both cards released; L1 standing by.
+
+## 2026-10-21 04:05 F1 -- merged O4 decode + F1 prefill recipe verified (for L1 and O4)
+
+CONFIG: harness/o4_recipe.env (O4 s4 decode: PLE_DEVICE, DECODE_HC,
+HC_GEMV, LEAN, GEMV_BF16, EP shared overlap/fuse, EP_BF16_OUT, TOPK,
+LINEAR_CAT, DENSE_GEMV, HC_Q8, PLE_FUSED, IQ3S_ROW, MoE o4/_C.o4g.so)
+plus the F1 delta harness/f1_prefill_delta.env (B70_EP_PREFILL=1,
+MAX_T 12288, RET bf16, C0 auto:64, C1 native:32, C1_MAXPAD 32768,
+B70_PREFILL=1 + X3 switches, WIDE_SO f1/_C.f1bucket.so sha 790230cb,
+and B70_EP_SO=f1/b70_ep_C.f1c.so sha 249cf94e, built from the shared
+b70_ep_xpu/csrc tree = O4's current moe_ep.cpp + F1's prefill_ep.cpp;
+it overrides o4c.so). Serve args: --max-num-batched-tokens 12288
+--max-model-len 131072, otherwise o4_serve.sh. Script:
+harness/f1_merged_serve.sh (copy of o4_serve.sh + delta + f1_probe).
+COMMAND: TAG=m1 MAX_LEN=131072 PREFILL=1024,8192 harness/f1_merged_serve.sh;
+raw f1/merged-m1/ (serve.log, bench.json, probe.json, health-*.txt).
+RESULT: health before/after HEALTHY. READY 03:55:59 (load+profile 20
+min behind other agents' lease). Identity hotschmoe-dev + o4 alias.
+Greedy 323/667 pass (O4 gate and F1 probe); 32K filler math 323/667;
+bench coherence ok/same. Decode: bench C1 ITL p50 15.20 ms (65.8
+tok/s), C2 19.54/19.55 ms per stream; probe C1 15.21, C2 19.52/19.54
+(O4 s4: 15.25 / 19.62 -- unchanged). Prefill TTFT (warm): 1018 tok 1.11
+s (920 tok/s); 8186 tok 3.34 s (2448); 12283 tok 5.12 s (2397); 32763
+tok 13.95 s (2349). bench_latency rows: 1024 -> 751, 8192 -> 2048 tok/s
+(its prompts are built fresh and include JIT on first shapes). KV on
+card 0: 356,207 tokens = 2.72x 131,072. 0 flag timeouts, SERVE_RC 0.
+VERDICT (L1, O4): the merged recipe is o4_recipe.env + f1_prefill_delta.env
+with the two serve args above; decode is O4's s4 and prefill is
+2.4k tok/s at 8K-32K (vs ~150 tok/s on s4). To adopt: append the delta's
+lines to o4_recipe.env (or source both), set B70_EP_SO to f1c.so (or
+rebuild from the shared csrc with f1/build_ep.sh, which includes
+prefill_ep.cpp), and serve with --max-num-batched-tokens 12288. The
+delta is all opt-in: with B70_EP_PREFILL unset nothing changes. L1 has
+card priority for its windows; F1 queues nothing further on the cards.

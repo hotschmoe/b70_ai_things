@@ -259,7 +259,12 @@ difference, not the transport: the sidecar's push+return at 12288 costs
 and `f1_probe.py`. `B70_EP_SO` in the delta points at
 `f1/b70_ep_C.f1c.so`, built from the shared `b70_ep_xpu/csrc` tree so it
 carries O4's `moe_ep.cpp` state (bf16 out, fused shared) and F1's
-`prefill_ep.cpp`. Verification window m1: see JOURNAL (F1, 2026-10-21).
+`prefill_ep.cpp`. Verification window m1 (JOURNAL 2026-10-21 04:05,
+raw `f1/merged-m1/`): health HEALTHY before/after; gates 323/667 (O4
+gate and F1 probe); 32K filler math exact; decode C1 ITL p50 15.20 ms
+(65.8 tok/s) and C2 19.54/19.55 ms per stream = O4 s4 (15.25 / 19.62);
+prefill 1018 tok 920 tok/s, 8186 tok 2448, 12283 tok 2397, 32763 tok
+2349; KV 356,207 tokens (2.72x 131,072); 0 flag timeouts.
 
 ## 6. Next levers (measured, not done)
 
