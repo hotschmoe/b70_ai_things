@@ -2,7 +2,11 @@
 
 Latest measured checkpoint: the final section below and reports/3D1_decode.md.
 The retained route/Q8F pair closes cleanly with shutdown30/Docker45; canonical
-63.534/63.861tok/s, strict repeats still fail. Strata DD remains down.
+63.534/63.861tok/s, strict repeats still fail. Latest user direction:
+restore Strata DD for daily use with vision, four streams,200K max and
+RAM-backed KV; stop it before research. Next queued investigation and
+time budget: ../../docs/20261021_flashnext_c4_next.md. The older down/free
+statements below describe the end of their individual experiment windows.
 
 Written after an office power outage, around 15:38 UTC on 2026-10-21. The
 host rebooted. All agents were killed mid-run: grok, Codex, Opus, Fable.

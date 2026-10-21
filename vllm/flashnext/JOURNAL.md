@@ -10244,3 +10244,37 @@ matched canaries and the frozen task subset before any quality ranking.
 No new runs, builds, runtime/default/service changes or GPU claims. No
 responding Claude ID obtained in this research stage; earlier requested
 consultations timed out. Preserve raw evidence and current dirty work.
+
+
+## 2026-10-21 -- Save next C4 plan and restore Strata daily service
+
+CONFIG -> User requests saving the next MTP0/1, conditional FA16/8 and
+dynamic-depth investigation with2-3h budget; preserve aggregate PP/TG/cold
+results in README/docs; commit/push, then restore DD with vision, more than
+two streams and200K max context. This supersedes the earlier DD-down state.
+COMMAND -> Docs checkpoint10228b99 pushed. Existing Strata release and
+systemd units retained; update both DD configs to parallel4, batch MTP
+depth1, maxctx200000 and kv-resident65536. Leased per-card/compiled-pair
+P2P0 health, unit startup and frontdoor functional probes. Evidence:
+docs/20261021_strata_dd_restore.md; raw scripts/results/config/pins/logs in
+/mnt/vm_8tb/b70/results/hotschmoe-dd/restore-20261021/.
+RESULT -> Initial fully resident4x200K launch cleanly refuses the peer
+expert complement (35.28GiB needed,31.84GiB free), without a device fault.
+RAM-backed KV enables four slots with all experts resident (171/341 per
+layer). Per-card and compiled-pair pre-health pass, as does the unit's
+subsequent per-card check. API identity/model aliases correct; four slots
+all ctx200000, concurrency4, images true. Image blue-circle recognition,
+four512-token code replies with10.13s common overlap, thinking/arithmetic,
+tool round trip and2048-token code stream pass.198036-token needle returns
+the exact marker; after another request,198029 tokens restore from cache
+(908ms engine restore,2.38s client wall,7 prompt-tail tokens reread) with
+the same correct answer. Kernel window has no matching GPU fault/wedge.
+Grafana3001/WebUI3000 health200, WebUI healthy and configured for18080/v1;
+Prometheus Strata target up. Both DD units active/running/enabled.
+VERDICT -> Leave DD running under both leases: live client traffic resumed
+during verification, so no further teardown/post-health was performed.
+Functional readiness, not a four-full200K throughput or long-term stability
+claim. Previous matched C4 rates retain original64K resident Strata config
+and explicit cached-TG qualification. No new binary, image, unit, key,
+frontdoor or vLLM runtime change. Stop DD before the next research window;
+do not restore it between individual experiment arms.

@@ -12,7 +12,7 @@
   1
  ],
  "gpu_order": "as_given",
- "parallel": 2,
+ "parallel": 4,
  "args": [
   "--pack",
   "/mnt/vm_8tb/b70/build/strata-ab/packs/ista-gsq-rco-iq3-xxs",
@@ -38,6 +38,8 @@
   "200000",
   "--kv",
   "int8",
+  "--kv-resident",
+  "65536",
   "--spec",
   "4",
   "--mtp",
@@ -63,7 +65,7 @@
   "STRATA_OWNED_PRICE": "exact",
   "STRATA_EP_PREFILL_PUSH": "1",
   "STRATA_BATCH_MTP": "1",
-  "STRATA_BATCH_MTP_DEPTH": "2",
+  "STRATA_BATCH_MTP_DEPTH": "1",
   "STRATA_BATCH_MTP_PAIR_HEAD": "1",
   "STRATA_BATCH_PREFILL_QUANTUM": "0",
   "STRATA_PREFILL_FIRST": "0",

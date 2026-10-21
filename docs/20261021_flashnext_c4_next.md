@@ -20,7 +20,7 @@ medians of two measured batches. All rates below are aggregate tok/s.
 Effective PP includes scheduling and overlapping generation until every
 stream emits its first content. Steady TG covers only the interval when
 all four streams are decoding. Strata's cold run had no such overlap, so
-its steady TG uses a separate cached replay at approximately the same20K
+its steady TG uses a separate cached replay at approximately the same 20K
 decode contexts. Cached replay walls12.85/13.12s do not replace cold wall
 or PP. These are finite recipe measurements, not isolated kernel rates.
 
@@ -78,5 +78,5 @@ is assumed in advance.
 
 Source audit and detailed component gates:
 [decode research](../vllm/flashnext/reports/20261021_decode_parity_research.md).
-User direction2026-10-21: save this as the next research item and restore
+User direction 2026-10-21: save this as the next research item and restore
 Strata for daily serving now; resume these tests when research restarts.

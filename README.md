@@ -6,14 +6,17 @@ two Intel Arc Pro B70 cards.
 ## Flash Next serving and next research
 
 Daily driver: [Strata Flash-Next IQ3_XXS](strata/flash-next/dd/README.md),
-served as `hotschmoe-dd`. Active research is the thin vLLM Flash-Next fork;
+served as `hotschmoe-dd`: four concurrent streams, 200K maximum context,
+vision enabled and RAM-backed KV with 65536 resident cells per slot.
+[Live deployment checks](docs/20261021_strata_dd_restore.md).
+Active research is the thin vLLM Flash-Next fork;
 Qwen3.8-27B AutoRound INT4 remains the fallback.
 
 Next: [C4 MTP comparison, profiling and time budget](docs/20261021_flashnext_c4_next.md).
-Budget2-3 hours, first decision45-75 minutes. Compare MTP0/1, conditionally
+Budget 2-3 hours, first decision 45-75 minutes. Compare MTP0/1, conditionally
 tune attention splits16/8, then test dynamic-depth completion tails.
 
-Measured2026-10-21 on two B70s: four identical cold19798-token prompts,
+Measured 2026-10-21 on two B70s: four identical cold 19798-token prompts,
 512 output tokens each, thinking off; all rates aggregate tok/s.
 
 | Recipe | Cold effective PP | Steady C4 TG | Cold output per wall second | Cold batch wall s |
@@ -25,7 +28,9 @@ Measured2026-10-21 on two B70s: four identical cold19798-token prompts,
 Effective PP includes scheduling/overlapping decode. Steady TG covers only
 all-four decode overlap; Strata required a separate cached replay for that
 column. Its cold wall and PP remain cold. Medians of two measured batches,
-one excluded warmup. [Full evidence and configuration](vllm/flashnext/reports/20261021_c4_compare.md),
+one excluded warmup. The Strata reference used four 64K fully resident
+slots; the daily service now uses four 200K slots with RAM-backed KV.
+[Full evidence and configuration](vllm/flashnext/reports/20261021_c4_compare.md),
 [JSON results](vllm/flashnext/reports/20261021_c4_compare.json),
 [model choice research](vllm/flashnext/reports/20261021_model_choice_research.md).
 

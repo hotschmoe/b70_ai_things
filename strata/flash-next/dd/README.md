@@ -1,12 +1,25 @@
-# hotschmoe-dd on Strata (night-final-v3, 2026-10-16)
+# hotschmoe-dd on Strata (night-final-v3, updated 2026-10-21)
 
 The office daily driver: Qwen3.8-Flash-Next ISTA GSQ-RCO IQ3_XXS on two B70s, Strata expert-parallel, batch MTP
-depth 2, 2 slots x 200k context, 32 GiB / 4-entry RAM parking. Engine and flags: docs/20261016_night_lab.md.
+depth 1 for concurrent batches, 4 slots, 200000-token maximum context per
+request, 65536 resident KV cells per slot backed by pinned system RAM,
+and 32 GiB / 4-entry idle-conversation parking. Solo requests retain
+`--spec 4`. Engine and original flags: docs/20261016_night_lab.md.
+
+The Oct21 update raises `parallel` from 2 to 4 and changes batch MTP depth 2
+to 1, matching the retained eight-row C4 verify path. It adds
+`--kv-resident 65536`: allocating four whole 200K histories in VRAM leaves
+too little room for the expert-parallel complement on card 1. KV streaming
+keeps the full history in RAM and stages needed KV without recomputing it;
+idle-conversation parking is a separate existing cache. The release binary,
+vision encoder, quantization, API key and systemd units are retained.
+Live image, four overlapping streams, thinking/tools and 198K-context
+cached-restore checks pass; see [Oct21 deployment evidence](../../../docs/20261021_strata_dd_restore.md).
 
 | Piece | Where |
 |---|---|
 | Engine binary | /mnt/vm_8tb/b70/build/strata-ab/releases/strata-night-20261016 (src-ep branch night-20261016, sha256 52d1778c...) |
-| Config | strata/flash-next/dd/hotschmoe-dd.json (= night/configs/night-final-v3-c2.json, release exe, log path) |
+| Config | strata/flash-next/dd/hotschmoe-dd.json (four slots, 200K max, RAM-backed KV, vision); text fallback matches slot/KV settings |
 | Images | on since 2026-10-16: the config's "vision" section (CPU strata-vision, build-vision-cpu/bin, mmproj BF16) + `--vision`; text-only fallback hotschmoe-dd-text.json |
 | Backend | 127.0.0.1:18124 (Strata server, container `hotschmoe-dd`, holds the GPU pair lease) |
 | Public endpoint | 0.0.0.0:18080/v1, API key /mnt/vm_8tb/b70/secrets/dd_api_key (frontdoor: vllm/fp8/openai_key_frontdoor.py) |
@@ -30,9 +43,28 @@ Operations:
 - Engine crashes inside the container restart on the next request (Strata server); a dead container restarts via
   systemd (Restart=on-failure, 30 s).
 
-Measured at deploy (fixed prompts): C1 ~141 tok/s (2048-token code reply 152.6), C2 ~92/stream, prefill 4K ~2200 /
+Measured at the original two-slot Oct16 deploy (fixed prompts): C1 ~141 tok/s (2048-token code reply 152.6), C2 ~92/stream, prefill 4K ~2200 /
 32K ~2150 tok/s; functional checks pass through the frontdoor and through open-webui. Feedback from real use goes in
 JOURNAL.md / docs/20261016_night_lab.md follow-ups.
+
+## Matched C4 reference and next tests
+
+Oct21 comparison, two B70s, four cold 19798-token prompts,512 output tokens
+each, thinking off. Rates aggregate tok/s; median of two measured batches.
+
+| Recipe | Cold effective PP | Steady C4 TG | Cold output per wall second | Cold batch wall s |
+|---|---:|---:|---:|---:|
+| Strata Flash-Next IQ3_XXS, MTP depth1 | 1739.5 | 188.5 | 38.84 | 52.74 |
+| vLLM Flash-Next IQ3_XXS, MTP1 | 2262.3 | 121.4 | 39.44 | 51.92 |
+| vLLM Qwen3.8-27B AutoRound INT4, MTP3 | 722.4 | 161.4 | 16.75 | 122.29 |
+
+Effective PP includes scheduling and overlapping decode; steady TG uses
+only the all-four decode interval. Strata required a separate cached replay
+for steady TG; its cold PP/wall remain cold. This Strata reference used
+four 64K slots with fully resident KV and is not a new benchmark of the
+four 200K RAM-backed daily config.
+[Full comparison](../../../vllm/flashnext/reports/20261021_c4_compare.md).
+[Next research item and 2-3 hour budget](../../../docs/20261021_flashnext_c4_next.md).
 
 ## Soak notes (from 2026-10-16: weeks of office use)
 
