@@ -205,3 +205,69 @@ strict nondeterminism remains explicit; no promotion or stability claim.
 The harness preserves root's ENGINE_ERROR_RC gate and now also records
 12unique QSA bindings/no private pool and active GGUF/FA/harness/reference
 source hashes. Shared active sources frozen for the run.
+
+## 17:17 - full QSA integration completes; fidelity unqualified
+
+CONFIG: the single q1-r1 attempt above, original O4+F1 math, N1/D1 off,
+same 4K/16K/32K fixtures and independent canonical Strata C1 references.
+
+COMMAND: the approved q1/serve-window.sh, with cpu-run --quiet around
+the short benchmark and finite long comparison. No retry or extra serve.
+
+RESULT: ready17:13:06,12unique actual QSA page bindings, no private pool,
+stable hotschmoe-dd first plus registered x6-qsa alias. 323/667 and short
+coherence pass. Native graph profiling/final initialization complete;
+card0 reports8.55GiB available KV/567978token capacity at configured
+maxlen65536 (a capacity diagnostic, not2x200K qualification).
+
+The Strata comparisons below are per output, not the aggregate boolean:
+
+| Prompt | Solo0/solo1 vs Strata | C2stream0/1 vs Strata | Solo repeat | C2 vs solo0 |
+|---|---|---|---|---|
+| 4096 | PASS/PASS | FAIL/PASS | PASS | FAIL/PASS |
+| 16384 | FAIL/FAIL | FAIL/FAIL | FAIL | FAIL/FAIL |
+| 32768 | FAIL/FAIL | FAIL/FAIL | PASS | PASS/PASS |
+
+All streams complete64output tokens. At32K both concurrent outputs equal
+the repeated solo output but differ from Strata. The4K aggregate
+strata_exact=false is caused by only one C2 stream; its solo outputs do
+match Strata. The original dense baseline already fails strict repeat,
+so these results do not establish QSA as the cause of drift.
+
+Diagnostic wire ITL p50: shortbench C1=18.18ms,C2=22.71/22.74ms;
+long4K C1=30.22ms,C2=35.65/35.65ms;16K C1=47.60ms,C2=53.25/53.24ms;
+32K C1=70.84ms,C2=77.10/77.12ms.32KC2stream0 has p99=8972.91ms and
+mean386.78ms, versus stream1 mean76.49ms. Preserve that scheduling/timing
+diagnostic without assigning cause. Historical client saves percentiles
+but not individual arrival timestamps; no tail mechanism is proven.
+
+Closure: X6_PROBE_RC1 (fidelity/repeat), QSA_BINDING_RC0,GREEDY_RC0,
+BENCH_RC0,SERVE_RC0,ENGINE_ERROR_RC0,HEALTH_AFTER_RC0,SOURCE_UNCHANGED.
+Actual EngineCore SIGTERM/drain at17:16:54 logs request processing
+complete/resource teardown, then engine manager stopped at17:16:55;
+no force-kill. Container exits0 after446s. One Python resource-tracker
+semaphore warning appears at API exit. Both native post-health probes
+HEALTHY; no crash/reset. Window closes1 and both leases release by17:17:30.
+Raw x6/flashnext-ista-iq3-xxs-ep-qsa-q1-r1; derived per-output summary
+q1/full-qsa-r1-summary.json. Raw JSON/logs remain unchanged.
+
+VERDICT: full QSA serving integration works through coherent requests,
+finite long-context requests and normal teardown. Fidelity/repeat gates
+fail, so QSA remains unqualified and no promotion/stability/speed claim
+is made. NEXT: same original-FA recipe with QSA disabled, same fixture
+IDs/lengths, maxlen65536/chunk12288,64outputs,C1 repeats+C2. Compare its
+per-output Strata matches and repeat behavior before attributing drift to
+QSA. Later timing work must save content-chunk arrivals in a shared client
+for both treatments. Loaded-context liveness localization and default-off
+P1 serving integration remain separate coordinated campaign work.
+
+Reproduction ports (CPU-only, after teardown): harness/q1_serve.sh,
+q1_strata_reference.sh,q1_strata_reference.json,q1_validate_references.py.
+The reference launcher copies the preserved canonical config to scratch,
+then uses the same frozen generator and explicit zero-draft validator.
+Generate fixtures with the campaign venv and
+`python harness/x6_make_prompts.py /mnt/vm_8tb/b70/build/vllm-flashnext/x6/reference-prompts.json`
+from vllm/flashnext. References: `bash harness/q1_strata_reference.sh`;
+QSA: `Q1_QSA=1 Q1_TAG=q1-r1 bash harness/q1_serve.sh`; dense control:
+`Q1_QSA=0 Q1_TAG=q1-dense-control-r1 bash harness/q1_serve.sh`.
+GPU commands require the parent-coordinated pair lease and DD stopped.

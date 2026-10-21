@@ -31,13 +31,15 @@ for fixture in json.loads(a.prompts.read_text()):
     row = dict(target_tokens=fixture['target_tokens'], prompt_sha256=fixture['prompt_sha256'],
                solo=solo, concurrent=concurrent, repeat_exact=solo[0]['text'] == solo[1]['text'],
                c2_solo_exact=[r['text'] == solo[0]['text'] for r in concurrent],
-               strata_exact=None)
+               strata_exact=None, strata_solo_exact=None, strata_c2_exact=None)
     if refs is not None:
         matches = [r for r in refs if r['prompt_sha256'] == fixture['prompt_sha256']]
         assert len(matches) == 1, 'missing or duplicate Strata reference'
         ref = matches[0]
         assert ref['prompt_tokens'] == len(fixture['token_ids']), 'reference token count mismatch'
-        row['strata_exact'] = all(r['text'] == ref['text'] for r in solo + concurrent)
+        row['strata_solo_exact'] = [r['text'] == ref['text'] for r in solo]
+        row['strata_c2_exact'] = [r['text'] == ref['text'] for r in concurrent]
+        row['strata_exact'] = all(row['strata_solo_exact'] + row['strata_c2_exact'])
     report['rows'].append(row)
     a.out.write_text(json.dumps(report, indent=2, ensure_ascii=True) + '\n')
     print('X6_LONG', row['target_tokens'], 'C1', solo[1]['itl_ms'], 'C2', [r['itl_ms'] for r in concurrent], 'repeat', row['repeat_exact'], 'strata', row['strata_exact'], flush=True)

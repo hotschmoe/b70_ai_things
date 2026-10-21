@@ -236,3 +236,75 @@ diagnostics, do not use it for promotion or canonical speed attribution.
 Control remains diagnostic61.642817/61.800831tok/s, strict-repeat-failing;
 no measured candidate suite replaces it. Root owns recovery and the next
 bounded discriminator. r1 remains separately discarded for guard bypass.
+
+## Final Q1 full-model audit - integration closes, parity gate fails
+
+CONFIG: CPU-only audit after the authorized Q1 reference/full-model
+windows. Evidence: q1/strata-references.json, q1/strata-window.log,
+q1/strata-reference-summary.json and x6/flashnext-ista-iq3-xxs-ep-qsa-q1-r1.
+Q1 uses maxlen65536/chunk12288, N1=0, D1plan=0, QSA pooled int8 pages;
+Strata reference is canonical no-draft C1. Report additions occur after
+the Q1 window and its source-after manifest complete. No GPU rerun.
+
+COMMAND: recompute fixture/ref prompt SHA256 and text hashes, check
+counts/zero drafts, independently compare each of the four vLLM output
+texts to its single Strata reference, recompute all probe booleans,
+inspect engine/teardown/source/health closure and latency summaries.
+
+RESULT: all three fixture prompt SHA256s agree with their references;
+fixture token-ID counts, target counts, Strata counts and each vLLM
+usage are exactly4096/16384/32768. Strata text SHA256s recompute. Every
+reference has64raw/outputIDs, generated64, no EOS IDs248044/248046 and
+runtime drafts_offered=0/drafts_accepted=0. The CPU tokenizer log passes
+all fixture IDs; the actual vLLM probe asserts identical fixture IDs
+before requests. Reference process/validation/source/native post-health
+all return0, with the same executable SHA25652d1778c909b90123a8947a3a2a9700370b76a2f64d293765f0e2510526fdad2.
+
+The precise x6_probe.py contract is decoded TEXT equality. It saves no
+vLLM output token IDs. strata_exact aggregates two C1 solos plus two C2
+outputs against one Strata C1 output. Independently recomputed matches:
+
+| Fixture | C1 first | C1 repeat | C2 first | C2 second |
+| --- | --- | --- | --- | --- |
+| 4K | match | match | differ | match |
+| 16K | differ | differ | differ | differ |
+| 32K | differ | differ | differ | differ |
+
+All12vLLM responses have64content chunks and authoritative64completion
+tokens. The 4K aggregate failure therefore does not mean that C1 fails
+the reference: both C1s and one C2 match it exactly. At16K the C1 repeat
+itself differs. At32K all four vLLM texts match each other but differ
+from Strata, first differing at zero-based character123. All recorded
+per-row and final probe booleans recompute exactly; final repeat_gate
+and strata_gate are both false, X6_PROBE_RC1.
+
+This is a reliable failure of the declared exact-text parity gate on
+matched input fixtures. It does not isolate QSA as the cause: N1 remains
+off, same-load/batch variance is already measured in dense control, and
+there is no matched dense run of these long fixtures or repeated Strata
+reference sample. The unanimous32K result is stronger within-window
+repeat evidence than16K, while cross-backend attribution remains open.
+All outputs stop at64tokens inside reasoning. These prefixes do not
+establish a task-answer quality failure or a failure to return the code
+and Paris facts later. No first mismatching token ID is available.
+
+Latency summaries contain a concrete tail:32K C2 first stream p50
+77.101816ms, p99 8972.907448ms, mean386.779298ms and decode2.585454tok/s;
+the second stream mean76.488886ms/decode13.073795tok/s. The corresponding
+decode windows are24.3671s/4.8188s. A median-only report would hide this
+stall. Individual arrival timestamps were not retained by this client,
+so this audit does not assign its cause. These are diagnostic latency
+observations, not a qualified comparison to Strata.
+
+Full-model integration itself closes cleanly:12expected QSA layers bound
+without rejected binding lines, arithmetic323/667 and Paris coherence
+pass, SERVE_RC0, ENGINE_ERROR_RC0 with empty engine-errors.txt, both-card
+native post-health HEALTHY, WINDOW_DONE. All83before/after source/SO
+manifest entries are byte-identical; the pinned reference artifact hash
+is e91528a578214cff7e7a0852ca9c7f7bd5e9f160ef418e18a4eb44c8359e2b30.
+Current small source/config hashes also match the launch ledger.
+
+VERDICT: real Flash-Next QSA integration and teardown/health/source
+closure pass. Exact-text reference and repeat qualification fail, with
+the causal and quality limits above. No promotion or speed/stability
+qualification follows from the clean engine closure.

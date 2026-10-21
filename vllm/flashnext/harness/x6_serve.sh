@@ -41,7 +41,7 @@ sha256sum "$GGUF_SO" "$(grep -v '^#' "$RECIPE" | sed 's/ *#.*//' | grep '^B70_EP
 manifest() {
   { rg --files "$B/vllm/vllm/models/qwen4_exp/xpu" "$B/vllm/vllm/models/qwen4_exp/gguf" "$B/c7b-fa-overlay" "$REPO/vllm/flashnext/plugins/b70_qsa_xpu" "$REPO/vllm/flashnext/plugins/b70_ep_xpu/b70_ep_xpu" "$REPO/vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu";
     printf '%s\n' "$RECIPE" "$DELTA" "$GGUF_SO" "$B/f1/b70_ep_C.f1c.so" "$B/f1/_C.f1bucket.so" "$B/b70_qsa_xpu/libb70_qsa_xpu.so" "$REPO/vllm/flashnext/plugins/b70_o4_xpu/b70_o4_xpu/_C.so";
-    printf '%s\n' "$H/x6_serve.sh" "$H/x6_probe.py" "$H/bench_latency.py" "$H/xpu-run.sh" "$H/xpu-entrypoint.sh" "$REPO/evals/configs/models.yaml";
+    printf '%s\n' "$H/x6_serve.sh" "$H/x6_probe.py" "$H/bench_latency.py" "$H/q1_serve.sh" "$H/xpu-run.sh" "$H/xpu-entrypoint.sh" "$REPO/evals/configs/models.yaml";
     [ ! -f "$REFERENCES" ] || printf '%s\n' "$REFERENCES";
   } | sort -u | xargs sha256sum
 }
@@ -112,6 +112,19 @@ bad = [line for line in log.splitlines() if re.search(r'KV page mismatch|private
 report = dict(bound_layers=names, expected_layers=12, rejected_lines=bad, passed=len(names) == 12 and not bad)
 (out / 'qsa-bindings.json').write_text(json.dumps(report, indent=2, ensure_ascii=True) + '\n')
 print('QSA_BINDING_GATE', json.dumps(report, ensure_ascii=True))
+raise SystemExit(0 if report['passed'] else 1)
+PY
+    QSA_BINDING_RC=$?
+  else
+    OUT=$OUT python3 - <<'PY'
+import json, os, pathlib, re
+out = pathlib.Path(os.environ['OUT'])
+log = (out / 'serve.log').read_text(errors='replace')
+qsa = [line for line in log.splitlines() if re.search(r'bound .*backend=B70_QSA|B70_QSA=1 registered', line)]
+flash = [line for line in log.splitlines() if re.search(r'Using Flash Attention backend\.|FLASH_ATTN backend', line)]
+report = dict(qsa_runtime_lines=qsa, flash_runtime_lines=flash, passed=not qsa and bool(flash))
+(out / 'dense-backend.json').write_text(json.dumps(report, indent=2, ensure_ascii=True) + '\n')
+print('DENSE_BACKEND_GATE', json.dumps(report, ensure_ascii=True))
 raise SystemExit(0 if report['passed'] else 1)
 PY
     QSA_BINDING_RC=$?

@@ -9411,3 +9411,58 @@ HEALTHY,normalexit,noreset,inputsunchanged. Bothcardsreleased17:08UTC.
 VERDICT: realStrata C1 references ready; noC2parity/latencyclaim. Root
 thenauthorized onefullQSA attempt,started17:09:08UTC,bothcards,
 originalO4/F1 flags,N1/D1off,maxlen65536/chunk12288,4K16K32Krefs.
+
+## 2026-10-21 A1 -- final Q1 full-model exact-text audit
+
+CONFIG: CPUonly postwindow;Q1 pooledQSA/N1off/D1off;canonicalStrataC1
+refs. NoGPU/sourcechanges/commit.
+COMMAND: recompute fixture/reference hashes,counts,per-output equality
+andallprobeflags;inspect completedengine/source/health closure.
+RESULT: allfixtureSHA/counts4096/16384/32768match,refs64IDs/noEOS,
+textSHAvalid,Strataruntimedrafts0/0. Strata4outputtextmatches by
+[C1first,C1repeat,C2first,C2second]:4K[T,T,F,T],16K[F,F,F,F],
+32K[F,F,F,F]. At32K allfourvLLMtextsagree butdifferfromStrata;16KC1
+repeatvaries. Gatecomparestext,not outputIDs;allresponses64tokens.
+FullengineclosureSERVE0/ENGINE_ERROR0,83sourceentriesunchanged,
+posthealthbothHEALTHY. 32KC2tailp998972.91ms/mean386.78ms hiddenbyp50
+77.10ms;nosavedarrivalseriesforcausalattribution.
+VERDICT: realintegrationpasses;exact-textreference+repeatgatesfail.
+NoQSAcausationfromunmatchedbaselinevariance;64tokenreasoningprefixes
+arenotanswerqualityevidence. Report3A1_audit.mdhasfinalmatrixandlimits.
+
+## 2026-10-21 17:20 ORCHESTRATOR -- continue vLLM without daily restores
+
+CONFIG: user explicitly directs continued vLLM testing and no Strata
+restoration between tests. Q1 full QSA closed with graceful engine exit,
+unchanged sources and both-card native post-health HEALTHY; exact text
+and repeat gates failed as independently audited.
+COMMAND: attempted systemctl start hotschmoe-dd, then user steering;
+stop unit and docker stop -t10 during startup, reset failed unit state.
+RESULT: startup pre-health passed on both cards, but frontdoor stayed502
+before readiness. No restored identity/arithmetic smoke completed. The
+Strata container is gone and research leases are free. Frontdoor stays
+active. No new speed promotion or external submission.
+VERDICT: continue campaign. Q1 owns same-fixture QSA-disabled original-FA
+control next, with fresh native pre-health after interrupted DD startup.
+P1 prepares isolated default-off native bucket overlay and matched flag0/1
+serving arms; D1 prepares loaded-context/EP liveness localization on CPU.
+No Strata restoration between these prepared GPU probes.
+
+## 2026-10-21 17:22 Q1 -- full QSA closes normally; fidelity remains unqualified
+
+CONFIG: q1-r1,originalO4/F1+QSA,N1/D1off,maxlen65536/chunk12288,
+64outputs,matchedfixture4K16K32K,C1repeat+C2,realStratano-draftrefs.
+COMMAND: oneauthorized both-card serve17:09:08->17:16:55;quietclients,
+120sprogressmonitor,actualEngineCoreerror/teardown/source/posthealthgates.
+RESULT:12QSApagebindings/registeredID/323/667/shortcoherencePASS.
+Stratavssolo0/1+C2s0/1:4K=[T,T,F,T],16K=[F,F,F,F],32K=[F,F,F,F].
+C1repeat4K/16K/32K=[T,F,T];32KC2bothmatchsolo. Aggregate4Kfailure is
+onlyoneC2stream,notC1.32KC2s0p99=8972.91ms/mean386.78vsother76.49ms;
+rawsummaryonly,nocausalclaim. ProbeRC1;binding/greedy/bench/serve/
+engineerror/posthealthRC0,sourcesunchanged. EngineCoredrain/requestcomplete/
+resource teardown thenmanagerstop~1s,noforcekill; nativebothHEALTHY.
+VERDICT:fullintegrationworksbutfidelity/repeatunqualified;noQSAcausality,
+promotion,stabilityorspeedclaim. NeedidenticalQSAoffcontrolfirst. Source
+portsq1_serve.sh/q1_strata_reference.sh+json/q1_validate_references.py;
+rawoutputsunchanged. Parentnowauthorizesnextdensecontrolundernewuser
+continuation; DDstop/leasesfreeconfirmedbyroot, nochildDDlifecycle.

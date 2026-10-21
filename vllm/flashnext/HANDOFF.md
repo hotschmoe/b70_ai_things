@@ -244,3 +244,28 @@ measured mode0 gather+DQ latency6.9-23.3 percent. Reproducible sources are
 plugins/b70_p1_xpu and harness/p1_*. It has no serving hook yet.
 Canonical no-draft Strata4K/16K/32K references are now on disk; first full
 QSA serving comparison is the remaining stage. See the new reports.
+
+The first full QSA attempt now completed. All 12 real pooled bindings,
+identity, arithmetic, graph initialization, graceful EngineCore teardown,
+unchanged sources and both-card post-health passed. Exact continuation
+and repeat gates failed: at 4K both solo outputs match Strata, but one
+C2 output differs; at 16K even solo repeats differ. At 32K all four vLLM
+texts agree with each other but differ from Strata. These are 64-token
+reasoning prefixes, not completed-answer quality scores or token-ID parity.
+A large 32K C2 stream timing gap also prevents a stability claim.
+
+Next bounded work, after reviewing reports/3A1_audit.md and 3Q1_qsa.md:
+1. Run these same fixtures with QSA disabled before attributing drift to
+   QSA. Preserve per-output comparisons and individual arrival times.
+2. Localize loaded-context/EP liveness and repeatability on the original
+   recipe. Keep N1 and D1 plan16 disabled pending concrete evidence.
+3. Integrate P1 selected-expert dequant behind a default-off flag, then
+   measure a matched serving control and treatment with full lifecycle
+   checks. Component timing alone is not a serving improvement.
+No new speed promotion or external submission was made this session.
+
+User steering at 17:19 UTC: keep the GPUs on the vLLM testing campaign;
+do not restore Strata between tests. A daily-driver restoration had just
+started and was stopped again before readiness. Continue the matched
+QSA-disabled control, P1 serving integration and loaded-context liveness
+localization under coordinated GPU leases.

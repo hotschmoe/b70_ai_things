@@ -126,3 +126,35 @@ The lifecycle now rejects explicit native/engine failures and forced
 EngineCore shutdown even when cleanup returns0. The repeat client keeps
 primary HTTP errors and marks missing rounds incomplete instead of raising
 a secondary KeyError. Neither change alters model computation.
+
+## Full QSA closes; next work is controlled localization
+
+The first full QSA serve completed all 4K/16K/32K fixtures. All 12 real
+pooled bindings, identity, arithmetic and graph initialization passed.
+EngineCore drained and exited normally; ENGINE_ERROR_RC0, SERVE_RC0,
+both-card native post-health HEALTHY, sources unchanged. The overall
+window correctly returns1 for failed exact-repeat/reference gates.
+
+Strata text matches, ordered solo1/solo2/C2a/C2b, are [true,true,false,true]
+at4K and allfalse at16K/32K. At16K solo repeats differ; at32K all four
+vLLM texts agree with each other. These are exact comparisons of64-token
+reasoning prefixes, not token-ID equality or completed-answer quality.
+The32K C2 first stream has p50=77.10ms but p99=8972.91ms and mean386.78ms,
+versus the other stream's mean76.49ms. No causal timing explanation or
+serving stability claim is established. See reports/3Q1_qsa.md and the
+independent audit in reports/3A1_audit.md.
+
+VERDICT: QSA integration works in this bounded full-model attempt; fidelity
+and stable serving remain unqualified. Compare the same fixtures against
+QSA-disabled vLLM before attributing drift. Loaded-context/EP liveness
+and repeatability remain prerequisites for enabling N1 or D1 plan16.
+P1 has a measured primitive and reproducible source, ready for a separate
+default-off serving hook and matched control/treatment. No speed promotion
+or external submission.
+
+At17:19 UTC the user directed continued vLLM testing without restoring
+Strata between tests. Its restoration had started, but the frontdoor
+remained502 before readiness; no identity/arithmetic smoke completed.
+Stop the service again and keep research ownership. Q1 prepares the same
+long-fixture control with QSA disabled; P1 prepares a default-off serving
+hook; D1 prepares loaded-context/EP liveness localization on CPU.

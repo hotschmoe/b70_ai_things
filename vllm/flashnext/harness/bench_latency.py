@@ -155,6 +155,7 @@ def stream_completion(
                 continue
             arrivals.append(time.perf_counter())
             pieces.append(piece)
+    wall_ms = (time.perf_counter() - t0) * 1000.0
     text = "".join(pieces)
     ttft_s = (arrivals[0] - t0) if arrivals else None
     itls_ms: list[float] = []
@@ -175,6 +176,9 @@ def stream_completion(
     return {
         "text": text,
         "n_chunks": len(arrivals),
+        "content_arrival_ms": [(arrival - t0) * 1000.0 for arrival in arrivals],
+        "itl_samples_ms": itls_ms,
+        "wall_ms": wall_ms,
         "prompt_tokens": prompt_tokens,
         "completion_tokens": completion_tokens,
         "ttft_ms": None if ttft_s is None else ttft_s * 1000.0,
