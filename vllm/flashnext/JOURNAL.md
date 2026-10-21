@@ -10208,3 +10208,39 @@ Strata TG requires the explicitly separate cached replay because original
 cold scheduling has no all-four decode overlap. No general stability/full
 quality/200K/RAM-restore/MTP-depth-optimum/shelf claim. All serves down,
 leases released, DD remains down. No backend/fork/runtime/default changes.
+
+
+## 2026-10-21 -- Two-agent model choice and decode parity research
+
+CONFIG -> User-requested independent research agents: exact Qwen3.8-27B
+AutoRound INT4 versus ISTA Flash-Next IQ3_XXS for repository work; current
+Strata versus vLLM decode path and multistream opportunities. No GPU work.
+COMMAND -> Read-only source/runtime-evidence audit, paired historical Pi1.2
+task/token/time analysis, public primary benchmark/model-card research and
+attributable experience reports. Reports and compact model evidence:
+reports/20261021_model_choice_research.md,
+reports/20261021_model_choice_research_evidence.json,
+reports/20261021_decode_parity_research.md.
+RESULT -> Exact local C2 coding/sysadmin tasks: Flash41/43 versus27B33/43,
+eight paired Flash wins and no27B wins. Same15 coding successes: Flash
+28.9 percent fewer completion tokens and12.6 percent lower median agent
+wall. Same18 sysadmin successes:41.8 percent more tokens and60.8 percent
+higher median wall. Reasoning tokens were not measured separately. Public
+Terminal-Bench priors favor Flash, but no matched score for these exact
+quantized recipes was found. Fresh fixed-output C4 timings do not predict
+agent task completion directly. Current vLLM already has async scheduling,
+route/Q8F, KREG/Q8 drafter, batched/subset head and fused EP shared experts.
+C4/MTP1 targetT8 reaches multiple fast-path limits; MTP2 targetT12 falls
+back. Dense FA verifies width2 by independent KV scans; shared-load width2
+attention is a profile-directed candidate. QSA multirow transactional MTP
+and graph integration remain separate correctness work. No subsystem has
+been shown to explain the whole188.5 versus121.4 steady-TG difference.
+VERDICT -> Prefer qualified Strata Flash for substantial repository work;
+retain27B for bounded edits/fallback. Next bounded speed probe: matched
+C4 MTP0/1 with target/draft/card-readiness budget, then conditionally FA
+fixed16/8 splits. Dynamic3/2/1 depth atC1/C2/C3-4 can target tails while
+keepingT<=8, not raise steady C4 depth. Exact-quant Terminal-Bench needs
+matched canaries and the frozen task subset before any quality ranking.
+No new runs, builds, runtime/default/service changes or GPU claims. No
+responding Claude ID obtained in this research stage; earlier requested
+consultations timed out. Preserve raw evidence and current dirty work.
