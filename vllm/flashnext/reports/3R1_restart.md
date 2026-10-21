@@ -29,7 +29,7 @@ this is not a frozen submission engine.
 | C1 ITL p50, 64 outputs | 15.1669 ms |
 | C2 ITL p50 per stream, 64 outputs | 19.5596 / 19.6108 ms |
 | 8186-token prefill, first measured request | 4327 ms, 1892 tok/s |
-| 12283-token prefill, first measured request | 5048 ms, 2433 tok/s |
+| 12283-token prefill, request-completion proxy | 5048 ms, 2433 input tok/s |
 | Strict exact-repeat promotion gate | FAIL |
 
 All C1 exact repeats match. C2 differs from C1 for multiple prompts;
@@ -37,6 +37,9 @@ the hash-table prompt also differs between the two C2 rounds. This is
 both batch-shape variance and a repeatability concern. N1 addresses one
 identified projection source, not every possible source of divergence.
 The single 8K timing is not a matched warm regression measurement.
+The 12K row emitted no content event (`n_chunks=0`); its `ttft_ms` is the
+client's request-wall fallback, not observed first-content TTFT. The 8K
+row did observe content. Neither rate isolates engine-only prefill time.
 
 The attempted 512-token canonical collector stopped before measurement:
 stock `vllm serve` lacks its required `/server_info` endpoint. No suite
@@ -68,3 +71,25 @@ is necessary; dequant and combination are concrete prefill candidates.
 Consultations with `claude-fable-5-1` and `claude-opus-5-5` each timed out
 after35s (exit124, no responding model ID). No advice is attributed to
 them. All new owners actually use gpt-6.1-sol.
+
+## Matched control and rejected attention treatment
+
+The integrated metadata shim and callback produced a complete control
+on the same unchanged recipe: reasoning61.642817 tok/s, code61.800831,
+three measured 512-token requests per suite. Source/SO checks, isolated
+request counters, zero draft activity, identity, coherence, normal engine
+teardown and both-card post-health pass. Strict C1/C2 repeatability fails.
+The independent audit recomputed rates from raw event arrival times.
+
+The first plan16 serving attempt was discarded after an integration guard
+was found to reject the real server's scale tensors. After a corrected
+wrapper gate passed and activation was proven in the real server, r2
+failed with native level_zero error40/OUT_OF_RESOURCES during a mixed
+20-token prefill plus one decode token. The traceback surfaced at a PLE
+ring gather; this does not establish the cause. No candidate canonical
+suite completed. Shell SERVE_RC0 describes cleanup and does not negate
+the engine failure. Both-card post-health and source/SO checks passed.
+
+Plan16 stays disabled and unqualified. There is no new headline speed
+result. Full-model GDN validation proceeds on the original attention path.
+See reports/3A1_audit.md and reports/3D1_decode.md for the finite evidence.

@@ -223,3 +223,11 @@ The merged serve harness now keeps hotschmoe-dd first, defaults to maxlen
 callback, and propagates failed checks. For canonical suites, use the
 metadata shim (harness/d1_api.py); ordinary vllm serve does not expose the
 collector's required /server_info endpoint on this pinned version.
+
+Resumed matched control: 61.642817 / 61.800831 tok/s on the two 512-token
+suites, no MTP, complete health/source/teardown evidence, strict-repeat
+FAIL. D1's compact-plan16 component is numerically valid but its corrected
+full serve (r2) failed with level_zero OUT_OF_RESOURCES40 before canonical
+measurement. Keep it disabled; the PLE traceback is a surfacing site, not
+a proven cause. Post-health recovered cleanly. No new submission or speed
+promotion. N1 full-model validation uses the original attention path.

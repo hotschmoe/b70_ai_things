@@ -9162,3 +9162,157 @@ VERDICT: primitive PASS, fullmodel pending. Card1 released toD1.
 Minimal seven-line hookpatch harness/patches/n1_gdn_ba_deterministic.patch
 preserves inherited modelWIP. Sharedmodel/N1hooksource frozen forD1
 matchedfullmodel control/plan16 pair,N1offbotharms. No heavybuilds.
+
+## 2026-10-21 16:26 D1 -- compact FA plan passes batch and near-131K graph gate
+
+CONFIG: native plan16; physical card1; B2 ragged active, B4/B8 with
+KV0 padding; changed live lengths/page mappings after capture, guarded
+output buffers; grouped FP32 reference without replicated GQA K/V.
+COMMAND: bash harness/d1_fa_batch_window.sh; raw d1/fa-batch-gate-1.
+RESULT: 13/13 cases pass active numerical tolerance, exact replay and
+canaries. B2 32768/131071 maxabs 0.00010259/0.00007561. Body21s,
+normalexit0, leased native pre/post health HEALTHY, no crash/reset.
+VERDICT: enabled batch/context shapes covered at component level. Root
+authorized matched full control and plan16, N1 OFF both, source freeze
+after e626d490. Runner d1_matched_windows.sh started16:27; source/SO
+identity snapshot408files. Full-model timing and qualification pending.
+
+## 2026-10-21 16:28 D1 -- precision correction to FA threshold explanation
+
+CONFIG: CPU source arithmetic only; no runtime change.
+COMMAND: inspect ceil(KV/64)<32 in the native legacy decode path.
+RESULT: collapse applies to KV<=1984; first possible32tile case is1985,
+not exactly2048. Measured native drop is1536->2047, with2047/2048flat.
+VERDICT: earlier D1 shorthand below2048 was approximate. Lmx-growth
+attribution and compact-plan measurements unchanged; report corrected.
+
+## 2026-10-21 16:34 D1 -- matched control canonical61.6/61.8, strict repeat fails
+
+CONFIG: original merged O4+F1, maxlen131072/chunk12288, N1OFF, plan0,
+no added route/Q8F, source freeze408files.
+COMMAND: d1_matched_windows.sh control; combined repeat+canonical callback.
+RESULT: reasoning61.642817/code61.800831 tok/s,512tokens,warmup1+3,
+isolationvalid, config no-spec; dirty diagnostic ranking_eligible=false.
+64tok C1p50 15.168827ms, C2 19.582852/19.604523. Warm8K2378.69tok/s.
+Arithmetic/coherence/8K+32Kneedles pass; exact repeats fail. ArmRC1,
+serveexit0, native both-card posthealthHEALTHY, SOhashes/source408unchanged.
+VERDICT: baseline diagnosis only, no promotion/submission. Required
+coherence/health/source closure permits scheduled plan16 arm, now loading.
+
+## 2026-10-21 16:40 P1 -- selected-expert dequant primitive CPU-prepared
+
+CONFIG: noGPU/noBuild/sharedsourcefreeze, realq2 T12283/E374 48layers.
+COMMAND: recover BUCKET_PROF and source layouts; mmap GGUF metadata;
+prepare scratchp1 namespace-unique C13 selected-source addressing and
+minimal primitive build/window; Python syntax and bash-n pass.
+RESULT: median16chunks/layer, combine/chunkcount correlation0.980;
+gather mean4.534ms, dequant12.026, combine9.675. C13 emits up to3.677GB
+BF16/layer thenbmm readsagain, so old10..15ms totalfloor is optimistic.
+VERDICT: next proposed test is selected-DQ only: remove3packed gathers
+perchunk, preserve exact decode/destinationlayout. Five realgate types,
+bothdowntypes,modes0/1/2,32reorderedexperts exact gate vsF1 C13;
+no bmm/serve. CPUbuild1..3min thencard1 body1..2min+health pendingroot
+authorization. No shared edits, no GPU, no speedclaim. Report3P1_prefill.md.
+
+## 2026-10-21 16:43 D1 -- correct real-wrapper scale guard; r2 loading
+
+CONFIG: discarded plan16-r1: private guard wrongly required absent KV
+scale args, while real BF16 backend always passes scalar views. Control
+original c7b path and all shared executed sources remain unchanged.
+COMMAND: parent-authorized graceful r1 stop; normal teardown/posthealth;
+then treatment-only helper/overlay fix forwarding normalized scales.
+Tiny actual-wrapper gate2 after probe import-order correction.
+RESULT: r1 posthealth bothcardsHEALTHY/source408unchanged, no candidate
+claim. Gate2 ACTIVE16, same scale objects verified at nativecall,3changed
+length/page cases numerical+exactreplayPASS, gate0/posthealth0HEALTHY.
+VERDICT: new plan16-r2 fullmodel authorized and started16:43, N1OFF,
+samecontrolsettings.410filemanifest+treatment-onlydelta records4changed
+treatmentpathentries and2newgatefiles; no sharedsource/SO changes.
+Raw d1/plan16-r2 and f1/merged-d1-plan16-r2. Full timing pending.
+
+## 2026-10-21 16:44 Q1 -- canonical no-draft Strata reference CPU prep ready
+
+CONFIG: root authorized scratchq1 config/launcher edits only; shared
+harness/plugins/fork/registry frozen. No GPU/build/largeweight load.
+COMMAND: copy canonical dd-nomtp-c1 config; change aliases/log only;
+compare resolved engine_args; frozen reference helper --check-tokenizer
+with CPython3.12.13/Strata packages and bytecode writes disabled.
+RESULT: resolvedargv identical to canonical:spec2,noMTP,suffix0,lookup0,
+parallel1,no batch injection. PromptSHA/context bounds pass. Native
+Strata tokenizer exactly matches4096/16384/32768fixtureIDs. Scratch
+launcher/validator syntaxpass; rawq1/cpu-reference-config.json and
+cpu-reference-tokenizer.log. Native engine never started.
+VERDICT: both-card reference window ready,expected2-4min,8minbodycap+
+nativepre/posthealth. Await explicitroot slot afterD1/N1. Launcher gates
+inputhashes,health,and savedengine counters zero drafts; runtime output
+gate notyetexercised. No sharedsource changes or C2parity claim.
+
+## 2026-10-21 16:45 P1 -- isolated selected-DQ CPU build ready
+
+CONFIG: rootauthorized CPUonly;MAX_JOBS4,P1diskTMPDIR;D1sourcefreeze.
+COMMAND: cpu-run bash p1/build.sh; static kerneltemplate metadata compare
+againstF1 bucket2; verifyoriginal sharedsourcehashes.
+RESULT: build38s exit0,P1_SELECTED_BUILD_OK;965480byte SO SHA
+0ebb5837a9467e5186566243684becc27cd5047bb0064e079763788b6dfcdbbd.
+All105 template metadata strings namespaceb70_p1_dequant,zerooverlap
+withF1's129. Sharedsources unchanged;noGPU. Broadinitial symbolcheck
+matchedordinarySYCL runtimefunction;template-onlycheckpasses.
+VERDICT: card1 selected-DQ primitive ready,1..2min body+health;awaitroot
+GPUgrant afterD1/N1. No rebuildneeded,no servinghook,no speedclaim.
+
+## 2026-10-21 16:49 A1 -- independent CPU evidence audit
+
+CONFIG: gpt-6.1-sol audit only; D1plan16-r2 active; noGPU/build/lifecycle/
+sharedsource edits/commit/submission. Read resumed reports and raw evidence.
+COMMAND: recompute control SSE rates+usage/isolation, repeat token/text
+hashes, manifest deltas, N1 case coverage, originalq2 stage statistics.
+RESULT: controlcanonical reasoning61.642816995/code61.800830597tok/s
+confirmed;512content events/usage each,+1request/+512generation,zero
+prefixhits,live speculative_config=null. Strictsame-load repeat fails.
+408->410manifest delta exactly4treatment entries+2gates;fork/sharedSOs
+unchanged inrecorded manifests. N1p2 has72cases/990O4sampledrows+48graph
+replays,oneDNN83/100matching;Q1tiny integrationonly;P1buildonly.
+Concretecorrection: restart12K n_chunks0/emptycontent usedwall5047.607ms
+proxy,not observedTTFT;allD1control/r1/r2 8Krows haveactualcontent.
+VERDICT: report3A1_audit.md;no qualification/promotion. Discardedr1 stays
+invalid despitepopulatedartifacts. r2 awaitsfinal teardown/health/source
+closure;no fullcandidate speedclaim inthisaudit. Rootnotified promptly.
+
+## 2026-10-21 A1 -- completed plan16-r2 closure audit rejects qualification
+
+CONFIG: correctedplan16/N1off;CPUonly rawclosure review requestedbyroot.
+COMMAND: inspect fataltrace,scheduler,repeat/callback,LMX artifacts,
+SO/source checks,nativeposthealth;compare completeC1repeat IDs.
+RESULT: nativefatal16:48:53 level_zero40 OUT_OF_RESOURCES surfacedat
+PLEringindex mtp_ple.py175 duringmixed20prefill+1decode/two requests.
+Causalorigin unproven. HTTP500 interruptsC2repeat;secondaryharness
+KeyError c2_2 follows. SavedC1same=[true,true,false,false];C2repeatmissing.
+LMXcontainsonlyforkmetadata,nocanonicalrequests/payload/rate. First8K
+35.521s/warm3.558s bothactualcontent;spikecauseunproven. OuterSERVE_RC0
+iscleanupexitafterenginefatal,notfailure-free serve. OverallRC1,
+410sourcebad=[],SOcheckspass,posthealthbothHEALTHY.
+VERDICT: candidatefailed/unqualified;no canonicalspeedcomparison,
+promotionorstabilityclaim. Full report3A1_audit.md closureaddendum.
+
+## 2026-10-21 16:53 ORCHESTRATOR -- audited control and failed treatment
+
+CONFIG: D1 matched control uses unchanged original attention; treatment
+plan16 default-off, corrected real scale forwarding after r1 discard.
+COMMAND: integrated merged windows, real-wrapper scale gate2, independent
+Sol6.1 audit of raw streams/config/counters/health/source/engine logs.
+RESULT: control medians61.642817/61.800831tok/s over3x512 per suite,
+noMTP,coherent,normal engine exit,posthealth HEALTHY,source/SO unchanged.
+Strict repeats fail. Corrected plan16 wrapper passes and real serve logs
+ACTIVE, but r2 enginefails native OUT_OF_RESOURCES40 during mixed
+20-prefill+1-decode step at16:48:53,before any canonical measurement.
+PLE ring gather traceback is surfacing site,not established cause.
+ShellSERVE_RC0 iscleanup only; both posthealth HEALTHY,410sourcechecks
+andSOchecks unchanged. No qualified candidate speed or stability result.
+VERDICT: keepplan16disabled. N1-original-r1 starts on bothcards with
+original attention and N1 projection only; no routine DDrestore between
+prepared windows. D1 CPU-only source/lifetime/mixed-shape localization.
+P1 private selected-DQ build38s,unique symbols,not GPUtested yet.
+Audit clarification: restart-r1 12K hasonecompletiontoken/no content event;
+5047.607ms isrequest-wall fallback,2433inputtok/s proxy,not observed
+first-contentTTFT or pureengineprefill. Raw evidence unchanged; curated
+report relabeled. D1 real8K probes do observefirstcontent.

@@ -99,3 +99,62 @@ The existing 05:28 worker-config repair suffices for the old tiny
 failure; no speculative source change was required. This remains a
 random-weight integration gate. Flash-Next coherence, reference match,
 latency and full-model memory behavior remain unmeasured with QSA.
+
+## Frozen CPU review of the reference path
+
+CONFIG: D1 matched pair owns both GPUs and freezes all source/config
+files. Read-only review of Strata reference argv, tokenizer, image and
+source; report edits only.
+
+COMMAND: compare prepared q1 config to
+strata/flash-next/night/configs/dd-nomtp-c1.json; inspect native-pack and
+serve gates in src-ep/src/program/generate.cpp:3026 and :7240, the plain
+decode selector at :12678, and StrataEngine sampling/EOS handling.
+
+RESULT: the prepared --spec 0 is invalid for this native serve: spec>=2
+is required as verify-buffer capacity. No --mtp plus suffix-draft 0 /
+lookup-chain 0 selects one token per round, independent of that buffer
+capacity. The existing canonical dd-nomtp-c1 config already expresses
+this qualified no-draft recipe with parallel 1; its environment matches
+the prepared reference exactly. It uses the same release executable,
+GGUF/PLE/pack/profile paths and KV int8. The pinned image e41d59c0 is
+exactly nl_launch.sh's image; native tokenizer files exist and their
+fixture equality already passed. HF generation_config and Strata both
+stop on IDs 248044/248046; temperature 0 selects greedy in both.
+
+VERDICT: root authorized replacing the scratch reference config with
+the canonical dd-nomtp-c1 config after the D1 freeze, changing only the
+research alias/log. Do not run the currently prepared spec0 config.
+Retain engine_info, engine_last and executable SHA in every reference,
+and require runtime zero-draft evidence. These C1 references do not prove
+Strata C2 parity; the later vLLM C2 equality check remains its own gate.
+
+## 16:43 - canonical reference CPU preparation ready
+
+CONFIG: root authorized scratch q1 reference config/launcher changes
+only during the corrected D1 treatment freeze. Shared campaign harness,
+plugins, fork and registry remain untouched. No GPU/build/weight load.
+
+COMMAND: copy canonical dd-nomtp-c1.json to the scratch reference config,
+change only aliases/log; compare resolved Strata engine_args; run frozen
+x6_strata_reference.py --check-tokenizer with UV CPython 3.12.13 and
+Strata venv packages. Disable bytecode writes. Syntax-check scratch
+launcher and host reference-output validator.
+
+RESULT: Q1_CANONICAL_REFERENCE_CONFIG_OK. Only aliases/log differ;
+resolved argv equals the canonical argv exactly: spec2, no MTP,
+suffix0, lookup0, parallel1, no injected --batch flag. All prompt hashes
+and prompt+output context limits pass. X6_STRATA_TOKENIZER_OK at exactly
+4096/16384/32768 fixture IDs. Raw q1/cpu-reference-config.json and
+q1/cpu-reference-tokenizer.log. No native executable was started.
+
+VERDICT: ready for explicit root both-card authorization after D1/N1.
+Exact command: `bash /mnt/vm_8tb/b70/build/vllm-flashnext/q1/strata-window.sh`.
+Expected 2-4 minutes, 8-minute body timeout plus native pre/post health.
+The scratch launcher now checks initial RAM, hashes config/canonical/
+helper/fixtures before and after, and propagates health/source/output
+failures. Its scratch validate-references.py requires all three matching
+fixture hashes/counts, nonempty outputs, stored engine_info/engine_last,
+consistent executable SHA and zero offered/accepted draft counters. That
+runtime gate is prepared and syntax checked, not yet exercised. It saves
+a separate reference summary without changing the frozen generator.

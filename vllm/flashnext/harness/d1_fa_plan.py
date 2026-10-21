@@ -33,7 +33,8 @@ def fill_plan(lens, splits, work, count):
 
 
 def paged_attention(q, k, v, out, cu, lens, table, max_k, count,
-                    scale=None, sink=None):
+                    scale=None, sink=None, q_descale=None, k_descale=None,
+                    v_descale=None):
     """Allocate graph-owned plan/scratch and invoke unchanged native FA."""
     batch = lens.numel()
     counts = torch.empty((batch,), device=q.device, dtype=torch.int32)
@@ -42,7 +43,7 @@ def paged_attention(q, k, v, out, cu, lens, table, max_k, count,
     fill_plan(lens, counts, work, count)
     result, _ = torch.ops._vllm_fa2_C.varlen_fwd(
         q, k, v, out, cu, zeros, lens, None, table, None,
-        1, max_k, 0.0, None, None, None,
+        1, max_k, 0.0, q_descale, k_descale, v_descale,
         q.shape[-1] ** -0.5 if scale is None else scale, sink,
         False, True, -1, -1, 0.0, False, None, count,
         False, counts, work,

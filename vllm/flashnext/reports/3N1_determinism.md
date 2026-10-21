@@ -181,3 +181,45 @@ the seven-line default-off model hook, no inherited O4/X6 dirty changes.
 Apply from fork root to preserved handoff source, add plugin directory
 to PYTHONPATH, build via cpu-run/MAX4, then enable the flag only in the
 coordinated candidate. No agent commits or shared plugin edits.
+
+## Candidate scheduling review during D1 pair freeze
+
+CONFIG: D1 matched control/plan16, N1 off in both. No source/build/GPU
+changes from N1 during the pair. Parent grants later N1-enabled slot.
+COMMAND: CPU-review n1_serve_window.sh and d1_combined_callback.sh.
+RESULT: N1 wrapper unconditionally selects its repeat-only callback.
+The existing D1 combined callback already runs N1 O5-repeat and both
+canonical512-token suites, so direct reuse of f1_merged_serve.sh avoids
+any source edit or duplicate lifecycle. Candidate should match D1 plan16
+runtime flags and F1 probe sizes, adding N1 plugin path and
+B70_GDN_BA_DETERMINISTIC=1 B70_N1_SO=<current r2 library>. Preserve
+F1_API_WRAPPER=harness/d1_api.py and
+F1_POST_PROBE_SCRIPT=harness/d1_combined_callback.sh, maxlen131072,
+batched12288, decode64, prefill1024, F1_LENGTHS=8192,
+F1_COHERENCE_LEN=8192, F1_REPEAT=2, F1_DECODE=0, promotion gate on.
+VERDICT: root gets the exact prepared environment; wait for pair outcome
+and authorization. Compare N1-repeat JSON offline to N1-off plan16.
+Optional N1_REFERENCE marks aggregate failure if token IDs change from
+the nondeterministic control, even if the candidate itself repeats, so
+omit it for a candidate-only determinism gate and report that comparison
+separately. Reordering a BF16 reduction can legitimately change output
+bits versus the old nondeterministic prefill path.
+
+## Read-only D1 control repeat audit
+
+CONFIG: D1 fullmodel control-r1, N1 off, original FA plan. No N1 GPU work
+or source edits during its active window. Evidence:
+f1/merged-d1-control-r1/{gate.json,n1-repeat.json}.
+COMMAND: parse completed repeat comparisons without changing artifacts.
+RESULT: O5 four-prompt128-token same-load C1 repeat streams are
+[false,false,true,true]; C2 are[false,false,true,false]. C1 repeated
+Paris differs49 and hash-map differs2. C2 comparisons against first C1
+show Paris/hash-map differences54/2 on round1 and49/43 on round2;
+lighthouse differs65 on round2. Promotion short-prompt repeat also
+fails, including persistent FibonacciC2 mismatch72 and a ParisC2
+round1 mismatch2 that disappears in round2.
+VERDICT: strong actual same-load nondeterminism baseline for the later
+N1 candidate. Paris5tok alone uses <=8 dispatch while paired with the
+15tok Fibonacci prompt produces M20: that also changes HC/MoE prefill
+paths, so N1 alone cannot be assumed to fix every cross-batch mismatch.
+The later plan16 control is the intended matched reference for N1.
