@@ -594,3 +594,71 @@ prioritize a selector algorithm change before a costly model load.
 No serving speed, fidelity, loaded-pressure liveness, fault clearance,
 promotion or external claim follows from this component window. The
 next upstream Torch selector is CPU preparation only at this cutoff.
+
+## Future QSA selector full-serve CPU review - two pre-load fixes
+
+CONFIG: read-only review of q1_selector_hook.py, q1_selector_api.py,
+optional x6_serve.sh API/PYTHONPATH/alias support and scratch
+q1/selector-serve-prepared.sh. No GPU load, new test, shared source edit,
+registry change or commit. The proposed native/fused-r2 pair is not run.
+
+COMMAND: trace import/patch/cache behavior through QsaBatch decode and
+prefill callers; review native/torch/fused factories, source/SO ledgers,
+graph warmups, live-config checks, client-progress watchdog and teardown.
+Compare the watchdog budget to already saved full-QSA request durations.
+
+RESULT: default mode native leaves ops.topk_batch unchanged. The hook
+itself imports only stdlib modules; opt-in factory import occurs lazily
+inside the actual selector call after base QSA loading/readiness. The
+top-level API hook is designed to run again under multiprocessing spawn.
+Each cache key includes all three input/output buffer pointers and
+shapes. With persistent decode buffers and configured graph warmups2,
+workspace construction should precede capture; actual worker integration
+and loaded-model allocation behavior remain untested.
+
+Two concrete issues were sent to root before any full load:
+
+1. The scratch watchdog watches x6-probe.json, which is written only
+   after two solo requests and one concurrent pair complete per fixture.
+   The preserved native-QSA32K phase takes approximately139s in total
+   (35.70s+35.77s+67.66s). Its proposed120s no-file-progress rule can
+   therefore stop the native control during normal active request
+   progress. Use per-request progress or a phase budget consistent with
+   measured durations before interpreting that watchdog as liveness.
+2. The hook replaces all topk_batch calls, including prefill. QsaBatch
+   prefill allocates fresh scores/ids/step per query tile. Every cache
+   miss permanently retains its factory workspace; current fused-r1
+   stores an int64 keys tensor shaped like scores. At configured
+   max_cells147456 and prefill tile256, each such workspace is
+   301989888bytes/288MiB. Allocation-address reuse may reduce misses,
+   but source has no cache eviction or lifetime bound. Fixed-buffer CPU
+   checks do not establish bounded memory for this transient prefill
+   path. Bound its ownership or keep the first selector integration
+   confined to persistent decode buffers; actual unique-buffer count
+   and memory use are unmeasured, not a demonstrated OOM.
+
+The prepared wrapper requires an explicit fused SO path and hashes it
+before/after; broad source identity covers repository hook/API/selector
+source, while x6's ledger includes native QSA. The scratch wrapper itself
+is outside that broad manifest until ported or explicitly hashed. Native
+pre/post health, EngineCore error scan and normal teardown are retained;
+live config checks require no speculation, prefix cache off,
+maxlen65536/chunk12288/maxseq4/TP1. Selector activation is checked from
+actual serve logs for non-native modes. These checks are prepared code,
+not actual full-model outcomes.
+
+Current fused factory still resolves q1_fused.selector, the serial-r1
+implementation. Root explicitly plans to select q1_fused_r2.selector
+only after its independent bitonic component pass and port. The planned
+research aliases are not yet registered. Both are known preparation
+items, so this review does not label the wrapper executable as fused-r2.
+The wrapper also propagates known baseline exact-reference/repeat failure
+as overall arm failure; if a diagnostic comparison is intended, preserve
+that failure separately from operational health/source/teardown closure.
+
+VERDICT: import/default-off structure and scoped decode cache design are
+reasonable for an opt-in integration candidate. Resolve progress-budget
+and transient-prefill ownership before a loaded serve, then require
+actual worker/activation, source/SO/config, coherence and lifecycle
+evidence. No GPU permission, numerical pass or serving readiness is
+implied by this CPU-only review.

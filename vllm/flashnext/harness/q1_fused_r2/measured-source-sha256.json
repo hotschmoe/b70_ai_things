@@ -1,0 +1,77 @@
+{
+  "raw_candidate_sha256_field_meaning": "SHA256 of measured selector.py source, NOT compiled library",
+  "selector_source_sha256": "e2da5b83cadf98dc36b2349f78a3066a41877b29611a76a1ea1cfc089f7b0ca1",
+  "measured_library_path": "/mnt/vm_8tb/b70/build/vllm-flashnext/q1/fused-r2/libq1_fused_r2.so",
+  "measured_library_sha256": "23e456afdc5ab7bff44b40a45fe51744773d19fe2191eb6f3963f57871d69325",
+  "namespace": "b70_q1_packcompact_r2",
+  "kernel_names": [
+    "PackKernelR2",
+    "CompactBitonicKernelR2"
+  ],
+  "raw_profile_dir": "/mnt/vm_8tb/b70/build/vllm-flashnext/q1/fused-r2/profile-r1",
+  "loader_in_measured_source": "torch.ops.load_library(str(HERE/'libq1_fused_r2.so'))",
+  "loader_after_port": "B70_Q1_FUSED_SO with same scratch measured library default",
+  "port_changes": "source/build/import/SO paths only; kernels/key/control unchanged",
+  "source_map": {
+    "key.h": {
+      "measured_sha256": "4da55917b5c8b23b664df8f9228f664db2a166bff2d09cbfed50c4680d13a3b1",
+      "port_sha256": "4da55917b5c8b23b664df8f9228f664db2a166bff2d09cbfed50c4680d13a3b1",
+      "byte_identical": true
+    },
+    "fused.cpp": {
+      "measured_sha256": "c5b8bb3d2a0e03384b152f41200d0c37681d7a0c184af9b6b26956c6ef7ac2a3",
+      "port_sha256": "c5b8bb3d2a0e03384b152f41200d0c37681d7a0c184af9b6b26956c6ef7ac2a3",
+      "byte_identical": true
+    },
+    "cpu_keys.cpp": {
+      "measured_sha256": "5d92164f74e39d19205e1021c5a207e94a062717d661df399dd0b2135c58ab5c",
+      "port_sha256": "5d92164f74e39d19205e1021c5a207e94a062717d661df399dd0b2135c58ab5c",
+      "byte_identical": true
+    },
+    "build.sh": {
+      "measured_sha256": "2f547be013f3ebcdc0213dd323593087e1f32c8ecfb5f773431417f8ab288764",
+      "port_sha256": "16d808b4df927d53dbf3ef2a1a1e6be1b2049a4c6461ae661eb0910abb72df9c",
+      "byte_identical": false
+    },
+    "cpu_test.py": {
+      "measured_sha256": "aab80ba8968f78b16af3356551855d7a189282556ca25ee471f82be4c2e9b1cc",
+      "port_sha256": "a96ae3108170f76f798b20910117532dfea524b708e5bc97801322199b1e3426",
+      "byte_identical": false
+    },
+    "selector.py": {
+      "measured_sha256": "e2da5b83cadf98dc36b2349f78a3066a41877b29611a76a1ea1cfc089f7b0ca1",
+      "port_sha256": "b88632ecab012b1740059a400cdd5e9bb104cf1c30e4c795f72452c516cbbc90",
+      "byte_identical": false
+    },
+    "oracle.py": {
+      "measured_sha256": "d05569e0767846afe6bdde0d1993dc229254047117dab26364b7b9401397224c",
+      "port_sha256": "d05569e0767846afe6bdde0d1993dc229254047117dab26364b7b9401397224c",
+      "byte_identical": true
+    },
+    "torch_control.py": {
+      "measured_sha256": "54964ea848bcf0921e7d73aece458d88d39031acec57e19f4318a6d8ee519def",
+      "port_sha256": "54964ea848bcf0921e7d73aece458d88d39031acec57e19f4318a6d8ee519def",
+      "byte_identical": true
+    },
+    "fused_v1_control.py": {
+      "measured_sha256": "f910acd656d471490ce3baf5e7a73774ed1898d21ff37cf393849eca6cd535a1",
+      "port_sha256": "f910acd656d471490ce3baf5e7a73774ed1898d21ff37cf393849eca6cd535a1",
+      "byte_identical": true
+    },
+    "probe.py": {
+      "measured_sha256": "f1610bf1142f4a0294dcf431dda06d7c8f79b1d3a1a65cc2e30fd71a858ef5f1",
+      "port_sha256": "f1610bf1142f4a0294dcf431dda06d7c8f79b1d3a1a65cc2e30fd71a858ef5f1",
+      "byte_identical": true
+    },
+    "inner.sh": {
+      "measured_sha256": "6b36421cc728769afd3bfca091b26402c4a0789b0fd62f0d1887e4aa7775adc0",
+      "port_sha256": "6b36421cc728769afd3bfca091b26402c4a0789b0fd62f0d1887e4aa7775adc0",
+      "byte_identical": true
+    },
+    "window.sh": {
+      "measured_sha256": "c8c3ac8a00f8918f43bd3d91e842b198c5f2018fcd8c3c00d2a7a8b9edb7dda1",
+      "port_sha256": "c6fc428a2e6a943e22a1b7850733af46335abdbc7bce35cbaefd6109c9349688",
+      "byte_identical": false
+    }
+  }
+}

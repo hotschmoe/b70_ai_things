@@ -215,3 +215,40 @@ about4.02/4.64ms in top-k. A group reduction saves only4-5us versus a
 copied tree compiled identically; the larger native-to-copy difference
 changes compiler settings, so it cannot be credited to the reduction.
 The next bounded candidate uses exact upstream int64 selection/sort.
+
+## Native-capture startup failure and recovery
+
+CONFIG: original-FA/N1-on diagnostic, two GPUs, debug-only derived image
+with unchanged existing package versions. GDB attaches only after READY.
+COMMAND: TAG=n1-native-r1 bash harness/d1_native_capture/native_window.sh;
+after full closure, bin/xe-reset (auto, both leases, P2P0 health).
+RESULT: before READY, card0 CCS memory CATerror18 and DEVICE_LOST20 during
+EP initialization. GDB never attached; no model requests ran. N1 installs
+its hook at construction but loads its SO/allocates/launches only on first
+apply, so this is not evidence of an N1 kernel fault. Container137 is
+cleanup; actual primary failure is DEVICE_LOST. Sources471/N1/image/private
+guards pass; both-card post-health passes. Kernel events preserved; root
+authentication was unavailable for the Xe devcoredump. Reset rebind then
+passes both native cards and compiled two-rank allreduce10 iterations,
+P2P0, unchanged boot ID;66s total. No reboot or driver change.
+VERDICT: no native PC for the earlier SIGSEGV, no further blind N1 retry.
+Keep N1 off and continue the independently prepared QSA work.
+
+## QSA selection critical path
+
+CONFIG: physicalcard1/logical0, native health, six real M1/M2/context
+shapes,147456 score columns, exact packed-key ties and ascending IDs.
+COMMAND: isolated q1_torch, q1_fused and separate q1_fused_r2 component
+windows, each quiet CPU/GPU lease and original native comparator.
+RESULT: Torch int64 topk/sort passes exactness/canaries/changed graph
+replay and reduces32K M1 chain from about4.66ms to1.50ms. Serial fused
+compaction also passes exactness but regresses to about4.33ms; its linear
+scan dominates. Parallel bitonic ordering of selected IDs passes the
+next component gate with about1.36ms32K M1 chain. All native pre/post
+health and source guards pass. These are populated components without
+loaded-model VRAM pressure; not serving speed claims.
+VERDICT: preserve all measured variants. Before serving r2, independently
+reviewed hook must select only persistent decode-owned buffers, retaining
+one workspace per batch and keeping native prefill. Watchdog must allow
+the historical139s full32K fixture phase. Measure fresh native and r2
+serving arms with identical sources/configuration, SOs and fixture IDs.

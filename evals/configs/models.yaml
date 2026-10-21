@@ -1776,3 +1776,23 @@ models:
     calibration: ISTA-GSQ-RCO
     serve_cmd: vllm/flashnext/harness/f1_merged_serve.sh
     notes: O4 decode plus F1 sidecar prefill research recipe, MTP off. Registered for identity gates; no shelf promotion. See vllm/flashnext/reports/2F1_prefill.md.
+
+  - label: flashnext-ista-iq3-xxs-q1-native-research
+    served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-q1-native
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: GGUF-IQ3_XXS-ISTA-GSQ-RCO
+    activations: bfloat16
+    calibration: publisher-ISTA-GSQ-RCO
+    serve_cmd: "B70_Q1_SELECTOR=native TAG=q1-native bash vllm/flashnext/harness/q1_selector_window.sh"
+    notes: "Q1 matched native selector control; research identity registration only. TP1 EP sidecar, int8 pooled QSA KV, no speculation, prefix off. No qualification or promotion."
+
+  - label: flashnext-ista-iq3-xxs-q1-fused-r2-research
+    served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-q1-fused-r2
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: GGUF-IQ3_XXS-ISTA-GSQ-RCO
+    activations: bfloat16
+    calibration: publisher-ISTA-GSQ-RCO
+    serve_cmd: "B70_Q1_SELECTOR=fused TAG=q1-fused-r2 bash vllm/flashnext/harness/q1_selector_window.sh"
+    notes: "Q1 opt-in decode-only packed-key topk and bitonic-ID selector candidate, explicit measured SO required. Native prefill selector. Research identity registration only; no serving qualification or promotion."

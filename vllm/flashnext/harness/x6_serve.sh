@@ -19,7 +19,7 @@ export B70_AGENT="${B70_AGENT:-X6}" B70_GPU_LOCK_TIMEOUT=21600
 PORT="${PORT:-18156}"
 MODE=qsa
 [ "${X6_QSA:-1}" = 0 ] && MODE=dense
-ALIAS="qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-x6-$MODE"
+ALIAS="${X6_RESEARCH_ALIAS:-qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-x6-$MODE}"
 OUT="$B/x6/flashnext-ista-iq3-xxs-ep-$MODE-$TAG"
 NAME="vllm-fn-x6-$TAG"
 HARD_KB=8388608
@@ -65,6 +65,9 @@ if [ "${SKIP_HEALTH_BEFORE:-0}" != 1 ]; then
   grep -q "xpu-health: HEALTHY" "$OUT/health-before.txt" || { echo "health before failed"; echo WINDOW_DONE; exit 3; }
 fi
 PYPATH="$B/c7b-fa-overlay:$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_ep_xpu:$REPO/vllm/flashnext/plugins/b70_qsa_xpu:$REPO/vllm/flashnext/plugins/b70_o4_xpu"
+PYPATH="${X6_PYPATH_PRE:+$X6_PYPATH_PRE:}$PYPATH"
+API=(vllm)
+if [ -n "${X6_API_WRAPPER:-}" ]; then API=(/opt/venv/bin/python "$X6_API_WRAPPER"); fi
 CFG='{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,4],"cudagraph_num_of_warmups":2}'
 ( while true; do a=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
     if [ "$a" -lt "$HARD_KB" ]; then echo "ABORT_LOW_RAM $a"; docker stop -t 5 "$NAME" >/dev/null 2>&1; exit 0; fi
@@ -82,7 +85,7 @@ B70_AGENT="$B70_AGENT" B70_GPU_LOCK_TIMEOUT=21600 timeout --signal=TERM --kill-a
   --env TRANSFORMERS_OFFLINE=1 --env VLLM_NO_USAGE_STATS=1 --env VLLM_ENGINE_READY_TIMEOUT_S=1200 \
   --env SYCL_CACHE_PERSISTENT=0 --env "SYCL_CACHE_DIR=$B/cache/sycl-o4" \
   "${ENVS[@]}" \
-  -- timeout --signal=TERM --kill-after=30 20m vllm serve /mnt/vm_8tb/b70/build/backend-decision/hf-flashnext \
+  -- timeout --signal=TERM --kill-after=30 20m "${API[@]}" serve /mnt/vm_8tb/b70/build/backend-decision/hf-flashnext \
   --host 0.0.0.0 --port "$PORT" \
   --served-model-name hotschmoe-dd "$ALIAS" \
   --tensor-parallel-size 1 --dtype bfloat16 --max-model-len "${MAX_LEN:-147456}" \

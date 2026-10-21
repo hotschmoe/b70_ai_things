@@ -559,3 +559,311 @@ Whole-chain/gated parity and changed-input replay remain required.
 VERDICT: CPU-ready design only; await explicit GPU grant. Parallel topk
 is worth a bounded capability/profile check before a complex multi-bit
 SYCL radix implementation. No full serve, pressure/fidelity or speed claim.
+
+## Torch packed-key selector profile-r1 - exact captured component PASS
+
+CONFIG: physicalcard1/logical0, original native top-k versus scratch
+upstream Torch packed-int64 selector. Fixed147456score columns in both
+arms, capacity4 with active M1/M2, contexts4K/16K/32K, real QSA geometry
+and populated seeded pages. Same input tensors and integer-key semantics;
+no reduction-precision or output-order change. No model/pressure load.
+
+COMMAND: Q1_PROFILE_TAG=profile-r1 bash
+/mnt/vm_8tb/b70/build/vllm-flashnext/q1/torch-r1/window.sh.
+Source/candidate hashes frozen before run, nativepre/posthealth and CPUquiet
+outside card1lease. Alphanumeric unitrace session;240s body cap.
+
+RESULT: started18:03:36, body20s/exit0, normal container disappearance,
+nativepre/postHEALTHY/sourcecheck0; released18:04:26. CPU66case log saved;
+GPU63adversarial cases across native/Torch (126comparisons) plus all6real
+147456-column shapes PASS. Torch XPU int64 topk/stable sort and entire
+chain graph capture supported. Integer IDs, inactive/tail canaries,
+changed-input top-k and whole-chain replay, exact gated output parity PASS.
+No unsupported-operator fallback, numerical rejection or hardware fault.
+
+Graph event averages (12replays/arm), milliseconds per layer:
+
+| Context/active | Native top-k/chain | Torch top-k/chain |
+|---|---:|---:|
+| 4096/1 | 0.8193/1.4128 | 0.8063/1.4949 |
+| 4096/2 | 0.9310/1.4778 | 0.8020/1.5282 |
+| 16384/1 | 1.9761/2.6114 | 0.8138/1.4658 |
+| 16384/2 | 2.0048/2.6764 | 0.8152/1.5273 |
+| 32768/1 | 4.0232/4.6604 | 0.8105/1.5100 |
+| 32768/2 | 3.9750/4.9686 | 0.8110/1.8943 |
+
+Native unitrace contains36complete replays, alternating3native11-operation
+and3Torch136-operation chains for all6shapes. Verify every chain's initial
+write-step, gather boundary and operation count before ordinal association;
+do not align host and GPU walltimes naively. Selector boundary covers all
+126Torch operations, not only the final topk/sort call.
+
+Uninstrumented per-chain device trace means (3replays), milliseconds:
+
+| Context/active | Native/Torch chain span | Native/Torch selector span | Native/Torch index scores | Native/Torch internal gaps |
+|---|---:|---:|---:|---:|
+| 4096/1 | 1.1856/1.4843 | 0.5505/0.8042 | 0.0533/0.0550 | 0.0083/0.1269 |
+| 4096/2 | 1.2155/1.5198 | 0.5435/0.8059 | 0.0541/0.0560 | 0.0082/0.1263 |
+| 16384/1 | 2.6132/1.4580 | 1.9696/0.8021 | 0.0544/0.0571 | 0.0087/0.1291 |
+| 16384/2 | 2.6707/1.5176 | 1.9983/0.8036 | 0.0539/0.0609 | 0.0087/0.1281 |
+| 32768/1 | 4.6552/1.5026 | 4.0166/0.8070 | 0.0535/0.0608 | 0.0083/0.1271 |
+| 32768/2 | 4.9584/1.8824 | 3.9683/0.8047 | 0.3678/0.3797 | 0.0085/0.1258 |
+
+Torch selector stays near0.80-0.81ms; trace shows96segmented radix-sort
+kernels for full key ordering and ascending-ID ordering, plus bit packing,
+masks/copies/guards. The two sort sets sum near0.60ms. Torch's126selector
+operations introduce about0.127ms total intra-chain gaps versus native's
+0.008ms. This is measurable parallelism despite more launches; it avoids
+the original single-group context scaling. It is not an optimized partial
+selection implementation on this local Torch dispatch.
+
+At4K the uninstrumented chain regresses approximately0.30ms/layer; event
+averages show only0.05-0.08ms regression because short native timings have
+extra inter-replay/host overhead relative their device spans. Keep both
+measurements; do not use the smaller difference as a universal estimate.
+At16K M1 trace improves2.613->1.458ms and at32K4.655->1.503ms.
+Those are about44/68% component reductions, not model speed gains. A12layer
+projection saves13.9/37.8ms at16K/32K but costs3.6ms at4K; loaded-model
+scheduling, pressure and full-prefill behavior remain unmeasured.
+
+At32KM2, index_scores is0.368ms native/0.380ms Torch versus roughly0.054ms
+in other native shapes at147456score columns. The rise occurs in both
+arms; retain as a shape/working-set diagnostic, no causal attribution.
+Current kernel/rank shows selector first, then attention near0.49-0.57ms;
+this larger M2index-score cost is worth later profiling. Previous topk-r1
+used score width=context+4, so cross-run total-chain comparisons are not
+matched and cannot establish a selector gain.
+
+Raw q1/torch-r1/profile-r1 contains all result/trace/source/image/health
+logs, trace-summary.json and passed parity gates. Selector/source remains
+scratch. Actual primitive semantics and graph support are established only
+for the tested shapes, not the whole model or200K concurrency.
+
+VERDICT: supports a separately authorized default-off serving integration
+experiment with the original O4/F1 recipe and no N1/D1 overlay. Preserve
+short-context regression and both native/Torch raw traces. No promotion,
+full-model fault clearance, fidelity/stability or serving-speed claim.
+No further GPU work queued; parent owns next scheduling decision.
+
+## Fused pack and threshold compaction - CPU ready
+
+CONFIG: preserve measured Torch-only control in separate harness/q1_torch/
+with source hashes linked to measured scratch/profile-r1; selector is
+byte-identical, runner changes are path/import-search only. New candidate
+is scratch q1/fused-r1 and two uniquely named SYCL ops under
+b70_q1_packcompact_r1. One full-score-column grid packs exact uint64 keys,
+then sign-XOR and bit_cast to int64. Invalid cells are signedMIN. Keep
+upstream int64 topk2051 sortedTrue; compact uses device values[width-1]
+threshold and a single actual-n ascending serial scan, preserving tails.
+No second-ID sort, rank-mask or tensor-copy stage. Width/n/idcap/selectedK
+clamps and width0 no-write guard match native semantics.
+
+COMMAND: cpu-run/MAX_JOBS4 offline AOT build using existing oneAPI2026.1,
+disk TMPDIR; compile same key.h into host CPUhelper; cpu-run cpu_test.py.
+Future command, ONLY after coordinated card1grant:
+`Q1_PROFILE_TAG=profile-r1 bash /mnt/vm_8tb/b70/build/vllm-flashnext/q1/fused-r1/window.sh`.
+Physicalcard1/logical0, default nativepre/posthealth, quietoutsidelease,
+240s body and source/binary/container gates, expected2-4min.
+
+RESULT: GPU library AOT34s PASS; initial separate CPUhelper build had
+missing g++, corrected to existing icpx in0.4s without rebuilding GPUlib.
+Library SHA42b7cb8eccd5c23164d7242776a4cccddcb837b317ac2f70fdf7b5f605baaf67.
+Compiled common key helper4166rawbit/index pairs exact includingNaN,
+signedzero/extremes; strict invalidMIN below every valid tested key.
+CPU252threshold/clamp/selectedK/width0/tail cases PASS; AST/ASCII/bash-n
+PASS. New operator behavior on GPU is not yet tested.
+
+Complexity: O(capacity*scores_n) fused packing, upstream topk unchanged,
+then O(active*n) serial threshold scan; no64radix scans in our kernel.
+Persistent keys8*actualB*scores_n (4.7MB at4x147456), values/indices about
+0.13MB plus upstream full-sort workspace. Many full-width Torch
+intermediates and second-sort workspace disappear. Allocation/reserved/
+peak counters and native trace are prepared for all three matched arms.
+The lazy per-shape key allocation must warm before graph capture; parent
+API caches per actual buffer/shape. The requested interface is
+PackedTopk(scores_n,cap,device).__call__(scores,ids,step).
+
+VERDICT: CPU gate ready only; await GPU grant. Preserve tested Torch-only
+control for attribution. Custom ops currently have XPU implementation;
+component graph capture alone will not prove Dynamo/FakeTensor support.
+Full API/serve integration belongs to parent after component and memory
+review; no native/plugin/upstream source edits or full-model claim.
+
+## Fused serial v1 component - exact PASS, performance REJECT
+
+CONFIG: physicalcard1/logical0, native/Torch-only/fused serial matched
+147456scorecols/capacity4/activeM1,M2 at4K/16K/32K, same populated pages.
+COMMAND: Q1_PROFILE_TAG=profile-r1 bash q1/fused-r1/window.sh (scratch).
+RESULT: started18:13:27; body23s/exit0/container gone/nativeprepostHEALTHY,
+sourcecheck0; released18:14:19. All189GPU adversarial comparisons and6real
+shapes pass exact integer IDs, inactive/tail canaries, changed top-k and
+whole-chain graph replay, exact gated outputs. No numerical or GPU fault.
+
+Graph event means, milliseconds per layer:
+
+| Context/active | Native selector/chain | Torch selector/chain | Fused serial selector/chain |
+|---|---:|---:|---:|
+| 4096/1 | 0.7987/1.3857 | 0.8058/1.4960 | 0.9843/1.6763 |
+| 4096/2 | 0.9909/1.4795 | 0.8141/1.5336 | 1.0099/1.6934 |
+| 16384/1 | 1.9773/2.6131 | 0.8090/1.4676 | 2.0301/2.6785 |
+| 16384/2 | 2.0047/2.6778 | 0.8115/1.5613 | 2.1642/2.9420 |
+| 32768/1 | 4.0247/4.6586 | 0.8093/1.4900 | 3.5507/4.3279 |
+| 32768/2 | 3.9763/4.9616 | 0.8148/1.9276 | 3.7211/4.8381 |
+
+Native trace validates54complete chains:11native/136Torch/63fused GPU
+operations per replay,3replays per18phases. Fused M1 pack costs5-6us;
+upstream first-sort kernels sum0.514-0.517ms; serial compaction itself
+costs0.416/1.447/3.091ms at4K/16K/32K. It dominates the attempted savings.
+Fewer kernels and lower memory are insufficient when the serial
+ascending scan returns as the critical path. Torch-only stays around
+0.805ms per selector. Fused selector spans0.992/2.020/3.668ms inM1trace.
+
+Raw memory counters include retained graph pools, current/prior case
+objects and cached selectors; reserved memory is arm/order dependent.
+On warmed cases peak-minus-before allocated is approximately42.64MB
+Torch versus19.04MB fused (23.59MB less), with another4.72MB fused keys
+on first actual147456shape allocation. These are component allocator
+measurements, not model capacity or loaded-pressure evidence. Capturing
+both whole-chain and isolated-top-k graphs is additional experimental
+pool pressure. The report does not multiply reserved counters into a
+model-KV capacity claim. Raw all-arm allocated/reserved/peaks are saved.
+
+Measured v1 is ported to harness/q1_fused with13source/build/CPU/profile/
+window/control/README/hashlink files. Kernels/key/control are byte-identical,
+runner changes paths only. B70_Q1_FUSED_SO defaults to the measured scratch
+library; no binary in campaign. Tested Torch-only remains separate under
+harness/q1_torch. No native QSA/upstream source change.
+
+VERDICT: reject serial compaction for speed; do not full-serve this path.
+Numerical/capture success does not clear loaded-model liveness faults.
+Next approved scratch candidate sorts selected IDs directly in parallel
+SLM bitonic, avoiding all actual-n serial scans; no GPU until parent grants.
+
+## Fused bitonic r2 - CPU ready during D1 freeze
+
+CONFIG: unique b70_q1_packcompact_r2 namespace/PackKernelR2 and
+CompactBitonicKernelR2. Keep exact fused uint64 packing and upstream
+int64 topk sortedTrue. Read selected-value low32bits to recover IDs for
+first device width, pad to nextpow2(cap2051)=4096 with INT_MAX, sort using
+256thread bitonic78stages plus initialfill barrier in16KiB SLM, write
+first width cooperatively. No context scan in compaction. Width/n/cap/
+selectedK clamps and inactive no-write remain exact. Tested v1/Torch
+controls stay unchanged and can co-load with distinct kernel names.
+
+COMMAND: cpu-run MAX_JOBS4/diskTMPDIR offlineAOT build; compiled key
+helper and CPU bitonic reference. Future authorized command:
+`Q1_PROFILE_TAG=profile-r1 bash /mnt/vm_8tb/b70/build/vllm-flashnext/q1/fused-r2/window.sh`.
+Expected2-4min physicalcard1/logical0;240s body/defaultnativepreposthealth.
+Four matched native/Torch/v1serial/v2bitonic arms,147456cols,6realshapes,
+exactness/canaries/changedgraphs/native trace and memory counters.
+
+RESULT: CPU AOT33s exit0, SHA
+23e456afdc5ab7bff44b40a45fe51744773d19fe2191eb6f3963f57871d69325.
+4166compiled key pairs and252CPU bitonic/clamp/selectedK/canary cases PASS,
+AST/ASCII/bash-n PASS. Compaction complexity O(cap*log^2(cap)), independent
+of actual context, with16KiB SLM per active query group. Persistent keys
+and upstream topk workspace unchanged from v1; no second full sort.
+
+VERDICT: CPU-ready only. GPU execution and campaign port wait until D1
+posthealth/source closure and parent's explicit grant. No shared-source
+changes during its freeze. Future port is separate harness/q1_fused_r2;
+parent owns API/serve integration after component/graph-memory evidence.
+
+## Bitonic r2 component - exact captured PASS, source port complete
+
+CONFIG: after parent recovery/health closure, physical card1/logical0;
+native, preserved Torch-only, preserved serial v1 and bitonic v2 matched
+at147456score columns, capacity4/activeM1,M2,4K/16K/32K populated QSA
+pages and real geometry. One bounded component attempt, no model serve.
+
+COMMAND: Q1_PROFILE_TAG=profile-r1 bash
+/mnt/vm_8tb/b70/build/vllm-flashnext/q1/fused-r2/window.sh.
+Quiet CPU outside one-card lease; default native pre/posthealth, source
+and actual binary hashes,240s body cap, unitrace and allocator counters.
+
+RESULT: start18:26:03, body24s/exit0, no container leftover, nativeprepost
+HEALTHY, sourcecheck0; closed/card1released18:26:54. GPU252adversarial
+variant comparisons and all6real shapes PASS: exact integer-key reference
+IDs, inactive/tail canaries, gated outputs, changed-input top-k and whole
+chain graph replay. V1 and V2 co-load with distinct namespaces/kernel
+names. No numerical fallback, crash, reset or loaded-model qualification.
+
+Identity clarification: raw result.json candidate_sha256 is the SHA256
+of measured selector.py source, NOT the compiled library. Raw artifact
+is preserved; new identity.json explicitly records meaning, loader path,
+SO identity and all measured-to-port source hashes. Selector source SHA:
+`e2da5b83cadf98dc36b2349f78a3066a41877b29611a76a1ea1cfc089f7b0ca1`.
+Actual measured SO:
+`/mnt/vm_8tb/b70/build/vllm-flashnext/q1/fused-r2/libq1_fused_r2.so`.
+SO SHA:
+`23e456afdc5ab7bff44b40a45fe51744773d19fe2191eb6f3963f57871d69325`.
+Both before/after source manifests validate that exact library.
+
+Graph event means, milliseconds per one-layer operation/chain:
+
+| Context/active | Native selector/chain | Torch selector/chain | Serial v1 selector/chain | Bitonic v2 selector/chain |
+|---|---:|---:|---:|---:|
+| 4096/1 | 0.9430/1.2941 | 0.8074/1.4964 | 0.9844/1.6739 | 0.7078/1.3468 |
+| 4096/2 | 0.9310/1.4850 | 0.8064/1.5010 | 1.0168/1.7141 | 0.7027/1.3876 |
+| 16384/1 | 1.9758/2.6107 | 0.8053/1.4808 | 2.0798/2.6994 | 0.7086/1.3665 |
+| 16384/2 | 2.0048/2.6739 | 0.8195/1.5141 | 2.1633/2.8660 | 0.7037/1.4305 |
+| 32768/1 | 4.0232/4.6581 | 0.8113/1.4639 | 3.6590/4.3265 | 0.7089/1.3578 |
+| 32768/2 | 3.9765/4.9595 | 0.8222/1.8576 | 3.6038/4.7752 | 0.7049/1.7359 |
+
+Device trace has exactly72complete chains,3per24phases, operation counts
+11native/136Torch/63v1/63v2 and distinct compact symbols. Native trace
+means below exclude inter-replay host gaps and per-op event overlays.
+
+| Context/active | Native chain ms | Torch chain ms | V1 chain ms | V2 chain ms | V2 pack/bitonic ms |
+|---|---:|---:|---:|---:|---:|
+| 4096/1 | 1.1857 | 1.4872 | 1.6615 | 1.3415 | 0.0059/0.1229 |
+| 4096/2 | 1.2114 | 1.4931 | 1.7010 | 1.3795 | 0.0058/0.1226 |
+| 16384/1 | 2.6063 | 1.4686 | 2.6997 | 1.3600 | 0.0057/0.1222 |
+| 16384/2 | 2.6679 | 1.4999 | 2.8584 | 1.4261 | 0.0055/0.1225 |
+| 32768/1 | 4.6532 | 1.4558 | 4.3237 | 1.3518 | 0.0053/0.1228 |
+| 32768/2 | 4.9544 | 1.8478 | 4.7738 | 1.7279 | 0.0058/0.1225 |
+
+Bitonic compaction is approximately0.123ms independent of context,
+replacing v1's0.414/1.483/3.090ms M1 serial scan. Pack is5-6us; first
+upstream radix-sort kernel sum remains about0.515ms. Selector device
+span is roughly0.70ms. The parallel sort removes the prior serial
+critical path while preserving exact native output ordering.
+
+V2 improves every tested shape versus Torch-only, but4K still regresses
+versus native by0.156ms M1/0.168ms M2 in device chain spans (about13-14%).
+Event averages show a smaller/different4K delta because short native
+measurements include more inter-replay/host overhead. Preserve both;
+no short-context win claim. M1native->v2 chain is2.606->1.360ms at16K
+and4.653->1.352ms at32K (about48/71% component reduction). Multiplying
+12layers is only a projection, not measured end-to-end improvement.
+The shared32KM2 index-score rise remains0.367-0.379ms across all arms;
+no new attribution. A matched serving pair must expose actual tradeoffs.
+
+Memory: warmed per-arm peak-minus-before allocated is42.64MB Torch-only
+versus19.04MB v1/v2; first v2 real-shape call adds4.72MB persistent keys.
+Transient reduction is23.59MB on this component path. Reserved and graph
+pool counters depend on arm order, retained graphs and fixture objects;
+these are not KV-capacity or full-model pressure claims. Full serving
+must record actual graph pools/workspace/available KV and activation.
+
+Port complete:14files under harness/q1_fused_r2, with kernel/key/Torch/
+v1control bytes identical to measured source. Path-only source/build/
+CPUhelper/SO adaptations are hash-linked in measured-source-sha256.json.
+B70_Q1_FUSED_SO explicitly pins the measured library (default same path).
+Selector interface remains PackedTopk(scores_n,cap,device).__call__.
+Measured v1 stays in q1_fused, Torch-only in q1_torch. Syntax/AST/ASCII
+pass; no port-only GPU rerun. No further Q1 source mutation queued.
+
+FakeTensor review: baseline compilation config is mode0/NONE with
+FULL_DECODE_ONLY and two warmups; no Dynamo tracing. The validated direct
+XPUGraph path therefore does not require FakeTensor registrations.
+Keep measured loader unchanged for this baseline. Future Dynamo use
+needs separately tested fake registrations; component capture alone
+would not qualify that mode. Parent owns default-off API, buffer/shape
+cache, workspace review and matched native/r2 full-serving authorization.
+
+VERDICT: exact captured component PASS and meaningful long-context
+component gain; preserve4K regression and model-pressure limits. Proceed
+only through parent's separately reviewed default-off serving pair.
+No serving speed, fidelity, stability,200K or fault-clearance claim.
+No additional GPU work queued; nativehealth and leases cleanly closed.

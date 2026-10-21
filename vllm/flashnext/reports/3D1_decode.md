@@ -551,3 +551,134 @@ not a cause. No further N1 full load until reviewed native-fault capture
 can identify a PC/core and separate monitor contribution. No unrelated
 stress was added. During Q1 source freeze, classifier repair remains
 scratch-only; port only after root releases that freeze.
+
+## Scoped native debugger CPU preparation passes; GPU capture pending
+
+CONFIG: parent approved CPU-only debugger setup after SIGSEGV witness.
+No /dev/dri in these test containers; no Torch import or GPU workload.
+Host core_pattern remains Apport pipe, Yama1/core0 unchanged. Parent
+image pinned ea234fbf7123cba58b387f4046a0c32192dd5b6febead3684dbd8690882bf572.
+
+COMMAND: MAX_JOBS=4 B70_AGENT=D1 bin/cpu-run bash
+build/vllm-flashnext/d1/native_capture/prepare_cpu.sh. Record parent image,
+apt simulation, pre/post package versions; build diagnostic-only derived
+image. Synthetic CPU C child under per-container SYS_PTRACE/default
+seccomp, GDB attach, recoverable then fatal SIGSEGV. Repeat only the tiny
+attach preflight after adding early-options/resume-handshake validation.
+No model load or research GPU lease consumed in this stage.
+
+RESULT: reusable CPU setup268s, greater than initial30-90s estimate;
+apt and image export dominate. All parent layers retained;25 packages
+newly added, zero existing package versions changed (both pre-install
+plan and post-install proof). Derived image
+b6a97730abd8bcb76b73f3d336c6e5b2a4bbdd096622c366c0b7f9d1f7a49564.
+Original image tag/ID unchanged. CPU synthetic attach under default
+seccomp PASS: two native PCs/siginfo/backtraces recorded; existing
+recoverable handler runs, final child waitstatus SIGSEGV11 preserved.
+Debugger portion0.315s; exact early-options wrapper9s. No package build
+repeated. setup-r1/{image-build.log,package-delta.json,qualification-proof.json,
+attach-early-r2/result.json,gdb.log} retain proof (gdb.log within attach dir).
+
+Parent approved port of ten files to harness/d1_native_capture/; generated
+private snapshot syntax PASS. Private xpu-run differs only HERE anchored
+to original harness, derived IMAGE and +SYS_PTRACE; default seccomp and
+all lease/loader/native checks remain. Its executable mode is preserved.
+No shared runtime/bin/fork edit. GDB early options disable auto-load and
+external symbols before attach. At READY, root GDB in the one research
+container attaches EngineCore namespace PID, records a continued-event
+handshake, then clients start. Catch SIGSEGV records $_siginfo (including
+si_code/si_addr), PC/registers/modules/all-thread bt32 and passes signal
+then continues. SIGTERM passes through for lifecycle. Recoverable fault
+alone is not labeled fatal. No inferior function calls or tensor printers.
+Both D1 C-timed AND Python faulthandler dumps are disabled only in the
+private overlay; host metadata/proc/error-word observation remains.
+Original N1 recipe/request sequence and120s client bound retained;
+clock begins after GDB resume and monitor arm. Native health stays outside.
+
+VERDICT: concrete native-PC capture is CPU-qualified, GPU integration
+untested. Proposed command after Q1 component closure/source port and
+parent explicit freeze-go:
+
+TAG=n1-native-r1 bash vllm/flashnext/harness/d1_native_capture/native_window.sh
+
+Both cards, expected~6min including model load/120s body/teardown/health.
+No GPU job queued now. Reuse cached image; do not rebuild packages.
+Debugger pauses can perturb EP flags, so this is fault localization,
+not a matched latency/stability comparison. A clean finite arm would not
+prove that removing the C watchdog fixed serving. Need actual native PC,
+backtrace and final process exit before any causal interpretation.
+
+## Native-capture arm fails before READY; recovery completed by root
+
+CONFIG: approved n1-native-r1, both cards, originalFA/plan0/N1r2/noP1,
+131072/chunk12288/capture1/2/3/4/8/no speculation. Debug imageb6a97730,
+private runner changes onlyHERE/IMAGE/SYS_PTRACE, both D1 faulthandler
+dump mechanisms disabled only in private overlay. GDB intended to attach
+and emit continued handshake before unchanged model requests.471-source
+freeze established after Q1 port/root optional x6 wrapper completion.
+
+COMMAND: TAG=n1-native-r1 bash harness/d1_native_capture/native_window.sh.
+Started18:18:13, standard nativepreHEALTHY27s both cards. Raw
+build/vllm-flashnext/f1/merged-n1-native-r1. No additional probe/retrial.
+
+RESULT: FAILED BEFORE READY at18:20:59 in process_weights_after_loading
+-> EP method -> torch.ops.b70_ep.ep_init. Primary DEVICE_LOST20 follows
+EP pathprobe/init prints; empty_cache memory-profiler exception is
+secondary cleanup. EPinit prints only after its local allocations,
+zeroing/reserve and both queue waits. It then calls ep_transport_warmup;
+that summary never prints. No GDB attach/resume or diagnostic body/model
+request occurred, no successful live /server_info identity proof, no
+SIGSEGV nativePC captured. The intended postREADY120s clock never started.
+
+Kernel events18:20:58 identify card0/BDF0000:0b:00.0 CCS,ASID904,
+116 distinct fault pages in0xeaab52c10000..0xeaab52cfa000 (~958KiB span),
+116 unsuccessfulENOENT replies and32 engine-memory CATerror18 records.
+Kernel resets the CCS engine and creates a device coredump. Native
+failure is in an initialization/peer-page-touch surface, not a request
+or late graph boundary. kernel-events.log/kernel-fault-summary.json saved.
+
+Dump copy was explicitly requested by root and attempted read-only via
+cpu-run. /sys/class/drm/card0/device/devcoredump/data is0600 root:root;
+stat_size0 is the sysfs declared size, not actual dump length. Read fails
+errno13 PermissionError. No zero-byte dump artifact exists. Root's sudo-n
+read also required interactive authorization, so device dump is UNAVAILABLE;
+preserve devcoredump-copy.json/error and kernel logs, not a fake dump.
+
+The failed EngineCore left API waiting startup. To avoid an unnecessary
+20-minute readiness wait, gracefully stopped only this research container
+with20s grace; outerSERVE_RC137/ENGINE_ERROR_RC1 recorded. Nativepost
+bothHEALTHY33s; WINDOW_DONE. Strict WINDOW_RC1, SOURCE_RC0 (471,bad=[]),
+N1_RC0,IMAGE_RC0,NATIVE_RC0; effectiveSO checks0. Both GPU leases fully
+released. No D1 reset or additional GPU activity. Root then performed
+approved non-reboot rebind66s despite passing nativepost because actual
+kernel CCS faults occurred: native bothHEALTHY, compiled10iteration two-
+rank collective P2P0 HEALTHY, same boot. recovery.log saved by root.
+
+VERDICT: failed startup, not N1 SIGSEGV localization. No speed/stability
+qualification. GDB never attached, so debugger attachment/stops cannot
+explain this preAttach failure; derived image/additional package presence,
+allocation timing and runtime context remain confounds. Keep N1 OFF for
+normal follow-on work and do not infer a model or kernel fix.
+
+CPU-only decision point after closure: native N1SO load, weightcat/cache
+and bf_gemm occur only inside the first projection apply. Constructor only
+shallow-copies the quant method; its weight-loading methods are preserved.
+No first model forward was reached. Thus direct N1 kernel execution or
+its lazy weight-cache pressure cannot explain THIS startup fault. No KV
+allocation, FA graph capture/reclaim or request pressure stage was reached.
+General model/hostpin/peer-VA/runtime pressure remains untested. Earlier
+N1-original-r1 reached requests then stalled; liveness-r1 SIGSEGV also
+reached requests with no matching kernel fault. These different surfaces
+do not establish one common cause or uniquely blame N1.
+
+One conditional future candidate, not implemented/run: if a startup peer
+fault recurs after root recovery in a planned N1-OFF serve, reuse cached
+GDB but attach at supported worker-init BEFORE EPinit, with one pending
+breakpoint on exported ep_touch_pages. Log x86_64 remote/local/bytes args
+(RSI/RCX/R8) then continue, alongside existing SIGSEGV PC/bt/pass capture.
+Compare kernel fault pages with these exact region bounds. This can
+separate an out-of-range address from an apparently in-range unmapped
+peer region without a native rebuild or new tensor copy. It is a source-
+backed discriminator (ELF exports ep_touch_pages/ep_transport_warmup),
+not a reason for another blind full N1 load. No extended instrumentation
+work or GPU job is queued. Q1 is now sole GPU owner under root scheduling.

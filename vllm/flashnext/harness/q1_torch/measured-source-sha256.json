@@ -1,0 +1,13 @@
+{
+  "measured_dir": "/mnt/vm_8tb/b70/build/vllm-flashnext/q1/torch-r1",
+  "profile": "profile-r1",
+  "measured_source_sha256": {
+    "selector.py": "54964ea848bcf0921e7d73aece458d88d39031acec57e19f4318a6d8ee519def",
+    "cpu_test.py": "2294cf2af8aaa531354385e04cb46adaed5ffa1e6cc554fde4e1fe171f3190e5",
+    "oracle.py": "d05569e0767846afe6bdde0d1993dc229254047117dab26364b7b9401397224c",
+    "probe.py": "943d5872d688a261152b7e0a989c3e3658d3f6cb6f43fc30266ff71b2217aeb8",
+    "inner.sh": "6b36421cc728769afd3bfca091b26402c4a0789b0fd62f0d1887e4aa7775adc0",
+    "window.sh": "5049a65275308eae77d68c777130548c22c1edf4bed9ccd8bc8863d53c47a209"
+  },
+  "port_changes": "path/import-search changes only; selector.py byte-identical"
+}

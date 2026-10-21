@@ -9729,3 +9729,137 @@ RESULT:66CPU cases exact/3s, AST/ASCII/bash-n PASS; no build/GPU. Multiple
 fullwidth int64 passes/tensMB temporaries plus topk workspace expected.
 VERDICT: CPU ready only; Torch XPU int64/stable-sort/capture untested,
 explicit card1grant required. No fullserve or speed/fidelity claim.
+
+## 2026-10-21 18:04 Q1 -- Torch packed selector exact/captured PASS
+
+CONFIG: card1/logical0, native/Torch matched147456scorecols, capacity4,
+activeM1/M2,4K/16K/32K seeded populated QSA pages; no model-pressure load.
+COMMAND: Q1_PROFILE_TAG=profile-r1 bash q1/torch-r1/window.sh (scratch).
+RESULT: GPU126adversarial comparisons plus6real shapes/IDoracle/canaries/
+changed-input topk+chain graphs/exact gated output PASS; int64topk/stable
+sort/capture supported. Body20s/exit0, containergone, nativepre/postHEALTHY,
+sourcecheck0; card1 released18:04:26.36validated traces:11native vs136Torch
+ops/replay. M1trace chainnative/Torch4K1.186/1.484ms,16K2.613/1.458,
+32K4.655/1.503. Torch selector~0.805ms vsnative0.55/1.97/4.02.
+VERDICT: component-only; shortcontext regression, meaningful16/32K gain;
+no serving/promotion/fault-clearance claim. No GPU queued. Report3Q1 has
+full event+trace tables,96sort kernels and shared32KM2index-score anomaly.
+
+## 2026-10-21 18:12 Q1 -- fused exact pack/threshold CPU ready
+
+CONFIG: measured Torch-only ported to harness/q1_torch with raw source
+hashlink/path-only changes. New unique scratch pack+compact ops keep
+upstream int64topk and exact uint64math/signbit_cast/threshold/IDorder.
+COMMAND: cpu-run MAX4 offlineAOT34s; sharedkey CPUhelper and thresholdoracle.
+RESULT: library42b7cb8eccd5c23164d7242776a4cccddcb837b317ac2f70fdf7b5f605baaf67;
+4166compiled key pairs/252threshold+clamp+canarycases/AST/ASCII/bash-n PASS.
+Separatehosthelper g++missing correctedtoicpx; GPUlibunchanged. NoGPUyet.
+VERDICT: ready for granted native/Torch/fused component comparison only;
+measure graph memory and shortcost before API/fullserve. Parent owns
+future overlay/lifecycle; no plugin/native/fork changes.
+
+## 2026-10-21 18:16 D1 -- CPU native-debugger setup PASS; next GPU capture pending
+
+CONFIG: parent approved CPU-only derived image/GDB; parentimageea234fbf
+pinned, noGPU/devdri or host core/Yama changes.
+COMMAND: cpu-run/MAX4/diskTMPDIR setup268s; tiny synthetic attach check.
+RESULT: debugimageb6a97730 retainsallbaselayers;25addedpackages,zero
+existingversionschanged. Defaultseccomp+percontainerSYS_PTRACE attach
+PASS; nativePC/siginfo/bt and existing recoverablehandler/fatalSIGSEGV
+semantics preserved; continued-event handshake validated0.315s.
+Ten sources ported harness/d1_native_capture; private runnerdiff only
+HERE/IMAGE/SYS_PTRACE, allleases/loader/health retained. BothD1 C/Python
+tracebackdumps disabled onlyprivateoverlay. Cachedimage reused.
+VERDICT: CPU-qualifiedcapturetool, GPUuntested; no causal/speed/stability
+claim. Wait Q1closure/sourceports and explicitparentfreeze-go before
+TAG=n1-native-r1; noGPUqueued. See3D1/setup-r1 qualification-proof.json.
+
+## 2026-10-21 18:14 Q1 -- serial fused exact PASS, speed REJECT
+
+CONFIG: native/Torch/v1serial matched147456cols/capacity4/M1,M2/4K16K32K.
+COMMAND: Q1_PROFILE_TAG=profile-r1 bash q1/fused-r1/window.sh (scratch).
+RESULT:189GPU comparisons/6shapes/canaries/changedgraphs/gated parity PASS;
+body23s/0, containergone/prepostHEALTHY/sourceunchanged/released18:14:19.
+M1serialcompact0.416/1.447/3.091ms dominates; pack~0.006ms, firstsort~0.515.
+Warm peak allocation delta42.64MB Torch/19.04fused; not model-capacity proof.
+Measured v1port harness/q1_fused complete before D1freeze, key/kernel/control
+identical/path-only runners; old Torchcontrol preserved separately.
+VERDICT: no fullserve for slowserial path; approved nextCPUbitonic selected
+ID sort independent of context, no loaded-model pressure/fault claim.
+
+## 2026-10-21 18:19 Q1 -- bitonic fused r2 CPU ready, no GPU during D1
+
+CONFIG: unique r2namespace/PackKernelR2/CompactBitonicKernelR2; upstream
+int64topk unchanged; recoverselectedIDs via low32bits,4096int SLM16KiB,
+WG256bitonic78stages, cooperative guardedwrite, no contextscan.
+COMMAND: cpu-run MAX4 AOT33s, compiled common keyhelper/CPUbitonic oracle.
+RESULT: library23e456afdc5ab7bff44b40a45fe51744773d19fe2191eb6f3963f57871d69325;
+4166key pairs/252bitonic cases/AST/ASCII/bash-n PASS; fourarm profile ready.
+VERDICT: scratch only, no GPU/port during D1freeze; root grant after native
+posthealth closure. No serving/speed/fidelity/pressure-liveness claim.
+
+## 2026-10-21 A1 -- future QSA selector overlay CPU review
+
+CONFIG: read-onlyhook/API/x6/scratchfullwrapper review;noGPU/newtests/
+sharedsourceedits/registry/commit. Actualfused-r2workerintegrationpending.
+COMMAND: trace lazyfactoryimport,perbuffer/shapecache,prefillcallers,
+source/SO/config/health/lifecycle and120sclientprogresswatchdog.
+RESULT: native/defaultuntouched,hookstdlibonly,lazyselectoraftersetup.
+Twoitemsrootnotified: x6probeupdatesonlyafterwholefixture,oldnative32K
+phase~139s>120swatchdog;freshprefilltilebuffersfeedunboundedcache,
+fusedkeys256x147456x8=288MiBretainedpercachemiss,actualmisscountunknown.
+VERDICT: fixprogressbudget/prefillworkspaceownershipbeforeloadedserve;
+currentfusedfactoryserialr1,aliasregistry+conditionalr2portstillpending.
+NoGPU/numerical/integrationreadinessclaim;detailsin3A1audit.
+
+## 2026-10-21 18:28 UTC - Root recovery after N1 startup device loss
+
+CONFIG: both cards; N1 original-FA native-capture diagnostic failed before
+READY/GDB attachment. No further GPU work until closure and recovery.
+COMMAND: bin/xe-reset, automatic non-reboot ladder, native and compiled
+collective checks enabled. Evidence f1/merged-n1-native-r1/recovery.log.
+RESULT: rebind succeeds; both native cards HEALTHY; compiled two-rank
+allreduce10 iterations shape4x5120 P2P0 HEALTHY. RC0,66s, boot ID unchanged.
+No GPU-capable container was running at reset. Kernel fault log preserved;
+Xe dump copy requires unavailable root authentication (sudo -n rejected),
+so no dump bytes were captured. No reboot, host package or driver changes.
+VERDICT: recovery complete. N1 remains off; startup EP fault cannot identify
+its lazy first-apply kernel as a cause, and no native PC was captured for
+prior SIGSEGV. Resume independently prepared QSA component on card1 only.
+
+## 2026-10-21 18:28 D1 -- native-capture startup DEVICE_LOST; root recoveryPASS
+
+CONFIG: originalFA/plan0/N1r2/debugimageb6a97730, bothcards,471-source
+freeze, noP1/noMTP; no D1 tracebackdumps. GDBafterREADY planned.
+COMMAND: TAG=n1-native-r1 bash harness/d1_native_capture/native_window.sh.
+RESULT: preHEALTHY27s; beforeREADY18:20:59 DEVICE_LOST20 inep_init,
+EPWARMUPsummaryabsent. Kernelcard0CCS/ASID904 has116faultpages/32CATerrors
+andautomaticengine reset. NoGDBattach/modelrequests/SIGSEGVPC capture.
+Researchcontainerstop20s->SERVE137/ENGINE_ERROR1, strictwindow1; native
+postbothHEALTHY33s;471source/N1/image/private/effectiveSOchecks0. GPUreleased.
+Devcoredumpread denied0600root:root(errno13); privilegedread alsounavailable,
+no fake/zerobyte dump. Rootrebind66s thennativeboth+compiled10iter2rank
+P2P0HEALTHY,bootunchanged; recovery.log saved.
+VERDICT: failedstartup notN1SIGSEGVlocalization/noattribution. N1compute/
+lazycache and KV/graph/request pressure not reached; hostpin/peerVA/image/
+timing/context hypotheses remain. N1OFF, noD1GPUretry. One conditional
+earlyGDB peer-region-boundary capture outlined only; Q1nextsoleGPUowner.
+
+## 2026-10-21 18:26 Q1 -- bitonic r2 exact component PASS, port complete
+
+CONFIG: card1/logical0 after root recovery, native/Torch/v1/v2 matched
+147456cols/capacity4/M1,M2/4K16K32K; real geometry/populated pages only.
+COMMAND: Q1_PROFILE_TAG=profile-r1 bash q1/fused-r2/window.sh (scratch).
+RESULT: body24s/0,252GPUvariant comparisons/all6shapes/IDoracle/canaries/
+gated/changed topk+chain graphs PASS. Container gone/prepostHEALTHY/
+source0; released18:26:54.72complete11/136/63/63-op traces validated.
+V2pack~0.006ms/bitonic~0.123ms; M1native/v2devicechain4K1.186/1.342,
+16K2.606/1.360,32K4.653/1.352ms.4Kregression remains; model gain untested.
+Warm peak increment42.64MB Torch/19.04MBv2 plus4.72MBpersistent keys.
+Rawcandidate_sha field is selector.py source; identity.json explicitly
+pins measuredSO23e456afdc5ab7bff44b40a45fe51744773d19fe2191eb6f3963f57871d69325.
+Path-only14file port harness/q1_fused_r2 hashlinks source/SO; AST/ASCII/
+bash-n PASS. Compilation0/directgraph needs noDynamo fake registrations.
+VERDICT: component-only PASS, no full-model pressure/fidelity/stability
+or fault-clearance claim; parent reviews default-off API/shape cache and
+matched full native/r2 serving pair. No Q1GPU or source changes queued.

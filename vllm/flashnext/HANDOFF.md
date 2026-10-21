@@ -324,3 +324,28 @@ only about4-5us versus an identically built copied tree. Native-vs-copy
 differences are build-context confounded; no serving gain is established.
 Next QSA candidate is exact parallel selection using upstream Torch int64
 topk/sort, preserving packed-key ties, dynamic width and ascending IDs.
+
+The Torch selector component now passes exact IDs, canaries, gated outputs
+and changed-input graph replay at six real shapes. At32K M1 its chain is
+about1.50ms versus4.66ms native, but it regresses the4K case. A first
+fused pack/serial-compaction variant also passes correctness but loses
+the speed gain to its serial scan. Preserve both measured variants under
+harness/q1_torch and q1_fused; neither has a measured serving gain.
+The next component candidate uses parallel bitonic ordering of selected
+IDs, under a separate q1_fused_r2 path. See reports/3Q1_qsa.md.
+
+The N1 native-capture attempt failed BEFORE READY and GDB attachment:
+kernel card0 CCS memory CATerror18, followed by DEVICE_LOST20 during EP
+initialization. It provides no native PC for the earlier SIGSEGV. The
+container is down; all471 source files, N1 SO and debug-image guards pass,
+and both-card post-health passes. The Xe dump requires root authentication
+and could not be copied; kernel events are saved. Root then ran bin/xe-reset:
+rebind recovered both cards, per-card and compiled two-rank collective
+health passed, boot unchanged,66s total. Keep N1 off; no further blind retry.
+
+Before full QSA selector integration, fix two CPU-review findings: keep
+prefill on the native selector to avoid retaining288MiB per transient
+prefill cache entry, and make the progress watchdog tolerate the previously
+observed139s healthy32K fixture phase. Use a bounded, decode-owned cache;
+do not evict workspaces referenced by captured graphs. Independent review
+is in reports/3A1_audit.md. DD stays down throughout this campaign.

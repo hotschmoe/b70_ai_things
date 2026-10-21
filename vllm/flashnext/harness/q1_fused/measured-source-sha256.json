@@ -1,0 +1,19 @@
+{
+  "measured_dir": "/mnt/vm_8tb/b70/build/vllm-flashnext/q1/fused-r1",
+  "profile": "profile-r1",
+  "library_sha256": "42b7cb8eccd5c23164d7242776a4cccddcb837b317ac2f70fdf7b5f605baaf67",
+  "source_sha256": {
+    "key.h": "b3db8f77b7f16f05810ba9b129c606083f550ce8860366965527adb28e997218",
+    "fused.cpp": "1737a3923337468daa874dc7985995e9f7da633e7eb9184111af2f9dd13a1920",
+    "cpu_keys.cpp": "26ee7dbc6efc2cf794cb28646f3ccf648de1b0a58606d69f955c09f848f2a3f3",
+    "build.sh": "4e4c2fb000697af131a83215a289c200ad5d3fc25fac3fb8e380d89f1f17d314",
+    "cpu_test.py": "15af2df4f27d536d85974e6ee423dfec7734952adc8b39ffea2858c6298b80f3",
+    "selector.py": "5760c428408e37e019c75aaa8fadb070895fa1f757e73f218cef581e2c2981e2",
+    "oracle.py": "d05569e0767846afe6bdde0d1993dc229254047117dab26364b7b9401397224c",
+    "torch_control.py": "54964ea848bcf0921e7d73aece458d88d39031acec57e19f4318a6d8ee519def",
+    "probe.py": "a90f6d4f509b85f81dc88b2735e606b420fd9757f3c5e7b23ee19e283490f0e0",
+    "inner.sh": "6b36421cc728769afd3bfca091b26402c4a0789b0fd62f0d1887e4aa7775adc0",
+    "window.sh": "dec37f0089636f4fac1100f6e8a69e8248dee9e9ef28a55ed31a6affb912803a"
+  },
+  "port_changes": "source/build/SO paths only; kernels/key/header/control byte-identical"
+}
