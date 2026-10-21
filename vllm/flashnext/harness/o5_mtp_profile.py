@@ -245,6 +245,17 @@ def main() -> None:
     llm.generate([PROMPTS[0]], SamplingParams(temperature=0.0, max_tokens=8, ignore_eos=True), use_tqdm=False)
 
     prompts = PROMPTS[:nprompt]
+    long_words = int(os.environ.get("O5_LONG_WORDS", "0"))
+    if long_words:
+        # Long-context parity: a shared ~long_words-word document before each
+        # prompt (pushes the KV past the FA split threshold).
+        base = (
+            "In the archive of the old harbor city, clerks recorded every ship, cargo, tide and "
+            "dispute for three centuries; the ledgers describe grain from the river valleys, salt "
+            "from the southern flats, timber, wool, copper, wine and the long quarrels of guilds. "
+        ).split()
+        doc = " ".join(f"{w}{'' if i % 37 else ' (entry ' + str(i // 37) + ')'}" for i, w in enumerate((base * (long_words // len(base) + 1))[:long_words]))
+        prompts = [f"Read this record:\n{doc}\n\nNow, unrelated: {p}" for p in prompts]
     result: dict = {"tag": tag, "k": k, "tokens": ntok, "gates": gates, "c1": [], "c2": []}
     timing: dict = {"c1": [], "c2": []}
     # C1: one prompt at a time. C2: pairs (i, i+1 mod n) so each row sees a

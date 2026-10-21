@@ -6823,3 +6823,93 @@ Evidence: HEAD is 62cf19945a62bd96f17c1df0f484a8a6f2308b1e. Cached diff is empty
 Verdict: OK. The only binary porcelain row is the known push-allreduce library.
 
 Suggested fix: none.
+
+### F274 -- IQ3 mixed-ragged C1 ITL is 8.1166 ms; the served first id is hotschmoe-dd
+
+Claim: the 02:53 note says the fixed IQ3 no-spec window has C1 p50 8.1166 ms, C2 10.2861 and 10.3282, PPL 9.05563298, and that exact repeat, stock token parity, both solo-vs-C2 outputs, source, identity, coherence, exit 0, and pre and post health all pass.
+
+Evidence: bench.json C1 itl_p50_ms is 8.116608951240778, n_chunks 62, decode_tok_s 125.12948731014187. C2 itl_p50_ms is 10.286088450811803 and 10.328217991627753. quality.json perplexity is 9.055632975432564. mtp.enabled is false. coherence.ok and coherence.same are true. models.json ids are hotschmoe-dd then the ud-iq3_xxs alias, max_model_len 4096. identity.expect_first is hotschmoe-dd and first_ok is true. repeat.json identical is true, first_mismatch is four nulls, and concurrent_identical is true. stock-parity.json identical is true and concurrent_identical is true, with four null mismatches. source-before.json equals source-after.json. serve-exit-code.txt is 0. health-before and health-after are HEALTHY, exit 0, 419 bytes each. This is a 35B proxy harness ITL.
+
+Verdict: OK on the rounded latencies, the PPL, the repeat and stock flags, both health files, and exit 0. WRONG campaign name: the first id is hotschmoe-dd. Not a Flash-Next promotion.
+
+Suggested fix: keep hotschmoe-dev as the first served id on this campaign, and keep this window labeled as the 35B proxy.
+
+### F275 -- f14 step is 15.22 ms and both health files are HEALTHY; the 15.1 ms parity line is not the window
+
+Claim: the 03:00 note says f14 C1 step is 15.22 ms (graph 14.34) and C2 is 18.61, tokens match f13, gates pass, and health is HEALTHY. It says the server C1 ITL p50 is 15.25 ms (65.6 tok/s) and C2 is 19.62, versus H1e 60.2 and Strata no-spec 15.1 ms, parity within 1 percent. The 03:20 note says f15 is pending, with o4e.so sha prefix a2b44212 and a router path of about 10 us to about 4 us.
+
+Evidence: run-f14 c1 step_ms p50 is 15.222 and replay_dev p50 is 14.343. c2 step_ms p50 is 18.613. Those tokens and gates were already byte-matched to f13 in the prior pass. f14 health-before and health-after are now both HEALTHY on cards 0 and 1, exit 0. The 15.25 ms and 65.6 tok/s figures are the s4 harness row already recorded: itl_p50_ms 15.247206902131438 and decode_tok_s 65.59842990649202, with C2 19.618978956714272 and 19.616755074821413. The s4 window prints Strata as 141.0 tok/s and 7.09 ms. 15.247/7.09 is 2.15x. 15.247/15.1 is about 1.0 percent, and 15.1 is not the line in that window. H1e 60.2 is a different serve. b70_ep_C.o4e.so sha256 starts a2b442128205634a. run-f15 has no profile. Its health-before file is a wait on card 0, not HEALTHY, and window.log only prints library prefixes and MEM_AVAILABLE_KB. reports/2O4_flashnext_decode.md exists and was not line-audited.
+
+Verdict: OK on the f14 step rounding and on both f14 health files. OK that s4 is 15.247 ms. WRONG that this is parity within 1 percent of the window Strata line, and the 60.2 to 15.25 arrow is not a matched A/B. UNVERIFIED for the 10 us to 4 us router claim. f15 is not a result. No promotion past 7.09 ms.
+
+Suggested fix: cite the window 7.09 ms line, and do not publish the router microbench until f15 has a profile and closed health.
+
+### F276 -- W2 packet rates match 97.0 and 97.2; staged responses are APPROVED while the run file still says not submitted
+
+Claim: the 03:02 note says W2 uses engine cfd2b6ff, max_model_len 65536, KV 161792, health HEALTHY before and after, and unchanged .so, engine, and frozen tree. It says identity, 323, 667, and the 8K and 32K needles pass, C4 Paris fails only because the golden text is from another quant, and the second C2 round prompt 0 diverges at token 34. It says reasoning is 97.0 tok/s (TTFT 563 ms) and code is 97.2 (449 ms), and that ids cmvhix9xu033yrf01fma4faax and cmvhiyocc0341rf01lm0dd1k9 are APPROVED with verifiedRun true.
+
+Evidence: engine.txt is cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95. models.json first id is hotschmoe-dd, max_model_len 65536. server-config kv_cache_size_tokens is 161792. health-before and health-after are HEALTHY, exit 0. so-before.sha256 equals so-after.sha256. The pinned GDN library in that list is gdn-bf16 sha 2bb3661f, not the R3 ragged sha 84dad4e8. gate.json top pass is false. identity, greedy 323, greedy 667, long_8192, and long_32768 pass. c4_paris fails; the stored text starts "Paris, a city renowned for its iconic landmarks". exact_repeat has one mismatch, round c2_2 prompt 0 at token 34, and the other 15 comparisons are null. Payload tokSOut is 97.0 and 97.2. Reasoning payload ttftMs is 562.58 (median 558.954). Code payload ttftMs is 448.62 (median 448.622). Both run-dir validation.json files have submitted false and verification "pending localmaxxing dry-run validation; no badge claimed". The staged submit json files for those two ids have status APPROVED and verifiedRun true. The same directory now also holds the W1 ids from the 02:45 note with status APPROVED and verifiedRun true. No frozen-repo manifest is in the W2 run directory. The cited earlier packet 96.1/96.3 was not opened.
+
+Verdict: OK on the commit, context, KV count, both health files, the .so match, the listed gate checks, the token-34 miss, and the 97.0 and 97.2 payload rates. The 563 ms and 449 ms lines are rounds of the payload TTFTs. OK that the staged responses say APPROVED and verifiedRun true. The run-dir validation files still say not submitted. WRONG campaign name. UNVERIFIED that the frozen tree is byte-unchanged, that 96.1/96.3 is the prior packet, and that the token-34 miss is the R3 reduction race. These are 35B packet rates, not a Flash-Next harness ITL.
+
+Suggested fix: copy the submit response next to the run validation.json, and keep the first id hotschmoe-dev.
+
+### F277 -- IQ4 mixed-ragged C1 ITL is 10.9075 ms; recipe and lmx-local are the only source-hash changes
+
+Claim: the 03:02 note says IQ4 C1 p50 is 10.9075 ms, C2 is 11.6587 and 11.6468, PPL is 8.76477959, both concurrent responses match solo, and identity, coherence, exact repeat, source, exit 0, and pre and post health pass. It says the only IQ3-to-IQ4 source change is x5_recipe and x5_lmx_local, with model and kernel hashes matched.
+
+Evidence: bench.json C1 itl_p50_ms is 10.907506919465959, n_chunks 56, decode_tok_s 93.7021683512854. C2 is 11.658658972010016 and 11.646786006167531. quality.json perplexity is 8.764779589576639. mtp.enabled is false. coherence.ok and coherence.same are true. repeat.json identical is true, four null mismatches, concurrent_identical true. source-before equals source-after. The IQ3 and IQ4 source sha256 maps have 56 paths in common and no path unique to either file. Two values differ: x5_recipe_35b.sh and x5_lmx_local.py. serve-exit-code.txt is 0. health-before is HEALTHY (396 bytes) and health-after is HEALTHY (419 bytes). models.json first id is hotschmoe-dd, max_model_len 4096. There is no stock-parity.json in this directory. This is a 35B proxy harness ITL.
+
+Verdict: OK on the latencies, the PPL, the repeat flags, the two-file source diff, exit 0, and both health files. WRONG campaign name. Not a Flash-Next promotion.
+
+Suggested fix: label the window as the 35B proxy and keep the first id hotschmoe-dev.
+
+### F278 -- eager solo-vs-dup hashes are not bitwise identical; b2v eff is 9.8995 / 13.225 ms and the 430 denominator is not in the log
+
+Claim: the 03:06 note says eager T=1 versus T=4 is bitwise identical on every module of every shared position from 28 positions to 89, so the b3v token-58 split exists only under FULL graphs. It says Q8_0 KREG q_proj drops from 146-168 us to 56-62 us and o_proj from 136-161 us to 35 us, with rel err at most 1.9e-7 and row invariance. It says b2v is C1 9.90 ms/token and C2 13.23, versus b2 10.20 / 13.57, with acceptance 335/430 and 263/430.
+
+Evidence: position-aligned h0 comparison of hashes-p0d.json gives solo vs dup 72 shared positions and 72 positions with a hash mismatch, including position 28 on linear_attn.norm (nt 1 vs 2). dup vs trip is 72 positions and 0 mismatches. hashes-p3d.json solo vs dup is 28 shared positions and 28 mismatches. solo vs trip shares 13 positions and all 13 mismatch. The probe.log FIRSTDIFF lines are the same mismatches, step-aligned. No token-58 census is in probe.log. p0d and p3d have no health-before file; both health-after files are HEALTHY. bench-k0 q_proj us is 145.89, 153.39, 160.88, 167.86 and o_proj is 135.59, 143.28, 152.19, 161.26. bench-k1 q_proj is 55.72, 62.81, 58.17, 59.44 and o_proj is 35.40, 36.71, 35.50, 35.66. All 36 k1 rows are invariant, and the largest max_rel is 1.8450487004884053e-7. Both q8 health files are HEALTHY, exit 0. b2v profile PHASE means are 9.8995 and 13.225. Metrics are drafts 440, draft tokens 880, accepted tokens 598, and accepted_tokens_per_pos 335 and 263. 335+263 is 598. The number 430 is not in profile.log. b2v health-before is absent and health-after is HEALTHY. These are in-process figures, not harness ITLs. The FA capture-split mechanism was not re-read this pass.
+
+Verdict: WRONG that every shared-position module hash is bitwise identical. OK on the Q8 bands as rounded edges, with k1 q_proj reaching 62.81 and k1 o_proj reaching 36.71, and OK that max_rel stays under 1.9e-7. OK on the b2v means and on the numerators 335 and 263. WRONG that the denominator in this log is 430. UNVERIFIED for the capture-time split sentence and for the claim that token 58 diverges only under FULL graphs. No promotion.
+
+Suggested fix: print the position-aligned census, and cite drafts 440 or draft tokens 880 as the denominator.
+
+### F279 -- Q4 mixed-ragged C1 ITL is 10.3716 ms; post-health is now HEALTHY and verified=true is not in the validation file
+
+Claim: the 03:21 note says Q4 C1 p50 is 10.3716 ms, C2 is 11.5693 and 11.5573, PPL is 8.50822826, both C2 responses match solo, and identity, coherence, exact repeat, source, and exit 0 pass. It says reasoning is 94.8 tok/s and code is 94.9, dry-run valid true, verified true, issues empty, no submit, and that Q4 dominates IQ4. It says post-health has been waiting since 03:11.
+
+Evidence: bench.json C1 itl_p50_ms is 10.371617041528225, n_chunks 56, decode_tok_s 98.4098816931264. C2 is 11.569287977181375 and 11.557296034879982. quality.json perplexity is 8.508228260209568, against IQ4 8.764779589576639. mtp.enabled is false. coherence.ok and coherence.same are true. repeat.json identical is true, four null mismatches, concurrent_identical true. source-before equals source-after. serve-exit-code.txt is 0. health-before was HEALTHY. health-after is now HEALTHY, exit 0, 7416 bytes, so the waiting sentence is stale. Validation medians are tokSOut 94.75425748299934 and 94.9330940766703, submitted false, issues empty, valid true, verification "pending localmaxxing dry-run validation; no badge claimed". models.json first id is hotschmoe-dd, max_model_len 4096. Prefix bytes behind the two PPL files were not diffed. This is a 35B proxy harness ITL.
+
+Verdict: OK on the latencies, the PPL values, the repeat flags, exit 0, and both health files. OK that Q4's C1 and stored PPL beat this IQ4 pair. WRONG campaign name. WRONG that the validation file says verified true. The no-submit flag matches. Not a Flash-Next promotion.
+
+Suggested fix: drop verified=true unless the verification string says so, and record that post-health has closed.
+
+### F280 -- W3 Flash-Next packet rates are 61.3 and 61.5 tok/s; first id is hotschmoe-dd and W3b has no result
+
+Claim: the 03:30 note says W3 uses cfd2b6ff and the O4 s4 recipe at max_model_len 131072, KV 491905, max_num_seqs 4, and batched 2048. It says health is HEALTHY before and after, integrity is unchanged, and the gate passes identity, 323, 667, and the 8K and 32K needles. It says C1 repeats are bitwise and C2 prompt 0 differs from C1 at token 2 in both rounds. It says reasoning is 61.3 tok/s (TTFT 2315 ms) and code is 61.5 (1455 ms), inter-chunk mean 16.3 ms rising from 15.9 to 16.7, compared with s4 at 15.25 ms over 64 tokens. It says the packet is not submitted and W3b is still running.
+
+Evidence: engine.txt is cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95. models.json first id is hotschmoe-dd, then the flash-next iq3 alias, max_model_len 131072. server-config model is the Flash-Next HF tree, kv_cache_size_tokens 491905, max_num_seqs 4, max_num_batched_tokens 2048. health-before and health-after are HEALTHY on cards 0 and 1, exit 0. so-before.sha256 equals so-after.sha256. gate identity, greedy 323, greedy 667, long_8192, and long_32768 pass. exact_repeat fails. The only mismatches are c2_1 prompt 0 and c2_2 prompt 0, both first_mismatch 2 against the c1_1 baseline. Payload tokSOut is 61.3 and 61.5. Reasoning payload ttftMs is 2315.24 (median 2313.517). Code payload ttftMs is 1455.34 (median 1455.485). Both validation.json files have submitted false. No labeled inter-chunk mean of 16.3, 15.9, or 16.7 was found outside sample streams. s4 remains the 64-token harness row at max_model_len 2048. w3b health-before is a wait, health-after is absent, and gate.json is absent. 1000/61.5 is about 16.3 ms. The Strata reference on the s4 window is 7.09 ms.
+
+Verdict: OK on the commit, the 131072 context, the KV count, both W3 health files, the .so match, the listed gate checks, the token-2 indexes, the 61.3 and 61.5 rates, and not-submitted. WRONG campaign name. UNVERIFIED for the 15.9 to 16.7 ramp and for byte equality of the two C2 outputs. W3b is not a result. This packet is slower than the s4 15.247 ms row and is not a matched A/B with it. No promotion.
+
+Suggested fix: serve hotschmoe-dev first, and leave W3b uncited until its gate and both health files close.
+
+### F281 -- pass 32 hygiene
+
+Claim: no host change by this audit, and no new secret or large binary was staged. The new EP dispatch path was skimmed for a host sync inside the kernel.
+
+Evidence: HEAD is 2302f40bb59064de61fd4c480a5efbe46c6ea1b9. Cached diff is empty. Porcelain is 25 rows. Binary porcelain row: M vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so. vllm/flashnext/.gitignore lists *.so. Fork HEAD is 0a6170da8ca9 on b70/flashnext, 13 files changed, 856 insertions(+), 52 deletions(-). The validate notes name the --api-key flag and do not hold a key value. ep_dispatch checks the expert id before indexing and does not call a host wait. ep_touch_pages and ep_store_flag_pages do call queue wait; those are setup helpers. The w8_gemv diff adds no .wait. This audit made no host change and did not commit the HEAD move.
+
+Verdict: OK. The only binary porcelain row is the known push-allreduce library. No capture-time host sync was found in ep_dispatch on this skim.
+
+Suggested fix: none.
+
+### F282 -- MTP2 wire ITL is 17.934 ms; 6.6182 ms is 1000/decode_tok_s, and post-health is still a wait
+
+Claim: the 03:28 note says all 576 raw token ids across 4 C1 and 2 C2 match the no-spec baseline, the same-load repeat passes, and ragged ntok 1/2 at slot (2,3) uses the fused kernel with no old fallback. It says C1 effective is 6.6182 ms (wire p50 17.9341) and C2 effective is 9.9137 and 8.5302 (wire 23.0351 and 23.0406), with bench accept 91/120. It says canonical rates are 147.1 and 141.8 tok/s, accept 85.714 and 80.203 percent, mean accepted length 2.714 and 2.604, local valid with ranking_eligible false, the API dry-run completed, and there is no submit. Post-health is queued.
+
+Evidence: parity.json was compared with the no-spec greedy.json from qwen36-35b-udq4km-fastq8-canon-mixed-ragged-mtp0. identical is true, concurrent_identical is true, and first_mismatch is four nulls. The file holds 4 rows and 2 concurrent rows of 96 token ids, 576 ids in total. repeat.json uses this serve's own greedy.json as baseline and has the same flags. bench.json C1 itl_p50_ms is 17.93412899132818, n_chunks 22, decode_tok_s 151.09871264823215. 1000/151.09871264823215 is 6.6182. C2 wire is 23.035096004605293 and 23.04057206492871, and 1000 over those decode_tok_s values is 9.9137 and 8.5302. The window mtp line prints accepted_during_bench 91 and draft_tokens_during_bench 120. Payload tokSOut is 147.1 and 141.8. specAcceptanceRate is 0.8571428571428571 and 0.8020304568527918. specMeanAcceptedLength is 2.7142857142857144 and 2.6040609137055837. validation.json ranking_eligible is false, submitted is false, and the verification string is the pending dry-run line. The dry-run header says local validation only and that the API dry-run still requires an api key. models.json first id is hotschmoe-dd. source-before equals source-after. serve exit is 0. health-before is HEALTHY, 387 bytes, exit 0. health-after is now HEALTHY, 6647 bytes, exit 0, so the queued post-health sentence is stale. The window prints FUSED_GDN_ACTIVE=1. serve.log has shared-expert FUSED lines at T=1 and T=2. No slot (2,3) or ragged-fallback line was found. The window Strata line is 7.09 ms. The window also prints n=57 while bench n_chunks is 22.
+
+Verdict: OK on the 576-id parity and the same-load repeat flags, the wire percentiles, the 91/120 accept count, the packet rates, ranking_eligible false, and no submit. The 6.6182 ms figure is 1000/decode_tok_s, not the harness ITL. WRONG campaign name. WRONG that this dry-run header shows a completed API dry-run. UNVERIFIED for the slot (2,3) fused-kernel sentence. Post-health has since closed, so the queued sentence is stale. Not a promotion. The wire C1 ITL is 17.934 ms.
+
+Suggested fix: cite 17.934 ms as the harness ITL. Post-health is already HEALTHY.

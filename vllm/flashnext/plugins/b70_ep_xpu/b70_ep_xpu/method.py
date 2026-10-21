@@ -22,6 +22,7 @@ _PF_ON = os.environ.get("B70_EP_PREFILL") == "1"
 _ZERO: dict = {}
 # O4: B70_EP_BF16_OUT=1 has the fused call write bf16 (moe_ep_shb, needs o4c+).
 _BF16_OUT = os.environ.get("B70_EP_BF16_OUT") == "1"
+_ROUTE = os.environ.get("B70_EP_ROUTE") == "1"
 
 
 def install() -> None:
@@ -42,8 +43,47 @@ def install() -> None:
         return method
 
     B70GGUFConfig.get_quant_method = get_quant_method
+    if _ROUTE:
+        _install_route()
     _INSTALLED = True
     print("b70_ep: B70EPMoEMethod installed", flush=True)
+
+
+def _install_route() -> None:
+    """O4 B70_EP_ROUTE=1: for decode (T <= 8) the EP layer skips the vLLM
+    router and runs softmax top-k + bump + dispatch in one card-0 kernel
+    (moe_ep_route). Needs B70_EP_FUSE_SHARED semantics (shared expert fused,
+    zero shared output) and a b70_ep library with moe_ep_route."""
+    import torch
+    from vllm.model_executor.layers.fused_moe.router.fused_topk_router import FusedTopKRouter
+    from vllm.model_executor.layers.fused_moe.runner.moe_runner import MoERunner
+
+    orig = MoERunner._apply_quant_method
+
+    def _apply_quant_method(self, hidden_states, router_logits, shared_experts_input, input_ids=None,
+                            shared_experts_overlapping=False):
+        qm = getattr(self.routed_experts, "quant_method", None)
+        r = self.router
+        if (
+            getattr(qm, "_o4_route_ok", False)
+            and not shared_experts_overlapping
+            and self._shared_experts is not None
+            and type(r) is FusedTopKRouter
+            and r.scoring_func == "softmax"
+            and getattr(r, "eplb_state", None) is None
+            and getattr(r, "_routing_replay_out", None) is None
+            and 0 < hidden_states.shape[0] <= 8
+            and hidden_states.dtype == torch.bfloat16
+            and router_logits.dtype == torch.bfloat16
+        ):
+            y = qm.apply_route(self.routed_experts, hidden_states, router_logits, int(r.top_k),
+                               bool(r.renormalize), self._shared_experts)
+            if y is not None:
+                return self._shared_experts.output, y
+        return orig(self, hidden_states, router_logits, shared_experts_input, input_ids, shared_experts_overlapping)
+
+    MoERunner._apply_quant_method = _apply_quant_method
+    print("b70_ep: B70_EP_ROUTE runner hook installed", flush=True)
 
 
 class B70EPMoEMethod:
@@ -270,6 +310,24 @@ def _make_class():
                 _ZERO[key] = zero
             shared_experts._output[shared_experts._output_idx] = zero
             return y.to(dtype=x.dtype)
+
+        @property
+        def _o4_route_ok(self) -> bool:
+            return _ROUTE and getattr(self, "_o4_shared", None) is True
+
+        def apply_route(self, layer, x, logits, topk, renorm, shared_experts):
+            if getattr(layer, "expert_map", None) is not None:
+                return None
+            xb = x if x.is_contiguous() else x.contiguous()
+            lg = logits if logits.is_contiguous() else logits.contiguous()
+            y = torch.ops.b70_ep.moe_ep_route(xb, lg, int(self._layer_idx), int(topk), 1 if renorm else 0)
+            key = (tuple(x.shape), x.dtype)
+            zero = _ZERO.get(key)
+            if zero is None:
+                zero = torch.zeros(x.shape, dtype=x.dtype, device=x.device)
+                _ZERO[key] = zero
+            shared_experts._output[shared_experts._output_idx] = zero
+            return y
 
         def _apply_overlap(self, layer, x, topk_weights, topk_ids, shared_experts, shared_experts_input):
             if getattr(layer, "expert_map", None) is not None:

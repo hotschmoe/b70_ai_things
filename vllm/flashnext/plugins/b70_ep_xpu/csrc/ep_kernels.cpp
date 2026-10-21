@@ -8,6 +8,7 @@
 #include "doorbell.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -155,6 +156,97 @@ void ep_add_uncached_bf16(sycl::queue& q, uint16_t* y, const float* a, const flo
                 const float v = av[j] + sycl::bit_cast<float>(load_uncached_u32(bp + j));
                 y[(size_t)i * 4 + j] = sycl::bit_cast<uint16_t>(sycl::ext::oneapi::bfloat16(v));
             }
+        }
+    });
+}
+
+// O4: bump + softmax top-k + dispatch in one work-group (decode, T <= 8).
+// Replaces the router top-k kernel, ep_bump and ep_dispatch. Softmax in
+// fp32, lowest expert index wins a tie, optional renormalisation (w / sum).
+// w0 receives the weights card 0's own expert call reads.
+void ep_route_dispatch(sycl::queue& q, const uint16_t* logits, int T, int E, int topk, int renorm, float* w0,
+                       int32_t* ids0, int32_t* peer_ids, float* peer_w, const uint16_t* x, uint16_t* peer_x,
+                       size_t x_bytes, int n0, int e1, const int32_t* map0, const int32_t* map1, int nexp,
+                       uint32_t* peer_flag, uint32_t* ctr) {
+    constexpr int WG = 256;
+    constexpr int PER = 4;  // experts per lane, E <= 1024
+    const size_t words = x_bytes / 4;
+    const bool mapped = map0 != nullptr;
+    q.parallel_for<class b70_ep_route_dispatch_k>(sycl::nd_range<1>(WG, WG), [=](sycl::nd_item<1> it) {
+        auto g = it.get_group();
+        const int lid = (int)it.get_local_id(0);
+        const uint32_t v = *ctr + 1u;
+        for (int t = 0; t < T; ++t) {
+            float p[PER];
+            float mx = -INFINITY;
+#pragma unroll
+            for (int j = 0; j < PER; ++j) {
+                const int e = lid + j * WG;
+                p[j] = e < E ? sycl::bit_cast<float>((uint32_t)logits[(size_t)t * E + e] << 16) : -INFINITY;
+                mx = sycl::fmax(mx, p[j]);
+            }
+            mx = sycl::reduce_over_group(g, mx, sycl::maximum<float>());
+            float sm = 0.f;
+#pragma unroll
+            for (int j = 0; j < PER; ++j) {
+                const int e = lid + j * WG;
+                p[j] = e < E ? sycl::exp(p[j] - mx) : 0.f;
+                sm += p[j];
+            }
+            sm = sycl::reduce_over_group(g, sm, sycl::plus<float>());
+#pragma unroll
+            for (int j = 0; j < PER; ++j) {
+                const int e = lid + j * WG;
+                p[j] = e < E ? p[j] / sm : -1.f;
+            }
+            float wk[16];
+            int ik[16];
+            float tot = 0.f;
+            for (int k = 0; k < topk; ++k) {
+                float bv = -2.f;
+#pragma unroll
+                for (int j = 0; j < PER; ++j) bv = sycl::fmax(bv, p[j]);
+                const float m = sycl::reduce_over_group(g, bv, sycl::maximum<float>());
+                int ci = 1 << 30;
+#pragma unroll
+                for (int j = PER - 1; j >= 0; --j)
+                    if (p[j] == m) ci = lid + j * WG;
+                const int idx = sycl::reduce_over_group(g, ci, sycl::minimum<int>());
+#pragma unroll
+                for (int j = 0; j < PER; ++j)
+                    if (lid + j * WG == idx) p[j] = -1.f;
+                wk[k] = m;
+                ik[k] = idx;
+                tot += m;
+            }
+            if (lid < topk) {
+                const int k = lid;
+                const int i = t * topk + k;
+                const float w = renorm ? wk[k] / tot : wk[k];
+                const int id = ik[k];
+                if (mapped) {
+                    const bool ok = id >= 0 && id < nexp;
+                    const int s0 = ok ? map0[id] : -1;
+                    const int s1 = ok ? map1[id] : -1;
+                    ids0[i] = (s0 >= 0 && s0 < n0) ? s0 : -1;
+                    peer_ids[i] = (s1 >= 0 && s1 < e1) ? s1 : -1;
+                } else {
+                    ids0[i] = (id >= 0 && id < n0) ? id : -1;
+                    peer_ids[i] = (id >= n0 && id < n0 + e1) ? id - n0 : -1;
+                }
+                w0[i] = w;
+                peer_w[i] = w;
+            }
+        }
+        const uint32_t* s = reinterpret_cast<const uint32_t*>(x);
+        uint32_t* d = reinterpret_cast<uint32_t*>(peer_x);
+        for (size_t i = lid; i < words; i += WG) d[i] = s[i];
+        sycl::atomic_fence(sycl::memory_order::release, sycl::memory_scope::system);
+        sycl::group_barrier(g, sycl::memory_scope::system);
+        if (lid == 0) {
+            *ctr = v;
+            sycl::atomic_fence(sycl::memory_order::acq_rel, sycl::memory_scope::system);
+            sys_store(peer_flag, v);
         }
     });
 }

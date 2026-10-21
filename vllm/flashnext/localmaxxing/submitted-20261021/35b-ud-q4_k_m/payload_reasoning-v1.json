@@ -1,0 +1,101 @@
+{
+  "backend": "xpu",
+  "batchSize": 1,
+  "benchmarkMode": "remote",
+  "contextLength": 65536,
+  "engineBuild": "b70-lmx-20261021 (vllm fork b70/lmx-20261021, X5 35B recipe)",
+  "engineCommit": "cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95",
+  "engineFlags": {
+    "commandSnippet": "# vLLM (fork branch b70/lmx-20261021 @ cfd2b6ffdb8f) + out-of-tree b70_gguf_xpu / b70_x5_xpu plugins, one Arc Pro B70, no speculative decoding\nB70_D3_GDN_SPEC=0 B70_X5_BATCH_LINEAR=0 B70_X5_CANONICAL=1 B70_X5_EVENTLESS=1 B70_X5_EVENTLESS_LAZY=1 B70_X5_GDN_BF16=1 B70_X5_GDN_MIXED=0 B70_X5_GDN_RAGGED=0 B70_X5_PACK_LINEAR=1 B70_X5_Q8_FAST=1 B70_X5_Q8_LINEAR=1 MAX_LEN=65536 MTP_TOKENS=0 QUANT=UD-Q4_K_M X5_LMX=1 B70_GGUF=1 B70_FUSE_SHARED=1 B70_PREFILL=0 \\\nvllm serve Qwen/Qwen3.6-35B-A3B --load-format b70_gguf --quantization b70_gguf (GGUF Qwen3.6-35B-A3B-UD-Q4_K_M.gguf) \\\n  --tensor-parallel-size 1 --dtype bfloat16 --max-model-len 65536 --max-num-seqs 2 --max-num-batched-tokens 1024 \\\n  --gpu-memory-utilization 0.90 --language-model-only --attention-backend FLASH_ATTN --no-enable-prefix-caching \\\n  --compilation-config '{\"mode\":0,\"cudagraph_mode\":\"FULL_DECODE_ONLY\",\"cudagraph_capture_sizes\":[1,2,3,4,6,8]}'  (no --speculative-config)",
+    "concurrency": 1,
+    "iterations": 3,
+    "maxTokens": 512,
+    "mode": "remote",
+    "mtpEnabled": false,
+    "prefixCacheBust": "leading_nonce_per_request",
+    "promptSource": "canonical:reasoning-v1",
+    "servedModel": "hotschmoe-dd",
+    "specDecoding": false,
+    "stream": true,
+    "temperature": 0,
+    "warmup": 1
+  },
+  "engineName": "vllm",
+  "engineRepository": "https://github.com/vllm-project/vllm",
+  "engineTimingsRaw": {
+    "nativeTimings": null,
+    "prometheusCounterDeltas": {
+      "vllm:generation_tokens_total": 512,
+      "vllm:prefix_cache_hits_total": 0,
+      "vllm:prompt_tokens_total": 302,
+      "vllm:request_success_total": 1
+    },
+    "provenance": "vLLM server usage and isolated global metric deltas; not per-request engine timings",
+    "usage": {
+      "completion_tokens": 512,
+      "prompt_tokens": 302,
+      "total_tokens": 814
+    }
+  },
+  "engineVersion": "0.32.1rc1.dev94+g5fd62688f",
+  "hardware": {
+    "cpu": "AMD Ryzen Threadripper 1950X 16-Core Processor",
+    "gpuCount": 1,
+    "gpuName": "Intel Arc Pro B70",
+    "hwClass": "DISCRETE_GPU",
+    "os": "Linux",
+    "ramGb": 128,
+    "vramGb": 32
+  },
+  "hfId": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+  "id": "cmvhix9xu033yrf01fma4faax",
+  "metricSource": "remote_endpoint",
+  "modelRevision": "5bc3e238d916f48a861bac2f8a1990a0e9b7e98d",
+  "notes": "One Intel Arc Pro B70 (32 GB, Xe2, kernel 7.1, Compute Runtime 26.22). vLLM 0.32 main + thin XPU fork (local branch b70/lmx-20261021, commit cfd2b6ffdb8f, based on vLLM main 5fd62688, not pushed) with our out-of-tree GGUF XPU plugin (custom SYCL MoE/GEMV kernels for Q4_K/IQ formats, BF16 GDN kernel, Q8 linear path), BF16 activations, full-decode XPU graphs. Unsloth Dynamic GGUF loaded by the plugin (MTP head present in the file but unused). No speculative decoding: no --speculative-config, server config speculative_config=null, zero draft tokens in the server counters, one token per forward pass. max_model_len 65536, prefix cache off, greedy (temperature 0), thinking on (server default; reasoning tokens counted as output), 512 max tokens, 1 warmup + 3 timed iterations with a new leading cache-bust nonce, median decode-rate sample. Client-observed HTTP streaming (lmx remote method); engineTimingsRaw holds vLLM usage plus isolated Prometheus counter deltas (vLLM has no per-request timings object). promotion gate: all checks pass except exact_repeat, c4_paris (detail follows). Gate detail: c4_paris compares against a fixed 16-token continuation recorded on a different quant; this Q4_K_M gives a different, coherent continuation (\" Paris, a city renowned for its iconic landmarks such as the Eiffel Tower,\"). Exact repeat: both C1 passes bitwise identical (4 prompts x 96 forced tokens); in the second of two C2 (2-request batch) passes one prompt diverged at token 34, i.e. batch-2 decode in this recipe is not run-to-run bitwise stable (known GDN reduction race, fixed after this engine snapshot). This submission is single-stream (C1), where repeats are exact; the 3 timed samples are 97.0-97.3 tok/s. ",
+  "outputSample": "Here's a thinking process:\n\n1.  **Analyze User Input:**\n   - **Context:** Small robotics club planning a weekend build.\n   - **Task 1 (Math/Word Problem):** 7 members, budget $412. Costs: motor driver $18.50, microcontroller $23.75. Each member wants one of each (so 7 motor drivers, 7 microcontrollers). Plus a shared 3D-printer spool at $27.90. After buying everything, split remainder evenly on batteries at $6.35 each. Find: total batteries bought, money left over.\n   - **Task 2 (Physics/Engineering Concept):** Alice vs. Ben on wheel size. Alice: larger wheel = more torque at ground. Ben: larger wheel = more speed. Explain who's right, the tradeoff, and how gear ratio changes it.\n   - **Task 3 (Procedure):** 6-9 step plain-English procedure for safely testing a new motor circuit for the first time, including pre-power checks.\n   - **Task 4 (Creative Feature + Risks):** Propose one unusual creative feature for a club robot project. Give two concrete risks and mitigation for each.\n   - **Format:** Answer all four parts in order with clear headings. Show reasoning for each part.\n\n2.  **Deconstruct \u0026 Solve Task 1 (Math):**\n   - Budget: $412.00\n   - Costs per person: motor driver ($18.50) + microcontroller ($23.75) = $42.25\n   - Number of members: 7\n   - Total for individual parts: 7 * $42.25 = $295.75\n   - Shared item: 3D printer spool = $27.90\n   - Total initial cost: $295.75 + $27.90 = $323.65\n   - Remainder: $412.00 - $323.65 = $88.35\n   - Battery cost: $6.35 each\n   - Number of batteries: $88.35 / $6.35 = 13.913... -\u003e They can buy 13 batteries (must be whole number)\n   - Cost",
+  "outputSha256": "f392dfad84f9a31f730e8680f95f5086783507299b4eadd685924e85e59ef8f6",
+  "outputTokens": 512,
+  "prefillTokens": 0,
+  "prompt": "You are helping a small robotics club plan a weekend build. Work through each part carefully and show your reasoning.\n\n1. The club has 7 members and a budget of 412 dollars. A motor driver costs 18.50, a microcontroller 23.75, and each member wants one of each plus a shared 3D-printer spool at 27.90. After buying everything, they split the remainder evenly on batteries priced at 6.35 each. How many batteries can they buy in total, and how much money is left over?\n\n2. Two members disagree about wheel size. Alice says a larger wheel gives more torque at the ground; Ben says it gives more speed. Explain who is right, what tradeoff is actually involved, and how gear ratio changes the answer.\n\n3. Write a short, plain-English procedure (six to nine steps) for safely testing a new motor circuit for the first time, including what to check before applying power.\n\n4. Finally, propose one creative feature for the robot that would be unusual for a club project, and give two concrete risks with how you would mitigate each.\n\nAnswer all four parts in order with clear headings.",
+  "promptSample": "You are helping a small robotics club plan a weekend build. Work through each part carefully and show your reasoning.\n\n1. The club has 7 members and a budget of 412 dollars. A motor driver costs 18.50, a microcontroller 23.75, and each member wants one of each plus a shared 3D-printer spool at 27.90. After buying everything, they split the remainder evenly on batteries priced at 6.35 each. How many batteries can they buy in total, and how much money is left over?\n\n2. Two members disagree about wheel size. Alice says a larger wheel gives more torque at the ground; Ben says it gives more speed. Explain who is right, what tradeoff is actually involved, and how gear ratio changes the answer.\n\n3. Write a short, plain-English procedure (six to nine steps) for safely testing a new motor circuit for the first time, including what to check before applying power.\n\n4. Finally, propose one creative feature for the robot that would be unusual for a club project, and give two concrete risks with how you would mitigate each.\n\nAnswer all four parts in order with clear headings.",
+  "promptSha256": "9000edaadb16fc77ab78b39917245a03d4d7585c3ba770cb045a47a0e0683445",
+  "promptTokens": 302,
+  "quantization": "Unsloth-Dynamic-Q4_K_M",
+  "samples": [
+    {
+      "draftAccepted": null,
+      "draftN": null,
+      "iteration": 1,
+      "outputTokens": 512,
+      "promptTokens": 302,
+      "tokSOut": 97.04454507068655,
+      "ttftMs": 562.579637
+    },
+    {
+      "draftAccepted": null,
+      "draftN": null,
+      "iteration": 2,
+      "outputTokens": 512,
+      "promptTokens": 299,
+      "tokSOut": 97.0470133486038,
+      "ttftMs": 558.954207
+    },
+    {
+      "draftAccepted": null,
+      "draftN": null,
+      "iteration": 3,
+      "outputTokens": 512,
+      "promptTokens": 302,
+      "tokSOut": 97.01418127235212,
+      "ttftMs": 558.288599
+    }
+  ],
+  "submissionId": "cmvhix9xu033yrf01fma4faax",
+  "submissionStatus": "approved",
+  "submittedAt": "2026-10-21T02:59:33.138Z",
+  "timingSource": "client_observed_http",
+  "tokSOut": 97,
+  "tokSOutSource": "inter_token",
+  "ttftMs": 562.58,
+  "ttftSource": "stream_first_token"
+}

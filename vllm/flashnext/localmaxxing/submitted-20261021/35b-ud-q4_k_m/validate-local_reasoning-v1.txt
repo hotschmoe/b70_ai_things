@@ -1,0 +1,4 @@
+[localmaxxing] speed_test_local_valid
+  path: submitted-20261021/35b-ud-q4_k_m/payload_reasoning-v1.json
+  status: valid
+  note: Local validation only; API dry-run still requires --api-key or LMX_API_KEY.

@@ -149,6 +149,18 @@ at::Tensor moe_ep_shb_op(at::Tensor x, at::Tensor w, at::Tensor ids, int64_t lay
                      true);
     return y;
 }
+at::Tensor moe_ep_route_op(at::Tensor x, at::Tensor logits, int64_t layer, int64_t topk, int64_t renorm) {
+    need_xpu(x, "x");
+    need_xpu(logits, "logits");
+    TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2 && x.is_contiguous(), "x must be bf16 [T, K]");
+    TORCH_CHECK(logits.scalar_type() == at::kBFloat16 && logits.dim() == 2 && logits.is_contiguous() &&
+                    logits.size(0) == x.size(0), "logits must be bf16 [T, E]");
+    auto y = at::empty({x.size(0), x.size(1)}, x.options());
+    b70ep::ep_moe_route(static_cast<const uint16_t*>(x.data_ptr()), static_cast<const uint16_t*>(logits.data_ptr()),
+                        static_cast<uint16_t*>(y.data_ptr()), (int)x.size(0), (int)logits.size(1), (int)topk,
+                        (int)x.size(1), (int)layer, (int)renorm);
+    return y;
+}
 // O4 split: begin returns the fp32 output buffer; end fills it in place.
 at::Tensor moe_ep_begin_op(at::Tensor x, at::Tensor w, at::Tensor ids, int64_t layer) {
     need_xpu(x, "x");
@@ -213,6 +225,7 @@ TORCH_LIBRARY(b70_ep, m) {
     m.def("ep_register_shared(int layer, Tensor sg, int sgt, Tensor su, int sut, Tensor sd, int sdt, Tensor sgi) -> Tensor");
     m.def("moe_ep_sh(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
     m.def("moe_ep_shb(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
+    m.def("moe_ep_route(Tensor x, Tensor logits, int layer, int topk, int renorm) -> Tensor");
     m.def("moe_ep_begin(Tensor x, Tensor w, Tensor ids, int layer) -> Tensor");
     m.def("moe_ep_end(Tensor(a!) y, int layer) -> ()");
     m.def("ep_capture_begin(int key) -> Tensor");
@@ -232,6 +245,7 @@ TORCH_LIBRARY_IMPL(b70_ep, XPU, m) {
     m.impl("ep_register_shared", ep_register_shared_op);
     m.impl("moe_ep_sh", moe_ep_sh_op);
     m.impl("moe_ep_shb", moe_ep_shb_op);
+    m.impl("moe_ep_route", moe_ep_route_op);
     m.impl("moe_ep_end", moe_ep_end_op);
 }
 

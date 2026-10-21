@@ -36,8 +36,8 @@ else:
             'XPU fork (local branch b70/lmx-20261021, commit ' + commit[:12] + ', based on vLLM main 5fd62688, '
             'not pushed) with out-of-tree plugins: GGUF IQ/Q2_0 SYCL kernels and an expert-parallel sidecar '
             '(card 0 runs the model and 138 of 512 experts per layer, card 1 the other 374; one vLLM worker, '
-            'no oneCCL), fused decode hyper-connection/PLE/top-k kernels, HC weights as Q8_0 copies, '
-            'PLE table in pinned host RAM, full-decode XPU graphs, BF16 activations. ')
+            'no oneCCL), fused decode hyper-connection/PLE/top-k kernels, hyper-connection weights rounded to Q8_0 copies (as in our Strata runs; the bf16-exact path measures ~16.2 ms/token vs 15.25), '
+            'PLE table in pinned host RAM, full-decode XPU graphs, BF16 activations. This decode recipe does not yet include our faster sidecar prefill path, so TTFT is higher than in the Strata runs. ')
 common = ('No speculative decoding: no --speculative-config, server config speculative_config=null, '
           'zero draft tokens in the server counters, one token per forward pass. '
           f'max_model_len {max_len}, prefix cache off, greedy (temperature 0), thinking on (server default; '

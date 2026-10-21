@@ -76,7 +76,7 @@ B70_AGENT=O5 B70_GPU_LOCK_TIMEOUT=14400 timeout --signal=TERM --kill-after=30 30
   --env "PYTHONPATH=$PYPATH" --env PYTHONUNBUFFERED=1 --env HF_HUB_OFFLINE=1 \
   --env TRANSFORMERS_OFFLINE=1 --env VLLM_NO_USAGE_STATS=1 \
   --env SYCL_CACHE_PERSISTENT=0 --env "SYCL_CACHE_DIR=$B/cache/sycl-o5" \
-  --env "O5_OUT=$OUT" --env "O5_TAG=$TAG" --env "O5_MTP=${O5_MTP:-0}" --env "O5_TOKENS=${O5_TOKENS:-128}" --env "O5_PROMPTS=${O5_PROMPTS:-4}" --env "O5_CAPTURE=${O5_CAPTURE:-}" --env "O5_SPEC_SCHEDULE=${O5_SPEC_SCHEDULE:-}" --env "O5_PROBE_TOKENS=${O5_PROBE_TOKENS:-4}" --env "O5_PROBE_PROMPT=${O5_PROBE_PROMPT:-Write a short story about a lighthouse keeper who discovers a message in a bottle.}" \
+  --env "O5_OUT=$OUT" --env "O5_TAG=$TAG" --env "O5_MTP=${O5_MTP:-0}" --env "O5_TOKENS=${O5_TOKENS:-128}" --env "O5_PROMPTS=${O5_PROMPTS:-4}" --env "O5_CAPTURE=${O5_CAPTURE:-}" --env "O5_SPEC_SCHEDULE=${O5_SPEC_SCHEDULE:-}" --env "O5_LONG_WORDS=${O5_LONG_WORDS:-0}" --env "O5_MAX_LEN=${O5_MAX_LEN:-2048}" --env "O5_PROBE_TOKENS=${O5_PROBE_TOKENS:-4}" --env "O5_PROBE_PROMPT=${O5_PROBE_PROMPT:-Write a short story about a lighthouse keeper who discovers a message in a bottle.}" \
   "${EXTRA[@]}" \
   -- "${CMD[@]}" > "$OUT/run.log" 2>&1
 RC=$?

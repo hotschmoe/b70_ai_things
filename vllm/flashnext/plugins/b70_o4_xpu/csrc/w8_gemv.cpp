@@ -8,6 +8,7 @@
 // split K for one row (KS * R == 4). Each lane reads 16 int8 weights per
 // step, so a sub-group reads 256 consecutive bytes.
 #include <sycl/sycl.hpp>
+#include <vector>
 
 #include <ATen/ATen.h>
 #include <c10/xpu/XPUStream.h>
@@ -19,7 +20,7 @@ constexpr int kMaxM = 8;
 
 inline float bf16f(uint16_t v) { return sycl::bit_cast<float>((uint32_t)v << 16); }
 
-template <int KS>
+template <int KS, int EPI>
 class w8_gemv_k;
 template <int KS>
 class bf_gemv_k;
@@ -86,9 +87,11 @@ void launch_bf(sycl::queue& q, const uint16_t* x, const uint16_t* w, uint16_t* y
     });
 }
 
-template <int KS>
+// EPI 1 (O4 HC down): rows < RL get silu(bf16(lo / HCF)) into y [M, RL],
+// rows >= RL keep lo (bf16) into y2 [M, N - RL] (the inject columns).
+template <int KS, int EPI = 0>
 void launch(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl::half* s, uint16_t* y, int M, int N,
-            int K) {
+            int K, int RL = 0, float HCF = 1.f, uint16_t* y2 = nullptr) {
     constexpr int NSGL = KS > 4 ? KS : 4;
     constexpr int R = NSGL / KS;
     const int chunks = K / 16;                // 16 weights per lane step
@@ -96,7 +99,7 @@ void launch(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl::half
     const int ngroups = (N + R - 1) / R;
     q.submit([&](sycl::handler& h) {
         sycl::local_accessor<float, 1> slm(NSGL * kMaxM, h);
-        h.parallel_for<w8_gemv_k<KS>>(
+        h.parallel_for<w8_gemv_k<KS, EPI>>(
             sycl::nd_range<1>((size_t)ngroups * NSGL * 16, NSGL * 16),
             [=](sycl::nd_item<1> it) [[sycl::reqd_sub_group_size(16)]] {
                 auto sg = it.get_sub_group();
@@ -160,7 +163,18 @@ void launch(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl::half
                         float t = 0.f;
                         for (int p = 0; p < KS; ++p) t += slm[(sgid + p) * kMaxM + lane];
                         const sycl::ext::oneapi::bfloat16 v(t);
-                        y[(size_t)lane * N + row] = sycl::bit_cast<uint16_t>(v);
+                        if constexpr (EPI == 1) {
+                            if (row < RL) {
+                                const float lo = (float)v;
+                                const float d = (float)sycl::ext::oneapi::bfloat16(lo / HCF);
+                                const sycl::ext::oneapi::bfloat16 a(d / (1.f + sycl::exp(-d)));
+                                y[(size_t)lane * RL + row] = sycl::bit_cast<uint16_t>(a);
+                            } else {
+                                y2[(size_t)lane * (N - RL) + (row - RL)] = sycl::bit_cast<uint16_t>(v);
+                            }
+                        } else {
+                            y[(size_t)lane * N + row] = sycl::bit_cast<uint16_t>(v);
+                        }
                     }
                 }
             });
@@ -238,6 +252,127 @@ void launch_short(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl
                 }
             });
     });
+}
+
+// O4 HC up + collapse: gate[m, st*H + h] = act[m] . w[st*H + h] (8 lanes
+// per row, same order as launch_short<8>), then
+// out[m, h] = bf16(sum_st bf16(flat[m, st*H+h] * bf16(sigmoid(gate))) / HC).
+// A work-group owns 2 h values x 4 streams (HC must be 4).
+class w8_upcol_k;
+void launch_upcol(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl::half* s, const uint16_t* flat,
+                  uint16_t* out, int M, int H, int K) {
+    constexpr int LPR = 8;
+    constexpr int RPS = 2;
+    constexpr int HC = 4;
+    const int chunks = K / 16;
+    const int ngroups = H / 2;
+    q.submit([&](sycl::handler& h) {
+        sycl::local_accessor<float, 1> slm(8 * kMaxM, h);
+        h.parallel_for<w8_upcol_k>(
+            sycl::nd_range<1>((size_t)ngroups * 64, 64),
+            [=](sycl::nd_item<1> it) [[sycl::reqd_sub_group_size(16)]] {
+                auto sg = it.get_sub_group();
+                const int lane = (int)sg.get_local_linear_id();
+                const int sgid = (int)it.get_local_id(0) >> 4;
+                const int lr = sgid * RPS + lane / LPR;   // 0..7
+                const int hl = lr / HC;
+                const int st = lr % HC;
+                const int hh = (int)it.get_group(0) * 2 + hl;
+                const int row = st * H + hh;
+                const int sub = lane % LPR;
+                float acc[kMaxM];
+#pragma unroll
+                for (int m = 0; m < kMaxM; ++m) acc[m] = 0.f;
+                const int8_t* wr = w + (size_t)row * K;
+                const sycl::half* sr = s + (size_t)row * (K / 32);
+                for (int c = sub; c < chunks; c += LPR) {
+                    const sycl::int4 wv = *reinterpret_cast<const sycl::int4*>(wr + (size_t)c * 16);
+                    const float sc = (float)sr[c >> 1];
+                    float wf[16];
+#pragma unroll
+                    for (int j = 0; j < 4; ++j) {
+                        const int word = j == 0 ? wv.x() : j == 1 ? wv.y() : j == 2 ? wv.z() : wv.w();
+#pragma unroll
+                        for (int b = 0; b < 4; ++b) wf[j * 4 + b] = (float)(int8_t)((word >> (8 * b)) & 0xff);
+                    }
+#pragma unroll
+                    for (int m = 0; m < kMaxM; ++m) {
+                        if (m < M) {
+                            const uint16_t* xr = x + (size_t)m * K + (size_t)c * 16;
+                            const sycl::uint4 a = *reinterpret_cast<const sycl::uint4*>(xr);
+                            const sycl::uint4 b = *reinterpret_cast<const sycl::uint4*>(xr + 8);
+                            const uint32_t xs[8] = {a.x(), a.y(), a.z(), a.w(), b.x(), b.y(), b.z(), b.w()};
+                            float d = 0.f;
+#pragma unroll
+                            for (int j = 0; j < 8; ++j) {
+                                d = sycl::fma(wf[2 * j], bf16f((uint16_t)(xs[j] & 0xffff)), d);
+                                d = sycl::fma(wf[2 * j + 1], bf16f((uint16_t)(xs[j] >> 16)), d);
+                            }
+                            acc[m] = sycl::fma(d, sc, acc[m]);
+                        }
+                    }
+                }
+#pragma unroll
+                for (int m = 0; m < kMaxM; ++m) {
+                    if (m < M) {
+                        float v = acc[m];
+#pragma unroll
+                        for (int o = 1; o < LPR; o <<= 1) v += sycl::permute_group_by_xor(sg, v, o);
+                        acc[m] = v;
+                    }
+                }
+                if (sub == 0) {
+                    for (int m = 0; m < M; ++m) slm[lr * kMaxM + m] = (float)sycl::ext::oneapi::bfloat16(acc[m]);
+                }
+                sycl::group_barrier(it.get_group());
+                const int lid = (int)it.get_local_id(0);
+                if (lid < 2 * M) {
+                    const int hl2 = lid / M;
+                    const int m = lid % M;
+                    const int h2 = (int)it.get_group(0) * 2 + hl2;
+                    float a = 0.f;
+                    for (int st2 = 0; st2 < HC; ++st2) {
+                        const float g = slm[(hl2 * HC + st2) * kMaxM + m];
+                        const float gs = (float)sycl::ext::oneapi::bfloat16(1.f / (1.f + sycl::exp(-g)));
+                        const float xv = bf16f(flat[(size_t)m * HC * H + (size_t)st2 * H + h2]);
+                        a += (float)sycl::ext::oneapi::bfloat16(xv * gs);
+                    }
+                    out[(size_t)m * H + h2] = sycl::bit_cast<uint16_t>(sycl::ext::oneapi::bfloat16(a / HC));
+                }
+            });
+    });
+}
+
+// O4: HC down|inject GEMV + silu(lo / hc) epilogue (KS 8). Returns act
+// [M, RL] and inject [M, N - RL].
+std::vector<at::Tensor> w8_down_act(at::Tensor x, at::Tensor w, at::Tensor s, int64_t rl, double hcf) {
+    TORCH_CHECK(x.scalar_type() == at::kBFloat16 && x.dim() == 2 && x.is_contiguous(), "x bf16 [M, K]");
+    TORCH_CHECK(w.scalar_type() == at::kChar && w.dim() == 2 && w.is_contiguous(), "w int8 [N, K]");
+    TORCH_CHECK(s.scalar_type() == at::kHalf && s.is_contiguous(), "s fp16");
+    const int M = (int)x.size(0), K = (int)x.size(1), N = (int)w.size(0);
+    TORCH_CHECK(M >= 1 && M <= kMaxM && rl > 0 && rl < N && K % 32 == 0, "shapes");
+    auto act = at::empty({M, (int64_t)rl}, x.options());
+    auto inj = at::empty({M, (int64_t)(N - rl)}, x.options());
+    sycl::queue& q = c10::xpu::getCurrentXPUStream().queue();
+    launch<8, 1>(q, static_cast<const uint16_t*>(x.data_ptr()), w.data_ptr<int8_t>(),
+                 reinterpret_cast<const sycl::half*>(s.data_ptr()), static_cast<uint16_t*>(act.data_ptr()), M, N, K,
+                 (int)rl, (float)hcf, static_cast<uint16_t*>(inj.data_ptr()));
+    return {act, inj};
+}
+
+at::Tensor w8_up_collapse(at::Tensor act, at::Tensor w, at::Tensor s, at::Tensor flat, int64_t h) {
+    TORCH_CHECK(act.scalar_type() == at::kBFloat16 && act.dim() == 2 && act.is_contiguous(), "act bf16 [M, K]");
+    TORCH_CHECK(w.scalar_type() == at::kChar && w.dim() == 2 && w.is_contiguous(), "w int8 [4H, K]");
+    TORCH_CHECK(flat.scalar_type() == at::kBFloat16 && flat.is_contiguous(), "flat bf16 [M, 4H]");
+    const int M = (int)act.size(0), K = (int)act.size(1);
+    TORCH_CHECK(M >= 1 && M <= kMaxM && w.size(0) == 4 * h && w.size(1) == K && h % 2 == 0 && K % 32 == 0 &&
+                    flat.numel() == (int64_t)M * 4 * h, "shapes");
+    auto out = at::empty({M, h}, act.options());
+    sycl::queue& q = c10::xpu::getCurrentXPUStream().queue();
+    launch_upcol(q, static_cast<const uint16_t*>(act.data_ptr()), w.data_ptr<int8_t>(),
+                 reinterpret_cast<const sycl::half*>(s.data_ptr()), static_cast<const uint16_t*>(flat.data_ptr()),
+                 static_cast<uint16_t*>(out.data_ptr()), M, (int)h, K);
+    return out;
 }
 
 at::Tensor w8_gemv(at::Tensor x, at::Tensor w, at::Tensor s, int64_t ksplit) {
@@ -323,6 +458,8 @@ TORCH_LIBRARY(b70_o4, m) {
     m.def("host_cpu_view(Tensor t) -> Tensor");
     m.def("w8_gemv(Tensor x, Tensor w, Tensor s, int ksplit) -> Tensor");
     m.def("bf_gemv(Tensor x, Tensor w, int ksplit) -> Tensor");
+    m.def("w8_down_act(Tensor x, Tensor w, Tensor s, int rl, float hcf) -> Tensor[]");
+    m.def("w8_up_collapse(Tensor act, Tensor w, Tensor s, Tensor flat, int h) -> Tensor");
 }
 TORCH_LIBRARY_IMPL(b70_o4, CompositeExplicitAutograd, m) {
     m.impl("host_table", host_table);
@@ -331,4 +468,6 @@ TORCH_LIBRARY_IMPL(b70_o4, XPU, m) {
     m.impl("host_cpu_view", host_cpu_view);
     m.impl("w8_gemv", w8_gemv);
     m.impl("bf_gemv", bf_gemv);
+    m.impl("w8_down_act", w8_down_act);
+    m.impl("w8_up_collapse", w8_up_collapse);
 }

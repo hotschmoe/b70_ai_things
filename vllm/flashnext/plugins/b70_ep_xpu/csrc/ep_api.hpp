@@ -25,6 +25,8 @@ void ep_register_shared(int layer, const uint8_t* sg, int sgt, const uint8_t* su
                         const void* sgi, int sgi_dt);
 void ep_moe_sh(const uint16_t* x, const float* w, const int32_t* ids, float* y, int T, int topk, int K, int layer,
                bool bf16_out = false);
+void ep_moe_route(const uint16_t* x, const uint16_t* logits, uint16_t* y, int T, int E, int topk, int K, int layer,
+                  int renorm);
 void ep_moe_begin(const uint16_t* x, const float* w, const int32_t* ids, int T, int topk, int K, int layer);
 void ep_moe_end(float* y, int T, int K, int layer);
 void ep_capture_begin(int key);

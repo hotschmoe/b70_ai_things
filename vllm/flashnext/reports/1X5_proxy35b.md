@@ -1,89 +1,94 @@
 # X5 -- Qwen3.6-35B-A3B on one B70
 
-Final requalification is in progress. Historical noSpec Q4 measured
-10.225ms C1 and IQ3 8.047ms, but a subsequent larger primitive probe
-located a missing shared-memory read-complete barrier in the inherited
-D3 reduction helper. Those finite measurements and dry-run packets are
-preserved as history; the final recipe will use the corrected kernel.
-MTP C2 remains unqualified. No submission or rank-win claim.
+Fixed-kernel quant measurements are complete. IQ3 is fastest at8.12ms
+C1 p50; Q4_K_M is the preferred4-bit recipe at10.37ms, with lower
+matched prefix PPL than IQ4_XS. All three pass identity,
+coherence, exact repeat, source, normal exit and native pre/post health.
+MTP2 exact on/off/repeat/source gates pass; posthealth and depth3
+remain pending. No submission or rank-win claim.
 
 Raw root: /mnt/vm_8tb/b70/build/vllm-flashnext/x5/.
-Flash-Next MTP ownership passed to O5; X1's implementation, Strata
-sidecar inventory and original failed gates are in reports/1X1_mtp.md.
-This report qualifies the smaller official proxy separately.
+The Flash-Next MTP implementation and Strata sidecar findings are in
+reports/1X1_mtp.md; that larger-model work passed to O5. The measurements
+below are the official35B proxy, not Flash-Next or Ornith/Shisa.
 
-## Recipe
+## Recipe and identity
 
-Run the bounded selected window, including health/RAM/teardown gates:
-
-```bash
-TAG=qwen36-35b-q4-final-nospec \
-  bash vllm/flashnext/harness/x5_recipe_35b.sh
-```
-
-The three isolated libraries can be rebuilt on CPU (not while timing):
+[Recipe](../harness/x5_recipe_35b.sh) runs a bounded health/RAM-guarded
+qualification window. [Server arguments](../harness/x5_serve_proxy.sh)
+are separate. Default QUANT=UD-Q4_K_M, MTP_TOKENS=0; select
+QUANT=UD-IQ3_XXS for the fastest lower-bit alternative.
 
 ```bash
-bin/cpu-run bash vllm/flashnext/harness/x5_build_gdn.sh
+# CPU builds, disk scratch, MAX_JOBS=4; no GPU touched by these builds.
+bin/cpu-run bash vllm/flashnext/harness/x5_build_gdn_ragged.sh
 bin/cpu-run bash vllm/flashnext/harness/x5_build_eventless.sh
 bin/cpu-run bash vllm/flashnext/harness/x5_build_q8.sh
+
+TAG=q4-fixed-nospec bash vllm/flashnext/harness/x5_recipe_35b.sh
 ```
 
-These scripts pin MAX_JOBS=4 and disk-backed scratch. Re-run their
-GPU numeric/replay and model gates after a rebuild or runtime change.
-
-Set QUANT=UD-IQ3_XXS for the fastest lower-bit alternative.
-Default MTP_TOKENS=0. x5_serve_proxy.sh contains the actual server
-arguments. Physical card1 only, explicitly leased and pinned; logical
-XPU0 inside the container. TP1/world1, BF16, FULL_DECODE_ONLY capture
-sizes1/2/3/4/6/8, installed FLASH_ATTN, no prefix cache, maxlen4096,
-maxseq2, batch1024, GPUutil0.90. Stable first alias hotschmoe-dd;
-second alias qwen3.6-35b-a3b-<quant>-x5-mtp<depth> is registered in
+Physical card1, bin/gpu-run lease plus entrypoint ZE_AFFINITY_MASK=1;
+logical XPU0 inside the container. TP1/world1, BF16, FULL_DECODE_ONLY
+capture sizes1/2/3/4/6/8, installed FLASH_ATTN, prefix cache disabled,
+maxlen4096, maxseq2, batch1024, GPUutil0.90. Stable first model name
+hotschmoe-dd; quant/depth research alias second and registered in
 evals/configs/models.yaml. This does not start the DD service.
 
-Flags: FUSE_SHARED1, X5_GDN_BF16=1, X5_EVENTLESS=1,
-X5_EVENTLESS_LAZY=1, X5_PACK_LINEAR=1, X5_Q8_LINEAR=1,
-X5_CANONICAL=1, X5_Q8_FAST=1, X5_BATCH_LINEAR=0.
-Old D3 FP16 wrapper and periodic graph reinstantiation are disabled.
-Native spec GDN is used unless B70_D3_GDN_SPEC=1 is explicitly selected.
-B70_PREFILL=0, SYCL_CACHE_PERSISTENT=0. No CCL topology override.
+Flags: B70_FUSE_SHARED=1; X5_GDN_BF16, X5_EVENTLESS,
+X5_EVENTLESS_LAZY, X5_PACK_LINEAR, X5_Q8_LINEAR, X5_CANONICAL,
+X5_Q8_FAST, X5_GDN_MIXED, X5_GDN_RAGGED all1; D3_GDN_SPEC1;
+X5_BATCH_LINEAR0. Old D3 FP16 wrapper is off. Periodic graph
+reinstantiation is off for the eventless path. B70_PREFILL0 and
+SYCL_CACHE_PERSISTENT0. No CCL topology override.
 
-Host kernel7.1.0-070100, UMD26.22, loader1.28.2, Torch2.14+xpu
-08187d9e, oneAPI2026.1.1; image vllm-flashnext-xpu:py312.
-Fork b70/flashnext HEAD0a6170da8ca9991972322fa1ca1d27674f0e75cd,
-shared dirty changes preserved. Per-window source-before/after manifests
-pin the actual code and binaries; HEAD alone does not describe it.
-X5 adds opt-in overlays and an isolated plugin, without core fork edits.
+Kernel7.1.0-070100, UMD26.22, loader1.28.2, Torch2.14+xpu08187d9e,
+oneAPI2026.1.1. Image vllm-flashnext-xpu:py312; Q4 container records
+image ID ea234fbf7123cba58b387f4046a0c32192dd5b6febead3684dbd8690882bf572.
+Fork b70/flashnext HEAD0a6170da8ca9991972322fa1ca1d27674f0e75cd plus
+shared dirty changes. Per-window manifests pin actual files/binaries;
+HEAD alone does not describe the measured source. X5 changes are
+opt-in overlays and an isolated plugin, without core fork edits.
 
-Pinned O3g: 38f7176ac290cb264268185c864da2dea1fcc36d07535fff021fb636d6538dcc.
-Aligned-Q8 SO: 51f304b431db82cd6cde1b6591c5caa19dd4184766a018eef615dac2068ce17c.
-BF16 D3 SO: 2bb3661f2b445ba57b3af0db5dbca192550bb22ebefac24d2a7f0a1953aae328.
-Replay helper/stub hashes are in every final manifest. It is specific
-to this Torch ABI and must be rebuilt after a Torch change.
+| Component | SHA256 |
+| --- | --- |
+| O3g MoE | 38f7176ac290cb264268185c864da2dea1fcc36d07535fff021fb636d6538dcc |
+| Aligned Q8 | 51f304b431db82cd6cde1b6591c5caa19dd4184766a018eef615dac2068ce17c |
+| Fixed BF16/ragged GDN R3 | 84dad4e82fa110fae57849d370fd3151ab2c09552bb83bf11b37dc94c613d130 |
 
-## Quant comparison
+Replay helper/stub hashes are in each manifest; this helper is specific
+to the pinned Torch ABI and must be rebuilt after a Torch change.
 
-Same final stack, card1, no MTP; SSE inter-chunk ITL p50 below.
-These short completion benchmarks are separate from the canonical
-512-token submission protocol. C2 may include another request's prefill.
+## Corrected no-spec comparison
 
-| GGUF | C1 p50/p90/p99 ms | C2 p50 ms/stream | Prefix PPL | Gates |
-| --- | --- | --- | ---: | --- |
-| UD-IQ3_XXS | 8.047/8.258/8.374 | 10.226 /10.273 | 9.055633 | PASS |
-| UD-IQ4_XS | 10.854/11.090/11.446 | 11.529 /11.511 | 8.764780 | PASS |
-| UD-Q4_K_M | 10.225/10.386/10.551 | 11.500 /11.491 | 8.508228 | PASS |
+SSE inter-chunk ITL p50; same corrected stack and card. These short
+completion benchmarks stop at configured EOS/128tokens. They are
+separate from the canonical512-token submission protocol.
 
-Raw tags: qwen36-35b-ud-iq3_xxs-fastq8-canon-mtp0,
-qwen36-35b-ud-iq4_xs-fastq8-canon-mtp0,
-qwen36-35b-udq4km-fastq8-canon-mtp0.
+| GGUF | C1 p50 ms | C2 p50 ms/stream | Prefix PPL | Full gate |
+| --- | ---: | --- | ---: | --- |
+| UD-IQ3_XXS | 8.1166 | 10.2861 /10.3282 | 9.055633 | PASS |
+| UD-IQ4_XS | 10.9075 | 11.6587 /11.6468 | 8.764780 | PASS |
+| UD-Q4_K_M | 10.3716 | 11.5693 /11.5573 | 8.508228 | PASS |
+
+Both concurrent responses match their solo outputs in every final
+quant window. Exact C1+C2 repeat, identity, coherence and source gates
+pass. Every serve returns0 normally. All native pre/post health checks
+pass. Each source-before/after SHA map
+matches. Between IQ3 and later windows only metadata caption/collection
+logic changed; model/kernel hashes match. No long-duration,200K
+context, RAM eviction or arbitrary-concurrency qualification.
+
+Raw tags end fastq8-canon-mixed-ragged-mtp0, prefixed
+qwen36-35b-ud-iq3_xxs, qwen36-35b-ud-iq4_xs, or qwen36-35b-udq4km.
 
 HF config/tokenizer revision995ad96eacd98c81ed38be0c5b274b04031597b0;
-GGUF repository unsloth/Qwen3.6-35B-A3B-MTP-GGUF, revision
-5bc3e238d916f48a861bac2f8a1990a0e9b7e98d. Files under
+GGUF repository unsloth/Qwen3.6-35B-A3B-MTP-GGUF revision
+5bc3e238d916f48a861bac2f8a1990a0e9b7e98d. Files live under
 /mnt/cache/b70/devmodel/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/.
-Each contains753 tensors, including20 tensors in MTP block40 and
-nextn_predict_layers1. Native Qwen3.5 MTP head, not Ornith/Shisa.
-One draft layer is reused for successive speculative positions.
+Each has753tensors, including20MTP tensors in block40 and one
+nextn prediction layer. Native Qwen3.5 MTP loads19parameter slots;
+one decoder head is reused for successive draft positions.
 
 | Format | File bytes | Trunk | Routed gate/up | Routed down |
 | --- | ---: | --- | --- | --- |
@@ -91,185 +96,147 @@ One draft layer is reused for successive speculative positions.
 | IQ4_XS | 18209036576 | mostly Q8_0 | mostly IQ3_S | mostly IQ4_XS |
 | Q4_K_M | 22663387424 | mostly Q8_0 | mostly Q4_K | Q5_K/Q4_K |
 
-These are dynamic mixed formats, not uniform 3/4-bit weights. All heads
-are Q6_K. quant-inventory.json records the actual tensor formats.
-The score uses the first2048 tokenizer tokens of WikiText-2 raw test,
-four independent512-token chunks,2044 scored prompt-logprob tokens.
-PPL=exp(meanNLL), no MTP. This is a matched prefix diagnostic, not
-full test-set perplexity. Corpus hash:
-efd86268d53e85efd67b67fcdf4846c7a4c56bc57cff41d00e3d7e4b57e17c46.
+Dynamic mixed formats, not uniform3/4-bit weights. Heads are Q6_K.
+quant-inventory.json records each tensor. The PPL diagnostic scores
+the first2048 WikiText-2 raw-test tokenizer tokens as four independent
+512-token chunks,2044 scored tokens. It is not full test-set PPL.
 Dataset revisionb08601e04326c79dfdd32d625aee71d232d685c3;
-parquet SHA5f1bea067869d04849c0f975a2b29c4ff47d867f484f5010ea5e861eab246d91.
+corpus SHAefd86268d53e85efd67b67fcdf4846c7a4c56bc57cff41d00e3d7e4b57e17c46.
 
-## Trace and implemented cuts
+## MTP qualification
 
-Q4 control q4-lazy-trace-r2, o4_trace.py-style unitrace capture:
-23 decode-like spans,1185kernels/span, median11.92ms span and10.70ms
-busy. Profiling overhead inflates the traced step. Untraced profiler
-C1 step/replay11.748/11.093ms; C2 12.959/11.864ms. The8-9ms host gap
-includes waiting for GPU completion and cannot be called idle time.
-Offline profiler intentionally exits after trace flush; its exit is
-not API lifecycle evidence. Native pre/post health and arithmetic pass.
+Corrected depth2 matches all576raw token IDs across4C1+2C2 against
+noSpec, and passes exact same-load repeat. Source SHA maps match
+noSpec exactly; identity/coherence/source gates and normal exit0 pass.
+Native posthealth is pending behind other leased work. Depth3 pending.
 
-| Dense region | GEMMs/token | Kernel sum ms/token | Representative N,K |
-| --- | ---: | ---: | --- |
-| GDN projections | 150 | 3.942 | qkv8192x2048,z4096x2048,out2048x4096,BA32x2048 |
-| Full-attention projections | 40 | 1.080 | q8192x2048,KV512x2048,o2048x4096 |
-| Shared expert/gate | 160 | 0.995 | GU512x2048,down2048x512,gate1x2048 |
-| Router | 40 | 0.171 | 256x2048 |
+| Draft depth | C1 effective ms/token | C2 effective ms/token/stream | Bench acceptance | Gate |
+| --- | ---: | --- | --- | --- |
+| 0 | 10.1616 | 11.2885 /11.2765 | n/a | PASS |
+| 2 | 6.6182 | 9.9137 /8.5302 | 91/120=75.83% | posthealth pending |
+| 3 | pending | pending | pending | pending |
 
-Ordered role attribution validates10GEMMs per GDN layer and9 per
-full-attention layer; roles.json/trace-summary.txt preserve it.
-Cats110/.304ms, casts~.232ms, routed GU40/.864ms, down~.631ms,
-fused GDN30/.338ms, Q6_K head1/.709ms.
+Effective latency is1000/decode_tok_s. Depth2 wire-chunk p50 is
+17.9341ms C1 and23.0351/23.0406ms C2; one chunk carries multiple
+accepted tokens. The short latency benchmark stops at EOS/128tokens.
+Acceptance is specific to these prompts, not a universal estimate.
+The serving log proves target FULL T3/T6 and native draft capture,
+plus real ragged T1/T2 verification using the fused kernel.
 
-Implemented:
+Spec windows also collect unranked512-token canonical packets.
+Depth2 reasoning/code rates are147.1/141.8tok/s, with acceptance
+85.714/80.203% and mean accepted length2.714/2.604. Both local/API
+dry-run validations pass; ranking_eligible=false and no submission.
+These are separate workloads from the short completion benchmark.
 
-- Merge compatible qkv+z, q+k+v, b+a output rows before placement.
-- Preserve known dense projection/shared Q8 GGUF payloads rather than
-  unconditional BF16 expansion. Routers/embedding/conv stay unchanged.
-- Chunk the complete routed+shared TP1 MoE at8 to keep decode arithmetic
-  when a decode row shares a batch with prefill. Routed-only chunking
-  left the shared-expert fused/unfused boundary inconsistent.
-- b70_x5::q8_linear separates existing int8 codes and half scales into
-  aligned arrays, SG16/4rows per workgroup, DP4A, activation-Q8 matching
-  O3, fixed reduction, BF16 epilogue, weight reuse acrossM1..8.
-- BF16 instantiation of D3 and a late-loaded eventless replay helper.
+For a fresh matched reproduction, retain the new noSpec token file:
 
-The generic-Q8 control passes all gates but costs15.650ms C1 and
-17.570/17.564ms C2. Aligned Q8 reduces these to10.225 and11.500/11.491:
-34.7%/34.5% less latency, with identical fork hashes, prefixPPL and
-all576 compared output token IDs. It does not isolate the gain from
-packing or canonicalization versus the earlier unstable stack.
+```bash
+MTP_TOKENS=0 TAG=q4-fixed-nospec \
+  bash vllm/flashnext/harness/x5_recipe_35b.sh
+X5_BASELINE=/mnt/vm_8tb/b70/build/vllm-flashnext/x5/q4-fixed-nospec/greedy.json \
+  MTP_TOKENS=2 TAG=q4-fixed-mtp2 \
+  bash vllm/flashnext/harness/x5_recipe_35b.sh
+```
 
-Actual Q4 merged projection weights at M1/2/3/4/8 pass10/10 probes:
-FP32 maxabs0 against the old op, exact BF16 epilogue, batch invariance,
-captured replay, exit0 and native pre/post health. Hot-loop matrix
-latencies are cache-resident diagnostics, not model throughput claims.
+The final comparison uses raw tags ending
+qwen36-35b-udq4km-fastq8-canon-mixed-ragged-mtp{0,2,3}.
 
-BF16D3 primitive checks pass3seeds/32replays, exact conv/replay,
-approximate stock core/state/output. State maxabs1.50e-4..2.45e-4;
-tolerance is1e-4 PLUS0.005relative, not an absolute1e-4 bound.
-Core maxabs<=6.10e-5, output cosine>0.999998. Full model gates remain
-mandatory. The original FP16 D3 rejects BF16 after projections and
-would duplicate work on fallback; the selected stack disables it.
+## Implemented fixes and profiling evidence
 
-## MTP gates
+- Compatible qkv+z, q+k+v and b+a projections merge output rows before
+  device placement (harness/x5_pack_linear.py:11).
+- Known dense/shared Q8 GGUF payloads stay packed; embeddings/router/
+  conv keep their original path (harness/x5_q8_linear.py).
+- Complete routed+shared TP1 MoE chunks at8, keeping decode arithmetic
+  when another request prefills (harness/x5_canonical_moe.py:14).
+- Aligned Q8 codes/half-scales, SG16/four output rows, DP4A, fixed
+  activation quantization/reduction and BF16 epilogue reuse weights
+  acrossM1..8 (plugins/b70_x5_xpu/csrc/q8_linear.cpp).
+- BF16 D3 supports compact ragged verification, actual-only state
+  writes and inactive groups. Three history rows are staged before
+  shared q/k writeback; per-layer scratch is owned before capture
+  (harness/patches/x5_gdn_ragged.py).
+- Mixed eager GDN batches split prefill/decode metadata and rows;
+  prefill stays native, decoded rows keep fused arithmetic. Metadata
+  is restored in finally. Known one-token decodes retain decode math,
+  fresh one-token prefills still initialize state
+  (harness/x5_gdn_mixed.py:21).
 
-Q4 MTP block40 loads19 parameter slots from20 GGUF tensors. Target
-and native Qwen3.5 drafter capture FULL graphs. One head is reused
-at every depth. No Shisa substitution or separate proxy MTP file.
-Every comparison respects configured EOS and compares raw token IDs.
+The inherited reduce_128 returned parts[0] after a barrier, then reused
+that shared location for the k sum before every subgroup finished
+reading the q sum. R2 showed exact SSM/conv/canary but mismatching
+query-dependent core/output in3-sequence cases. The read-complete
+barrier is the R3-only change from R2. R3 passes all76 eager/rejection/
+padded-page/inactive/8-replay cases exactly against sequential fused
+decode, including previously failing cases. Stock approximation
+3seeds/32replays also passes at unchanged tolerances. Pre/post native
+health and normal exit0 pass. Raw gdn-ragged/r1,r2,r3 retain failures.
+Persistent scratch alone did not fix the R2 mismatch. Shared D3 source
+is unchanged; JOURNAL requests a deliberate port by its owner.
 
-| Stage | C1 effective ms/token | C2 gate | Verdict |
-| --- | ---: | --- | --- |
-| Selected BI0, stock spec GDN, depth2 | 6.597 | repeat passes, on/off FAIL at34 | rejected; C1 on/off FAIL at57 |
-| BI0, fused spec GDN, depth2 | 6.632 | repeat and on/off FAIL at34 | all4C1 on/off comparisons pass |
-| BI1, fused spec GDN, depth2 | 7.647 | repeat FAIL at66, on/off FAIL at34 | all4C1 on/off comparisons pass |
-| BI1 + mixed GDN, depth0 control | 11.138 | repeat + solo/C2 parity PASS | PASS control |
-| BI1 + mixed GDN, depth2 | 7.646 | repeat FAIL43, on/off FAIL41 | ragged fallback observed |
+The earlier Q4 unitrace control q4-lazy-trace-r2 has23 decode-like
+spans,1185kernels/span,11.92ms median span/10.70ms busy. The trace
+is instrumented; its host gap includes GPU waiting, not pure idle.
+Ordered attribution validates10GEMMs per GDN and9 per full-attn layer:
 
-Every failed model stage exits0 normally, has matching before/after
-source hashes and HEALTHY native pre/post checks. These remain failed
-whole-variant gates; do not promote their diagnostic speed numbers.
-The first stage acceptance is90/120=75%; fused spec91/120=75.83%;
-BI1 stage93/128=72.66%, all for the short latency benchmark subset.
-Wire-chunk timing differs from effective token latency under MTP.
+| Dense region | GEMMs/token | Kernel sum ms/token |
+| --- | ---: | ---: |
+| GDN projections | 150 | 3.942 |
+| Full-attention projections | 40 | 1.080 |
+| Shared expert/gate | 160 | 0.995 |
+| Router | 40 | 0.171 |
 
-BF16 fused verification passes21/21 exact sequential-equivalence
-cases: widths3/4, every acceptance position,3seeds,8captured replays.
-Core/output/intermediate SSM/final conv all maxabs0. Native health
-and normal exit pass. Raw gdn-bf16/spec-r1.
+Cats110/.304ms, casts~.232ms, fused GDN30/.338ms, Q6_K head1/.709ms.
+This historical trace selected the projection work; it is not a trace
+of the corrected final stack. The aligned-Q8 kernel passes10actual-
+weight M1/2/3/4/8 cases: FP32 maxabs0 versus old op, exact BF16,
+batch invariance and capture/replay. The historical matched generic-
+Q8 control15.65ms became10.22ms C1, with identical576token IDs and
+PPL. Those old full-model rows used the inherited D3 helper and are
+superseded for final qualification. No isolated GDN speed claim.
 
-The remaining C2 failure survives native batch-invariant dense linears.
-A mixed batch made D3 fall back to stock GDN for the running decode
-when another request prefills. x5_gdn_mixed.py splits eager GDN rows
-and metadata: native prefill for prefill rows, fused recurrence for
-decode rows. It restores metadata in finally, copies no recurrent
-state, leaves pure FULL graph capture unchanged and keeps safe ragged
-fallback. Known one-token decodes reclassified as prefill by vLLM
-retain decode math; fresh one-token prefills still initialize state.
-CPU row/state/reorder/known-fresh/ragged checks pass. Scope: TP1,
-SYCL prefill, proxy maxseq2; no arbitrary-concurrency qualification.
+## LocalMaxxing packets
 
-The mixed noSpec control passes full graphs, identity/coherence,
-exact C1+C2 repeat, unchanged source, exit0 and native pre/post health.
-BOTH concurrent responses now match their solo outputs, whereas the
-old control's Paris differs. All4solo outputs and prefixPPL8.52856158
-match the prior BI1 control. C1 p50=11.3582ms,C2=12.7837/12.7484ms.
-The real (prefill1,decode1,spec0) split is logged. Raw
-qwen36-35b-udq4km-fastq8-bi-mixed-mtp0. MTP2 still fails C2; depth3 pending.
+Corrected Q4 noSpec packets: raw Q4 tag above, under
+localmaxxing/no-spec-{reasoning,code}-v1/.
 
-BI1 is a correctness control and is slower than selected BI0 noSpec.
-The noSpec submission packets use BI0. MTP comparisons use the fresh
-matched BI1+mixed control; do not imply parity with the BI0 recipe.
+| Suite | Median tok/s (rounded payload) | TTFT of median-rate sample ms | Output tokens |
+| --- | ---: | ---: | ---: |
+| reasoning-v1 | 94.8 | 567.35 | 512 |
+| code-v1 | 94.9 | 454.39 | 512 |
 
-The mixed MTP2 retry exposes a real ragged fallback: ntok4,
-slot(2,3), token indices4. The old fused kernel assumes equal width;
-its guard safely routes ragged batches to stock GDN. The isolated
-new BF16 kernel uses cu bounds and compact indices, writes only real
-candidates and skips inactive groups. It stages three small history
-rows before shared q/k writeback; no failure attribution is made to
-that ordering change. Original libraries remain intact.
-
-Ragged primitive R1 passes eager checks but fails8-replay equality at
-3sequences with lengths[3,1,2]; HEALTHY pre/post and normal error exit1.
-R2 uses caller-owned persistent scratch, is built (SHA248e6b78d150ef59f79ca0b726a696a10d39c6c9c3b9fd13c1fd26445c77b4be),
-and is queued for the same probe with componentwise diagnostics.
-No model result or causal lifetime claim yet. Raw gdn-ragged/r1,r2.
-
-## LocalMaxxing
-
-Canonical no-spec collection is complete, raw tag
-qwen36-35b-udq4km-fastq8-canon-lmx-mtp0. Exact repeat/coherence,
-source hashes, normal exit0 and native pre/post health all pass. Its
-greedy tokens match the selected Q4 baseline.
-
-| Suite | Median tok/s | Effective ms/token | TTFT of median-rate sample ms | Output tokens |
-| --- | ---: | ---: | ---: | ---: |
-| reasoning-v1 | 96.059 | 10.410 | 561.07 | 512 |
-| code-v1 | 96.255 | 10.389 | 450.31 | 512 |
-
-Both validate_dry.sh calls pass local validation and API dry-run
-valid=true, verification.verified=true, issues=[]. No submission or
-public verified badge is claimed. Payloads and dry-run.txt are under
-localmaxxing/no-spec-{reasoning,code}-v1 in that raw directory.
-
-x5_lmx_local.py wraps
-X4's collector: one warmup plus3iterations of reasoning/code suites,
-max512tokens, leading nonce, temperature0, prefix cache disabled,
-authoritative usage and isolated request/token/spec counters. A
-read-only config route proves speculative_config=null, without
-exposing environment variables or enabling dev operations. Packets
-carry exact model revision, context, dirty-build identity and flags.
-The wrapper never submits. Run validate_dry.sh only on valid packets.
+Each uses one warmup and3iterations, temperature0, leading nonce,
+prefix cache off, authoritative usage and isolated request/token/spec
+counters. Live speculative_config=null, specDecoding=false and
+mtpEnabled=false. Both local validation and API dry-run return
+valid=true, verification.verified=true, issues=[]. All launch flags,
+model revision, actual4096context and source/library identity are
+recorded. No submission or public verified badge is claimed.
 The [API docs](https://www.localmaxxing.com/en/api-docs) specify that
-dry-run validates without creating a database entry.
+dry-run validates without creating a database entry. Historical packets
+in the old lazy-GDN tag are superseded and must not be the final recipe.
+Public Arc entries mix card counts, context and short/unverified output;
+this report does not claim a leaderboard win from unlike methods.
 
-Public API snapshot2026-10-21 in localmaxxing-public/ contains short
-and unverified Arc entries; card counts/context/quant differ. A top
-claimed one-B70 GPTQ4bit entry reports248.3tok/s with32outputtokens,
-not the canonical256minimum. Do not claim a rank win from these
-short proxy harness numbers or silently compare unlike methods.
+## Lifecycle and limits
 
-## Retained failures and limitations
+Early replay preloads completed requests but exited139 during Torch/
+SYCL finalization. A libc-only preload plus late Torch helper fixes
+normal API exit and passes2066replays/RNG advancement. Explicit
+nonvirtual replay dispatch avoids recursion; preserve ordinary SYCL
+symbol interposition. Original reclaim500 control stalled; its exact
+cause is unproven. Eventless mode is a finite measured fix, not a soak
+claim. The c7b Flash-Next FA overlay is excluded for this proxy because
+its missing paged config falls back to a capture-invalid D2H reference.
 
-Early eventless API runs completed requests but exited139 during
-Torch/SYCL finalization; not qualified. The libc-only preload plus
-late Torch helper passes2066replays/RNG/normal exit and final API
-teardown. An initial helper bridge used virtual replay and recursed;
-qualified nonvirtual dispatch fixes it. This is a measured lifecycle
-fix, not proof of the exact UMD constructor-order cause.
+A scoped native batch-invariant dense control passed at11.30ms C1,
+PPL8.52856, but did not fix C2 MTP by itself and is off in the final
+fast recipe. Historical MTP C1-only parity/speed rows are unqualified.
+NoSpec/MTP final health, source and teardown evidence must close
+before promotion. No shelf promotion, commits/pushes, DD start or
+GPU reset. Other agents' dirty changes are preserved.
 
-Earlier Q4 late-helper control repeated C1 but C2 Paris failed at34;
-not qualified. Original reclaim500 control stalled after initial
-requests; no completed latency/PPL, healthy stop. Correlation with
-periodic replay is not causal proof. The c7b Flash-Next FA overlay
-fails proxy capture and is excluded; installed FLASH_ATTN succeeds.
-First unitrace tag failed because session names require alphanumerics;
-r2 sanitizes them. First BF16D3 state tolerance failure is retained.
-
-Claude fable-5.1 and claude-5.5 consults returned unrecognized_model
-and Not logged in; no responding model IDs or advice were obtained.
-No X5 commits/pushes, DD start, reset or other-agent termination.
-Finite request/health gates do not qualify200K context or soak behavior.
+Claude fable-5.1 and claude-5.5 CLI consultations returned
+unrecognized_model and Not logged in. No responding model IDs or
+independent advice were obtained; none is invented in this report.

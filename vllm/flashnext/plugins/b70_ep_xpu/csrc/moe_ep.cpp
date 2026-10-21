@@ -82,6 +82,11 @@ struct State {
     Moe2Fn moe2 = nullptr;
     bool with_shared = false;
     bool out_bf16 = false;
+    // O4 route mode (moe_ep_route): bf16 router logits [T, route_E].
+    const uint16_t* route_logits = nullptr;
+    int route_E = 0;
+    int route_renorm = 1;
+    float* w0 = nullptr;
     ReserveFn reserve = nullptr;
     void* so = nullptr;
     Region inbox, psum, flag_in, flag_ret;
@@ -243,6 +248,7 @@ void ep_init(int max_t, int max_k, int max_topk, int nlayers) {
     s.done0 = sycl::malloc_device<uint32_t>(1, stream0);
     s.err0 = sycl::malloc_host<uint32_t>(nlayers, stream0);
     s.ids0 = sycl::malloc_device<int32_t>((size_t)max_t * (size_t)max_topk, stream0);
+    s.w0 = sycl::malloc_device<float>((size_t)max_t * (size_t)max_topk, stream0);
     s.y0 = sycl::malloc_device<float>((size_t)max_t * (size_t)max_k, stream0);
     s.ctr1 = sycl::malloc_device<uint32_t>(nlayers, *s.q1);
     s.done1 = sycl::malloc_device<uint32_t>(1, *s.q1);
@@ -337,6 +343,36 @@ void ep_moe_sh(const uint16_t* x, const float* w, const int32_t* ids, float* y, 
     }
     s.with_shared = false;
     s.out_bf16 = false;
+}
+
+bool stream_recording();
+
+void ep_moe_route(const uint16_t* x, const uint16_t* logits, uint16_t* y, int T, int E, int topk, int K, int layer,
+                  int renorm) {
+    State& s = S();
+    if (!s.moe2) throw std::runtime_error("moe_ep_route: the MoE library has no b70_moe_layer2");
+    if (T < 1 || T > 8 || E < 1 || E > 1024 || topk < 1 || topk > 16) throw std::runtime_error("moe_ep_route shape");
+    if (!stream_recording()) {
+        // Eager (warmup) prejit reads ids0/w0 before the route kernel runs.
+        q0().memset(s.ids0, 0, (size_t)T * (size_t)topk * 4);
+        q0().memset(s.w0, 0, (size_t)T * (size_t)topk * 4);
+    }
+    s.with_shared = true;
+    s.out_bf16 = true;
+    s.route_logits = logits;
+    s.route_E = E;
+    s.route_renorm = renorm;
+    try {
+        ep_moe(x, s.w0, s.ids0, reinterpret_cast<float*>(y), T, topk, K, layer);
+    } catch (...) {
+        s.with_shared = false;
+        s.out_bf16 = false;
+        s.route_logits = nullptr;
+        throw;
+    }
+    s.with_shared = false;
+    s.out_bf16 = false;
+    s.route_logits = nullptr;
 }
 
 void ep_register_map(int layer, const int32_t* map0, const int32_t* map1, int nexp) {
@@ -520,10 +556,17 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
     ep_push_ctr(*s.q1, s.psum.remote, s.y1, n4, s.done1, flag_ret_r, ctr1);
 
     sycl::queue& a = q0();
-    ep_bump(a, ctr0);
     if ((L.map0 == nullptr) != (L.map1 == nullptr)) throw std::runtime_error("ep map is half set");
-    ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, n_ids, x_b, L.e0, L.e1, L.map0, L.map1, L.nexp,
-                s.done0, flag_in_r, ctr0);
+    if (s.route_logits != nullptr) {
+        // O4: router top-k, bump and dispatch in one kernel; card 0 reads w0.
+        ep_route_dispatch(a, s.route_logits, T, s.route_E, topk, s.route_renorm, s.w0, s.ids0, peer_ids, peer_w, x,
+                          peer_x, x_b, L.e0, L.e1, L.map0, L.map1, L.nexp, flag_in_r, ctr0);
+        w = s.w0;
+    } else {
+        ep_bump(a, ctr0);
+        ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, n_ids, x_b, L.e0, L.e1, L.map0, L.map1, L.nexp,
+                    s.done0, flag_in_r, ctr0);
+    }
     const bool fused_sh = s.with_shared && L.has_shared && s.moe2 != nullptr && T <= 8;
     // b70_moe_layer2 runs the fused decode schedule, whose reduce writes
     // every element of y0; the zero fill is only needed by the old path.

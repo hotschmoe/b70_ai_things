@@ -1,0 +1,101 @@
+{
+  "backend": "xpu",
+  "batchSize": 1,
+  "benchmarkMode": "remote",
+  "contextLength": 65536,
+  "engineBuild": "b70-lmx-20261021 (vllm fork b70/lmx-20261021, X5 35B recipe)",
+  "engineCommit": "cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95",
+  "engineFlags": {
+    "commandSnippet": "# vLLM (fork branch b70/lmx-20261021 @ cfd2b6ffdb8f) + out-of-tree b70_gguf_xpu / b70_x5_xpu plugins, one Arc Pro B70, no speculative decoding\nB70_D3_GDN_SPEC=0 B70_X5_BATCH_LINEAR=0 B70_X5_CANONICAL=1 B70_X5_EVENTLESS=1 B70_X5_EVENTLESS_LAZY=1 B70_X5_GDN_BF16=1 B70_X5_GDN_MIXED=0 B70_X5_GDN_RAGGED=0 B70_X5_PACK_LINEAR=1 B70_X5_Q8_FAST=1 B70_X5_Q8_LINEAR=1 MAX_LEN=65536 MTP_TOKENS=0 QUANT=UD-Q4_K_M X5_LMX=1 B70_GGUF=1 B70_FUSE_SHARED=1 B70_PREFILL=0 \\\nvllm serve Qwen/Qwen3.6-35B-A3B --load-format b70_gguf --quantization b70_gguf (GGUF Qwen3.6-35B-A3B-UD-Q4_K_M.gguf) \\\n  --tensor-parallel-size 1 --dtype bfloat16 --max-model-len 65536 --max-num-seqs 2 --max-num-batched-tokens 1024 \\\n  --gpu-memory-utilization 0.90 --language-model-only --attention-backend FLASH_ATTN --no-enable-prefix-caching \\\n  --compilation-config '{\"mode\":0,\"cudagraph_mode\":\"FULL_DECODE_ONLY\",\"cudagraph_capture_sizes\":[1,2,3,4,6,8]}'  (no --speculative-config)",
+    "concurrency": 1,
+    "iterations": 3,
+    "maxTokens": 512,
+    "mode": "remote",
+    "mtpEnabled": false,
+    "prefixCacheBust": "leading_nonce_per_request",
+    "promptSource": "canonical:code-v1",
+    "servedModel": "hotschmoe-dd",
+    "specDecoding": false,
+    "stream": true,
+    "temperature": 0,
+    "warmup": 1
+  },
+  "engineName": "vllm",
+  "engineRepository": "https://github.com/vllm-project/vllm",
+  "engineTimingsRaw": {
+    "nativeTimings": null,
+    "prometheusCounterDeltas": {
+      "vllm:generation_tokens_total": 512,
+      "vllm:prefix_cache_hits_total": 0,
+      "vllm:prompt_tokens_total": 239,
+      "vllm:request_success_total": 1
+    },
+    "provenance": "vLLM server usage and isolated global metric deltas; not per-request engine timings",
+    "usage": {
+      "completion_tokens": 512,
+      "prompt_tokens": 239,
+      "total_tokens": 751
+    }
+  },
+  "engineVersion": "0.32.1rc1.dev94+g5fd62688f",
+  "hardware": {
+    "cpu": "AMD Ryzen Threadripper 1950X 16-Core Processor",
+    "gpuCount": 1,
+    "gpuName": "Intel Arc Pro B70",
+    "hwClass": "DISCRETE_GPU",
+    "os": "Linux",
+    "ramGb": 128,
+    "vramGb": 32
+  },
+  "hfId": "unsloth/Qwen3.6-35B-A3B-MTP-GGUF",
+  "id": "cmvhiyocc0341rf01lm0dd1k9",
+  "metricSource": "remote_endpoint",
+  "modelRevision": "5bc3e238d916f48a861bac2f8a1990a0e9b7e98d",
+  "notes": "One Intel Arc Pro B70 (32 GB, Xe2, kernel 7.1, Compute Runtime 26.22). vLLM 0.32 main + thin XPU fork (local branch b70/lmx-20261021, commit cfd2b6ffdb8f, based on vLLM main 5fd62688, not pushed) with our out-of-tree GGUF XPU plugin (custom SYCL MoE/GEMV kernels for Q4_K/IQ formats, BF16 GDN kernel, Q8 linear path), BF16 activations, full-decode XPU graphs. Unsloth Dynamic GGUF loaded by the plugin (MTP head present in the file but unused). No speculative decoding: no --speculative-config, server config speculative_config=null, zero draft tokens in the server counters, one token per forward pass. max_model_len 65536, prefix cache off, greedy (temperature 0), thinking on (server default; reasoning tokens counted as output), 512 max tokens, 1 warmup + 3 timed iterations with a new leading cache-bust nonce, median decode-rate sample. Client-observed HTTP streaming (lmx remote method); engineTimingsRaw holds vLLM usage plus isolated Prometheus counter deltas (vLLM has no per-request timings object). promotion gate: all checks pass except exact_repeat, c4_paris (detail follows). Gate detail: c4_paris compares against a fixed 16-token continuation recorded on a different quant; this Q4_K_M gives a different, coherent continuation (\" Paris, a city renowned for its iconic landmarks such as the Eiffel Tower,\"). Exact repeat: both C1 passes bitwise identical (4 prompts x 96 forced tokens); in the second of two C2 (2-request batch) passes one prompt diverged at token 34, i.e. batch-2 decode in this recipe is not run-to-run bitwise stable (known GDN reduction race, fixed after this engine snapshot). This submission is single-stream (C1), where repeats are exact; the 3 timed samples are 97.0-97.3 tok/s. ",
+  "outputSample": "Here's a thinking process:\n\n1.  **Understand User Requirements:**\n   - **Tool Name:** `logtally`\n   - **Input:** Newline-delimited JSON from stdin\n   - **Record Fields:** `ts` (ISO-8601 string), `level` (DEBUG, INFO, WARN, ERROR), `service` (string), optional `latency_ms` (number)\n   - **Output:** Per service: count of records by level, p50 and p95 of `latency_ms` (ignore records without latency)\n   - **Error Handling:** Malformed lines counted and reported at the end, never crash\n   - **Flag:** `--since \u003cISO timestamp\u003e` to filter out earlier records\n   - **Constraints:** Use only Python standard library\n   - **Post-code Requirements:** \n     - Explain percentile computation method in 2-3 sentences\n     - List 3 edge cases for unit tests\n\n2.  **Deconstruct Requirements \u0026 Plan Implementation:**\n   - **Input Parsing:** Read from `sys.stdin`, line by line.\n   - **JSON Parsing:** Use `json.loads()`. Handle `json.JSONDecodeError` and missing/invalid fields gracefully.\n   - **Filtering:** \n     - `--since` flag: Parse the provided ISO timestamp, compare with each record's `ts`.\n     - Level validation: Only accept DEBUG, INFO, WARN, ERROR.\n     - Service: Must be present.\n   - **Data Structures:** \n     - Per service: dictionary mapping level -\u003e count\n     - Per service: list of latencies\n     - Malformed count\n   - **Percentile Calculation:** Need p50 and p95. Since only standard library, I'll implement a simple percentile calculation. Common method: nearest-rank or linear interpolation. I'll use linear interpolation (like `numpy.percentile` with `interpolation='linear'` or Python's `statistics` module doesn't have percentiles, so I'll implement it manually). Actually, Python 3.10+ has `statistics.quantiles`, but to be safe and explicit, I'll implement a simple nearest-rank or linear interpolation. Let's stick to a straightforward linear interpolation method, or just sort and pick indices. I'll implement a standard percentile function.\n   - **Output Format:** The prompt doesn't specify exact format, but I'll make it clear and structured. Maybe JSON or",
+  "outputSha256": "4c228db5f27756f845f972baa91574ed1b7b7e64824f6921fb851e63a14cc185",
+  "outputTokens": 512,
+  "prefillTokens": 0,
+  "prompt": "Implement a small command-line tool in Python called `logtally`.\n\nRequirements:\n- It reads newline-delimited JSON log records from stdin. Each record has `ts` (ISO-8601 string), `level` (one of DEBUG, INFO, WARN, ERROR), `service` (string), and optional `latency_ms` (number).\n- It prints, per service, the count of records by level and the p50 and p95 of `latency_ms` (ignore records without latency).\n- Malformed lines must be counted and reported at the end, never crash the program.\n- Support a `--since \u003cISO timestamp\u003e` flag that drops earlier records.\n- Use only the standard library.\n\nAfter the code, explain in two or three sentences how you computed percentiles and why you chose that method, then list three edge cases a unit test suite should cover.",
+  "promptSample": "Implement a small command-line tool in Python called `logtally`.\n\nRequirements:\n- It reads newline-delimited JSON log records from stdin. Each record has `ts` (ISO-8601 string), `level` (one of DEBUG, INFO, WARN, ERROR), `service` (string), and optional `latency_ms` (number).\n- It prints, per service, the count of records by level and the p50 and p95 of `latency_ms` (ignore records without latency).\n- Malformed lines must be counted and reported at the end, never crash the program.\n- Support a `--since \u003cISO timestamp\u003e` flag that drops earlier records.\n- Use only the standard library.\n\nAfter the code, explain in two or three sentences how you computed percentiles and why you chose that method, then list three edge cases a unit test suite should cover.",
+  "promptSha256": "a737db738bd4e37881d1737f8dc51cae0295eff9ece6551d39826ce8ed43a690",
+  "promptTokens": 239,
+  "quantization": "Unsloth-Dynamic-Q4_K_M",
+  "samples": [
+    {
+      "draftAccepted": null,
+      "draftN": null,
+      "iteration": 1,
+      "outputTokens": 512,
+      "promptTokens": 239,
+      "tokSOut": 97.23178105345868,
+      "ttftMs": 448.621996
+    },
+    {
+      "draftAccepted": null,
+      "draftN": null,
+      "iteration": 2,
+      "outputTokens": 512,
+      "promptTokens": 238,
+      "tokSOut": 97.26939304769215,
+      "ttftMs": 449.089366
+    },
+    {
+      "draftAccepted": null,
+      "draftN": null,
+      "iteration": 3,
+      "outputTokens": 512,
+      "promptTokens": 236,
+      "tokSOut": 97.22793787828112,
+      "ttftMs": 448.574345
+    }
+  ],
+  "submissionId": "cmvhiyocc0341rf01lm0dd1k9",
+  "submissionStatus": "approved",
+  "submittedAt": "2026-10-21T03:00:38.460Z",
+  "timingSource": "client_observed_http",
+  "tokSOut": 97.2,
+  "tokSOutSource": "inter_token",
+  "ttftMs": 448.62,
+  "ttftSource": "stream_first_token"
+}

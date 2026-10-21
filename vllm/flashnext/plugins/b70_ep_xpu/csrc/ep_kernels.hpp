@@ -29,6 +29,10 @@ void ep_push_ctr(sycl::queue& q, void* peer_dst, const void* src, int64_t n4, ui
 
 // y[i] = a[i] + uncached load of b[i]. n4 is the number of float4s.
 void ep_add_uncached(sycl::queue& q, float* y, const float* a, const float* b, int64_t n4);
+void ep_route_dispatch(sycl::queue& q, const uint16_t* logits, int T, int E, int topk, int renorm, float* w0,
+                       int32_t* ids0, int32_t* peer_ids, float* peer_w, const uint16_t* x, uint16_t* peer_x,
+                       size_t x_bytes, int n0, int e1, const int32_t* map0, const int32_t* map1, int nexp,
+                       uint32_t* peer_flag, uint32_t* ctr);
 void ep_add_uncached_bf16(sycl::queue& q, uint16_t* y, const float* a, const float* b, int64_t n4);
 
 // Remap expert ids and push weights plus bf16 activations. One kernel, system barrier, then flag.
