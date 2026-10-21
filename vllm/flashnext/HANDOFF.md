@@ -388,3 +388,16 @@ Pause full route/Q8F serves until a bounded partial-report repair records
 all variants independently, mismatch magnitude and affected outputs.
 No kernel rebuild, relaxed exactness gate or speed result is authorized
 by this failure. Reports/3D1_decode.md owns the subsequent evidence.
+
+The reporting-only probe-r2 completes all nine numerical comparisons:
+only one signed-zero encoding differs, original0x0000 (+0) versus both
+existing-fused and candidate0x8000 (-0), large_gate/weight1/h386. Saved
+CPU storage bytes independently confirm zero magnitude; no FTZ inference.
+Every other output bit matches; existing-fused and candidate match all
+23040 elements. Strict COMPONENT_FAIL and skipped timing remain intact;
+no graph/96-weight/M2 qualification follows. Body16s, source hashes
+unchanged, card1 post-health HEALTHY, no container leftover. No kernel
+rebuild or relaxed gate. Cause of the zero sign remains unproven.
+This does not establish a nonzero arithmetic error or runtime invalidity;
+the retained route/Q8F diagnostic serving retest can proceed after its
+bounded client and branch-observation CPU checks, without a bitexact claim.

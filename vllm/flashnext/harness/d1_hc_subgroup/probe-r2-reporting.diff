@@ -1,0 +1,65 @@
+--- /mnt/vm_8tb/b70/build/vllm-flashnext/d1/hc_subgroup_r1/probe-r1-source.py	2026-10-21 18:53:56.974445941 +0000
++++ /mnt/vm_8tb/b70/build/vllm-flashnext/d1/hc_subgroup_r1/probe.py	2026-10-21 18:53:56.974806639 +0000
+@@ -58,9 +58,59 @@
+             x2=(x.float()*scale).bfloat16()
+             ys={n:fn(x2,w,s,f)for n,fn in variants.items()}
+             torch.xpu.synchronize()
+-            for n,y in ys.items():
+-                assert torch.equal(y.view(torch.int16),ys['original'].view(torch.int16)),(case,i,n)
+-            result['gate'].append({'case':case,'weight_index':i,'all_bitexact':True})
++            # Host CPU payload only after all three device outputs exist.
++            host={n:y.detach().cpu()for n,y in ys.items()}
++            row={'case':case,'weight_index':i,'comparisons':{}}
++            pairs=[('original',n)for n in variants]+[('existing_fused','candidate')]
++            any_bad=False
++            locations=set()
++            for left,right in pairs:
++                aa=host[left].view(torch.int16).to(torch.int32)&65535
++                bb=host[right].view(torch.int16).to(torch.int32)&65535
++                mismatch=aa!=bb
++                where=mismatch.nonzero().tolist()
++                finite=torch.isfinite(host[left].float())&torch.isfinite(host[right].float())
++                # Monotonic BF16 bit order, with signed zeros distinct for
++                # the strict bit gate. ULP applies only to finite pairs.
++                ao=torch.where(aa&32768!=0,65535^aa,aa^32768)
++                bo=torch.where(bb&32768!=0,65535^bb,bb^32768)
++                diff=(host[left].float()-host[right].float()).abs()
++                key=left+'__vs__'+right
++                row['comparisons'][key]={
++                    'bitexact':not where,'mismatch_count':len(where),
++                    'max_abs_finite':float(diff[finite].max())if bool(finite.any())else None,
++                    'max_bf16_ulp_finite':int((ao-bo).abs()[finite].max())if bool(finite.any())else None,
++                    'first_locations':where[:16],
++                    'left_all_finite':bool(torch.isfinite(host[left].float()).all()),
++                    'right_all_finite':bool(torch.isfinite(host[right].float()).all())}
++                if where:
++                    any_bad=True
++                    locations.update(v[1]for v in where)
++            row['all_bitexact']=not any_bad
++            if any_bad:
++                # Small affected CPU payload: full output/act/flat plus only
++                # mismatching h's four packed weight rows and their scales.
++                selected=sorted(locations)
++                payload={'outputs':host,'act':x2.detach().cpu(),'flat':f.detach().cpu(),
++                         'h_locations':selected,'case':case,'weight_index':i}
++                indices=torch.tensor([st*2560+h for st in range(4)for h in selected],
++                                     device=w.device,dtype=torch.int64)
++                payload['weight_row_indices']=indices.cpu()
++                payload['weight_rows']=w.index_select(0,indices).cpu()
++                payload['scale_rows']=s.index_select(0,indices).cpu()
++                path=out/(case+'-'+str(i)+'-cpu-payload.pt')
++                torch.save(payload,path)
++                row['cpu_payload']=str(path)
++            result['gate'].append(row)
++            (out/'result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='ascii')
++    result['gate_complete']=len(result['gate'])==9
++    result['gate_pass']=result['gate_complete']and all(row['all_bitexact']for row in result['gate'])
++    if not result['gate_pass']:
++        result['timing_skipped']='Strict original/existing/candidate bitexact gate failed; no relaxation'
++        result['verdict']='COMPONENT_FAIL; all nine numerical comparisons preserved'
++        (out/'result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='ascii')
++        print(json.dumps(result,sort_keys=True),flush=True)
++        raise SystemExit(1)
+     def capture(fn):
+         held=fn();torch.xpu.synchronize()
+         g=torch.xpu.XPUGraph()

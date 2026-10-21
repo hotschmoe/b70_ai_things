@@ -9940,3 +9940,39 @@ VERDICT: finite operational researchPASS only; longdecodebenefit/short
 regression, no fidelity/stability/200K/fault-clearance promotion. NoQSA
 GPUqueued. NextprefillB32/64/256 criticalpath+VRAM hypothesisonly; parent
 owns HCcomponent and retained route/Q8F short controls next.
+
+
+## 2026-10-21 18:55 A1 -- HC r2 signed-zero rejection audit
+
+CONFIG: CPU-only audit of d1/hc_subgroup_r1/probe-r2, same candidate
+SO84b64...; nine M1/K320/H2560/HC4 cases, no GPU/new test/gate relaxation.
+COMMAND: inspect raw JSON/lifecycle/health/source and original/existing/
+candidate sources; decode saved CPU .pt output storage using stdlib only.
+RESULT: existing_fused/candidate exact23040/23040elements; each differs
+from original only large_gate weight1 [0,386], original BF16+0/0x0000
+versus both fused-0/0x8000. Absolute error0; comparator ULP1 is signed-zero
+encoding distance. Strict gate FAIL preserved; all graph/timing/all96/
+changed-input/M2 checks skipped. BODY1 is explicit parity reject,
+POST0/SOURCE0/no container leftover, native card1 both health HEALTHY;
+closed18:55:55UTC. Source shows tl.exp versus sycl::exp and subgroup/SLM
+changes but lacks saved intermediate proof of zero-sign cause.
+VERDICT: finite signed-zero parity failure, no nonzero output deviation
+or runtime invalidity observed; no fused graph/full-model/serving/speed
+qualification. No cause attribution or relaxed gate. Full details and
+exact SO hashes in reports/3A1_audit.md.
+
+
+## 2026-10-21 19:03 D1 -- HC component strict signedzero reject; sources preserved
+
+CONFIG: currentcanonical ORIGINALQ8, Q8F/route absent; Lc existingcandidate
+separate. M1upcollapse subgroup-local SO84b64, same LPR8/BF16points.
+COMMAND: CPUbuild36s afterQ1quietrelease; granted card1 probe-r1 then
+reporting-only repaired probe-r2, no rebuild; nativepre/post+sourceguards.
+RESULT: R1body17s/R2body16s exit1, containersclosed, nativepostHEALTHY
+15/14s, SOURCE0, released18:52:17/18:55:55. R2all9cases saved; ONLYlargegate
+weight1,h386 original+0(0000) vs existing/new-0(8000), count1/ULP1/maxabs0;
+existing=new all9. StdlibrawCPUstorageconfirmszero, payload41723bytes.
+VERDICT: strictFAIL/timingSKIPPED; no newHCspeed/bitexact claim orGPUretry.
+Port harness/d1_hc_subgroup preserves kernel+R1source and measuredSOidentity;
+CPUownership/ASCII/AST/bashPASS, no rebuild. Parentreviewed/ported trimmed
+existingflag diagnosticpair; no D1servequeued. Report3D1_decode.md.

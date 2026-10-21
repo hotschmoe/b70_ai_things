@@ -934,3 +934,60 @@ strict fidelity/repeat failures persist, planned KV capacity drops one
 block. Keep this tradeoff explicit. One fixed-order process pair with
 two C1 streams and one C2 pair per context is not a repeated statistical
 campaign, promotion, quality or external-submission qualification.
+
+
+## 2026-10-21 18:55 HC component r2 - signed-zero strict rejection
+
+CONFIG: CPU-only independent audit of `d1/hc_subgroup_r1/probe-r2`.
+Same candidate SO84b64b232579423e6b7e55f1eb0bd0a2611ffaa01ba410f003eb241b17dcb2d9
+and existing O4 SO0377d20b562fc00671117c5977a93cfc259fe5a584d11bdce78d481067136af9.
+M1/K320/H2560/HC4 synthetic ready inputs; random, zero and large_gate
+activation cases, each at weight indices0,1,95. This is nine cases,
+not a numerical check of all96allocated weights or real model weights.
+
+COMMAND: read completed result/status/window/health/source artifacts,
+probe.py, original hc_decode.py, existing w8_gemv.cpp and scratch
+upcol.cpp. Independently inspect the saved CPU .pt ZIP storage with
+stdlib zipfile/struct after verifying pickle metadata maps storages0/1/2
+to original/existing_fused/candidate BF16[1,2560]. No Torch import, GPU
+access, numerical rerun, gate change, build or production source edit.
+
+RESULT: all nine cases completed. Existing_fused and candidate are
+bitexact across all23040output elements. Each differs from original in
+exactly one element: large_gate, weight1, [0,386]. Saved raw BF16 is
+original0x0000 (+0), existing_fused0x8000 (-0), candidate0x8000 (-0).
+All other output bits agree. All outputs are finite and maximum absolute
+value difference is0. The reported maximum BF16 ULP1 is the comparator's
+adjacent signed-zero encoding distance; it is not a nonzero value error.
+The original__vs__original entry compares an output to itself and is not
+an independent repeat/determinism trial.
+
+Original means the same Q8 up GEMV with ksplit-8 followed by Triton
+_hc_collapse, not unquantized BF16 weights. Existing SYCL up+collapse
+and candidate retain the per-row LPR8 chunk/FMA/XOR reduction sequence,
+BF16 gate rounding, BF16 sigmoid/product rounding and four-stream sum.
+Candidate moves stream ownership into one subgroup and removes the
+existing cross-subgroup SLM/barrier. Original collapse uses tl.exp;
+both fused versions use sycl::exp. Source differences identify possible
+investigation locations, but the saved payload lacks device gate,
+sigmoid and partial-sum intermediates; it does not establish whether
+transcendental evaluation, accumulation, compiler treatment of zero or
+another implementation detail caused the sign difference. No cause is
+assigned from final-output parity alone.
+
+Strict gate_pass=false is preserved. timing=[] and timing_skipped
+explicitly records strict failure without relaxation. The failure branch
+returns before graph capture/replay, changed-input/all96weight checks,
+timing and the M2 rejection check; none of those are qualified by r2.
+Window closes18:55:55UTC with BODY_RC1 (the intended strict reject),
+POST_RC0,SOURCE_RC0,CONTAINER_LEFTOVER0. Native card1 pre/post health is
+HEALTHY, and all nine listed source/SO/lifecycle hashes verify unchanged.
+
+VERDICT: observed failure is signed-zero strict bit parity, with no
+nonzero output discrepancy or runtime invalidity observed in these nine
+M1 cases. It does not justify invalidating the default original route or
+claiming model corruption. It also does not qualify either fused route:
+Q8F is default-off, strict failure remains recorded, and graph/timing,
+full-model pressure and serving qualification remain absent. Keep the
+full-route/Q8F serves paused pending root's explicit qualification plan;
+no gate was relaxed and no additional test was run by this audit.

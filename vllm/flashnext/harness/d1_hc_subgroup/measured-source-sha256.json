@@ -1,0 +1,52 @@
+{
+  "measured_library_path": "/mnt/vm_8tb/b70/build/vllm-flashnext/d1/hc_subgroup_r1/libd1_hc_sg_r1.so",
+  "measured_library_sha256": "84b64b232579423e6b7e55f1eb0bd0a2611ffaa01ba410f003eb241b17dcb2d9",
+  "raw_runs": {
+    "probe-r1": "/mnt/vm_8tb/b70/build/vllm-flashnext/d1/hc_subgroup_r1/probe-r1",
+    "probe-r2": "/mnt/vm_8tb/b70/build/vllm-flashnext/d1/hc_subgroup_r1/probe-r2"
+  },
+  "r1_original_source_preserved_byteidentical": true,
+  "port_scope": "kernel and frozenR1source identical; current probe/build/window and CPUoutput paths only",
+  "source_map": {
+    "upcol.cpp": {
+      "scratch_sha256": "0561d9de151ecd10faf37af3338bc1b746eac3426a542988aab63adc6bda5fe2",
+      "port_sha256": "0561d9de151ecd10faf37af3338bc1b746eac3426a542988aab63adc6bda5fe2",
+      "byte_identical": true
+    },
+    "build.sh": {
+      "scratch_sha256": "8e9fa7aaea24159b7bdb8464d46fd033e6f093d266665caa4b629045741bcfe4",
+      "port_sha256": "a74e1e7ed3b8cafe157e03faf7ad8c2529da010960ef3ef801958c3709587318",
+      "byte_identical": false
+    },
+    "probe.py": {
+      "scratch_sha256": "2eaabb2363999e0b01cd63f0d91095f58a40773a2640ab04ab03c6bddac7d7b0",
+      "port_sha256": "dae87c69661985e41fb7a6f07563436aeab221379c1a9cc0ca4c582169b1b9f4",
+      "byte_identical": false
+    },
+    "window.sh": {
+      "scratch_sha256": "9f9712c00e2788907f1239c50dc083d243843ed6db63a20cc47b3384cfb3acc3",
+      "port_sha256": "c6ad8683a365c60314cc90b047c8bd81acc73a3db0faad742282f87acbeb65fa",
+      "byte_identical": false
+    },
+    "cpu_check.py": {
+      "scratch_sha256": "9402fb51488daacd4c49a7f30f480d487f2be35715650363220609fd7f226731",
+      "port_sha256": "3bf7a8fd4a3c2e88a2fae1359512820e310226a15c863a104e01785e3a6867d4",
+      "byte_identical": false
+    },
+    "analyze_ld.py": {
+      "scratch_sha256": "994b6103a5c096fb39d50540a8edc1c33fd7d276adc83d77a1d8747c6f378fe5",
+      "port_sha256": "c6166ea9932c101b38b5deb4a4651e3704f6b21f0adae17de946e22bfed2521e",
+      "byte_identical": false
+    },
+    "read_cpu_payload.py": {
+      "scratch_sha256": "2beec7919be9ca16da692d2a463546a64a780850e96948d31e151f9f9a1add45",
+      "port_sha256": "77ca39e57eae5fd3d76c68af9ef37daf9142daf93b7b35596bbbe4956114feed",
+      "byte_identical": false
+    },
+    "probe-r1-source.py": {
+      "scratch_sha256": "45fb9bb51404360d3157b10ab2d8ecf65f671cf2761f06fbf89e6bc835107e00",
+      "port_sha256": "45fb9bb51404360d3157b10ab2d8ecf65f671cf2761f06fbf89e6bc835107e00",
+      "byte_identical": true
+    }
+  }
+}
