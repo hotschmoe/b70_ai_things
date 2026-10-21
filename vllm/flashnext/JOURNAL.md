@@ -10011,3 +10011,82 @@ private10+SO4OK; kernellogonlyDockernet/no matchingGPUfault. Closed19:10:32.
 VERDICT: completedfiniteclientrates do not override strictrepeat or
 process-teardownfail. Urgentclosurefinding sentparent before treatmentGO.
 No normalteardown/stablepair/promotion claim. Full detail in3A1_audit.md.
+
+
+## 2026-10-21 19:25 A1 -- shutdown30 control natural exit independently verified
+
+CONFIG: frozen shutdown_grace_r1/d1-shutdown30-control-r1 and mergedF1;
+CPUonly, retainedclients/observer/SOs plus supportedCLI30/Docker45/procwatch.
+COMMAND: read actualbranch/config, reconstruct saved canonicalSSE/text/
+arrivals/511ITLs/rates, inspect closure/health/source and saved/proc only.
+RESULT: live timeout30,131072/12288/4/TP1/specnull/prefixfalse/mode0,
+GPUblocks231; w8_gemv prefullcapturePID107/no treatmentops. Clients132.706s
+complete; only exactrepeatFAIL/HARNESS3, all8canonical512outputs/chunks,
+warmexcluded medians61.514492092reasoning/61.836305952code. AtSIGTERM
+19:24:31,worker.done19:24:32, managerstopped19:24:36/no forcekill. Watcher
+actually captures hostPID100775 Z/waitstatus0 at19:24:36.300775, notexit0
+inferredfromdisappearance. Span5.598s startsbeforeDockerstop; observedZ
+~3.3-4.3s aftersecond-resolutionworker.done. ActiveCPU/threadcleanup then
+sampled D/folio_wait beforeZ is notcausalGPU/deadlockproof. Source507bad[],
+private16/SO4OK/postbothHEALTHY; kernel39lines/noGPUfaultmatches.
+Operationaltrue/issues[]/strictfalse; closed19:25:17. Earlier5sreject
+unchanged. VERDICT: finite timeout-limitedcleanup result, no fidelity/
+globalstability/promotion/newStrataMTP qualification. Full3A1 report.
+
+
+## 2026-10-21 19:26 D1 -- shutdown30 control naturalexit0, strictreject retained
+
+CONFIG: same retainedcontrol/body, supportedCLI30 replacesXPUauto5;
+Docker45/passiveproc onlyteardown, frozen507sources.
+COMMAND: d1-shutdown30-control-r1 bothcards19:18:44 READY19:22:17.
+RESULT: requestphases132.7s; canonicalvalid61.5/61.8, exactrepeatFAIL.
+Actualconfig30/branch/source507/private/SOPASS. NaturalEngineCoreZ
+waitstatus0, noforcekill; firstsample->Z5.590916308s, actualexit bracket
+(5.090192782,5.590916308]s; notexactSIGTERMinterval. Nativepre/postHEALTHY
+27/32s/kernelclean/containerabsent/released19:25:17. OPERATIONAL0/HARNESS3.
+VERDICT: finitecleancontrol, notuniversalgracefix/promotion. Original5s
+rejectpreserved. RootgrantedSINGLEroute+Q8Ftreatment on samefrozencfg;
+started19:26:18, nootherGPU/reset/retry. Report3D1.
+
+
+## 2026-10-21 19:32 A1 -- final existing route/Q8F matched audit complete
+
+CONFIG: shutdown30/Docker45 fixedordercontrol+treatment, sources507frozen,
+onlyEP_ROUTE1/Q8F1delta; no new subgroup kernel/GPU/tests byA1.
+COMMAND: independent sources/SOs/fork/config/fixture equality, actualop
+returns, all16canonicalSSE/text/512usage/arrival/511ITL math and closure.
+RESULT: exact507source/preflight/privatewrapper/SOmanifest/forkpatch across
+pair; all sourceafterbad[]/private16/SO4OK. Fullconfigdiffonlyinstance/quant
+repr; GPUblocks231/KV356207tokens/Cmax2.72/profile0.39+final0.02GiB same.
+TinyautoKVbudgetrecommendations-81920/-94208bytes are retained inreport.
+Treatmentactualroute/downact/upreturns precedefullcapturePID107; w8_gemv
+fallbackalsoobserved, no exclusivefusedclaim. Warmexcluded canonical512
+reasoning61.514492092->63.534291311 (+3.283453%tok/s,-3.179069%ITL),
+code61.836305952->63.861132643 (+3.274495%,-3.170671%). Versushistorical
+Strata66.2/65.9 treatmentstill-4.026750/-3.093881%; short64tokenp50 is
+separated. Alloutputs512/finishlength/counters1request512tokens/prefix0,
+fixturehashessamebutnonce-bearingrequests differ. BothonlyexactrepeatFAIL;
+math/needles/Paris/minimalF1PASS. TreatmentnaturalZ/wait0 observed19:32:12.280075,
+no forcekill/postbothHEALTHY/kernel46lines noGPUfaultmatch. Closed19:32:52,
+operationaltrue/HARNESS3 preservesstrictfalse. Earlier5srejectunchanged.
+VERDICT: finite combinedflags gain in onefixedorderpair; no isolated
+kernelcausality/generalstability/quality/MTP/200K/eviction/promotion claim.
+Full paired table, memory, proc ranges and limits inreports/3A1_audit.md.
+
+
+## 2026-10-21 19:34 D1 -- existing route+Q8F +3.28% canonical, still belowStrata
+
+CONFIG: matchedfixedorder shutdown30/Docker45 pair, same507sources/4SOs/
+privatelifecycle/config exceptrunmetadata; originalFA/N1off/noP1/QSA/MTP.
+COMMAND: separatelygranted control then routeq8f via d1_shutdown_grace/window.sh.
+RESULT: rawcanonical medians61.514492/61.836306 ->63.534291/63.861133tok/s
+(+3.283/+3.274%); historicalStrata66.2/65.9 remainsahead2.665709/2.038867.
+Normalizedfixtures/optionsmatch exceptstandardcachebustnonce;512tokensall.
+ShortC1p5015.156->14.665ms,C2~19.56->19.23ms. Actual3nativeopsreturnbefore
+fullcapture; bothoperationaltrue/strictrepeatfalse/HARNESS3. Treatment
+naturalZwaitstatus0, firstsample->Z5.573460021s (notexactSIGTERMinterval),
+nativepre/postbothHEALTHY28/31s/source507bad[]/privateSO0/kernelclean;
+containerabsent/released19:32:52. Controlclean27/32s similarlyclosed.
+VERDICT: finitebundle gain only, below512tokenStratabar; no promotion/
+submission/newHCspeed/P1QSAcombination. Defaultsunchanged; nofurtherGPU.
+Details/crossarmhashes/rawrates inreport3D1 andmatched-route-q8f-summary.json.

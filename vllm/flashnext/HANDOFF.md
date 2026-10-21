@@ -1,5 +1,9 @@
 # Flash-Next on vLLM: session handoff (2026-10-21)
 
+Latest measured checkpoint: the final section below and reports/3D1_decode.md.
+The retained route/Q8F pair closes cleanly with shutdown30/Docker45; canonical
+63.534/63.861tok/s, strict repeats still fail. Strata DD remains down.
+
 Written after an office power outage, around 15:38 UTC on 2026-10-21. The
 host rebooted. All agents were killed mid-run: grok, Codex, Opus, Fable.
 Nothing was lost on disk except /tmp, which is tmpfs, so any agent scripts
@@ -417,3 +421,69 @@ to5; source log and live config agree. Worker cleanup is not final process
 exit. Next bounded control uses supported --shutdown-timeout30 plus outer
 Docker45s to distinguish slow finalization from an exit hang. Preserve the
 original reject; no runtime-fault, cause, stability or timeout-fix claim.
+
+Shutdown30 control d1-shutdown30-control-r1 closes operationally:
+canonical61.514492/61.836306, all eight warm+measured requests complete,
+identity/math/retrieval pass, exact repeats fail. Source507/private16/SO4,
+both-card health and kernel checks pass. Host sampler actually captures
+EngineCore Z with waitstatus0, no forced kill. About5.6s is the watcher
+span, NOT exact SIGTERM-to-exit; request logs have second resolution.
+This is one finite grace discrimination, not a universal timeout cure.
+Root then grants treatment d1-shutdown30-routeq8f-r1 with identical frozen
+sources, clients, libraries and30/45s budgets, adding only route/Q8F flags.
+The treatment is running; no result or promotion is yet claimed.
+
+## Latest measured checkpoint (2026-10-21 19:34 UTC)
+
+The final route/Q8F treatment now closes operationally and is independently
+audited. Same507 sources, fork snapshot, private serve source, pinned SOs,
+fixtures and configured workload match the shutdown30 control. Actual
+runtime config and231 GPU blocks/356207 planned KV tokens match; instance
+IDs, object repr addresses and small allocator byte recommendations differ.
+Both use maxlen131072/chunk12288/4, TP1 EP sidecar, original FA, no spec,
+prefix off, shutdown30/Docker45. The only inference change is adding
+B70_EP_ROUTE=1 and B70_DECODE_HC_Q8F=1. Actual native route/down_act/
+up_collapse returns precede full capture in the same worker; fallback
+w8_gemv remains in use where the fused branch does not apply.
+
+Canonical medians, one excluded warmup plus three measured512-token
+requests per suite, independently recomputed from raw content arrivals:
+
+| Suite | Control tok/s | Two flags tok/s | Gain | Historical Strata tok/s |
+|---|---:|---:|---:|---:|
+| reasoning-v1 | 61.514492 | 63.534291 | 3.28% | 66.2 |
+| code-v1 | 61.836306 | 63.861133 | 3.27% | 65.9 |
+
+The remaining historical gaps are4.03% reasoning/3.09% code. This is one
+fixed-order combined-flag pair, not separate kernel attribution or a fresh
+matched Strata run. All16 warm/measured requests have512 usage tokens,
+512 content arrivals, correct counters and valid dirty diagnostic payloads.
+Identity/math/8K32K retrieval and short coherence pass; exact repeats fail.
+HARNESS_RC3 preserves that strict reject while operational_outcome is true.
+
+Both engines are actually observed in host /proc as Z with waitstatus0,
+without force kill. Sampler spans are about5.6s, not exact SIGTERM-to-exit.
+Both-card pre/post native health, source/private/SO and kernel checks pass.
+The prior5s forced-control teardown remains a reject; these two finite
+successes do not prove a universal shutdown cure or global stability.
+
+Reproduce only under root GPU coordination with a fresh TAG:
+
+    ARM=routeq8f TAG=fresh bash vllm/flashnext/harness/d1_shutdown_grace/window.sh
+
+This finite research wrapper does not deploy a long-lived server. Default
+O4/F1 recipes, DD service and shelf are unchanged. P1 selected dequant and
+QSA selectors were measured separately and are NOT combined into this pair.
+Historical MTP results have not been requalified after the outage.
+
+Next decision points:
+1. Optimize the existing fused HC path with the subgroup candidate only
+   after an explicit numerical contract: its original strict component
+   gate remains rejected for one signed-zero bit; no timing/graph claim.
+2. Measure a combined P1 plus retained fusion recipe and requalify MTP;
+   do not assemble a performance claim from separate configurations.
+3. Close repeatability/long-C2 tails and qualify actual Flash-Next2x200K
+   plus RAM eviction/restore without recompute. These remain open.
+
+No external submission or daily-driver promotion. All research containers
+are down and leases released; leave Strata DD down per user campaign mode.

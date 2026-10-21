@@ -767,3 +767,122 @@ VERDICT: finite canonical diagnostic completed; control is NOT operationally
 clean due forcedEngineCore cleanup, and strictrepeat rejects. Preserve all
 raw statuses; parent must decide any treatment separately. No code changes
 between intendedarms and no claim of successful promotion/control closure.
+
+
+## Shutdown30 control: finite natural exit, original reject preserved
+
+CONFIG: source of prior5s deadline VERIFIED in actualcontrol serve.log63:
+XPUplatform xpu.py447 maps CLIdefault0 to5 (source445 conditional). Actual
+liveconfig records5. Supported --shutdown-timeout30 bypasses that branch;
+privateDockerstopgrace45 +readonlyhostproc onlyduringteardown. Same
+retaineddefault/config/body/observer/SOs as prior5sreject; no kernel/fork
+change, no newGPUhooks/reset. Production graceport/freezeeb671679,507sources.
+
+COMMAND: ARM=control TAG=d1-shutdown30-control-r1 bash
+harness/d1_shutdown_grace/window.sh, bothcards19:18:44,READY19:22:17.
+RawB/d1/shutdown_grace_r1/d1-shutdown30-control-r1 and
+B/f1/merged-d1-shutdown30-control-r1. Same trimmedclients/240spostREADY.
+
+RESULT: nativeprebothHEALTHY27s. Actual/live shutdown_timeout30 and full
+no-spec config checked; originalw8_gemv return before fullcapture marker,
+branchPASS. Promoidentity/math/needlesPASS, exactrepeatFAIL. bench/probe/
+canonical0, all4phases132.70495s. Canonicalvalid61.5/61.8tok/s, allwarm+3
+samples saved, rankingeligiblefalse. No shortdecode speedchange claimed.
+
+Teardown watcher firstsample_savedtrue, ARM/WATCH0. No forcekill. Natural
+EngineCorehostPID100775 stateZ/stat52waitstatus0 captured. SERVE0/ENGINE0,
+OPERATIONAL0/issues[], HARNESS3 strictlypreserved dueexactrepeat. Passive
+samples show threads78->2; mainR2-4s thenD/folio_wait_bit_common4.6-5.1s
+fromwatchstart, thenZ; no nativePC/cause inferred. EngineCore worker.done
+precedes cleanup_dist_env_and_memory/interpreter/nativefinalization.
+
+Timing semantics: firstsample19:24:30.709858688->observedZ19:24:36.300774996
+is5.590916308s. Actualexit liesbetween finalnonZ andZsamples: fromfirst
+(5.090192782,5.590916308]s. Watchstart->Z5.597982724s. SIGTERMlog has ONLY
+secondresolution19:24:31, worker.done19:24:32, managerstopped19:24:36;
+5.59s is NOT an exact SIGTERM-to-exit measurement. Details in
+teardown-interval.json/teardown-summary.json outside source tree.
+
+NativepostbothHEALTHY32s, source507bad[], private/SO0, kerneljournalclean,
+containerabsent/bothleasesreleased19:25:17. Original5sforcedcleanupreject
+remains untouched. This finite intervention supports deadline-limited
+cleanup as a hypothesis; it is not a universal cure or a liveness cause.
+
+VERDICT: operationally complete finite control, strictrepeatFAIL and no
+promotion. Root separately granted SINGLE existing route+Q8F treatment
+with same30/45/frozen507sources/SOs/body/observer. Treatment underway under
+new tag; no independent extra GPU work, retry or reset is authorized.
+
+
+## Existing route + Q8F matched pair: +3.28 percent, still below Strata
+
+CONFIG: control then treatment, one fixed-order dirty diagnostic pair,
+frozen507sources/effective4SOs/private lifecycle bytes identical. TP1EP
+sidecar, maxlen131072/chunk12288, originalc7bFA/plan0/N1off, noP1/QSA/MTP/
+FA8/HC_FUSE changes. Both actualconfigs use shutdown30/Docker45; all fields
+match except runinstance_id and quantconfig object's printedaddress.
+Only functionalenv delta is B70_EP_ROUTE=1 +B70_DECODE_HC_Q8F=1; branch
+output directory differs as evidence metadata. F1EPc249cf94e retained;
+new subgroupSO84b64 is NOT loaded. Defaultrecipe remains unchanged.
+
+COMMAND: ARM=control TAG=d1-shutdown30-control-r1 then separately granted
+ARM=routeq8f TAG=d1-shutdown30-routeq8f-r1 bash
+vllm/flashnext/harness/d1_shutdown_grace/window.sh. Treatment started
+19:26:18/READY19:29:57, same onepromo/shortbench/minimalF1/canonicalONLY;
+postREADY240s bound. Reproduce ONLYafter coordinated grant with freshTAG
+using that routeq8f command. No external submission or promotion.
+
+RESULT: every warmup+3 measured canonical request forces512 outputtokens.
+Normalized requests are byte-equivalent after stripping ONLY standard
+LocalMaxxing cache-bustnonce, with all other request fields equal. Actual
+prompttokens vary with nonce: reasoning control341/347/346 vs treatment
+347/348/348; code281/279/281 vs283/281/278. This is the faithful canonical
+protocol, not exact nonce-token equality or deterministic output parity.
+Raw median output rates, not rounded CLIpayload summaries:
+
+| Suite | Control tok/s | Route+Q8F tok/s | Gain | Historical Strata tok/s | Remaining gap tok/s |
+|---|---:|---:|---:|---:|---:|
+| reasoning-v1 | 61.514492 | 63.534291 | 3.283% | 66.2 | 2.665709 |
+| code-v1 | 61.836306 | 63.861133 | 3.274% | 65.9 | 2.038867 |
+
+Treatment trails historical Strata by4.027%/3.094% respectively. Reciprocal
+median-rate latency drops0.516800/0.512752ms. Short64token bench C1p50
+15.156042->14.664565ms; C2perstream p50 19.560515/19.568130 ->
+19.220978/19.235395ms (~0.33-0.34ms, ~1.7% reduction). ShortC1 is NOT a
+512token target win; no matched historical no-specC2 bar was established.
+Minimal1KF1 remained a coherence diagnostic, not a new prefill claim.
+
+Treatmentactual nativeop_return evidence: w8_down_act13904965730111,
+w8_up_collapse13904966113020, moe_ep_route13906263239619 all beforefull
+capture_return13916294858598 inworkerPID107. Control proves original
+w8_gemv beforefullcapture and no treatmentops. Observers restore native
+op attributes after first success; no Tensorread/sync/perop timedlogging.
+Branchproof in both outcome.json files PASS; installedflags alone unused.
+
+Treatment all4clientphases complete129.09885spostREADY, canonicalvalid/all
+samples saved, bench/probe/canonicalRC0. In BOTHarms identity/math/8K32K
+needles PASS, exactrepeatFAIL=>HARNESS3 retained; OPERATIONAL0/issues[].
+No bitexact/stability/fidelity promotion follows. Route weights can change
+ulps/tokens; existingHC component has signedzero exception. The observed
+bundle gain cannot isolate route fromHC or establish a repeated-order gain.
+
+Treatmentnatural EngineCorehostPID103593 stateZ/stat52waitstatus0; no
+forcekill, SERVE0/ENGINE0/ARM0/WATCH0. FIRSTsample->observedZ5.573460021s,
+actualexit bracketfromfirst (5.072919845,5.573460021]s. Watchstart->Z
+5.580213982s. SIGTERMlog19:32:07/worker.done19:32:08/managerstopped19:32:12
+are secondresolution; do not call5.573s an exact SIGTERM-to-exit interval.
+Control's corresponding firstsample->Z5.590916308s/bracket
+(5.090192782,5.590916308]s remains separately recorded. Original5s forced
+cleanup reject is preserved;30s finite natural exit is not a universalfix.
+
+TreatmentnativeprebothHEALTHY28s/postbothHEALTHY31s, source507bad[], private/
+SO0, kerneljournalclean, containerabsent/bothleasesreleased19:32:52. Control
+pre/post27/32s alsoHEALTHY. Crossarm summary with source/config/env/fixture
+hashes/rawrates: B/d1/shutdown_grace_r1/matched-route-q8f-summary.json.
+Rawbothouterdirs inB/d1/shutdown_grace_r1 and liveartifactsB/f1/merged-*.
+
+VERDICT: existing default-off route+Q8F gives an observed~3.28% canonical
+no-spec gain in this clean finite pair, but63.53/63.86 still trail historical
+66.2/65.9. StrictrepeatFAIL/dirtydiagnostic/rankingeligiblefalse/no promotion.
+No newHCspeed claim; noP1/QSA combination. Keep retaineddefaults unchanged.
+All authorized GPUwork complete; no furtherGPU/reset/retry/jobs queued.

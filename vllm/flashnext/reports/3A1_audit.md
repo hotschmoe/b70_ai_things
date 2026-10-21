@@ -1059,3 +1059,189 @@ qualified under the prepared gate, and cannot supply a normal-teardown or
 matched stable-pair claim. Parent must decide next action from the actual
 shutdown evidence before any separately authorized treatment. No treatment
 speed, global stability, promotion or external submission is established.
+
+
+## 2026-10-21 19:25 shutdown30 control - natural exit observed
+
+CONFIG: `d1/shutdown_grace_r1/d1-shutdown30-control-r1` and
+`f1/merged-d1-shutdown30-control-r1`. New supportedCLI shutdown30,
+Dockerstop45 and passive host/proc teardown sampler; retained original
+control clients/observer/SOs remain unchanged. Source checkpoint eb671679.
+Earlier5s control forcekill rejection remains a separate immutable result.
+
+COMMAND: CPU-only source review followed by independent raw observer,
+live config, SSE/sample/usage/counter, lifecycle, source/SO/kernel and
+saved proc-state audit. No tests, GPU calls or production edits. The
+passive monitor begins after all client timings; it does not measure or
+instrument GPU inference.
+
+RESULT: actual live JSON shutdown_timeout=30. Other required config is
+131072/12288/4/TP1/speculation null/prefix false/mode0/FULL[2,0]/capture
+sizes[1,2,3,4,8], GPUblocks231. Stable model ID remains first and expected
+registered O4alias second. PID107 w8_gemv return13445570928241 precedes
+profile capture13448469696200 and full capture13457092353475; no
+forbidden route/down_act/up_collapse return or observer error is saved.
+
+Only strict exact_repeat fails. Identity/arithmetic323/667,8K/32Kneedle,
+identityafter/unchanged pass; gateRC3 is preserved. Bench/probe/canonical
+RC0 and all client phases complete132.705705s within240s without expiry.
+Canonical both suites have one excluded warmup and three measured512-token
+requests, all finish_reason=length,512content arrivals/511ITLs. Independent
+SSE reconstruction agrees with saved text/arrivals/intervals and every
+rate; per-request deltas isolate1success/512generation/zero prefix hits.
+Canonical prompt hashes match text and prior control fixtures. Live
+speculation null proves configured no-spec; no draft activity is recorded.
+Validation true/diagnostic true/ranking false/submitted false persists.
+
+Reasoning measured rates61.563975496/61.501800444/61.514492092 give
+median61.514492092tok/s,16.256331898ms/token (iteration3). Code
+61.836305952/61.813686786/61.844971436 gives median61.836305952,
+16.171729288ms/token (iteration1). Warmup61.508577773/61.782528145
+is excluded. These remain below historical Strata66.2/65.9; no new
+post-outage Strata/MTP or paired treatment comparison is established.
+
+ActualSIGTERM begins19:24:31 and worker cleanup logs done19:24:32.
+Engine manager stops19:24:36 with no force-kill line and empty
+engine-errors.txt. Passive watcher maps containerEngineCore107 to
+hostPID100775, confirms unchanged starttime, records12samples, and
+captures actual stateZ with field52waitstatus0 at19:24:36.300775UTC.
+This is observed normal exit evidence, not an inference from process
+disappearance. First sample is19:24:30.709859 and lastalive sample
+19:24:35.800051, bounding exit observation to the final0.501s interval.
+The5.598199s watcher span starts beforeDockerstop and is not an exact
+SIGTERM-to-exit duration. Second-resolution worker log places observedZ
+approximately3.3-4.3s afterworker.done.
+
+Leader hasR samples during active cleanup, D/folio_wait_bit_common at
+19:24:35.296/35.800, thenZ. Threads decrease78->2; user/system CPUticks
+increase18631->18907/35785->35935. Other threads mostly showfutex/ep_poll.
+These are sampled finite cleanup activity/wait observations; they do not
+identify a native function, deadlock, GPU fault or precise cleanup cause.
+
+Final SERVE0/ENGINE_ERROR0/nativebothcard pre/postHEALTHY; source507bad[],
+all16private and4SO hashes unchanged. Captured39-line kernel journal has
+no matching GPUfault/reset. Handshake/watchRC0 and actualfirstsample true.
+Window closes19:25:17UTC with operational_complete=true,issues=[],
+OPERATIONAL_RC0; HARNESS_RC3 retains strictrepeatfalse. Qualification
+remainsfalse.
+
+VERDICT: finite supported-grace diagnostic succeeds operationally and
+captures natural EngineCore exit0. Together with the separate5s forcekill
+result it supports timeout-limited cleanup for this retained recipe/body;
+it does not retrospectively pass the5s arm, identify cleanup cause or
+establish global stability. Strict repeat still fails and canonical speed
+still trails historical Strata. Any treatment requires parent's separate
+GO and unchanged paired evidence; no promotion or submission is implied.
+
+
+## 2026-10-21 19:32 final retained-default versus existing route/Q8F pair
+
+CONFIG: matched shutdown30/Docker45 control and separately authorized
+routeq8f treatment under `d1/shutdown_grace_r1/d1-shutdown30-{control,
+routeq8f}-r1`, with live artifacts in corresponding `f1/merged-*` paths.
+Original c7bFA/F1EPc/O4HC,131072/12288/4/TP1, no N1/plan/P1/QSA/MTP,
+prefix disabled. Treatment adds only B70_EP_ROUTE=1 and
+B70_DECODE_HC_Q8F=1; tag/observerdir are evidence metadata. This uses
+EXISTING O4HC SO0377d20b, not new subgroup SO84b64, whose strict component
+gate failed signed-zero parity and whose timing remains unmeasured.
+
+COMMAND: CPU-only independent cross-pair comparison of source/preflight/
+generated wrapper/SO/fork/config/fixture/payload identity, actual native-op
+returns, saved canonical SSE and all512token usage/arrival/counter arrays,
+strict/coherence checks, proc exit witness, lifecycle/nativehealth/kernel.
+No GPU/test/build/shared production edits. Report and JOURNAL only.
+
+RESULT: source-before manifests are exactly equal across507files, including
+forkHEAD/diff/untracked identity; both afterward verify bad=[],files507.
+Preflight JSON, generated serve.sh, four-SO manifest, callback forkHEAD,
+fork.patch and fork-untracked.txt are byte-identical. Both16private hashes
+and4SO checks pass unchanged. Canonical payload model/method/quantization/
+fixture hashes match, stable hotschmoe-dd is first and O4researchalias is
+second. The canonical text fixture is identical; requests intentionally
+have different random leading nonces and slightly different prompt token
+counts (reasoning control341-347/treatment347-348 measured; code279-281/
+278-283). Do not call the raw nonce-bearing request bytes identical.
+
+Actual full live config JSON differs only instance_id and the quant-config
+object's repr address. Both have shutdown30, maxlen131072, chunk12288,
+maxseq4,TP1,speculation null,prefix false,mode0,FULL[2,0],capture sizes
+[1,2,3,4,8],GPUblocks231. Both log availableKV8.49GiB,KV356207tokens and
+maximum131072-context concurrency2.72x; profile/final graph footprint is
+0.39/0.02GiB in each. Startup automatic suggested KV byte budgets differ
+slightly:8938776966->8938695046 and9184921088->9184826880. These are
+81920/94208fewer suggested bytes, not a measured block/capacity change.
+First-layer card1free rounds1.29->1.28GiB. Keep these observed memory
+measurements separate from identical configured parameters/capacity.
+
+Control's actual pre-full-capture witness is w8_gemv only. Treatment
+PID107 records w8_down_act13904965730111,w8_up_collapse13904966113020,
+moe_ep_route13906263239619, all before profilecapture13907828470094 and
+fullcapture13916294858598. Treatment also records w8_gemv13906244529644,
+so exclusive fused dispatch is not established. No observer/op errors
+occur. These are real successful host native-call returns in one worker
+before capture completed, not device synchronization, per-layer execution
+counts or every subsequent graph replay proof. Control has no forbidden
+route/down_act/up_collapse return.
+
+Both complete all postREADY phases without bound expiry:132.705705s
+control,129.099693s treatment. GateRC3 is solely exact_repeat=false;
+identity/arithmetic323/667,8K/32Kneedle,finalidentity all pass in both.
+Short-bench Paris coherence is true/same within each arm, but the actual
+Paris prose differs across arms. MinimalF1 short/1024coherence323/667
+passes in both. These finite checks do not establish answer quality or
+strict cross-arm equality.
+
+All16canonical requests, including both warmups per arm, have512usage
+completion tokens,512nonempty content arrivals,511ITLs and finish=length.
+Saved SSE events reconstruct every output and arrival array; interval/rate
+math recomputes. Each request has isolated1success/512generation counters,
+zero prefix hits; live specnull proves configured no-spec. Both canonical
+prompt hashes match exact fixture text. Local validations true, diagnostic
+true,ranking_eligible=false,submitted=false persist. Exclude warmup and
+select median of three measured rates, rather than median token interval:
+
+| Canonical512 suite | Control tok/s | Treatment tok/s | Throughput change | Effective ITL change | Historical Strata tok/s | Treatment vs Strata |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| reasoning-v1 | 61.514492092 | 63.534291311 | +3.283453% | -3.179069% | 66.2 | -4.026750% |
+| code-v1 | 61.836305952 | 63.861132643 | +3.274495% | -3.170671% | 65.9 | -3.093881% |
+
+Treatment reasoning measured rates are63.534291311/63.535874095/
+63.508298520, medianiteration1; code63.861132643/63.861817995/
+63.854716302, medianiteration1. Warmups63.553067852/63.893154385 are
+excluded. Effective canonicalITL is16.256331898->15.739531824ms for
+reasoning and16.171729288->15.658976886ms for code. Historical Strata
+was not remeasured; no post-outage MTP result is qualified by this pair.
+
+Separate64-token short bench C1p50 is15.156042->14.664565ms and C1mean
+rate65.894050->68.304648tok/s. C2p50 pairs19.560515/19.568130->
+19.220978/19.235395ms. Its different short prompt/output window cannot
+replace the canonical512-token comparison or be compared as though it
+were the Strata66.2/65.9suite measurement. No new subgroup kernel timing
+exists in this serve.
+
+Treatment shutdownSIGTERM is19:32:07,worker.done19:32:08 and engine
+manager stopped19:32:12, without forcekill. PassivehostPID103593 has
+unchanged starttime and12samples; lastaliveD19:32:11.779535 followed by
+actualZ/waitstatus0 at19:32:12.280075. Normal exit0 is directly observed,
+not inferred from process disappearance. Watcher span5.580356s begins
+beforeDockerstop, so it is not an exact SIGTERM-to-exit duration. Z is
+approximately3.28-4.28s aftersecond-resolutionworker.done. CPUticks/
+threadstate samples show cleanup activity, not the native cleanup cause.
+Both grace arms naturally exit, while original5s forcekill remains a
+separate failed closure; one finite control repeat cannot prove a general
+shutdown-cause diagnosis or future stability.
+
+BothSERVE0/ENGINE_ERROR0/emptyengineerrors and nativebothcard pre/post
+HEALTHY. Treatment captured46-line kernel journal has no matchingGPUfault/
+reset; control has39lines likewise. Source/private/SOs unchanged and
+teardownmonitor handshake/watchRC0. Treatment closes19:32:52UTC,
+operational_complete=true,issues=[]; both HARNESS_RC3 preserve strict
+repeatfailure,qualification_pass=false.
+
+VERDICT: one fixed-order matched research pair measures approximately
+3.28percent canonical no-spec throughput improvement from the COMBINED
+existing route/Q8F flags, while remaining below historical Strata and
+failing strict repeat. It does not isolate route versus HC contributions,
+qualify the new subgroup kernel, demonstrate global stability/quality,
+requalify MTP or establish200K/eviction capability. No promotion or
+external submission is justified by this audit.

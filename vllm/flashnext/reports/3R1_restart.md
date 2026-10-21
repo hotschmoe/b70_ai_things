@@ -277,3 +277,45 @@ body17s, container gone, card1 HEALTHY and all source hashes unchanged.
 Preserve that reject and quantify the masked candidate comparison before
 running full fusion serves. Do not count an incomplete numerical gate
 as a performance result or silently relax it.
+
+## Final route/Q8F checkpoint and shutdown grace
+
+CONFIG: one fixed-order retained control / existing route+Q8F pair, TP1
+EP sidecar across both cards, original FA, maxlen131072/chunk12288,
+no speculative decoding, P1, QSA or N1. Sources507, four SOs and private
+lifecycle bytes match. Only treatment flags B70_EP_ROUTE=1 and
+B70_DECODE_HC_Q8F=1 differ functionally. Both use shutdown-timeout30
+and Docker stop45; defaults and the daily service recipe are unchanged.
+COMMAND: ARM=control TAG=d1-shutdown30-control-r1, then ARM=routeq8f
+TAG=d1-shutdown30-routeq8f-r1, each with bash
+vllm/flashnext/harness/d1_shutdown_grace/window.sh.
+RESULT: canonical512 medians reasoning61.514492->63.534291tok/s and
+code61.836306->63.861133tok/s, gains3.283%/3.274%. Treatment remains
+4.027%/3.094% below historical Strata66.2/65.9, not remeasured today.
+Actual native route/down_act/up_collapse returns precede graph capture;
+the existing GEMV fallback remains in use. This measures combined flags,
+not separate attribution or the new subgroup kernel.
+
+Both arms pass identity/math/8K32K needles, native pre/post health,
+source/SO checks and clean kernel windows. Exact repeat fails in both;
+HARNESS_RC3 remains a qualification failure even though all client phases
+finish and operational closure passes. Both EngineCore processes are
+directly observed as zombies with waitstatus0, without force kill. About
+5.6s from passive first sample to observed exit is not an exact
+SIGTERM-to-exit measurement. The original default5s forced-cleanup arm
+remains a failed closure; this finite intervention supports a too-short
+grace hypothesis, not a universal shutdown fix or native cause diagnosis.
+
+VERDICT: close on no-spec throughput, still a research recipe. Exact
+repeat, long-context C2 tails, MTP requalification and actual Flash-Next
+2x200K/RAM eviction restoration remain open. P1 prefill and QSA decode
+results were measured separately and cannot be combined into a qualified
+speed claim. No promotion or external submission. All research serves
+closed, leases released, DD left down as requested.
+
+Setup reflection: reused existing binaries, one shared bounded client
+sequence and CPU-reviewed observers, with no DD restoration between runs.
+After the first forced cleanup, a matched two-arm grace intervention
+resolved operational closure without rebuilding or weakening the fatal
+guard. Independent audit recomputed every canonical sample from saved
+SSE; no further GPU tests were needed for the final documentation.
