@@ -1,0 +1,154 @@
+diff --git a/vllm/models/qwen4_exp/xpu/mtp.py b/vllm/models/qwen4_exp/xpu/mtp.py
+index 24d2a73914..f03c91bbf8 100644
+--- a/vllm/models/qwen4_exp/xpu/mtp.py
++++ b/vllm/models/qwen4_exp/xpu/mtp.py
+@@ -9,24 +9,23 @@ Qwen3Next MTP):
+     ``[T, hc, n_embd]`` (``hc = hc_count = 4``) plus the token embedding,
+     applies two separate projections (``fc_embedding`` / ``fc_hidden``) and
+     sums them;
+-  * ``pre_fc_norm_hidden`` is a grouped RMSNorm over the wide state
+-    (per-stream, gamma of size ``hc * n_embd``) that collapses the streams by
+-    their mean back to ``[T, n_embd]``;
++  * ``pre_fc_norm_hidden.forward_wide`` normalizes the full wide vector
++    and preserves distinct streams through the shared hidden projection;
+   * the single MTP decoder layer is a standard ``Qwen4ExpDecoderLayer``
+     (full attention + hyper-connections + MoE) and re-broadcasts the fc output
+     to the wide state;
+   * the final output norm is the top-level ``hyper_connection_mixer``
+     (a ``HyperConnection`` with ``has_inject=False``).
+ 
+-All MTP weights live under the ``mtp.`` prefix in the checkpoint and are kept
+-BF16 (the quant ``ignore`` list matches ``re:.*mtp\\..*``), so the draft model
+-is entirely unquantized. The token embedding and LM head are shared with the
+-target model.
++Native checkpoint MTP weights live under ``mtp.`` and remain BF16. The
++optional B70_MTP_RT sidecar uses packed Q8 dense projections and Q2 experts.
++The token embedding and LM head are shared with the target model.
+ 
+ The target model exposes the wide residual via ``get_mtp_target_hidden_states``
+ (see ``Qwen4ExpModel``), mirroring the DeepSeek-V4 XPU MTP hook.
+ """
+ 
++import os
+ from collections.abc import Iterable
+ 
+ import torch
+@@ -112,6 +111,11 @@ class Qwen4ExpMultiTokenPredictor(nn.Module):
+ 
+         model_config = vllm_config.model_config
+         quant_config = vllm_config.quant_config
++        gguf_quant = (
++            quant_config
++            if quant_config is not None and quant_config.get_name() == "b70_gguf"
++            else None
++        )
+ 
+         config: Qwen4ExpTextConfig = model_config.hf_text_config
+         self.config = config
+@@ -125,6 +129,7 @@ class Qwen4ExpMultiTokenPredictor(nn.Module):
+         self.embed_tokens = VocabParallelEmbedding(
+             self.vocab_size,
+             config.hidden_size,
++            quant_config=gguf_quant,
+         )
+ 
+         # fc stage: two separate projections (BF16, unquantized).
+@@ -139,7 +144,7 @@ class Qwen4ExpMultiTokenPredictor(nn.Module):
+             config.hidden_size,
+             bias=False,
+             return_bias=False,
+-            quant_config=None,  # MTP fc is BF16
++            quant_config=gguf_quant if os.environ.get("B70_MTP_RT") else None,
+             prefix=f"{prefix}.fc_embedding",
+         )
+         self.fc_hidden = ReplicatedLinear(
+@@ -147,12 +152,12 @@ class Qwen4ExpMultiTokenPredictor(nn.Module):
+             config.hidden_size,
+             bias=False,
+             return_bias=False,
+-            quant_config=None,  # MTP fc is BF16
++            quant_config=gguf_quant if os.environ.get("B70_MTP_RT") else None,
+             prefix=f"{prefix}.fc_hidden",
+         )
+         # GGUF stores one packed eh_proj (K=2H) instead of the two BF16
+         # linears above. The W4A16 path leaves this unset.
+-        if quant_config is not None and quant_config.get_name() == "b70_gguf":
++        if gguf_quant is not None and not os.environ.get("B70_MTP_RT"):
+             from vllm.models.qwen4_exp.gguf.mtp_proj import attach_gguf_eh_proj
+ 
+             attach_gguf_eh_proj(self, vllm_config, prefix)
+@@ -319,6 +324,12 @@ class Qwen4ExpMTP(nn.Module, Qwen4ExpMixtureOfExperts):
+         self.lm_head = ParallelLMHead(
+             config.vocab_size,
+             config.hidden_size,
++            quant_config=(
++                self.quant_config
++                if self.quant_config is not None
++                and self.quant_config.get_name() == "b70_gguf"
++                else None
++            ),
+             prefix=maybe_prefix(prefix, "lm_head"),
+         )
+         self.logits_processor = LogitsProcessor(config.vocab_size)
+@@ -348,6 +359,54 @@ class Qwen4ExpMTP(nn.Module, Qwen4ExpMixtureOfExperts):
+     ) -> torch.Tensor | None:
+         return self.logits_processor(self.lm_head, hidden_states)
+ 
++    def get_top_tokens(self, hidden_states: torch.Tensor) -> torch.Tensor:
++        """Greedy draft token (speculative_config use_local_argmax_reduction).
++
++        B70_MTP_DRAFT_VOCAB=<int32 id file> (Strata draft_vocab_en.bin)
++        evaluates only those head rows and maps the argmax back. Drafts
++        only: the target still verifies against its full-vocab head.
++        """
++        sub = getattr(self, "_b70_draft_head", None)
++        if sub is None:
++            sub = self._build_draft_head(hidden_states.device)
++        if sub is False:
++            return self.compute_logits(hidden_states).argmax(dim=-1)
++        packed, qtype, n, ids = sub
++        if packed is None:
++            logits = torch.nn.functional.linear(hidden_states, qtype)
++        else:
++            from vllm.models.qwen4_exp.gguf.ops_interface import linear as linear_op
++
++            logits = linear_op(hidden_states, packed, qtype, n)
++        return ids[logits.argmax(dim=-1)]
++
++    def _build_draft_head(self, device: torch.device):
++        path = os.environ.get("B70_MTP_DRAFT_VOCAB", "")
++        if not path:
++            self._b70_draft_head = False
++            return False
++        if torch.xpu.is_current_stream_capturing():
++            raise RuntimeError("b70 draft head must be built before graph capture")
++        import numpy as np
++
++        ids_np = np.fromfile(path, dtype=np.int32)
++        ids = torch.from_numpy(ids_np.astype(np.int64)).to(device)
++        head = self.lm_head
++        packed = getattr(head, "b70_packed", None)
++        if packed is not None:
++            rows = int(head.b70_num_rows)
++            sub = packed.reshape(rows, -1).index_select(0, ids).contiguous()
++            self._b70_draft_head = (sub, int(head.b70_qtype), int(ids.numel()), ids)
++        else:
++            w = head.weight.index_select(0, ids).contiguous()
++            self._b70_draft_head = (None, w, int(ids.numel()), ids)
++        logger.info(
++            "b70 MTP draft head: %d of %d vocab rows from %s (%s)",
++            ids.numel(), self.config.vocab_size, path,
++            "packed" if packed is not None else "dense",
++        )
++        return self._b70_draft_head
++
+     def load_weights(self, weights: Iterable[tuple[str, torch.Tensor]]) -> set[str]:
+         # The drafter receives the *full* checkpoint stream (all 48 main
+         # layers + the vision tower). Keep only what the draft model owns:
+@@ -374,4 +433,4 @@ class Qwen4ExpMTP(nn.Module, Qwen4ExpMixtureOfExperts):
+ __all__ = [
+     "Qwen4ExpMTP",
+     "Qwen4ExpMultiTokenPredictor",
+-]
+\ No newline at end of file
++]

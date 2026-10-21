@@ -23,7 +23,8 @@ def main():
     flags = ('QUANT', 'MTP_TOKENS', 'CARD', 'PORT', 'B70_X5_GDN_BF16',
              'B70_X5_EVENTLESS', 'B70_X5_EVENTLESS_LAZY', 'B70_X5_PACK_LINEAR',
              'B70_X5_Q8_LINEAR', 'B70_X5_CANONICAL', 'B70_X5_BATCH_LINEAR',
-             'B70_X5_Q8_FAST')
+             'B70_X5_Q8_FAST', 'B70_X5_GDN_MIXED', 'B70_X5_GDN_RAGGED',
+             'B70_D3_GDN_SPEC', 'X5_LMX')
     text = ' '.join(f'{k}={os.environ.get(k, "0")}' for k in flags)
     text += ' B70_FUSE_SHARED=1 B70_D3_GDN=0 DTYPE=bfloat16 MAX_LEN=4096'
     text += ' B70_GGUF_SO=' + str(repo / 'vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu/_C.o3g.so')

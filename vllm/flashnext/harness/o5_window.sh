@@ -35,7 +35,7 @@ if [ "${SKIP_HEALTH_BEFORE:-0}" != 1 ]; then
   grep -q "xpu-health: HEALTHY" "$OUT/health-before.txt" || { echo "health before failed"; echo WINDOW_DONE; exit 3; }
 fi
 
-PYPATH="$B/c7b-fa-overlay:$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_ep_xpu:$REPO/vllm/flashnext/plugins/b70_qsa_xpu:$REPO/vllm/flashnext/plugins/b70_o4_xpu:$REPO/vllm/flashnext/harness"
+PYPATH="${O5_PYPATH_PRE:+$O5_PYPATH_PRE:}$B/c7b-fa-overlay:$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_ep_xpu:$REPO/vllm/flashnext/plugins/b70_qsa_xpu:$REPO/vllm/flashnext/plugins/b70_o4_xpu:$REPO/vllm/flashnext/harness"
 RECIPE="${O5_RECIPE:-$REPO/vllm/flashnext/harness/o5_recipe.env}"
 cp "$RECIPE" "$OUT/recipe.env"
 F3=$(grep -v '^#' "$RECIPE" | sed 's/ *#.*//' | grep -v '^B70_GGUF_SO=' | xargs)
@@ -76,7 +76,7 @@ B70_AGENT=O5 B70_GPU_LOCK_TIMEOUT=14400 timeout --signal=TERM --kill-after=30 30
   --env "PYTHONPATH=$PYPATH" --env PYTHONUNBUFFERED=1 --env HF_HUB_OFFLINE=1 \
   --env TRANSFORMERS_OFFLINE=1 --env VLLM_NO_USAGE_STATS=1 \
   --env SYCL_CACHE_PERSISTENT=0 --env "SYCL_CACHE_DIR=$B/cache/sycl-o5" \
-  --env "O5_OUT=$OUT" --env "O5_TAG=$TAG" --env "O5_MTP=${O5_MTP:-0}" --env "O5_TOKENS=${O5_TOKENS:-128}" --env "O5_PROMPTS=${O5_PROMPTS:-4}" --env "O5_CAPTURE=${O5_CAPTURE:-}" --env "O5_PROBE_TOKENS=${O5_PROBE_TOKENS:-4}" --env "O5_PROBE_PROMPT=${O5_PROBE_PROMPT:-Write a short story about a lighthouse keeper who discovers a message in a bottle.}" \
+  --env "O5_OUT=$OUT" --env "O5_TAG=$TAG" --env "O5_MTP=${O5_MTP:-0}" --env "O5_TOKENS=${O5_TOKENS:-128}" --env "O5_PROMPTS=${O5_PROMPTS:-4}" --env "O5_CAPTURE=${O5_CAPTURE:-}" --env "O5_SPEC_SCHEDULE=${O5_SPEC_SCHEDULE:-}" --env "O5_PROBE_TOKENS=${O5_PROBE_TOKENS:-4}" --env "O5_PROBE_PROMPT=${O5_PROBE_PROMPT:-Write a short story about a lighthouse keeper who discovers a message in a bottle.}" \
   "${EXTRA[@]}" \
   -- "${CMD[@]}" > "$OUT/run.log" 2>&1
 RC=$?

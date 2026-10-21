@@ -524,8 +524,11 @@ void enqueue_moe(const uint16_t* x, const float* w, const int32_t* ids, float* y
     if ((L.map0 == nullptr) != (L.map1 == nullptr)) throw std::runtime_error("ep map is half set");
     ep_dispatch(a, ids, w, x, s.ids0, peer_ids, peer_w, peer_x, n_ids, x_b, L.e0, L.e1, L.map0, L.map1, L.nexp,
                 s.done0, flag_in_r, ctr0);
-    a.memset(s.y0, 0, (size_t)T * (size_t)K * sizeof(float));
-    if (s.with_shared && L.has_shared && s.moe2 != nullptr && T <= 8) {
+    const bool fused_sh = s.with_shared && L.has_shared && s.moe2 != nullptr && T <= 8;
+    // b70_moe_layer2 runs the fused decode schedule, whose reduce writes
+    // every element of y0; the zero fill is only needed by the old path.
+    if (!fused_sh) a.memset(s.y0, 0, (size_t)T * (size_t)K * sizeof(float));
+    if (fused_sh) {
         // y0 = card-0 routed + sigmoid(x . sgi) * shared, fp32 (out_mode 0).
         s.moe2(&a, x, L.g0, L.gt, L.u0, L.ut, L.d0, L.dt, s.ids0, w, L.sg, L.sgt, L.su, L.sut, L.sd, L.sdt,
                static_cast<void*>(s.y0), T, topk, L.e0, L.I, L.K, L.sgi, L.sgi_dt, 0);

@@ -1,0 +1,127 @@
+--- a/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kreg.hpp
++++ b/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kreg.hpp
+@@ -288,6 +288,17 @@
+     return r;
+ }
+ 
++// O5: Q8_0 through KREG. Lane g of a 256-value group owns Q8_0 block g
++// (34 bytes: fp16 d + 32 int8); the dot is the IQ4_XS form.
++inline B70W4X b70_load_q8_0(const uint8_t* b, int g) {
++    const uint8_t* blk = b + 34 * g;
++    B70W4X r{};
++    r.d = b70_fp16_to_fp32((uint16_t)b70_ld16(blk));
++    r.lo = b70_ld16_a2(blk + 2);
++    r.hi = b70_ld16_a2(blk + 18);
++    return r;
++}
++
+ inline float b70_dot_iq4xs(const B70W4X& r, const B70Act& a) {
+     return r.d * a.d0 * (float)b70_dp4a4(r.hi, a.u1, b70_dp4a4(r.lo, a.u0, 0));
+ }
+@@ -417,7 +428,7 @@
+     constexpr int P0 = R * NCOLS;
+     constexpr int P = (P0 + 15) / 16 * 16;
+     constexpr int PL = P / 16;
+-    constexpr int BB = TYPE == B70_Q4_K ? 144 : TYPE == B70_Q5_K ? 176 : TYPE == B70_Q6_K ? 210 : 136;
++    constexpr int BB = TYPE == B70_Q4_K ? 144 : TYPE == B70_Q5_K ? 176 : TYPE == B70_Q6_K ? 210 : TYPE == B70_Q8_0 ? 272 : 136;
+     constexpr bool kTable = TYPE == B70_IQ4_XS;
+     const int bpr = K / 256;
+     const int nb = K / 32;
+@@ -447,7 +458,7 @@
+                     const B70Q8* xj = xq + (size_t)j * (size_t)nb;
+                     if (!live) {
+                         a[j] = B70Act{};
+-                    } else if constexpr (kTable) {
++                    } else if constexpr (kTable || TYPE == B70_Q8_0) {
+                         const B70Q8* blk = xj + (kb * 8 + g);
+                         a[j].u0 = b70_ld_int4(blk->qs);
+                         a[j].u1 = b70_ld_int4(blk->qs + 16);
+@@ -489,20 +500,54 @@
+                 const int row0 = (int)it.get_group(0) * R;
+                 const int rlast = N - 1 - row0;
+                 float v[P];
++                // O5: at NCOLS >= 3 issue all R row loads first, decode each block
++                // once, then R x NCOLS dots (as Strata launch_night_kreg). At
++                // NCOLS <= 2 the original per-row loop. Same arithmetic and order
++                // in both: bitwise identical outputs.
++                if constexpr (NCOLS >= 3) {
++                    using WT = std::conditional_t<TYPE == B70_Q6_K, B70W6,
++                                                  std::conditional_t<TYPE == B70_Q4_K || TYPE == B70_Q5_K, B70WK, B70W4X>>;
++                    WT wv[R];
++#pragma unroll
++                    for (int r = 0; r < R; ++r) {
++                        const int rr = r < rlast ? r : rlast;
++                        const uint8_t* b = w + ((size_t)(row0 + rr) * (size_t)bpr + (size_t)kb) * (size_t)BB;
++                        if constexpr (TYPE == B70_Q4_K) wv[r] = b70_load_q4(b, g);
++                        else if constexpr (TYPE == B70_Q5_K) wv[r] = b70_load_q5(b, g);
++                        else if constexpr (TYPE == B70_Q6_K) wv[r] = b70_load_q6(b, g);
++                        else if constexpr (TYPE == B70_Q8_0) wv[r] = b70_load_q8_0(b, g);
++                        else wv[r] = b70_load_iq4xs(b, g, tbl);
++                    }
++#pragma unroll
++                    for (int r = 0; r < R; ++r) {
++#pragma unroll
++                        for (int j = 0; j < NCOLS; ++j) {
++                            float part = 0.f;
++                            if (live) {
++                                if constexpr (TYPE == B70_Q4_K || TYPE == B70_Q5_K) part = b70_dot_k(wv[r], a[j]);
++                                else if constexpr (TYPE == B70_Q6_K) part = b70_dot_q6(wv[r], a[j]);
++                                else part = b70_dot_iq4xs(wv[r], a[j]);
++                            }
++                            v[r * NCOLS + j] = part;
++                        }
++                    }
++                } else {
++#pragma unroll
++                    for (int r = 0; r < R; ++r) {
++                        const int rr = r < rlast ? r : rlast;
++                        const uint8_t* b = w + ((size_t)(row0 + rr) * (size_t)bpr + (size_t)kb) * (size_t)BB;
+ #pragma unroll
+-                for (int r = 0; r < R; ++r) {
+-                    const int rr = r < rlast ? r : rlast;
+-                    const uint8_t* b = w + ((size_t)(row0 + rr) * (size_t)bpr + (size_t)kb) * (size_t)BB;
+-#pragma unroll
+-                    for (int j = 0; j < NCOLS; ++j) {
+-                        float part = 0.f;
+-                        if (live) {
+-                            if constexpr (TYPE == B70_Q4_K) part = b70_dot_k(b70_load_q4(b, g), a[j]);
+-                            else if constexpr (TYPE == B70_Q5_K) part = b70_dot_k(b70_load_q5(b, g), a[j]);
+-                            else if constexpr (TYPE == B70_Q6_K) part = b70_dot_q6(b70_load_q6(b, g), a[j]);
+-                            else part = b70_dot_iq4xs(b70_load_iq4xs(b, g, tbl), a[j]);
++                        for (int j = 0; j < NCOLS; ++j) {
++                            float part = 0.f;
++                            if (live) {
++                                if constexpr (TYPE == B70_Q4_K) part = b70_dot_k(b70_load_q4(b, g), a[j]);
++                                else if constexpr (TYPE == B70_Q5_K) part = b70_dot_k(b70_load_q5(b, g), a[j]);
++                                else if constexpr (TYPE == B70_Q6_K) part = b70_dot_q6(b70_load_q6(b, g), a[j]);
++                                else if constexpr (TYPE == B70_Q8_0) part = b70_dot_iq4xs(b70_load_q8_0(b, g), a[j]);
++                                else part = b70_dot_iq4xs(b70_load_iq4xs(b, g, tbl), a[j]);
++                            }
++                            v[r * NCOLS + j] = part;
+                         }
+-                        v[r * NCOLS + j] = part;
+                     }
+                 }
+ #pragma unroll
+--- a/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kernels.cpp
++++ b/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kernels.cpp
+@@ -14,6 +14,7 @@
+ #include <sycl/ext/oneapi/matrix/matrix.hpp>
+ #include <sycl/ext/intel/experimental/grf_size_properties.hpp>
+ #include <cstdio>
++#include <cstdlib>
+ #include <stdexcept>
+ #include <string>
+ 
+@@ -286,7 +287,10 @@
+     if (rb <= 0 || M <= 0 || N <= 0 || (K % 32) != 0) throw std::runtime_error("b70_gguf: bad gemv shape");
+     b70_check_a2(w, "gemv");
+     auto& sy = q_of(queue);
+-    const bool kreg = (type == B70_Q4_K || type == B70_Q5_K || type == B70_Q6_K || type == B70_IQ4_XS) && (K % 256) == 0;
++    // O5: B70_KREG_Q8=1 also routes Q8_0 (the MTP drafter's dense weights) through KREG.
++    static const bool kreg_q8 = [] { const char* e = std::getenv("B70_KREG_Q8"); return e && e[0] == '1'; }();
++    const bool kreg = (type == B70_Q4_K || type == B70_Q5_K || type == B70_Q6_K || type == B70_IQ4_XS ||
++                       (kreg_q8 && type == B70_Q8_0)) && (K % 256) == 0;
+     if (kreg) {
+         for (int m0 = 0; m0 < M; m0 += 8) {
+             const int mm = (M - m0) < 8 ? (M - m0) : 8;

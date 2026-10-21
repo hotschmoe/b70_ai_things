@@ -31,6 +31,15 @@ if os.environ.get("B70_X5_GDN_BF16") == "1":
         source = source.replace('or ntok != nseq * nwidth', 'or ntok > nseq * nwidth')
         source = source.replace('or token_indx.numel() < nseq * nwidth',
                                 'or token_indx.numel() < ntok')
+        source = source.replace('        _has_ones(self, cache[0])',
+            '''        _has_ones(self, cache[0])
+        import torch
+        if getattr(self, "_x5_history", None) is None:
+            assert not torch.xpu.is_current_stream_capturing(), "X5 history needs eager warmup"
+            self._x5_history = torch.empty((8, 3, 8192), dtype=torch.bfloat16,
+                                           device=hidden_states.device)''')
+        source = source.replace('        float(self.layer_norm_epsilon),\n',
+            '        float(self.layer_norm_epsilon),\n        self._x5_history,\n')
     sys.modules[module.__name__] = module
     exec(compile(source, str(_patches / "d3_gdn.py"), "exec"), module.__dict__)
     module.install()

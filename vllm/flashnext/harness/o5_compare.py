@@ -4,8 +4,10 @@
   python3 o5_compare.py <ref tokens-*.json> <arm tokens-*.json> [...]
 
 Reports, per phase and prompt, whether the ids are identical and the first
-differing index. Also checks C1 vs C2 inside each arm (batch invariance
-across rows/T without MTP). Exit 0 only if everything matches.
+differing index. The GATE is arm vs reference (MTP on vs off) at C1 and at
+C2; exit 0 only if that matches. C1 vs C2 inside one arm is printed as a
+diagnostic only (C2 prefills two different prompts in one batch, so its
+prefill numerics differ from C1's; that is not an MTP on/off effect).
 """
 
 from __future__ import annotations
@@ -38,8 +40,7 @@ def main() -> int:
         for p, seqs in c2.items():
             for s in seqs:
                 d = first_diff(c1[p][0], s)
-                ok &= d is None
-                print(f"{arm['tag']}: c1 vs c2 '{p[:32]}' diff_at={d}")
+                print(f"diag {arm['tag']}: c1 vs c2 '{p[:32]}' diff_at={d}")
     ref = arms[0]
     for arm in arms[1:]:
         for phase in ("c1", "c2"):
@@ -50,7 +51,7 @@ def main() -> int:
                     d = first_diff(x, y)
                     ok &= d is None
                     print(f"{ref['tag']} vs {arm['tag']} {phase} '{p[:32]}'#{i} diff_at={d} n={len(x)}")
-    print("PARITY", "PASS" if ok else "FAIL")
+    print("PARITY (on vs off, C1 and C2)", "PASS" if ok else "FAIL")
     return 0 if ok else 1
 
 

@@ -11,6 +11,17 @@ def change(before, after):
     src = src.replace(before, after)
 
 
+change('''  item.barrier(sycl::access::fence_space::local_space);
+  return parts[0];
+}''', '''  item.barrier(sycl::access::fence_space::local_space);
+  const float result = parts[0];
+  // Every subgroup must finish reading before the next reduction reuses
+  // parts[0]. The q sum is immediately followed by the k sum.
+  item.barrier(sycl::access::fence_space::local_space);
+  return result;
+}''')
+
+
 change('template <bool IsSpec>\nvoid launch_decode(', r'''
 // Snapshot the three input history rows before any value-head group writes
 // shared q/k history. Work-groups have no cross-group barrier. Only this
@@ -81,6 +92,17 @@ change('''        reinterpret_cast<sycl::half*>(conv_state.data_ptr()),
        '''        reinterpret_cast<sycl::half*>(conv_state.data_ptr()),
         reinterpret_cast<const sycl::half*>(history.data_ptr()),
         reinterpret_cast<float*>(ssm_state.data_ptr()),''')
+change('''    double eps) {
+  TORCH_CHECK(core.is_xpu()''', '''    double eps, std::optional<torch::Tensor> history_scratch) {
+  TORCH_CHECK(core.is_xpu()''')
+change('''  auto history = torch::empty({nseq, 3, kConv}, conv_state.options());
+  record_use(history);''', '''  auto history = history_scratch.has_value() ? *history_scratch
+      : torch::empty({nseq, 3, kConv}, conv_state.options());
+  TORCH_CHECK(history.device() == core.device() && history.scalar_type() == conv_state.scalar_type()
+      && history.is_contiguous() && history.dim() == 3 && history.size(0) >= nseq
+      && history.size(1) == 3 && history.size(2) == kConv, "history scratch [B,3,8192]");
+  record_use(history);''')
+change('''      "float eps) -> ()");''', '''      "float eps, Tensor? history_scratch=None) -> ()");''')
 src = src.replace('#include <sycl/sycl.hpp>',
                   '#include <sycl/sycl.hpp>\n#include <sycl/ext/oneapi/bfloat16.hpp>')
 src = src.replace('sycl::half', 'sycl::ext::oneapi::bfloat16').replace('at::kHalf', 'at::kBFloat16')

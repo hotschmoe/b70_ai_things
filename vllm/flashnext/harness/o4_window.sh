@@ -29,6 +29,13 @@ echo "=== O4 window $TAG $(date -u +%H:%M:%S) ==="
 sha256sum "$SO" "$REPO/vllm/flashnext/plugins/b70_ep_xpu/b70_ep_xpu/_C.so" | cut -c1-16
 AVAIL_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
 echo "MEM_AVAILABLE_KB:$AVAIL_KB"
+# Another agent's load can hold the RAM; wait up to 2 h for 60 GB.
+for _w in $(seq 1 720); do
+  AVAIL_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
+  [ "$AVAIL_KB" -ge 60000000 ] && break
+  [ $((_w % 30)) = 1 ] && echo "waiting for RAM: MemAvailable_kB=$AVAIL_KB $(date -u +%H:%M:%S)"
+  sleep 10
+done
 if [ "$AVAIL_KB" -lt 60000000 ]; then
   echo "ABORT MemAvailable under 60 GB before a Flash-Next load"; echo WINDOW_DONE; exit 4
 fi

@@ -1,0 +1,37 @@
+--- /mnt/vm_8tb/b70/build/vllm-flashnext/c7b-fa-overlay/vllm_xpu_kernels/flash_attn_interface.py	2026-10-19 22:31:14.725378140 +0000
++++ flash_attn_interface.py	2026-10-21 01:54:13.010467779 +0000
+@@ -55,6 +55,14 @@
+     _SPEC_DECODE_MAX_QLEN = 16
+ 
+ 
++# O5: B70_FA_KV_SPLITS=N fixes the paged decode KV split count for both the
++# q_len=1 decode path and the spec-decode path. The kernel then splits each
++# row's own KV range into N parts (paged_decode_kernel.hpp legacy path), so a
++# row's result no longer depends on the batch size or max_seqlen_k: MTP
++# verify rows match sequential decode at any context length.
++_FIXED_KV_SPLITS = int(os.environ.get("B70_FA_KV_SPLITS", "0") or 0) or None
++
++
+ def _spec_decode_varlen_fwd(
+     q,
+     k,
+@@ -128,7 +136,7 @@
+         softcap,
+         False,  # return_softmax
+         None,  # gen
+-        None,  # num_splits (let the kernel pick via get_num_splits)
++        _FIXED_KV_SPLITS,  # None: the kernel picks via get_num_splits
+         False,  # is_mix_batch
+         None,  # splits_per_seq
+         None,  # work_list
+@@ -550,6 +558,10 @@
+                 softcap,
+             )
+ 
++        if (_FIXED_KV_SPLITS is not None and num_splits_kv is None
++                and block_table is not None and max_seqlen_q == 1
++                and host_kv_lens is None):
++            num_splits_kv = _FIXED_KV_SPLITS
+         # Compute per-seq splits and work_list on host, upload to device.
+         # Only enable for decode (max_seqlen_q == 1) with paged KV cache,
+         # multi-seq batches, and global num_splits_kv > 1.

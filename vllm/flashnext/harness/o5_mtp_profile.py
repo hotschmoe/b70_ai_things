@@ -210,6 +210,11 @@ def main() -> None:
     )
     if k:
         kwargs["speculative_config"] = {"method": "mtp", "num_speculative_tokens": k}
+        if os.environ.get("O5_SPEC_SCHEDULE"):
+            # "lo-hi-k,lo-hi-k": dynamic speculative tokens by batch size.
+            kwargs["speculative_config"]["num_speculative_tokens_per_batch_size"] = [
+                tuple(int(v) for v in part.split("-")) for part in os.environ["O5_SPEC_SCHEDULE"].split(",")
+            ]
         if os.environ.get("B70_MTP_DRAFT_VOCAB"):
             # Restricted-vocab greedy draft head (Qwen4ExpMTP.get_top_tokens).
             kwargs["speculative_config"]["use_local_argmax_reduction"] = True

@@ -1,14 +1,11 @@
 # X5 -- Qwen3.6-35B-A3B on one B70
 
-Selected no-speculative stack: Q4_K_M, C1 inter-chunk p50 10.225ms,
-C2 11.500/11.491ms per stream. IQ3_XXS is fastest at 8.047ms C1;
-Q4 is the preferred 4-bit option because it is faster and has lower
-matched prefix perplexity than IQ4_XS. All three final quant windows
-pass identity, coherence, exact C1/C2 repeat, source identity, normal
-exit0 and native pre/post health. These are finite-window results.
-MTP is under investigation. Canonical Q4 no-spec LocalMaxxing packets
-pass local and API dry-run validation:96.1/96.3tok/s reasoning/code.
-No submission, rank-win, long-context or long-duration stability claim.
+Final requalification is in progress. Historical noSpec Q4 measured
+10.225ms C1 and IQ3 8.047ms, but a subsequent larger primitive probe
+located a missing shared-memory read-complete barrier in the inherited
+D3 reduction helper. Those finite measurements and dry-run packets are
+preserved as history; the final recipe will use the corrected kernel.
+MTP C2 remains unqualified. No submission or rank-win claim.
 
 Raw root: /mnt/vm_8tb/b70/build/vllm-flashnext/x5/.
 Flash-Next MTP ownership passed to O5; X1's implementation, Strata
@@ -169,7 +166,8 @@ Every comparison respects configured EOS and compares raw token IDs.
 | Selected BI0, stock spec GDN, depth2 | 6.597 | repeat passes, on/off FAIL at34 | rejected; C1 on/off FAIL at57 |
 | BI0, fused spec GDN, depth2 | 6.632 | repeat and on/off FAIL at34 | all4C1 on/off comparisons pass |
 | BI1, fused spec GDN, depth2 | 7.647 | repeat FAIL at66, on/off FAIL at34 | all4C1 on/off comparisons pass |
-| BI1 + mixed GDN, depth0 control | 11.138 | repeat + solo/C2 parity PASS | MTP2 queued |
+| BI1 + mixed GDN, depth0 control | 11.138 | repeat + solo/C2 parity PASS | PASS control |
+| BI1 + mixed GDN, depth2 | 7.646 | repeat FAIL43, on/off FAIL41 | ragged fallback observed |
 
 Every failed model stage exits0 normally, has matching before/after
 source hashes and HEALTHY native pre/post checks. These remain failed
@@ -200,11 +198,25 @@ BOTH concurrent responses now match their solo outputs, whereas the
 old control's Paris differs. All4solo outputs and prefixPPL8.52856158
 match the prior BI1 control. C1 p50=11.3582ms,C2=12.7837/12.7484ms.
 The real (prefill1,decode1,spec0) split is logged. Raw
-qwen36-35b-udq4km-fastq8-bi-mixed-mtp0. MTP2/3 gates pending.
+qwen36-35b-udq4km-fastq8-bi-mixed-mtp0. MTP2 still fails C2; depth3 pending.
 
 BI1 is a correctness control and is slower than selected BI0 noSpec.
 The noSpec submission packets use BI0. MTP comparisons use the fresh
 matched BI1+mixed control; do not imply parity with the BI0 recipe.
+
+The mixed MTP2 retry exposes a real ragged fallback: ntok4,
+slot(2,3), token indices4. The old fused kernel assumes equal width;
+its guard safely routes ragged batches to stock GDN. The isolated
+new BF16 kernel uses cu bounds and compact indices, writes only real
+candidates and skips inactive groups. It stages three small history
+rows before shared q/k writeback; no failure attribution is made to
+that ordering change. Original libraries remain intact.
+
+Ragged primitive R1 passes eager checks but fails8-replay equality at
+3sequences with lengths[3,1,2]; HEALTHY pre/post and normal error exit1.
+R2 uses caller-owned persistent scratch, is built (SHA248e6b78d150ef59f79ca0b726a696a10d39c6c9c3b9fd13c1fd26445c77b4be),
+and is queued for the same probe with componentwise diagnostics.
+No model result or causal lifetime claim yet. Raw gdn-ragged/r1,r2.
 
 ## LocalMaxxing
 

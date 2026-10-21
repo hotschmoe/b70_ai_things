@@ -1,0 +1,3 @@
+# L1 localmaxxing submissions, 2026-10-21 (non-speculative only). Engine commit cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95 (local branch b70/lmx-20261021).
+35b-ud-iq3_xxs reasoning-v1: id cmvhi9x0k033rrf01tej20yt5 APPROVED verified=True tokSOut=120.9 ttftMs=719.22 issues=[] submitted 2026-10-21T02:41:23Z
+35b-ud-iq3_xxs code-v1: id cmvhibbft033urf01uqycd7eu APPROVED verified=True tokSOut=122.1 ttftMs=576.73 issues=[] submitted 2026-10-21T02:42:28Z

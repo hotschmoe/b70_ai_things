@@ -29,7 +29,16 @@ sha256sum "$GGUF_SO" "$(grep -v '^#' "$RECIPE" | sed 's/ *#.*//' | grep '^B70_EP
   "$REPO/vllm/flashnext/plugins/b70_o4_xpu/b70_o4_xpu/_C.so" | cut -c1-16
 AVAIL_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
 echo "MEM_AVAILABLE_KB:$AVAIL_KB"
-[ "$AVAIL_KB" -lt 60000000 ] && { echo "ABORT low RAM"; echo WINDOW_DONE; exit 4; }
+# Another agent's load can hold the RAM; wait up to 2 h for 60 GB.
+for _w in $(seq 1 720); do
+  AVAIL_KB=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo)
+  [ "$AVAIL_KB" -ge 60000000 ] && break
+  [ $((_w % 30)) = 1 ] && echo "waiting for RAM: MemAvailable_kB=$AVAIL_KB $(date -u +%H:%M:%S)"
+  sleep 10
+done
+if [ "$AVAIL_KB" -lt 60000000 ]; then
+  echo "ABORT MemAvailable under 60 GB before a Flash-Next load"; echo WINDOW_DONE; exit 4
+fi
 if [ "${SKIP_HEALTH_BEFORE:-0}" != 1 ]; then
   B70_AGENT=O4 B70_GPU_LOCK_TIMEOUT=14400 "$REPO/bin/gpu-run" "$REPO/bin/xpu-health" > "$OUT/health-before.txt" 2>&1
   echo "HEALTH_BEFORE_RC:$?"

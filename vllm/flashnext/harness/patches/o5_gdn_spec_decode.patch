@@ -1,0 +1,50 @@
+diff --git a/vllm/_xpu_ops.py b/vllm/_xpu_ops.py
+index 166534e5b1..159fa607d7 100644
+--- a/vllm/_xpu_ops.py
++++ b/vllm/_xpu_ops.py
+@@ -16,6 +16,9 @@ from vllm.utils.torch_utils import direct_register_custom_op
+ 
+ logger = init_logger(__name__)
+ 
++# O5: B70_GDN_SPEC_DECODE=1 routes 1-token GDN decode through the spec kernels.
++_GDN_SPEC_DECODE = __import__("os").environ.get("B70_GDN_SPEC_DECODE") == "1"
++
+ if TYPE_CHECKING:
+ 
+     def register_fake(fn):
+@@ -230,6 +233,35 @@ def _gdn_attention_core_xpu_impl(
+         self.conv1d.weight.size(0), self.conv1d.weight.size(2)
+     )
+ 
++    if (
++        _GDN_SPEC_DECODE
++        and num_prefills == 0
++        and num_spec_decodes == 0
++        and num_decodes > 0
++        and non_spec_state_indices_tensor is not None
++    ):
++        # B70_GDN_SPEC_DECODE=1 (O5): run a pure 1-token decode batch through
++        # the speculative GDN/conv kernels, one token per sequence. MTP verify
++        # uses those kernels, so MTP on and off then share the same compiled
++        # per-token code (the decode and spec kernels are not bitwise equal).
++        n = num_decodes
++        spec_query_start_loc = non_spec_query_start_loc
++        spec_token_indx = (
++            non_spec_token_indx
++            if non_spec_token_indx is not None
++            else torch.arange(n, dtype=torch.int32, device=core_attn_out.device)
++        )
++        spec_state_indices_tensor = non_spec_state_indices_tensor[:n].view(n, 1)
++        num_accepted_tokens = torch.ones(
++            n, dtype=torch.int32, device=core_attn_out.device
++        )
++        non_spec_query_start_loc = None
++        non_spec_token_indx = None
++        non_spec_state_indices_tensor = None
++        has_initial_state = None
++        num_spec_decodes = n
++        num_decodes = 0
++
+     torch.ops._xpu_C.gdn_attention(
+         core_attn_out,
+         z,

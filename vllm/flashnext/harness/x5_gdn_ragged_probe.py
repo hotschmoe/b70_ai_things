@@ -8,6 +8,25 @@ import d3_probe as d3
 
 outdir = Path(os.environ['X5_RAGGED_OUT'])
 os.environ['X5_PROBE_OUT'] = str(outdir / 'stock-numeric.json')
+# Keep scratch ownership explicit across capture, including the stock
+# approximation probe's calls. First allocation always precedes capture.
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'plugins/b70_gdn_xpu'))
+import b70_gdn_xpu
+b70_gdn_xpu.register()
+native = torch.ops.b70_gdn.decode_fused
+histories = {}
+
+
+def persistent(*args):
+    count = args[11].shape[0]
+    if count not in histories:
+        assert not torch.xpu.is_current_stream_capturing()
+        histories[count] = torch.empty((count, 3, 8192), dtype=torch.bfloat16, device='xpu')
+    return native(*args, histories[count])
+
+
+torch.ops.b70_gdn.decode_fused = persistent
 # Preserve the stock approximation gate and its original tolerances too.
 runpy.run_path(str(Path(__file__).with_name('x5_gdn_probe.py')))
 torch.xpu.set_device(0)
@@ -90,6 +109,12 @@ for width, initial_lengths in cases:
                 state_exact=torch.equal(actual_s, expected_s),
                 conv_exact=torch.equal(actual_c, expected_c),
                 padding_exact=bool(torch.all(page[:, cb+sb:] == 90).item()))
+            if not all(row[k] for k in ('core_exact', 'out_exact', 'state_exact', 'conv_exact', 'padding_exact')):
+                row.update(core_maxabs=(core.float()-expected_core.float()).abs().max().item(),
+                    out_maxabs=(output.float()-expected_out.float()).abs().max().item(),
+                    state_maxabs=(actual_s-expected_s).abs().max().item(),
+                    conv_maxabs=(actual_c.float()-expected_c.float()).abs().max().item())
+                print(json.dumps(row), flush=True)
             assert all(row[k] for k in ('core_exact', 'out_exact', 'state_exact', 'conv_exact', 'padding_exact')), row
             graph = torch.xpu.XPUGraph()
             with torch.xpu.graph(graph):
@@ -97,10 +122,19 @@ for width, initial_lengths in cases:
             for _ in range(8):
                 graph.replay()
             torch.xpu.synchronize()
-            row['replay_exact'] = (torch.equal(core, expected_core)
-                and torch.equal(output, expected_out) and torch.equal(actual_s, expected_s)
-                and torch.equal(actual_c, expected_c)
-                and bool(torch.all(page[:, cb+sb:] == 90).item()))
+            row.update(replay_core_exact=torch.equal(core, expected_core),
+                replay_out_exact=torch.equal(output, expected_out),
+                replay_state_exact=torch.equal(actual_s, expected_s),
+                replay_conv_exact=torch.equal(actual_c, expected_c),
+                replay_padding_exact=bool(torch.all(page[:, cb+sb:] == 90).item()))
+            row['replay_exact'] = all(row[k] for k in ('replay_core_exact', 'replay_out_exact',
+                'replay_state_exact', 'replay_conv_exact', 'replay_padding_exact'))
+            if not row['replay_exact']:
+                row.update(replay_core_maxabs=(core.float()-expected_core.float()).abs().max().item(),
+                    replay_out_maxabs=(output.float()-expected_out.float()).abs().max().item(),
+                    replay_state_maxabs=(actual_s-expected_s).abs().max().item(),
+                    replay_conv_maxabs=(actual_c.float()-expected_c.float()).abs().max().item())
+                print(json.dumps(row), flush=True)
             assert row['replay_exact'], row
             del graph
             results.append(row)

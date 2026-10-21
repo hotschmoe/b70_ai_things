@@ -1,5 +1,5 @@
---- a/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kreg.hpp	2026-10-20 21:33:19.893000876 +0000
-+++ b/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kreg.hpp	2026-10-21 00:50:34.980192386 +0000
+--- a/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kreg.hpp
++++ b/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kreg.hpp
 @@ -489,20 +489,52 @@
                  const int row0 = (int)it.get_group(0) * R;
                  const int rlast = N - 1 - row0;

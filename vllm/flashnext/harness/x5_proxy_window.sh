@@ -121,6 +121,17 @@ if ((ready)); then
   fi
   curl -sf "http://127.0.0.1:$PORT/metrics" > "$OUT/metrics.txt"
   python3 "$REPO/vllm/flashnext/harness/x5_manifest.py" "$OUT/source-after.json"
+  python3 - "$OUT" <<'PY'
+import json, sys
+from pathlib import Path
+p = Path(sys.argv[1])
+a = json.loads((p / 'source-before.json').read_text())['sha256']
+b = json.loads((p / 'source-after.json').read_text())['sha256']
+drift = [k for k in sorted(a.keys() | b.keys()) if a.get(k) != b.get(k)]
+print('SOURCE_DRIFT', json.dumps(drift, ensure_ascii=True))
+raise SystemExit(3 if drift else 0)
+PY
+  record_rc SOURCE "$?"
   set -e
 fi
 cleanup

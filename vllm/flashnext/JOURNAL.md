@@ -8201,3 +8201,236 @@ equal to gemv; other types are slower on it.
 VERDICT: s3 is 2% above Strata no-spec (15.1 ms). f13 = f12 +
 B70_IQ3S_ROW=1 (IQ3_S dense shards on the row kernel, ~0.3 ms expected)
 queued.
+
+## 2026-10-21 02:02 X5 -- ragged R1 replay mismatch; persistent-scratch R2 queued
+
+CONFIG: isolated ragged BF16 GDN numeric probe, no model.
+COMMAND: gdn-ragged/r1; then CPUrun/MAX4 rebuild with explicit
+caller-owned history scratch for graph lifetime.
+RESULT: R1 stock approximation gate passes; 2sequence ragged,
+inactive slots, rejection carry, paged-state/canary/replay cases pass
+through width3. At3sequences lengths[3,1,2], eager core/output/SSM/
+conv/canary exact,8-replay combined check fails. Exit1, native
+pre+post health HEALTHY, no crash/reset. Original R1 binary/source/
+probe retained. R2 rebuild87s exit0, optional scratch argument, SHA
+248e6b78d150ef59f79ca0b726a696a10d39c6c9c3b9fd13c1fd26445c77b4be.
+VERDICT: R2 probe supplies persistent scratch outside capture; model
+overlay eagerly owns per-layer scratch. Add componentwise replay
+diagnostics. No claim that lifetime caused R1 mismatch until retry.
+Card1 probe queued, expected under45s body+native pre/post health.
+No model speed/qualification claim, commits or DD changes.
+
+## 2026-10-21 02:10 ORCHESTRATOR -- localmaxxing submissions approved; L1 gets card priority
+
+CONFIG: no GPU. Orchestrator (Claude) note, binding.
+COMMAND: none.
+RESULT: The user approved localmaxxing submissions for three
+configurations:
+- Flash-Next IQ3_XXS no-spec on the sidecar, both cards. This is the
+  main goal.
+- Qwen3.6-35B-A3B Q4_K_M no-spec, one card.
+- Qwen3.6-35B-A3B UD-IQ3_XXS no-spec, one card.
+Agent L1 (Opus) owns the runs and the submissions.
+VERDICT: Card priority is now L1 > O4 > O5 > F1 > X5. L1 announces
+each window here. Other agents finish their current window, then
+yield. O4: tell L1 (via the JOURNAL) which recipe is your best
+qualified no-spec serve at the time (s3, or f13 if it passes).
+
+## 2026-10-21 02:06 L1 -- localmaxxing windows announced; please yield card 1 then both
+
+CONFIG: no GPU yet. L1 (Opus 5.5) owns the three approved localmaxxing
+runs (35B UD-IQ3_XXS, 35B UD-Q4_K_M on card 1; Flash-Next IQ3_XXS no-spec
+on both cards).
+COMMAND: none yet. Freezing the fork state on a new branch b70/lmx-20261021
+(worktree only; the shared b70/flashnext working tree is NOT touched).
+RESULT: planned windows, in order:
+- W1 card 1, ~15 min: 35B UD-IQ3_XXS serve, promo gate, lmx measure.
+- W2 card 1, ~15 min: 35B UD-Q4_K_M, same.
+- W3 both cards, ~30 min: Flash-Next no-spec (O4 best recipe), gate,
+  lmx measure.
+VERDICT: requests. X5: after your current card-1 window, please do not
+queue new card-1 work until L1 posts W2 done. O4/O5/F1: please do not start
+new both-card windows from W3 start until L1 posts W3 done. During each L1
+measurement window please hold heavy CPU work (builds, big copies). O4:
+please reply here with your best qualified no-spec serve (s3 or f13), the
+exact env/recipe file, the GGUF/EP .so paths, and the max_model_len you
+consider honest for it.
+
+## 2026-10-21 02:12 O5 -- PARITY PASS at MTP2 (C1 4/4, C2 4/4 x 128 tokens); k=3 9.59 ms; FA split fix
+
+CONFIG: recipe harness/o5_recipe_b.env (O4 f9 + _C.o5b.so +
+B70_GDN_SPEC_DECODE=1). Arms b0 (MTP off), b2 (k=2), b3v (k=3 + 40525-row
+draft vocab). Gate script harness/o5_compare.py (gate = on vs off at C1
+and C2; C1 vs C2 inside one arm is only a diagnostic: C2 prefills two
+prompts in one batch).
+COMMAND: o5_window.sh TAG=b0|b2|b3v; o5/fa/run.sh (card 1,
+harness/o5_fa_invar.py: FA verify rows vs sequential decode and batch-2
+vs batch-1, KV 64000 tokens in 1600-token pages, 24 q / 2 KV heads).
+RESULT: b0 vs b2: all 8 streams token-identical over 128 tokens -> PARITY
+PASS at k=2 (first exact on/off result for Flash-Next). b0 C1 16.20,
+C2 20.19 (the GDN flag costs nothing). b0 vs b3v: 7/8 identical, "hash
+map" C1 differs at token 58 -> one more op is row-variant at T=4 only.
+b3v: C1 9.59 ms/token, C2 13.77 ms/stream, verify T=4 21.1 ms, propose
+3.3 ms, acceptance by position 74.2/56.3/42.4%.
+FA: with the default split heuristic (get_num_splits: depends on batch
+and max_seqlen_k) verify rows differ from sequential at past=12000 and
+batch-2 row 0 differs from batch-1 at past=5000. With a fixed split count
+(new env B70_FA_KV_SPLITS=16 or 32 in a private overlay copy,
+o5/fa-overlay/vllm_xpu_kernels/flash_attn_interface.py) every case
+16..60000 is bitwise equal; the kernel splits each row's own KV range.
+Card-1 health HEALTHY before/after.
+VERDICT: k=2 exact. The 2048-context gate does not exercise the FA split
+(contexts stay below the split threshold); B70_FA_KV_SPLITS=16 goes into
+the recipe for 200K serving. Probe p0d/p3d (T=4) queued for the k=3 gap.
+
+## 2026-10-21 02:15 X5 -- exact-state mismatch isolates shared reduction scratch
+
+CONFIG: ragged R2, explicit persistent scratch, same numeric suite.
+COMMAND: gdn-ragged/r2 probe; inspect reduce_128 in D3 source.
+RESULT: 3seq lengths[3,1,2] now fails eager core/output, while SSM,
+conv and canary remain BIT EXACT. Persistent lifetime alone does
+not solve it. No model serve used R1/R2. Probe exits1, posthealth
+queued; no crash/reset. Source reduce_128 returns parts[0] after a
+barrier but permits the next k reduction to overwrite it before all
+subgroups read the q sum. This affects query normalization/output
+while leaving the recurrent state update unchanged.
+VERDICT: add read-complete local barrier after loading result; R3
+CPUrun/MAX4 build queued. This is a concrete correctness finding in
+the inherited D3 helper. Requalify all final model recipes with the
+fixed binary after the same primitive suite passes; retain earlier
+noSpec results as historical finite gates, not the final recipe.
+
+## 2026-10-21 02:15 G2b -- audit pass 30
+
+CONFIG: CPU only. No GPU, no commit, no host change. Findings F264-F269
+appended to reports/1G2_audit.md after F263.
+COMMAND: checked x5 bi-mixed-mtp0, bi-mixed-mtp2, gdn-ragged r1, o5
+run-b2, run-b0, run-b3v, fa-0/16/32, o4 run-f12, run-f13, serve-s3, and
+dense2.log.
+RESULT: mixed noSpec C1 itl_p50_ms is 11.35824 with first id hotschmoe-dd.
+s3 harness itl_p50_ms is 15.42205 with first id hotschmoe-dev and no
+health-before. b0 vs b2 is 8 of 8 token-identical over 128 ids. b2 C1
+eff mean is 10.2045 ms/tok.
+VERDICT: no speed promotion. The s3 figure is a 64-token harness ITL.
+O5 figures are in-process eff ms/tok. The X5 figures are 35B proxy
+diagnostics.
+Not verified in this pass: none
+
+## 2026-10-21 02:17 X5 -- read-complete barrier build ready; same suite queued
+
+CONFIG: ragged R3 changes only reduce_128 read-complete barrier
+from R2; persistent scratch API and all numeric cases unchanged.
+COMMAND: x5_build_gdn_ragged.sh under CPUrun/MAX4; PROBE_TAG=r3
+x5_gdn_ragged_window.sh.
+RESULT: CPU build50s exit0; SHA
+84dad4e82fa110fae57849d370fd3151ab2c09552bb83bf11b37dc94c613d130.
+R2 post-health HEALTHY, no own model server active.
+VERDICT: card1 suite queued, body under45s plus health. Require
+all76ragged/rejection/page/replay cases plus stock tolerance gate.
+Then remeasure IQ3/IQ4/Q4 noSpec, canonical selected packets and
+MTP2/3 with the fixed kernel. Prior numbers are historical finite
+gates; do not submit the old packets as the final fixed recipe.
+Request to D3 owner after verification: port the read-complete
+barrier to shared reduce_128 source; X5 keeps a measured isolated
+generator patch meanwhile. No shared source or ABI stack changes.
+
+## 2026-10-21 02:30 O4 -- f13 IQ3_S dense on the row kernel; s4 serve C1 ITL 15.25 ms
+
+CONFIG: f12 + B70_IQ3S_ROW=1 (fork gguf/linear.py: IQ3_S shards of small-M
+linears through moe_gemv with one expert id, then a bf16 copy into the
+shared output). s4 = harness/o4_recipe.env at f13 via o4_serve.sh.
+COMMAND: o4_window.sh TAG=f13; o4_serve.sh TAG=s4.
+RESULT: f13 C1 step 15.24 ms (graph 14.40), C2 18.68 ms; tokens identical
+to f12 (96 tokens, C1 and C2); gates pass. s4: identity [hotschmoe-dev,
+qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4], greedy 323/667, coherence
+OK/OK same; C1 ITL p50 15.25 ms (p90 15.48, p99 16.26, 65.6 tok/s), C2
+19.62/19.62 ms per stream; health HEALTHY before and after.
+VERDICT: C1 no-MTP is 1% above Strata no-spec (15.1 ms). f14 queued:
++ B70_DECODE_HC_FUSE=1 (attention combine fused with the MLP mix norm)
+and o4/b70_ep_C.o4d.so (sha 66975d09: no y0 zero-fill on the fused
+moe_layer2 path, whose reduce overwrites every element).
+
+## 2026-10-21 02:31 X5 -- fixed reduction passes76cases; final windows queued
+
+CONFIG: ragged R3 SHA84dad4e82fa110fae57849d370fd3151ab2c09552bb83bf11b37dc94c613d130,
+caller-owned scratch, same cases/inputs as R2.
+COMMAND: gdn-ragged/r3; x5_final_windows.sh after posthealth closes.
+RESULT: all76 eager/rejection/page/inactive/8replay cases BIT EXACT
+for core/output/everySSM/conv/canary, including previously failing
+3seq. Stock approximation3seeds/32replays also passes. Normalexit0,
+prehealth HEALTHY; posthealth pending. This supports the missing
+read-complete local barrier as the observed reduction-race fix.
+VERDICT: freeze binary/source; final card1 windows IQ3,IQ4,Q4 noSpec
+with same corrected GDN and BIO0; Q4 canonical local packets; then
+Q4 MTP2/3 exact on/off gates. Each releaseslease separately, expected
+~3min body+health (Q4 noSpec ~4min); no CPUquiet whilequeued. Final
+recipe defaults mixed1/ragged1/spec1. Historical packets superseded.
+Source identity is now an explicit failing gate. No commits/DD/reset.
+
+## 2026-10-21 02:45 L1 -- W1 35B UD-IQ3_XXS no-spec submitted: 120.9 / 122.1 tok/s Verified
+
+CONFIG: frozen engine = fork worktree /mnt/vm_8tb/b70/build/vllm-flashnext/
+vllm-lmx-20261021, branch b70/lmx-20261021, commit cfd2b6ffdb8f (tree
+7f69ba45 == shared b70/flashnext working tree at 02:10, verified by a
+temp-index write-tree; not pushed). Campaign harness/plugins/bin copied to
+lmx-l1/frozen-repo (sha manifest checked before/after every window). X5
+selected recipe (GDN_BF16, eventless lazy, pack/Q8 linear, canonical MoE,
+Q8 fast), card 1, MTP off, max_model_len 131072 (KV 569,740 tokens).
+COMMAND: localmaxxing/l1/l1_window_35b.sh TAG=w1c-iq3 (gate + lmx_vllm
+measure-local under cpu-run --quiet); l1_finalize.py; dry-run; l1_submit.sh.
+RESULT: health HEALTHY before/after; .so/engine/frozen-repo unchanged.
+Gate: identity, 323/667, C4 Paris, 8K and 32K needles PASS; exact repeat
+C1 x2 bitwise PASS, C2 prompt 3 diverges at token 80 in both C2 rounds
+(deterministic M=2 batch variance; recorded in notes). lmx: reasoning-v1
+120.9 tok/s (TTFT 719 ms), code-v1 122.1 (577 ms), 512 tokens, coherent.
+Submitted: cmvhi9x0k033rrf01tej20yt5, cmvhibbft033urf01uqycd7eu, both
+APPROVED verifiedRun=true. Two earlier attempts (w1, w1b) failed at load:
+the frozen copy still pointed at live-repo d3/libdequant paths; fixed.
+VERDICT: W1 done. W2 (Q4_K_M, card 1, 65536) is queued behind O4 f14.
+O4: after f14 please do not queue further both-card windows; L1 W3
+(Flash-Next, s4 recipe = recipe-s4.env, f13) follows W2.
+
+## 2026-10-21 02:51 G2b -- audit pass 31
+
+CONFIG: CPU only. No GPU, no commit, no host change. Findings F270-F273
+appended to reports/1G2_audit.md after F269.
+COMMAND: checked x5/gdn-ragged r3, o4/serve-s4, o4/run-f13, o4/run-f14,
+and lmx-l1/runs/w1c-iq3 plus the w1 and w1b serve logs.
+RESULT: r3 probe prints PASS 76 and exit 0. s4 harness itl_p50_ms is
+15.24721 with first id hotschmoe-dev and no health-before. L1 payload
+tok/s values are 120.9 and 122.1, validation submitted is false, and
+the first id is hotschmoe-dd.
+VERDICT: no speed promotion. The s4 figure is a 64-token harness ITL.
+The R3 figure is a kernel probe. The L1 figures are 35B packet rates.
+Not verified in this pass: none
+
+## 2026-10-21 02:53 X5 -- fixed IQ3 fully gated; packet caption corrected
+
+CONFIG: final R3 GDN, BIO0/mixed1/ragged1/specflag1, IQ3 noSpec,
+card1; qwen36-35b-ud-iq3_xxs-fastq8-canon-mixed-ragged-mtp0.
+COMMAND: final-fixed-gdn controller, bounded x5_recipe_35b window.
+RESULT: C1p50=8.1166ms,C2=10.2861/10.3282; PPL9.05563298.
+Exactrepeat/stocktokenparity, both solo-vs-C2 outputs, source/
+identity/coherence/exit0 and native pre+post health all PASS.
+VERDICT: first corrected final quant accepted. IQ4 next. Before
+IQ4 source snapshot, metadata-only update adds mixed/ragged/spec
+flags to packet command caption; no model/kernel/timing math change.
+Recipe spec windows also collect unranked512token canonical packets
+for protocol comparison. Each later window remains source-gated.
+IQ3's older caption-only source hash is unused in its measurement.
+No commits, DD start or reset.
+
+## 2026-10-21 03:00 O4 -- f14 and close: C1 no-MTP 60.2 -> 15.25 ms (server)
+
+CONFIG: f13 + B70_DECODE_HC_FUSE=1 + o4/b70_ep_C.o4d.so (f14). First f14
+attempt aborted on the 60 GB MemAvailable pre-check (another agent held
+87 GB); o4_window.sh/o4_serve.sh now wait up to 2 h for the RAM.
+COMMAND: o4_window.sh TAG=f14.
+RESULT: f14 C1 step 15.22 ms (graph 14.34), C2 18.61 ms; tokens identical
+to f13; gates pass; health HEALTHY. Report reports/2O4_flashnext_decode.md
+(before/after timelines, causes, fixes, recipe, ITL table). Recipe:
+harness/o4_recipe.env (= s4) with harness/o4_serve.sh.
+VERDICT: server C1 ITL p50 15.25 ms (65.6 tok/s), C2 19.62 ms/stream vs
+H1e 60.2 / 32.1 and Strata no-spec 15.1 ms: parity within 1%, not below.
+Ranked next items are in the report (EP prelude/top-k fusion, a streamed
+HC kernel, PLE stage glue). No commit, no DD action.
