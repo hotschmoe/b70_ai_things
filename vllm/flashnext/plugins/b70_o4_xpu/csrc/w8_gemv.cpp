@@ -49,23 +49,13 @@ void launch_bf(sycl::queue& q, const uint16_t* x, const uint16_t* w, uint16_t* y
                     const int c0 = part * per;
                     const int c1 = sycl::min(c0 + per, chunks);
                     const uint16_t* wr = w + (size_t)row * K;
-                    for (int c = c0 + lane; c < c1; c += 4 * 16) {
-                        sycl::uint4 wvu[4];
-#pragma unroll
-                        for (int u = 0; u < 4; ++u) {
-                            const int cu = c + u * 16;
-                            if (cu < c1) wvu[u] = *reinterpret_cast<const sycl::uint4*>(wr + (size_t)cu * 8);
-                        }
-#pragma unroll
-                        for (int u = 0; u < 4; ++u) {
-                            const int cu = c + u * 16;
-                            if (cu >= c1) break;
-                            const sycl::uint4 wv = wvu[u];
+                    for (int c = c0 + lane; c < c1; c += 16) {
+                        const sycl::uint4 wv = *reinterpret_cast<const sycl::uint4*>(wr + (size_t)c * 8);
                         const uint32_t ws[4] = {wv.x(), wv.y(), wv.z(), wv.w()};
 #pragma unroll
                         for (int m = 0; m < kMaxM; ++m) {
                             if (m < M) {
-                                const sycl::uint4 a = *reinterpret_cast<const sycl::uint4*>(x + (size_t)m * K + (size_t)cu * 8);
+                                const sycl::uint4 a = *reinterpret_cast<const sycl::uint4*>(x + (size_t)m * K + (size_t)c * 8);
                                 const uint32_t xs[4] = {a.x(), a.y(), a.z(), a.w()};
                                 float d = acc[m];
 #pragma unroll
@@ -76,7 +66,6 @@ void launch_bf(sycl::queue& q, const uint16_t* x, const uint16_t* w, uint16_t* y
                                 acc[m] = d;
                             }
                         }
-                    }
                     }
                 }
 #pragma unroll
@@ -123,19 +112,9 @@ void launch(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl::half
                     const int c1 = sycl::min(c0 + per, chunks);
                     const int8_t* wr = w + (size_t)row * K;
                     const sycl::half* sr = s + (size_t)row * (K / 32);
-                    for (int c = c0 + lane; c < c1; c += 4 * 16) {
-                        sycl::int4 wvu[4];
-#pragma unroll
-                        for (int u = 0; u < 4; ++u) {
-                            const int cu = c + u * 16;
-                            if (cu < c1) wvu[u] = *reinterpret_cast<const sycl::int4*>(wr + (size_t)cu * 16);
-                        }
-#pragma unroll
-                        for (int u = 0; u < 4; ++u) {
-                            const int cu = c + u * 16;
-                            if (cu >= c1) break;
-                            const sycl::int4 wv = wvu[u];
-                        const float sc = (float)sr[cu >> 1];
+                    for (int c = c0 + lane; c < c1; c += 16) {
+                        const sycl::int4 wv = *reinterpret_cast<const sycl::int4*>(wr + (size_t)c * 16);
+                        const float sc = (float)sr[c >> 1];
                         float wf[16];
 #pragma unroll
                         for (int j = 0; j < 4; ++j) {
@@ -146,7 +125,7 @@ void launch(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl::half
 #pragma unroll
                         for (int m = 0; m < kMaxM; ++m) {
                             if (m < M) {
-                                const uint16_t* xr = x + (size_t)m * K + (size_t)cu * 16;
+                                const uint16_t* xr = x + (size_t)m * K + (size_t)c * 16;
                                 const sycl::uint4 a = *reinterpret_cast<const sycl::uint4*>(xr);
                                 const sycl::uint4 b = *reinterpret_cast<const sycl::uint4*>(xr + 8);
                                 const uint32_t xs[8] = {a.x(), a.y(), a.z(), a.w(), b.x(), b.y(), b.z(), b.w()};
@@ -159,7 +138,6 @@ void launch(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl::half
                                 acc[m] = sycl::fma(d, sc, acc[m]);
                             }
                         }
-                    }
                     }
                 }
 #pragma unroll
@@ -215,19 +193,9 @@ void launch_short(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl
                 if (row < N) {
                     const int8_t* wr = w + (size_t)row * K;
                     const sycl::half* sr = s + (size_t)row * (K / 32);
-                    for (int c = sub; c < chunks; c += 4 * LPR) {
-                        sycl::int4 wvu[4];
-#pragma unroll
-                        for (int u = 0; u < 4; ++u) {
-                            const int cu = c + u * LPR;
-                            if (cu < chunks) wvu[u] = *reinterpret_cast<const sycl::int4*>(wr + (size_t)cu * 16);
-                        }
-#pragma unroll
-                        for (int u = 0; u < 4; ++u) {
-                            const int cu = c + u * LPR;
-                            if (cu >= chunks) break;
-                            const sycl::int4 wv = wvu[u];
-                        const float sc = (float)sr[cu >> 1];
+                    for (int c = sub; c < chunks; c += LPR) {
+                        const sycl::int4 wv = *reinterpret_cast<const sycl::int4*>(wr + (size_t)c * 16);
+                        const float sc = (float)sr[c >> 1];
                         float wf[16];
 #pragma unroll
                         for (int j = 0; j < 4; ++j) {
@@ -238,7 +206,7 @@ void launch_short(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl
 #pragma unroll
                         for (int m = 0; m < kMaxM; ++m) {
                             if (m < M) {
-                                const uint16_t* xr = x + (size_t)m * K + (size_t)cu * 16;
+                                const uint16_t* xr = x + (size_t)m * K + (size_t)c * 16;
                                 const sycl::uint4 a = *reinterpret_cast<const sycl::uint4*>(xr);
                                 const sycl::uint4 b = *reinterpret_cast<const sycl::uint4*>(xr + 8);
                                 const uint32_t xs[8] = {a.x(), a.y(), a.z(), a.w(), b.x(), b.y(), b.z(), b.w()};
@@ -251,7 +219,6 @@ void launch_short(sycl::queue& q, const uint16_t* x, const int8_t* w, const sycl
                                 acc[m] = sycl::fma(d, sc, acc[m]);
                             }
                         }
-                    }
                     }
                 }
 #pragma unroll

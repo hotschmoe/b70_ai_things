@@ -22,10 +22,18 @@ RECLAIM=500
 EXTRA=()
 EXTRA+=(--env "B70_X5_PACK_LINEAR=${B70_X5_PACK_LINEAR:-0}")
 EXTRA+=(--env "B70_X5_Q8_LINEAR=${B70_X5_Q8_LINEAR:-0}")
+EXTRA+=(--env "B70_X5_CANONICAL=${B70_X5_CANONICAL:-0}")
+EXTRA+=(--env "B70_MTP_CANONICAL_MOE=${B70_X5_CANONICAL:-0}")
+EXTRA+=(--env "B70_X5_BATCH_LINEAR=${B70_X5_BATCH_LINEAR:-0}")
+EXTRA+=(--env "B70_X5_Q8_FAST=${B70_X5_Q8_FAST:-0}")
+EXTRA+=(--env "B70_X5_SO=${B70_X5_SO:-$B/x5/q8-fast/libb70_x5_xpu.so}")
 EXTRA+=(--env "B70_X5_EVENTLESS_LAZY=${B70_X5_EVENTLESS_LAZY:-0}")
 if [[ "${UT_TRACE:-0}" == 1 ]]; then
-  CMD=(bash -c "export LD_LIBRARY_PATH=$B/o4/zelayers:\$LD_LIBRARY_PATH; exec $UT -d --chrome-kernel-logging --teardown-on-signal 10 --session x5$TAG --follow-child-process 0 --output-dir-path $OUT/trace -o $OUT/trace/timing.txt /opt/venv/bin/python $REPO/vllm/flashnext/harness/x5_profile.py")
-  EXTRA+=(--env "O4_UT_SESSION=x5$TAG")
+  SESSION=x5${TAG//[^a-zA-Z0-9]/}
+  [[ "$SESSION" =~ ^[a-zA-Z0-9]+$ ]]
+  echo "$SESSION" > "$OUT/unitrace-session.txt"
+  CMD=(bash -c "export LD_LIBRARY_PATH=$B/o4/zelayers:\$LD_LIBRARY_PATH; exec $UT -d --chrome-kernel-logging --teardown-on-signal 10 --session $SESSION --follow-child-process 0 --output-dir-path $OUT/trace -o $OUT/trace/timing.txt /opt/venv/bin/python $REPO/vllm/flashnext/harness/x5_profile.py")
+  EXTRA+=(--env "O4_UT_SESSION=$SESSION")
 fi
 if [[ "${B70_X5_GDN_BF16:-0}" == 1 ]]; then
   EXTRA+=(--env B70_X5_GDN_BF16=1 --env "B70_GDN_SO=$B/x5/gdn-bf16/libb70_gdn_xpu.so")
@@ -38,7 +46,7 @@ rm -f "$OUT/profile-ready" "$OUT/profile-go"
 "$REPO/vllm/flashnext/harness/xpu-run.sh" --card 1 --name "$NAME" \
   --env B70_GGUF=1 --env "B70_GGUF_PATH=/mnt/cache/b70/devmodel/unsloth/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-$QUANT.gguf" \
   --env "B70_GGUF_SO=$REPO/vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu/_C.o3g.so" \
-  --env "PYTHONPATH=$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/harness" \
+  --env "PYTHONPATH=$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_x5_xpu:$REPO/vllm/flashnext/harness" \
   --env B70_FUSE_SHARED=1 --env B70_D3_GDN=0 --env "B70_XPU_CG_RECLAIM=$RECLAIM" \
   --env B70_GGUF_REF=0 --env B70_EAGER_QK=0 --env B70_PREFILL=0 \
   --env SYCL_CACHE_PERSISTENT=0 --env HF_HUB_OFFLINE=1 --env TRANSFORMERS_OFFLINE=1 \

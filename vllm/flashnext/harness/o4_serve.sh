@@ -6,7 +6,7 @@
 #
 #   TAG=s1 bash vllm/flashnext/harness/o4_serve.sh
 #
-# Env: TAG, PORT (18140), MAX_LEN (2048), DECODE (64), PREFILL (1024),
+# Env: TAG, PORT (18147), MAX_LEN (2048), DECODE (64), PREFILL (1024),
 # O4_RECIPE (env file, default harness/o4_recipe.env), O4_SERVE_EXTRA
 # ("K=V ..." appended), SKIP_HEALTH_BEFORE=1, SERVE_ARGS_EXTRA.
 set -uo pipefail
@@ -14,7 +14,7 @@ REPO=/mnt/vm_8tb/github/b70_ai_things
 H=$REPO/vllm/flashnext/harness
 B=/mnt/vm_8tb/b70/build/vllm-flashnext
 TAG="${TAG:?TAG}"
-PORT="${PORT:-18140}"
+PORT="${PORT:-18147}"
 OUT="$B/o4/serve-$TAG"
 NAME="vllm-fn-o4-serve-$TAG"
 HARD_KB=8388608
@@ -65,7 +65,9 @@ SP=$!
 ready=0
 for i in $(seq 1 360); do
   kill -0 $SP 2>/dev/null || { echo "serve exited before ready"; break; }
-  if curl -sf --max-time 2 "http://127.0.0.1:$PORT/v1/models" > "$OUT/models.json"; then ready=1; echo "READY $(date -u +%H:%M:%S)"; break; fi
+  # Ready only when THIS server answers (alias check; another agent may share the port).
+  if curl -sf --max-time 2 "http://127.0.0.1:$PORT/v1/models" > "$OUT/models.json" \
+     && grep -q "qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4" "$OUT/models.json"; then ready=1; echo "READY $(date -u +%H:%M:%S)"; break; fi
   sleep 5
 done
 GREEDY_RC=2; BENCH_RC=2
@@ -75,7 +77,7 @@ if [ $ready = 1 ]; then
 import json, os, urllib.request
 port = os.environ["PORT"]; out = os.environ["OUT"]
 ids = [m["id"] for m in json.load(open(f"{out}/models.json"))["data"]]
-rows = [{"ids": ids, "first_ok": ids[:1] == ["hotschmoe-dev"]}]
+rows = [{"ids": ids, "first_ok": ids[:2] == ["hotschmoe-dev", "qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4"]}]
 for content, ref in (("Return only the integer: 17 * 19.", "323"), ("Return only the integer: 23 * 29.", "667")):
     body = json.dumps({"model": "hotschmoe-dev", "messages": [{"role": "user", "content": content}],
                        "max_tokens": 16, "temperature": 0, "chat_template_kwargs": {"enable_thinking": False}}).encode()

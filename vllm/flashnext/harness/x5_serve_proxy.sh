@@ -14,14 +14,28 @@ SO=${B70_GGUF_SO:-$REPO/vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu/_C.o3g.
 RECLAIM=${B70_XPU_CG_RECLAIM:-500}
 if [[ "${B70_X5_EVENTLESS:-0}" == 1 ]]; then RECLAIM=0; fi
 test -f "$WEIGHTS"
+if [[ "${B70_X5_GDN_RAGGED:-0}" == 1 && "${B70_X5_GDN_BF16:-0}" != 1 ]]; then
+  echo 'X5 ragged verification requires BF16 GDN'; exit 2
+fi
 sha256sum "$SO"
 ENV_ARGS=(--env "B70_D3_GDN=${B70_D3_GDN:-0}" --env "B70_FUSE_SHARED=${B70_FUSE_SHARED:-1}")
 ENV_ARGS+=(--env "B70_X5_PACK_LINEAR=${B70_X5_PACK_LINEAR:-0}")
 ENV_ARGS+=(--env "B70_X5_Q8_LINEAR=${B70_X5_Q8_LINEAR:-0}")
+ENV_ARGS+=(--env "B70_X5_CANONICAL=${B70_X5_CANONICAL:-0}")
+ENV_ARGS+=(--env "B70_MTP_CANONICAL_MOE=${B70_X5_CANONICAL:-0}")
+ENV_ARGS+=(--env "B70_X5_BATCH_LINEAR=${B70_X5_BATCH_LINEAR:-0}")
+ENV_ARGS+=(--env "B70_X5_GDN_MIXED=${B70_X5_GDN_MIXED:-0}")
+ENV_ARGS+=(--env "B70_X5_GDN_RAGGED=${B70_X5_GDN_RAGGED:-0}")
+ENV_ARGS+=(--env "B70_D3_GDN_SPEC=${B70_D3_GDN_SPEC:-0}")
+ENV_ARGS+=(--env "B70_X5_Q8_FAST=${B70_X5_Q8_FAST:-0}")
+ENV_ARGS+=(--env "B70_X5_SO=${B70_X5_SO:-$B/x5/q8-fast/libb70_x5_xpu.so}")
 ENV_ARGS+=(--env "B70_X5_EVENTLESS_LAZY=${B70_X5_EVENTLESS_LAZY:-0}")
 if [[ "${B70_X5_GDN_BF16:-0}" == 1 ]]; then
+  GDN_SO=$B/x5/gdn-bf16/libb70_gdn_xpu.so
+  if [[ "${B70_X5_GDN_RAGGED:-0}" == 1 ]]; then GDN_SO=$B/x5/gdn-ragged/libb70_gdn_xpu.so; fi
+  sha256sum "$GDN_SO"
   ENV_ARGS+=(--env B70_D3_GDN=0 --env B70_X5_GDN_BF16=1
-    --env "B70_GDN_SO=$B/x5/gdn-bf16/libb70_gdn_xpu.so")
+    --env "B70_GDN_SO=$GDN_SO")
 fi
 ARGS=(vllm serve /mnt/cache/b70/devmodel/Qwen/Qwen3.6-35B-A3B
   --host 0.0.0.0 --port "$PORT" --served-model-name hotschmoe-dd "$ALIAS"
@@ -33,15 +47,17 @@ ARGS=(vllm serve /mnt/cache/b70/devmodel/Qwen/Qwen3.6-35B-A3B
 if [[ "$MTP_TOKENS" != 0 ]]; then
   ARGS+=(--speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${MTP_TOKENS}}")
 fi
-if [[ "${B70_X5_GDN_BF16:-0}" == 1 || "${B70_X5_PACK_LINEAR:-0}" == 1 || "${B70_X5_Q8_LINEAR:-0}" == 1 || "${B70_X5_EVENTLESS_LAZY:-0}" == 1 ]]; then
-  ARGS=(/opt/venv/bin/python "$REPO/vllm/flashnext/harness/x5_api.py" "${ARGS[@]:1}")
+if [[ "${B70_X5_GDN_BF16:-0}" == 1 || "${B70_X5_PACK_LINEAR:-0}" == 1 || "${B70_X5_Q8_LINEAR:-0}" == 1 || "${B70_X5_EVENTLESS_LAZY:-0}" == 1 || "${B70_X5_CANONICAL:-0}" == 1 || "${B70_X5_BATCH_LINEAR:-0}" == 1 || "${B70_X5_Q8_FAST:-0}" == 1 || "${X5_LMX:-0}" == 1 ]]; then
+  API_SCRIPT=x5_api.py
+  if [[ "${X5_LMX:-0}" == 1 ]]; then API_SCRIPT=x5_lmx_api.py; fi
+  ARGS=(/opt/venv/bin/python "$REPO/vllm/flashnext/harness/$API_SCRIPT" "${ARGS[@]:1}")
 fi
 if [[ "${B70_X5_EVENTLESS:-0}" == 1 ]]; then
   ARGS=("$REPO/vllm/flashnext/harness/x5_eventless_serve.sh" "${ARGS[@]}")
 fi
 exec "$REPO/vllm/flashnext/harness/xpu-run.sh" --card "$CARD" --name "$NAME" --port "$PORT" \
   --env B70_GGUF=1 --env "B70_GGUF_PATH=$WEIGHTS" --env "B70_GGUF_SO=$SO" \
-  --env "PYTHONPATH=$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu" \
+  --env "PYTHONPATH=$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_x5_xpu" \
   --env "B70_XPU_CG_RECLAIM=$RECLAIM" \
   --env B70_GGUF_REF=0 --env B70_EAGER_QK=0 --env B70_PREFILL=0 \
   --env SYCL_CACHE_PERSISTENT=0 --env "SYCL_CACHE_DIR=$B/cache/sycl-x5" \

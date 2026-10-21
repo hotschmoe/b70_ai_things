@@ -7676,3 +7676,528 @@ histogram/scan/scatter, one D2H, host plan, per chunk index_select +
 wide dequant + pad/inverse + 2 oneDNN bmm + swiglu + deterministic
 combine, no atomics). p6 queued: c1=native:32, c0=native:64 arms vs
 the fast:32 control, 1K-32K, gates, 32K coherence, decode.
+
+## 2026-10-20 23:22 X5 -- unitrace session preflight corrected
+
+CONFIG: q4-lazy-trace diagnostic, late replay/GDN1, card1.
+COMMAND: x5_profile_window.sh UT_TRACE=1 TAG=q4-lazy-trace.
+RESULT: unitrace rejects non-alphanumeric session x5q4-lazy-trace,
+exit1 BEFORE model load. No latency/token data. Pre-health HEALTHY;
+post-health queued. Missed launcher constraint, not a GPU fault.
+VERDICT: sanitize session independently of output TAG; r2 queued.
+Canonical MoE/projection/Q8 and optional scoped native invariant dense
+hooks now wired default OFF before r2 source snapshot; no changes
+to measured paths planned during that run. Candidate follows trace.
+
+## 2026-10-20 23:35 O4 -- f8 Triton top-k + GDN b|a GEMM, f9 small dense via split-K + bf16 EP sum: C1 16.30 ms
+
+CONFIG: f7 + B70_DECODE_TOPK=1 + B70_LINEAR_CAT=1 (f8); + B70_DENSE_GEMV=1
+(router and b|a through b70_o4.bf_gemv) + B70_EP_BF16_OUT=1 with
+o4/b70_ep_C.o4c.so (sha 10495833: moe_ep_shb, the card-0 + card-1 sum
+written as bf16 in the add kernel, equal to fp32 add then cast) (f9).
+COMMAND: o4_window.sh TAG=f8, f9; raw o4/run-f8, run-f9.
+RESULT: gates pass, c2 same_text; C1 and C2 token ids identical to f7
+over 96 tokens in both (top-k weights differ by 1-3 ulp, no flip).
+f8 C1 16.43 ms (graph 15.59), C2 19.70. f9 C1 16.30 ms (graph 15.44),
+C2 19.53. Health HEALTHY. Probes: int8 (Q8_0) HC GEMVs floor at ~12 us
+per call for both HC shapes (down 11.9 vs bf16 15.5, up 12.0 vs oneDNN
+13.4); a 4-deep load unroll made all three GEMV kernels slower
+(reverted).
+VERDICT: keep f8/f9. Queued f10 (B70_EP_Q0=150; trace showed card 0
+waiting 7 us/layer for card 1) and f11 (+ B70_DECODE_HC_Q8=1, Strata-
+style Q8 HC, a numerics change). Copied library swaps now use mv (a cp
+over a mapped .so can crash a running process).
+
+## 2026-10-20 23:28 G2b -- audit pass 26
+
+CONFIG: CPU only. No GPU, no commit, no host change. Findings F239-F245
+appended to reports/1G2_audit.md after F238.
+COMMAND: checked o4/run-f7, run-f7ut, run-f8, f1/run-p4, f1/run-p5,
+x5/eventless-lazy/probe-r5, x5/q4-lazy-control, and x5/q4-lazy-trace
+against the journal notes from 22:45 through 23:30.
+RESULT: f7 C1 step_ms p50 is 16.681 with replay_host_ms p50 12.31.
+p4 profile-off peak prefill_tok_s is 2277.886. p5 profile-off clears
+2000 tok/s at built 8186, 12283, and 32763, and p5 decode itl_p50_ms
+is 18.46688 on 64 tokens. p5 health-after was still a wait with zero
+HEALTHY lines. Q4 late-load C1 itl_p50_ms is 10.90976, first id
+hotschmoe-dd, gate_rc 3, serve gpu-run exit 0. r5 replay exit 0 with
+2066 replays. unitrace session x5q4-lazy-trace exits 1 before load.
+VERDICT: no speed promotion. f7 and f8 stay profiler step_ms. p5's
+2000 tok/s cells are prefill_tok_s, and 18.47 ms is a 64-token harness
+ITL. The Q4 late-load recipe is not qualified. Not verified in this pass: ## 2026-10-20 23:35 O4 -- f8 Triton top-k + GDN b|a GEMM, f9 small dense via split-K + bf16 EP sum: C1 16.30 ms
+
+## 2026-10-20 23:35 X5 -- Q4 trace closes, candidate card1 queued
+
+CONFIG: q4-lazy-trace-r2, unitrace control, no MTP, card1.
+COMMAND: sanitized session, profiler C1/C2x96 plus24traced; CPUquiet
+only after load; CPU trace analysis under cpu-run/MAX4.
+RESULT: arithmetic323/667 pass. C1/C2 differ at26 (both C2 streams).
+23 decode-like spans1185kernels each: spanp50=11.92ms,busy10.70ms.
+390GEMMs sum6.188ms; cat110calls/.304ms, casts~.232ms; routed
+GU40/.864ms, down~.631ms; GDN30/.338ms; headQ6K1/.709ms.
+Profile with collection paused: C1step11.748ms/replay11.093, C2
+step12.959/replay11.864. Host gap8-9ms includes asynchronous GPU
+completion wait; not8ms of idle optimization. API control ITL10.91ms
+is separate. Profile exit0 intentionally skips finalizers (offline),
+not an API lifecycle gate; pre/post native health HEALTHY.
+VERDICT: dense GEMMs dominate. Candidate retains packed Q8, merges
+projections and chunks complete MoE at8 to keep routed/shared arithmetic
+consistent. New card1 window expected2-3min plus health; queued behind
+priority work, no quiet while waiting. Fresh quality/repeat gates first.
+
+## 2026-10-20 23:44 X5 -- correctness closes but generic Q8 slow; aligned DP4A build
+
+CONFIG: qwen36-35b-udq4km-packq8-canon-mtp0, card1.
+COMMAND: full window, no MTP; build isolated b70_x5 q8_linear under
+cpu-run/MAX4, then queue short actual-weight probe.
+RESULT: exact C1/C2 repeat, identity/coherence, exit0 and pre/post
+health PASS. PrefixPPL8.50822826. C1p50=15.6498ms,C2=17.5697/17.5643;
+slower than10.91ms control, REJECT speed recipe. Generic Q8 linear
+not KREG; raw34-byte blocks are byte-packed per dot. New isolated
+DP4A op uses load-time aligned codes/scales, same activationQ8, fixed
+SG16 reduction and reuses weight loads across M1..8; BF16 epilogue.
+CPU build29s rc0, SHA51f304b431db82cd6cde1b6591c5caa19dd4184766a018eef615dac2068ce17c.
+VERDICT: card1 probe expected<1min body, native health around it,
+quiet acquired only AFTER GPU load. Check actual Q4 trunk projection
+weights, old/new numerical error, exact M-invariance/captured replay,
+normal exit and latency before full serve. No DD/reset/commit.
+
+## 2026-10-21 00:02 F1 -- p6: native bucketed op; 2527 tok/s at the 12288 chunk
+
+CONFIG: p5 serve with B70_PREFILL_WIDE_SO=f1/_C.f1bucket.so (sha
+790230cb: C13 wide dequant + b70_gguf::prefill_moe_bucketed), ctl keys
+c0=/c1=native:N. Arms: c1 native:32 (profile on, then off); c0 native:64
++ c1 native:32; c0 fast + c1 fast:32 (p5 control). READY 23:51:12.
+COMMAND: TAG=p6 harness/f1_window.sh; raw f1/run-p6/.
+RESULT: health before/after HEALTHY; gates 323/667 pass on every arm;
+32K filler math 323/667; decode C1 ITL p50 18.41 ms, C2 22.73/22.74.
+Clean TTFT (tok/s):
+| arm | 1018 | 8186 | 12283 | 32763 |
+| c0 fast, c1 native:32 | 1.11 s (919) | 3.36 s (2438) | 5.71 s (2150) | 15.67 s (2091) |
+| c0 native:64, c1 native:32 | 1.24 s (820) | 3.53 s (2319) | 4.86 s (2527) | 14.03 s (2336) |
+| c0 fast, c1 fast:32 (control) | 1.42 s (717) | 3.69 s (2217) | 6.06 s (2027) | 16.35 s (2004) |
+Profile at 12288 with c1 native: host_c1 0.28-0.34 s per chunk (6
+ms/layer, was 40-48), card-1 device 1.74-2.0 s (36-42 ms/layer), card-0
+wait+add 1.8-2.0 s (the card-1 time is now exposed), card-0 experts
+1.19-1.28 s, between-layers 1.92-2.07 s. The bench's two-identical-
+requests check on the 6-token Paris prompt returned same=false (one
+token differs at position 14; both texts coherent); that prompt never
+enters the prefill path (T <= 8 is the decode kernel) and matches X1's
+same-load repeatability finding on this stack, so it is recorded, not
+attributed to the prefill change. 0 flag timeouts.
+VERDICT: the native op removes the host bottleneck: card 1's Python
+loop 40-48 -> 6 ms/layer. With card 0 also native at the 12288 chunk
+the sidecar reaches 2527 tok/s (4.86 s), within 3% of X3's DP2 2615
+while keeping O4's decode. Card 0's fused kernel stays better below
+8192, so the recipe is c0=auto:64 (fused < DQ_T, native >= DQ_T) and
+c1=native:32, maxpad 32768, bf16 return. p7 queued as the final
+qualification: that recipe, 1K/8K/12288/32K/128K, gates, 32K coherence,
+decode, health. Next lever after that: card 1's device time
+(36-42 ms/layer vs ~10-15 ms of dequant+GEMM floor) -- stage-profile
+the native op (pad/combine/dequant/bmm) before choosing overlap vs
+rebalance.
+
+## 2026-10-21 00:03 X5 -- aligned Q8 full-model gates pass, final quant comparison
+
+CONFIG: qwen36-35b-udq4km-fastq8-canon-mtp0, O3g unchanged,
+BF16 GDN/complete MoE chunk8/projection merge, no MTP, card1.
+COMMAND: actual Q8 trunk probe then full HTTP window.
+RESULT: probe10/10 cases FP32 maxabs0 against old op, exact BF16
+epilogue, batchM1/2/3/4/8 and captured replay, normalexit0/health.
+Cached projection N12288K2048 M1:255.47->40.15us; M3:184.60->31.12us.
+These hot-loop timings are not end-to-end or bandwidth-roof claims.
+Full model C1p50=10.2246ms,C2=11.5000/11.4909; PPL8.50822826
+unchanged. Identity/coherence/exact C1+C2 repeat/exit0/pre+post health
+PASS. Source hashes stable within each old/new window; fork hashes
+also identical across them. C1 improves34.7% vs generic-Q8 15.6498ms.
+VERDICT: qualified finite Q4 control; no long-duration or DD promotion
+claim. Queue IQ3 and IQ4 with identical final flags and same quality
+corpus for a matched quant choice. Each uses card1 only, expected2-3min
+body plus health, releases between arms, no quiet during GPU queue.
+MTP2/3 then use the chosen quant and matched no-MTP token baseline.
+
+## 2026-10-21 00:11 G2b -- audit pass 27
+
+CONFIG: CPU only. No GPU, no commit, no host change. Findings F246-F252
+appended to reports/1G2_audit.md after F245.
+COMMAND: checked o4/run-f8, run-f9, run-f10, run-f11, f1/run-p5,
+f1/run-p6, x5/q4-lazy-trace-r2, x5/qwen36-35b-udq4km-packq8-canon-mtp0,
+x5/qwen36-35b-udq4km-fastq8-canon-mtp0, and x5/q8-fast/probe-r1 against
+the journal notes from 23:35 through 00:03.
+RESULT: f9 C1 step_ms p50 is 16.295 with replay_host_ms p50 12.289.
+f11 C1 step_ms p50 is 15.698 with replay_host_ms p50 11.316 and token
+ids still matching f7. p6 profile-off peak prefill_tok_s is 2527.287
+at built 12283, and p6 decode itl_p50_ms is 18.41406 on 64 tokens.
+p5 health-after is HEALTHY for cards 0 and 1. fastq8 C1 itl_p50_ms is
+10.22458, first id hotschmoe-dd, serve gpu-run exit 0. packq8 C1
+itl_p50_ms is 15.64983 with the same campaign name.
+VERDICT: no speed promotion. f8 through f11 stay profiler step_ms.
+p6's 2527 tok/s cell is prefill_tok_s, and 18.41 ms is a 64-token
+harness ITL. The fastq8 10.22 ms figure is a 35B proxy harness ITL.
+Not verified in this pass: none
+
+## 2026-10-21 00:15 O4 -- f10 Q0=150 neutral; f11 Q8 HC: C1 15.70 ms
+
+CONFIG: f9 recipe + B70_EP_Q0=150 (f10); + B70_DECODE_HC_Q8=1 (f11:
+HC down|inject and up GEMVs on Q8_0-rounded int8 copies, b70_o4.w8_gemv
+ksplit 8 / short-K 8 lanes per row; bf16 weights kept for prefill,
++0.67 GB on card 0).
+COMMAND: o4_window.sh TAG=f10, f11; raw o4/run-f10, run-f11.
+RESULT: f10 C1 16.31 / C2 19.54 ms (no change; keep Q0=138). f11 C1
+15.70 ms (graph 14.85), C2 18.93 ms (graph 17.86); gates pass, c2
+same_text, C1 and C2 token ids identical to f10 over 96 tokens despite
+the weight rounding. Health HEALTHY around both.
+VERDICT: Q8 HC is a Strata-matched numerics change (STRATA_NIGHT_HC=q8);
+offered as an opt-in on top of the recipe, pending the server windows
+s1 (recipe, bf16 HC) and s2 (recipe + Q8 HC) with identity and ITL.
+
+## 2026-10-21 00:19 X5 -- matched final quant choice; MTP2 queued
+
+CONFIG: all3quants O3g/FA/FULL_DECODE_ONLY, BF16GDN, packed
+projections, complete-MoE chunk8, fast aligned Q8, no MTP, card1.
+COMMAND: compare-final-fastq8 master; same2044-token quality corpus.
+RESULT: IQ3 C1p50=8.0471ms,C2=10.2258/10.2725,PPL9.05563298;
+IQ4 C1=10.8541,C2=11.5288/11.5106,PPL8.76477959;
+Q4 C1=10.2246,C2=11.5000/11.4909,PPL8.50822826.
+All request gates/normalexit0 pass, within-window source hashes match.
+IQ3 pre/post health HEALTHY; IQ4 post-health queued.
+VERDICT: Q4 dominates IQ4 on measured C1 and prefix PPL and is chosen
+for4-bit submission recipe. IQ3 remains fastest lower-bit option.
+MTP2 uses chosenQ4 and its exact no-MTP token baseline; will queue
+only after IQ4 full gate+post-health closes. Card1 only, expected
+3min body plus health, no quiet held during lease queue. Depth3 follows
+only after any new correctness issue from2 is understood.
+
+## 2026-10-21 00:38 X5 -- bounded card1 gap requested after current serve
+
+CONFIG: no GPU work; MTP2 pre-health waiting since00:25:57 behind
+O4 serve-s1 (pair held since00:25:37/55). No CPUquiet held.
+COMMAND: inspect lease owners and own queue logs; keep measured
+serving sources frozen. Prepare read-only config metadata route for
+canonical local collection (native server_info is dev-only).
+RESULT: all3 final no-MTP quants now pass source/identity/coherence/
+repeat/exit0/native pre+post health. Q4 chosen4bit; IQ3 fastest.
+VERDICT: please leave a bounded card1 gap after the active pair serve.
+X5 remaining: MTP2 then3 (about3min body each), canonical noSpec
+packet (about3-4min). Each window releases the lease independently;
+long queue timeout21600, CPU prep complete. No request to interrupt
+active measurements. No commits/DD/reset.
+
+## 2026-10-21 00:50 O5 -- batch-variance culprit 1 = oneDNN HC down GEMM; on O4 f9: MTP2 C1 11.62 ms
+
+CONFIG: probe p0b/p2b (eager, f3 recipe): forward hooks hash every target
+module's row-0 output (wide HC state included) and input; [A] decoded at
+T=1 (MTP off) vs T=3 verify (MTP2), compared by row-0 position
+(harness/o5_invar_probe.py, o5_invar_compare.py). Card-1 GEMV bench on
+real layer-14/15 weights (harness/o5_gemv_bench.py, o5/gemv/).
+Then O4 f9 flags as harness/o5_recipe.env (+ B70_MTP_GGUF), GGUF lib
+o4/_C.o4g.so, EP o4/b70_ep_C.o4c.so: arms n0 (MTP off), n2 (MTP2).
+COMMAND: o5_window.sh TAG=p0b|p2b (O5_SCRIPT=o5_invar_probe.py), gemv/run.sh,
+TAG=n0|n2; raw /mnt/vm_8tb/b70/build/vllm-flashnext/o5/.
+RESULT: prefill identical; first T=1 vs T=3 divergence is inside a layer
+whose input is identical: HC mix output differs (in_proj_* inputs differ).
+GEMV bench: every dense GGUF kernel (Q4_K/Q5_K/Q6_K/IQ4_XS/IQ3_S/IQ4_NL/
+Q2_0, M=1..8) is row-invariant; oneDNN BF16 F.linear is row-variant for
+the HC down shape (K=10240) at M>=4 (and the fused [324,10240] at M=3 per
+the probe); b70_o4 bf_gemv is invariant at all M. O4's
+B70_DECODE_HC_GEMV=1 (bf_gemv ks=4) removes it.
+f9 arms: gates pass, HEALTHY before/after.
+| arm | C1 ms/tok | C2 ms/tok/stream | accept C1/C2 | step | verify graph | propose |
+| n0 | 16.29 | 20.44 | - | 16.3 | 15.5 (T=1) | - |
+| n2 | 11.62 | 17.87 | 68.4/65.5% | 27.6 | 22.6 (T=3) | 3.55 |
+Parity n0 vs n2: C2 4/4 prompts token-identical over 128 tokens; C1 3/4
+identical, "hash map" prompt differs at token 58. (C1 vs C2 inside one
+arm still differ, from prefill batching -- not an on/off issue.)
+GEMV bench also shows the multi-column cost: Q5_K head 782 us at M=1,
+1652 at M=3, 2132 at M=4 (Strata's KREG doc: 759 -> 893 at 4 columns).
+VERDICT: one batch-variant op left at T=3; eager probe on the f9 recipe
+with the failing prompt queued (p0c/p2c). Kernel fix in progress for the
+multi-column kreg: Strata issues all R row loads before the dots; our port
+decodes the block inside the column loop. Private build o5/_C.o5a.so
+(bitwise-neutral by construction), A/B on card 1 next.
+
+## 2026-10-21 00:45 G2b -- audit pass 28
+
+CONFIG: CPU only. No GPU, no commit, no host change. Findings F253-F256
+appended to reports/1G2_audit.md after F252.
+COMMAND: checked o4/run-f10, run-f11, o4/serve-s1, f1/run-p7, and the
+three x5 fastq8 no-MTP quant windows plus the mtp2 directory against
+the journal notes from 00:15 through 00:38.
+RESULT: f11 C1 step_ms p50 is 15.698 with replay_host_ms p50 11.316,
+and health-after is HEALTHY with no health-before. IQ3 C1 itl_p50_ms
+is 8.04707, IQ4 is 10.85415, and Q4 is 10.22458. All three first ids
+are hotschmoe-dd. p7 profile-off prefill_tok_s peaks at 2511.124 on
+built 12283, and p7 decode itl_p50_ms is 18.49068. The s1 window print
+is alias_ok false and C1 18.58 ms; the renamed JSON stores 16.21894.
+VERDICT: no speed promotion. f10 and f11 stay profiler step_ms. The
+quant ITLs are 35B proxy harness numbers. p7's 2511 tok/s cell is
+prefill_tok_s. The s1 bench is not an O4 recipe ITL.
+Not verified in this pass: ## 2026-10-21 00:50 O5 -- batch-variance culprit 1 = oneDNN HC down GEMM; on O4 f9: MTP2 C1 11.62 ms
+
+## 2026-10-21 00:48 X5 -- Q4 MTP2 repeats, on/off gate fails
+
+CONFIG: selectedQ4 fast-Q8/canonical MoE/BF16D3/eventless-lazy,
+MTP2, card1; spec verification stock GDN (D3 spec0).
+COMMAND: x5_proxy_window.sh; x5/qwen36-35b-udq4km-fastq8-canon-mtp2.
+RESULT: target/draft FULL graphs captured; exact same-load C1/C2
+repeat passes. On/off parity FAILS Paris C1 at57/C2 at34; other
+4 streams match. Diagnostic C1 effective6.597ms (151.58tok/s),
+wirep50=17.515; C2 effective9.244/9.392ms; bench accept90/120=75%.
+Identity/coherence/source/normalexit0 and pre/post health pass.
+VERDICT: not qualified. No depth3 yet. Investigate GDN nonSpec vs
+spec math and remaining dense batch variance; do not relax gate.
+Next bounded card1 window collects selected noSpec canonical local
+packets (~3-4min) with read-only live config route; no submission.
+No model/kernel change for that run. No commits/DD/reset.
+
+## 2026-10-21 00:49 X5 -- BF16 D3 verification equivalence probe queued
+
+CONFIG: same isolated BF16D3 binary, no model load, card1 only.
+COMMAND: x5_gdn_spec_window.sh; widths3/4 (draft2/3), all acceptance
+positions,3seeds, compare every output/core/state/finalconv against
+sequential fused decode;8captured replays. No timed claims.
+RESULT: CPU preparation/py_compile/bash-n pass; GPU queued with21600s
+timeout, native pre/post health. Expected probe body under20s.
+VERDICT: require exact sequential equivalence before enabling BF16
+fused-spec on the selected noSpec baseline. No binary rebuild.
+
+## 2026-10-21 00:55 X5 -- canonical Q4 packets pass dry-run
+
+CONFIG: selected noSpecQ4, card1, maxlen4096, FULL graphs/FA,
+512outputtokens, prefixcacheoff, nonce, C1, warmup1+3iterations.
+COMMAND: X5_LMX=1 x5_recipe_35b.sh; tag
+qwen36-35b-udq4km-fastq8-canon-lmx-mtp0; validate_dry.sh bothsuites.
+RESULT: reasoning96.059tok/s (10.410ms), code96.255 (10.389ms);
+TTFT of median-rate samples561.07/450.31ms. Live config spec=null,
+no draft activity, request/token deltas isolate one request. Both
+local valid, API dry-run valid=true/verified=true/issues=[].
+All576 baseline token IDs match; request gates/source/exit0/native
+pre+post health pass. NoSpec context4096 only, not200K.
+VERDICT: ready local noSpec4bit packets, NOT submitted; no rank-win
+or public badge claim. Fused-spec primitive21/21 exact against
+sequential fused decode (all states/outputs/conv/replay); posthealth
+waiting behind O4 s2. Next MTP2 retry changes only GDNspec1.
+
+## 2026-10-21 00:57 X5 -- fused-verification MTP2 retry queued
+
+CONFIG: selectedQ4 recipe, B70_D3_GDN_SPEC=1, draft2, physicalcard1.
+COMMAND: x5_recipe_35b.sh; tag
+qwen36-35b-udq4km-fastq8-canon-fusedspec-mtp2.
+RESULT:21/21 primitive cases exact, numeric maxabs0, normalexit0;
+fullmodel gate pending. Long lease timeout21600, no quiet whilequeued.
+VERDICT: expected3min serve body plus pinned pre/post health. Compare
+all6 streams with the exact chosen noSpec baseline; no relaxed EOS
+or parity gate. Depth3 follows once this new difference is assessed.
+
+## 2026-10-21 01:03 X5 -- fused GDN probe fully closed
+
+CONFIG:21BF16 verification cases, widths3/4, all acceptance offsets.
+COMMAND: x5_gdn_spec_window.sh, gdn-bf16/spec-r1.
+RESULT: core/output/everySSMstate/finalconv and8replays bit-exact
+to sequential fused decode; maxabs0; normalexit0, pinned native
+pre+post health HEALTHY.17s probe body, no timed speed claim.
+VERDICT: primitive qualified for the forthcoming MTP2 model gate.
+Model retry waiting behind O5 n3v; noCPUquiet held in queue.
+
+## 2026-10-21 01:09 X5 -- fused-spec fixes C1 parity; C2 still varies
+
+CONFIG: selectedQ4+fusedBF16verification, MTP2, all other flags fixed.
+COMMAND: qwen36-35b-udq4km-fastq8-canon-fusedspec-mtp2 window.
+RESULT: fused spec3/6 rows captured/executed. All4C1 streams now
+match noSpec and repeat exactly. C2 Paris differs at34 on repeat
+and baseline parity; Fibonacci matches. Diagnostic C1 effective
+6.632ms, accept91/120=75.83%; source stable, normalexit0.
+Post-health queued behind F1 p8, so full health closure pending.
+VERDICT: C1-only improvement, NOT whole-variant qualification. Next
+use native upstream XPU batch-invariant dense linears (scoped to
+linear applies, no global mode that rejects quant models) for a fresh
+noSpec baseline before MTP2/3. Existing selected noSpec packets stay
+valid. Card1, expected3min body plus health; no CPUquiet in queue.
+
+## 2026-10-21 01:15 O5 -- kreg multi-column fix: Q5_K head M=3 1638 -> 944 us, bitwise identical
+
+CONFIG: private source copy o5/gguf-src = repo plugins/b70_gguf_xpu/csrc
+(unchanged since 21:33, i.e. O4's _C.o4g.so source) + one kreg.hpp change,
+saved as harness/patches/o5_kreg_multicol.patch. At NCOLS >= 3 the KREG
+kernel now issues all R row loads and decodes each block once, then does
+the R x NCOLS dots (Strata launch_night_kreg order); our port decoded the
+weight block again for every column. NCOLS <= 2 keeps the old loop, so
+no-MTP decode (M=1, M=2) runs the same code. Same arithmetic order.
+COMMAND: cpu-run scripts/build.sh (MAX_JOBS=4, 101 s) ->
+o5/gguf-src/b70_gguf_xpu/_C.o5b.so (sha 04ea8891); card-1 A/B
+o5/gemv/run2.sh, run3.sh (o5_gemv_bench.py, real layer-14/15 + head
+weights, same seed, output md5 per call). HEALTHY before/after.
+RESULT: every output hash identical to o4g at every M (bitwise), every
+kernel still row-invariant. GPU-bound shapes, us per call o4g -> o5b:
+Q5_K head 248320x2560: M=3 1638 -> 944, M=4 2118 -> 1101, M=8 4614 -> 1820
+(M=1 781 -> 781, M=2 1068 -> 1068). IQ4_XS 12288x2560 M=3 140 -> 68;
+Q5_K 2560x6144 M=3 78 -> 48, M=4 116 -> 66. Small shapes sit at the eager
+launch floor here (~35-40 us); in-graph numbers come from the serve arms.
+Also: n3v (MTP k=3 + draft vocab, o4g): C1 11.26 ms, C2 18.73 (verify
+T=4 25.0 ms, propose 3.3 ms; acceptance 57.8% per draft).
+VERDICT: O4 / orchestrator: this patch is safe to merge into the repo
+csrc (M<=2 unchanged, bitwise-identical). MTP arms b2/b3v/b0 with
+recipe harness/o5_recipe_b.env (= o5_recipe.env with GGUF_SO=_C.o5b.so)
+queued behind the parity probe p0c/p2c.
+
+## 2026-10-21 01:17 X5 -- invariant-dense noSpec control passes requests
+
+CONFIG: Q4 all selected flags + native scoped XPU invariant dense
+linears; noSpec, fusedGDN1/specflag1, physicalcard1.
+COMMAND: qwen36-35b-udq4km-fastq8-bi-mtp0 window.
+RESULT: FULL graphs pass, coherence/identity/exactC1+C2repeat pass.
+C1p50=11.2989ms, C2=12.7707/12.7679; prefixPPL8.52856158.
+Within-window source hashes match, normalexit0, posthealth queued.
+VERDICT: retain as matched MTP correctness baseline, not the best
+noSpec recipe (slower than selected10.225ms). MTP2 BI1/spec1 now
+queued against this exact baseline, card1 about3min body+health.
+Original valid noSpec submission packets retain BI0. No commit/DD/reset.
+
+## 2026-10-21 01:20 O4 -- HTTP serve windows s1 (recipe) and s2 (recipe + Q8 HC)
+
+CONFIG: harness/o4_serve.sh, recipe o4/recipe-s1.env (= harness/
+o4_recipe.env at f9: ring + PLE device + fused HC + HC split-K GEMV +
+lean + GEMV bf16 epilogue + shared overlap/fuse + EP bf16 sum + Triton
+top-k + b|a cat + dense split-K; B70_GGUF_SO o4/_C.o4g.so, B70_EP_SO
+o4/b70_ep_C.o4c.so), served names hotschmoe-dev then
+qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4, max_len 2048, FULL_DECODE_ONLY
+1,2,3,4,8, no MTP. s2 adds B70_DECODE_HC_Q8=1.
+COMMAND: o4_serve.sh TAG=s1 / s2; bench_latency.py under cpu-run --quiet,
+decode 64, prefill 1024. Raw o4/serve-s1, serve-s2.
+RESULT: s1: the script's first readiness probe was answered by F1's
+server on the same port 18140 (ids ...-f1-prefill); that bench was
+discarded (serve-s1/NOTE.txt) and greedy+bench rerun by hand against this
+container after confirming ids [hotschmoe-dev, ...-o4]. s1: greedy
+323/667, coherence OK/OK same; C1 ITL p50 16.22 ms (p90 16.53, 61.7
+tok/s), C2 20.26/20.25 ms per stream; prefill 1017 tok 151 tok/s (eager
+prefill, X3/F1 scope). s2 (Q8 HC): identity first hotschmoe-dev + alias,
+greedy 323/667, coherence OK; C1 ITL p50 15.57 ms (p90 15.97, 64.0
+tok/s), C2 19.84/19.84 ms. Health HEALTHY before/after both.
+PLE table pin 87.8 s at load in s1 (was 122 s before madvise).
+VERDICT: C1 no-MTP 60.2 -> 15.57 ms (Q8 HC) / 16.22 ms (bf16 HC) on the
+server bench vs Strata no-spec 15.1 ms. o4_serve.sh now defaults to port
+18147 and waits for its own alias. f12 (+ B70_PLE_FUSED=1, two Triton
+kernels for the PLE tail) running.
+
+## 2026-10-21 01:23 X5 -- mixed GDN candidate prepared, NOT enabled
+
+CONFIG: CPU-only metadata test, no /dev/dri mounted; current BI2
+serve remains queued unchanged behind O4 f12.
+COMMAND: x5_gdn_mixed_cpu.py under bin/cpu-run in base image+venv.
+RESULT: noSpec/spec2/spec3 row reorder and state ownership, original
+metadata preservation, safe ragged fallback all pass; normalexit0.
+Initial host launch127 because serving venv interpreter is container-
+only; corrected no-device container16s. No GPU work for this test.
+VERDICT: candidate splits mixed GDN prefill/decode requests, retaining
+pure fused decode arithmetic. No state rollback/copy, no core edits;
+FULL_DECODE_ONLY pure path unchanged. Unwired, no speed/qualification
+claim. Enable only if BI2 full-model gate still needs this change.
+
+## 2026-10-21 01:28 X5 -- dense-only fix insufficient; mixed GDN control queued
+
+CONFIG: Q4 BI1/fusedspec1, MTP2, card1.
+COMMAND: qwen36-35b-udq4km-fastq8-bi-mtp2.
+RESULT: all4C1 streams match baseline and repeat; C2 Paris fails
+repeat at66, baseline at34; Fibonacci matches. Diagnostic C1effective
+7.647ms,C2=10.067/9.301,accept93/128=72.66%. Source stable,
+normalexit0; post-health queued behind O5 p0c. Not qualified.
+VERDICT: enable tested metadata split for mixed prefill/decode GDN
+under X5_GDN_MIXED1. Fresh noSpec BI1+mixed1 control queued,
+card1 expected3min body+health, noquiet whilequeued. Pure captured
+decode unchanged; mixed eager calls preserve row/state ownership
+and restore metadata in finally. Native prefill for prefill rows,
+fused decode for decode rows; no state copy/rollback or core edits.
+CPU mapping tests pass. Prior source snapshots in x5/mixed-before.
+No new speed claim until full model gates. No commit/DD/reset.
+
+## 2026-10-21 01:32 G2b -- audit pass 29
+
+CONFIG: CPU only. No GPU, no commit, no host change. Findings F257-F263
+appended to reports/1G2_audit.md after F256.
+COMMAND: checked o5/run-n0, run-n2, run-n3v, o5/gemv bench-o4g against
+bench-o5b, x5 mtp2, lmx, gdn-bf16/spec-r1, fusedspec, bi-mtp0, bi-mtp2,
+and o4/serve-s1 plus serve-s2.
+RESULT: n2 C1 eff mean is 11.62325 ms/tok and n2 has no health-before.
+o5b matches o4g on 84 of 84 hashes. s2 harness itl_p50_ms is 15.57096
+with no health-before and first id hotschmoe-dev. bi-mtp2 diagnostic
+effective is 7.647 ms with first id hotschmoe-dd and a Paris mismatch.
+VERDICT: no speed promotion. O5 figures are in-process eff ms/tok. The
+s2 figure is a 64-token harness ITL. The X5 figures are 35B proxy
+diagnostics.
+Not verified in this pass: none
+
+## 2026-10-21 01:33 X5 -- mixed GDN restores solo/concurrent token parity
+
+CONFIG: Q4 BI1/fusedGDN1/specflag1/mixed1, noSpec, physicalcard1.
+COMMAND: qwen36-35b-udq4km-fastq8-bi-mixed-mtp0 window.
+RESULT: real mixed path (prefill1,decode1,spec0) executes. Exact
+C1/C2 repeat passes; BOTH C2 responses now match their solo outputs.
+All4solo outputs match priorBI1control; prefixPPL unchanged8.52856158.
+C1p50=11.3582,C2=12.7837/12.7484ms. Source hashes stable, exit0,
+pinned prehealth pass; posthealth queued behind O5 health.
+VERDICT: evidence supports mixed GDN arithmetic as the missing C2
+control. Not chosen for noSpec latency. MTP2 BI1+mixed1 now queued
+against this exact baseline, card1 about3min body+health. No commit,
+DD start or reset. CPU one-token known/fresh state cases also pass.
+
+## 2026-10-21 01:51 X5 -- ragged verification kernel built; exact probe queued
+
+CONFIG: BI1+mixed1 MTP2 still fails C2 Paris repeat43/parity41, all
+4solo comparisons pass; source/exit0/native pre+post health pass.
+COMMAND: inspect real fallback log ntok4,slot(2,3),indx4; build
+x5_build_gdn_ragged.sh under CPUrun/MAX4; x5_gdn_ragged_window.sh.
+RESULT: observed ragged verification uses stock GDN; old fused
+kernel assumes nseq*width and wrapper safely refuses short batches.
+New isolated BF16 kernel uses cu bounds + compact token indices,
+writes only actual conv/SSM candidates, skips zero-length groups.
+It stages3small conv history rows before shared q/k writeback for
+explicit read-before-write ordering across value-head groups. No
+attribution of the model failure to that ordering change is made.
+CPU build51s exit0, SHA34241ad3ef8c9e79c39692c090848e4b628d3e6d20d34c1d1aac48b027de8e77.
+VERDICT: no original binary/shared source changed. Card1 numeric
+probe queued: stock tolerance gate + compact ragged 2/3sequences,
+rejection carry, padded pages/canaries, inactive slots and8replays.
+Expected body under45s plus health. Model qualification pending.
+
+## 2026-10-21 01:55 O5 -- b2 (f9 + kreg fix): MTP2 C1 10.20 ms/token, C2 13.57 ms/stream
+
+CONFIG: harness/o5_recipe_b.env = O4 f9 flags + GGUF lib o5/_C.o5b.so (kreg
+multi-column fix) + B70_GDN_SPEC_DECODE=1 (new, fork _xpu_ops.py: a pure
+1-token GDN decode batch runs the spec GDN/conv kernels; no effect on MTP
+verify batches). MTP k=2, full-vocab draft head, FULL_DECODE_ONLY,
+capture 1,2,3,4,6,8.
+COMMAND: o5_window.sh TAG=b2; raw o5/run-b2/.
+RESULT: gates pass. C1 10.20 ms/token mean of 4 prompts (8.48-11.54),
+C2 13.57 ms/stream. Verify graph T=3 19.8 ms (n2 22.6, T=1 control 15.5),
+C2 verify T=6 26.5 ms (n2 35.2). Propose 3.50 ms, host gap ~1.0 ms.
+Acceptance by position (vLLM metrics): 337/430 = 78.4% first draft,
+270/430 = 62.8% second; 1.41 accepted per step at C1+C2.
+VERDICT: kreg fix is worth 1.4 ms/token at C1 and 4.3 ms/token at C2.
+Why the GDN flag: the eager probe on the f9 recipe (p0c/p2c, "hash map"
+prompt) puts the first T=1 vs T=3 divergence at a GDN layer whose inputs
+are identical (linear_attn.norm input = core output differs): the decode
+and spec GDN/conv kernels are separate compilations of the same math
+(state is fp32 for this model, so no rounding gap) and are not bitwise
+equal. Routing MTP-off decode through the spec kernels gives both arms the
+same code. b0 (MTP off, same recipe) runs next for the parity gate.
+
+## 2026-10-21 01:55 O4 -- f12 fused PLE tail; s3 serve C1 ITL 15.42 ms; IQ3_S dense probe
+
+CONFIG: f11 + B70_PLE_FUSED=1 (f12: ple_device.py Triton _ple_gate
+(key/query norms, score, signed-sqrt gate, gated value, conv norm) and
+_ple_conv (4-tap dilated conv over batch + device ring, ring write,
+residual + gated + conv), T <= 8). s3 = o4_recipe.env at f12 (incl. Q8
+HC) through o4_serve.sh (port 18147, alias-checked readiness).
+COMMAND: o4_window.sh TAG=f12; o4_serve.sh TAG=s3;
+harness/o4_dense_bench.py on card 1 (real IQ3_XXS-file tensors).
+RESULT: f12 C1 step 15.49 ms (graph 14.60), C2 18.79; tokens identical to
+f11 over 96 tokens; gates pass. s3: identity [hotschmoe-dev, ...-o4],
+greedy 323/667, coherence OK/OK same; C1 ITL p50 15.42 ms (p90 15.64, p99
+15.81, 64.9 tok/s), C2 19.68/19.69 ms per stream; health HEALTHY before
+and after. Dense probe: IQ3_S dense GEMV runs at 128-206 GB/s (attn_gate
+52.7 us, attn_q 65.7, ssm_out 50.5); the same bytes on the row kernel
+(moe_gemv with one expert id) take 31.8 / 37.4 / 21.9 us and are BITWISE
+equal to gemv; other types are slower on it.
+VERDICT: s3 is 2% above Strata no-spec (15.1 ms). f13 = f12 +
+B70_IQ3S_ROW=1 (IQ3_S dense shards on the row kernel, ~0.3 ms expected)
+queued.

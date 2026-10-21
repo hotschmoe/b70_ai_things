@@ -35,8 +35,13 @@ if [ "${SKIP_HEALTH_BEFORE:-0}" != 1 ]; then
   grep -q "xpu-health: HEALTHY" "$OUT/health-before.txt" || { echo "health before failed"; echo WINDOW_DONE; exit 3; }
 fi
 
-PYPATH="$B/c7b-fa-overlay:$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_ep_xpu:$REPO/vllm/flashnext/plugins/b70_qsa_xpu:$REPO/vllm/flashnext/harness"
-F3="B70_MTP_RT=/mnt/vm_8tb/b70/build/strata-ab/mtp-bf16/rt B70_MTP_GGUF=/mnt/vm_8tb/b70/build/strata-ab/mtp-bf16/mtp-q2_0.gguf B70_PLE_MLOCK=1 B70_DECODE_HC=triton B70_DECODE_LEAN=1 B70_EP_SHARED_OVERLAP=1 B70_EP_FUSE_SHARED=1 B70_EP_SO=$B/o4/b70_ep_C.o4b.so"
+PYPATH="$B/c7b-fa-overlay:$B/vllm:/mnt/vm_8tb/b70/build/strata-ab/llama-pinned/gguf-py:$REPO/vllm/flashnext/plugins/b70_gguf_xpu:$REPO/vllm/flashnext/plugins/b70_ep_xpu:$REPO/vllm/flashnext/plugins/b70_qsa_xpu:$REPO/vllm/flashnext/plugins/b70_o4_xpu:$REPO/vllm/flashnext/harness"
+RECIPE="${O5_RECIPE:-$REPO/vllm/flashnext/harness/o5_recipe.env}"
+cp "$RECIPE" "$OUT/recipe.env"
+F3=$(grep -v '^#' "$RECIPE" | sed 's/ *#.*//' | grep -v '^B70_GGUF_SO=' | xargs)
+RSO=$(grep -v '^#' "$RECIPE" | sed 's/ *#.*//' | grep '^B70_GGUF_SO=' | cut -d= -f2)
+[ -n "$RSO" ] && [ -z "${O5_SO:-}" ] && SO="$RSO"
+echo "GGUF_SO: $SO $(sha256sum "$SO" | cut -c1-16)"
 echo "O5_EXTRA: ${O5_EXTRA:-$F3} ${O5_EXTRA_ADD:-}"
 EXTRA=()
 for kv in ${O5_EXTRA:-$F3} ${O5_EXTRA_ADD:-}; do EXTRA+=(--env "$kv"); done
@@ -71,7 +76,7 @@ B70_AGENT=O5 B70_GPU_LOCK_TIMEOUT=14400 timeout --signal=TERM --kill-after=30 30
   --env "PYTHONPATH=$PYPATH" --env PYTHONUNBUFFERED=1 --env HF_HUB_OFFLINE=1 \
   --env TRANSFORMERS_OFFLINE=1 --env VLLM_NO_USAGE_STATS=1 \
   --env SYCL_CACHE_PERSISTENT=0 --env "SYCL_CACHE_DIR=$B/cache/sycl-o5" \
-  --env "O5_OUT=$OUT" --env "O5_TAG=$TAG" --env "O5_MTP=${O5_MTP:-0}" --env "O5_TOKENS=${O5_TOKENS:-128}" --env "O5_PROMPTS=${O5_PROMPTS:-4}" --env "O5_CAPTURE=${O5_CAPTURE:-}" --env "O5_PROBE_TOKENS=${O5_PROBE_TOKENS:-4}" \
+  --env "O5_OUT=$OUT" --env "O5_TAG=$TAG" --env "O5_MTP=${O5_MTP:-0}" --env "O5_TOKENS=${O5_TOKENS:-128}" --env "O5_PROMPTS=${O5_PROMPTS:-4}" --env "O5_CAPTURE=${O5_CAPTURE:-}" --env "O5_PROBE_TOKENS=${O5_PROBE_TOKENS:-4}" --env "O5_PROBE_PROMPT=${O5_PROBE_PROMPT:-Write a short story about a lighthouse keeper who discovers a message in a bottle.}" \
   "${EXTRA[@]}" \
   -- "${CMD[@]}" > "$OUT/run.log" 2>&1
 RC=$?

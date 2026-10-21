@@ -201,6 +201,7 @@ def main() -> None:
         attention_backend="FLASH_ATTN",
         enable_prefix_caching=False,
         mamba_cache_mode="align",
+        disable_log_stats=False,
         compilation_config={
             "mode": 0,
             "cudagraph_mode": os.environ.get("O5_CG", "FULL_DECODE_ONLY"),
@@ -289,6 +290,15 @@ def main() -> None:
             f"PHASE {phase} eff_ms_per_tok mean={statistics.fmean(effs) if effs else None} "
             f"median={statistics.median(effs) if effs else None} accept_mean={statistics.fmean(accs) if accs else None}"
         )
+    try:
+        for m in llm.get_metrics():
+            if "spec_decode" in m.name:
+                val = getattr(m, "value", None)
+                if val is None:
+                    val = getattr(m, "values", None)
+                log(f"METRIC {m.name} {val}")
+    except Exception as exc:  # noqa: BLE001
+        log(f"metrics unavailable: {exc}")
     result["timing"] = timing
     with open(os.path.join(OUT, f"tokens-{tag}.json"), "w") as fh:
         json.dump(result, fh)

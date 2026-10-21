@@ -21,11 +21,31 @@
 #include <torch/library.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <map>
 #include <vector>
 
 namespace {
+
+// B70_BUCKET_PROFILE=1: host wall per stage with a queue wait after each
+// (serializes; diagnostic arm only). Printed once per op call.
+struct StageProf {
+    bool on = false;
+    double group = 0, plan = 0, gather = 0, dequant = 0, pad = 0, bmm1 = 0, swiglu = 0, bmm2 = 0, combine = 0;
+    int chunks = 0;
+    std::chrono::steady_clock::time_point t;
+    void start(sycl::queue& q) { if (on) { q.wait(); t = std::chrono::steady_clock::now(); } }
+    void lap(sycl::queue& q, double& acc) {
+        if (!on) return;
+        q.wait();
+        auto n = std::chrono::steady_clock::now();
+        acc += std::chrono::duration<double, std::milli>(n - t).count();
+        t = n;
+    }
+};
 
 class b70_bk_hist;
 class b70_bk_scan;
@@ -191,6 +211,9 @@ at::Tensor prefill_moe_bucketed_op(at::Tensor x, at::Tensor ids, at::Tensor w, a
     TORCH_CHECK(down.numel() == (int64_t)E * H * rb_dn, "down pack");
     TORCH_CHECK(E > 0 && E <= 4096 && M > 0, "E/M");
     sycl::queue& q = q_cur();
+    StageProf sp;
+    sp.on = std::getenv("B70_BUCKET_PROFILE") && std::getenv("B70_BUCKET_PROFILE")[0] == '1';
+    sp.start(q);
     auto opt_i = ids.options();
     at::Tensor counts = at::empty({E}, opt_i);
     at::Tensor starts = at::empty({E + 1}, opt_i);
@@ -203,6 +226,7 @@ at::Tensor prefill_moe_bucketed_op(at::Tensor x, at::Tensor ids, at::Tensor w, a
     // The one host sync of the layer: expert counts.
     std::vector<int32_t> hc((size_t)E);
     q.memcpy(hc.data(), counts.data_ptr<int32_t>(), sizeof(int32_t) * (size_t)E).wait();
+    sp.lap(q, sp.group);
     // Bucket plan: power-of-two widths >= 8, tile experts, maxpad padded rows.
     std::map<int, std::vector<int>> buckets;
     for (int e = 0; e < E; ++e) {
@@ -235,13 +259,16 @@ at::Tensor prefill_moe_bucketed_op(at::Tensor x, at::Tensor ids, at::Tensor w, a
     at::Tensor gate2 = gate.view({E, (int64_t)F * rb_gu});
     at::Tensor up2 = up.view({E, (int64_t)F * rb_gu});
     at::Tensor down2 = down.view({E, (int64_t)H * rb_dn});
+    sp.lap(q, sp.plan);
     for (const Chunk& ch : chunks) {
+        sp.chunks += 1;
         at::Tensor sel = sel_dev.narrow(0, ch.off, ch.n);
         const int n = ch.n;
         const int cap = ch.cap;
         at::Tensor g_rows = at::index_select(gate2, 0, sel);
         at::Tensor u_rows = at::index_select(up2, 0, sel);
         at::Tensor d_rows = at::index_select(down2, 0, sel);
+        sp.lap(q, sp.gather);
         at::Tensor w_gu = at::empty({n, 2 * F, H}, x.options());
         at::Tensor w_dn = at::empty({n, H, F}, x.options());
         at::Tensor gu_flat = w_gu.view({(int64_t)n * 2 * F, H});
@@ -249,18 +276,33 @@ at::Tensor prefill_moe_bucketed_op(at::Tensor x, at::Tensor ids, at::Tensor w, a
         b70_prefill_dequant_wide_op(g_rows.view({-1}), type_gu, (int64_t)n * F, H, gu_flat, 1, F);
         b70_prefill_dequant_wide_op(u_rows.view({-1}), type_gu, (int64_t)n * F, H, gu_flat, 2, F);
         b70_prefill_dequant_wide_op(d_rows.view({-1}), type_down, (int64_t)n * H, F, dn_flat, 0, 0);
+        sp.lap(q, sp.dequant);
         at::Tensor xpad = at::empty({n, cap, H}, x.options());
         q.memset(inv.data_ptr<int32_t>(), 0xFF, sizeof(int32_t) * (size_t)M);
         pad_rows(q, static_cast<const uint16_t*>(x.data_ptr()), static_cast<uint16_t*>(xpad.data_ptr()),
                  inv.data_ptr<int32_t>(), order.data_ptr<int32_t>(), starts.data_ptr<int32_t>(),
                  sel.data_ptr<int32_t>(), n, cap, (int)H, topk);
+        sp.lap(q, sp.pad);
         at::Tensor gu = at::bmm(xpad, w_gu.transpose(1, 2));  // [n, cap, 2F] bf16
+        sp.lap(q, sp.bmm1);
         at::Tensor hid = at::empty({n, cap, F}, x.options());
         swiglu(q, static_cast<const uint16_t*>(gu.data_ptr()), static_cast<uint16_t*>(hid.data_ptr()),
                (int64_t)n * cap, (int)F);
+        sp.lap(q, sp.swiglu);
         at::Tensor yd = at::bmm(hid, w_dn.transpose(1, 2));  // [n, cap, H] bf16
+        sp.lap(q, sp.bmm2);
         combine(q, static_cast<const uint16_t*>(yd.data_ptr()), inv.data_ptr<int32_t>(), w.data_ptr<float>(),
                 out.data_ptr<float>(), T, topk, (int)H);
+        sp.lap(q, sp.combine);
+    }
+    if (sp.on) {
+        int64_t padded = 0;
+        for (const Chunk& ch : chunks) padded += (int64_t)ch.n * ch.cap;
+        std::printf("BUCKET_PROF T=%d M=%d E=%d chunks=%d padded_rows=%ld group=%.2f plan=%.2f gather=%.2f dequant=%.2f "
+                    "pad=%.2f bmm1=%.2f swiglu=%.2f bmm2=%.2f combine=%.2f ms\n",
+                    T, M, E, sp.chunks, (long)padded, sp.group, sp.plan, sp.gather, sp.dequant, sp.pad, sp.bmm1,
+                    sp.swiglu, sp.bmm2, sp.combine);
+        std::fflush(stdout);
     }
     return out;
 }

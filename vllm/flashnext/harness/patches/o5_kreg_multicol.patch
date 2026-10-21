@@ -1,0 +1,67 @@
+--- a/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kreg.hpp	2026-10-20 21:33:19.893000876 +0000
++++ b/vllm/flashnext/plugins/b70_gguf_xpu/csrc/kreg.hpp	2026-10-21 00:50:34.980192386 +0000
+@@ -489,20 +489,52 @@
+                 const int row0 = (int)it.get_group(0) * R;
+                 const int rlast = N - 1 - row0;
+                 float v[P];
++                // O5: at NCOLS >= 3 issue all R row loads first, decode each block
++                // once, then R x NCOLS dots (as Strata launch_night_kreg). At
++                // NCOLS <= 2 the original per-row loop. Same arithmetic and order
++                // in both: bitwise identical outputs.
++                if constexpr (NCOLS >= 3) {
++                    using WT = std::conditional_t<TYPE == B70_Q6_K, B70W6,
++                                                  std::conditional_t<TYPE == B70_Q4_K || TYPE == B70_Q5_K, B70WK, B70W4X>>;
++                    WT wv[R];
+ #pragma unroll
+-                for (int r = 0; r < R; ++r) {
+-                    const int rr = r < rlast ? r : rlast;
+-                    const uint8_t* b = w + ((size_t)(row0 + rr) * (size_t)bpr + (size_t)kb) * (size_t)BB;
+-#pragma unroll
+-                    for (int j = 0; j < NCOLS; ++j) {
+-                        float part = 0.f;
+-                        if (live) {
+-                            if constexpr (TYPE == B70_Q4_K) part = b70_dot_k(b70_load_q4(b, g), a[j]);
+-                            else if constexpr (TYPE == B70_Q5_K) part = b70_dot_k(b70_load_q5(b, g), a[j]);
+-                            else if constexpr (TYPE == B70_Q6_K) part = b70_dot_q6(b70_load_q6(b, g), a[j]);
+-                            else part = b70_dot_iq4xs(b70_load_iq4xs(b, g, tbl), a[j]);
++                    for (int r = 0; r < R; ++r) {
++                        const int rr = r < rlast ? r : rlast;
++                        const uint8_t* b = w + ((size_t)(row0 + rr) * (size_t)bpr + (size_t)kb) * (size_t)BB;
++                        if constexpr (TYPE == B70_Q4_K) wv[r] = b70_load_q4(b, g);
++                        else if constexpr (TYPE == B70_Q5_K) wv[r] = b70_load_q5(b, g);
++                        else if constexpr (TYPE == B70_Q6_K) wv[r] = b70_load_q6(b, g);
++                        else wv[r] = b70_load_iq4xs(b, g, tbl);
++                    }
++#pragma unroll
++                    for (int r = 0; r < R; ++r) {
++#pragma unroll
++                        for (int j = 0; j < NCOLS; ++j) {
++                            float part = 0.f;
++                            if (live) {
++                                if constexpr (TYPE == B70_Q4_K || TYPE == B70_Q5_K) part = b70_dot_k(wv[r], a[j]);
++                                else if constexpr (TYPE == B70_Q6_K) part = b70_dot_q6(wv[r], a[j]);
++                                else part = b70_dot_iq4xs(wv[r], a[j]);
++                            }
++                            v[r * NCOLS + j] = part;
++                        }
++                    }
++                } else {
++#pragma unroll
++                    for (int r = 0; r < R; ++r) {
++                        const int rr = r < rlast ? r : rlast;
++                        const uint8_t* b = w + ((size_t)(row0 + rr) * (size_t)bpr + (size_t)kb) * (size_t)BB;
++#pragma unroll
++                        for (int j = 0; j < NCOLS; ++j) {
++                            float part = 0.f;
++                            if (live) {
++                                if constexpr (TYPE == B70_Q4_K) part = b70_dot_k(b70_load_q4(b, g), a[j]);
++                                else if constexpr (TYPE == B70_Q5_K) part = b70_dot_k(b70_load_q5(b, g), a[j]);
++                                else if constexpr (TYPE == B70_Q6_K) part = b70_dot_q6(b70_load_q6(b, g), a[j]);
++                                else part = b70_dot_iq4xs(b70_load_iq4xs(b, g, tbl), a[j]);
++                            }
++                            v[r * NCOLS + j] = part;
+                         }
+-                        v[r * NCOLS + j] = part;
+                     }
+                 }
+ #pragma unroll

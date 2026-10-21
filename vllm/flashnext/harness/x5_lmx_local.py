@@ -22,7 +22,8 @@ def main():
     command = out / 'lmx-command.txt'
     flags = ('QUANT', 'MTP_TOKENS', 'CARD', 'PORT', 'B70_X5_GDN_BF16',
              'B70_X5_EVENTLESS', 'B70_X5_EVENTLESS_LAZY', 'B70_X5_PACK_LINEAR',
-             'B70_X5_Q8_LINEAR')
+             'B70_X5_Q8_LINEAR', 'B70_X5_CANONICAL', 'B70_X5_BATCH_LINEAR',
+             'B70_X5_Q8_FAST')
     text = ' '.join(f'{k}={os.environ.get(k, "0")}' for k in flags)
     text += ' B70_FUSE_SHARED=1 B70_D3_GDN=0 DTYPE=bfloat16 MAX_LEN=4096'
     text += ' B70_GGUF_SO=' + str(repo / 'vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu/_C.o3g.so')
@@ -50,6 +51,7 @@ def main():
         payload = json.loads(payload_file.read_text())
         payload['contextLength'] = max_len
         payload['modelRevision'] = '5bc3e238d916f48a861bac2f8a1990a0e9b7e98d'
+        payload['engineFlags']['mtpEnabled'] = bool(depth)
         payload['notes'] = (
             'X5 single physical card 1, BF16, FULL_DECODE_ONLY, FLASH_ATTN. '
             'GGUF revision pinned; HF config/tokenizer revision '

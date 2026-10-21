@@ -55,11 +55,20 @@ Python, `b70_ep_xpu/prefill_ep.py`, hooked at the top of
    `B70_PREFILL_DQ_T`, power-of-two row buckets, tile 64, grouped Triton
    pad/combine; fused DPAS kernel below the threshold);
 3. card 1 (under `torch.xpu.device(1)`, since every b70_gguf op takes the
-   current device's stream): its 374 experts with the scratch-free fused
-   DPAS grouped op `prefill_moe_layer`, in token sub-chunks
-   (`B70_EP_PREFILL_C1_CHUNK`, default 2048) because the fused op allocates
-   about 32 KB of fp32 scratch per expanded row and card 1 has about
-   1.1 GiB free beside 29.2 GiB of experts;
+   current device's stream): its 374 experts. Three paths were measured
+   (section 4): `fused` (scratch-free DPAS grouped op in 2048-token
+   sub-chunks; slow at ~27 rows per expert per call), `fast:N` (X3's
+   Python bucketed dequant+bmm with N-expert tiles and a padded-row cap,
+   since card 1 has 1.19 GiB free beside 29.2 GiB of experts and real
+   routing is skewed: one expert took 5428 of 8186 tokens), and
+   `native:N` (new C++ op `b70_gguf::prefill_moe_bucketed`,
+   `plugins/b70_gguf_xpu/csrc/bucket_moe.cpp`: device histogram/scan/
+   scatter, one D2H of the counts, host bucket plan, then per chunk
+   `index_select` of the packed rows, C13 wide dequant, pad + inverse
+   index, two oneDNN bmm, swiglu, deterministic per-token combine, no
+   atomics; built into `f1/_C.f1bucket.so` together with the wide dequant,
+   which replaces `_C.x3wide.so` in the recipe). Card 0 uses `auto`: the
+   fused kernel below `B70_PREFILL_DQ_T` (8192), the native op above it;
 4. return + add; output cast to the model dtype.
 
 Host order is card 0 first: its grouping `.cpu()` wait only covers work
@@ -69,6 +78,10 @@ enqueues card 1, and card 1's wait was already released by the push.
 Chunk size: 12288 (vLLM `max_num_batched_tokens`), the C13/X3 point where
 dequant+bmm wins and the GEMM-only budget is 3255 tok/s. The exchange is
 sized by `B70_EP_PREFILL_MAX_T` (12288: inbox 63 MB, psum 126 MB).
+
+All knobs are runtime-switchable through `B70_EP_PREFILL_CTL` (a file
+re-read at layer 0 of each forward: `profile= ret= c0= c1= c1_chunk=
+c1_maxpad= push=`), so one 8-minute load measures several arms.
 
 Not built in this pass: HALVES-style overlap of card 1's experts under
 card 0's next-layer attention (Strata `prefill.cpp:5216`), and the QSA
@@ -85,8 +98,12 @@ triton, LEAN, shared-expert fused/overlap, MoE `o4/_C.o4pin-o3g.so` sha
 
 ```
 B70_EP_SO=/mnt/vm_8tb/b70/build/vllm-flashnext/f1/b70_ep_C.f1.so   (sha 3d7b231c)
-B70_EP_PREFILL=1  B70_EP_PREFILL_MAX_T=12288  B70_EP_PREFILL_C1_CHUNK=2048
-B70_PREFILL=1  B70_PREFILL_WIDE_SO=.../_C.x3wide.so  B70_PREFILL_DQ_T=8192
+B70_EP_PREFILL=1  B70_EP_PREFILL_MAX_T=12288  B70_EP_PREFILL_CTL=<run>/ctl.txt
+  ctl: ret=bf16 c0=auto:64 c1=native:32 c1_maxpad=32768 push=main
+  (env equivalents: B70_EP_PREFILL_RET=bf16 B70_EP_PREFILL_C0=auto:64
+   B70_EP_PREFILL_C1=native:32 B70_EP_PREFILL_C1_MAXPAD=32768)
+B70_PREFILL=1  B70_PREFILL_WIDE_SO=/mnt/vm_8tb/b70/build/vllm-flashnext/f1/_C.f1bucket.so (sha 790230cb)
+B70_PREFILL_DQ_T=8192  B70_PREFILL_MAX_PAD_ROWS=65536
 B70_PREFILL_REDUCE=grouped  B70_PREFILL_BUCKET=1  B70_PREFILL_EXPERT_TILE=64
 B70_PREFILL_DQ_OVERLAP=0  B70_PREFILL_PLE_HASH=numpy  B70_PREFILL_HC=triton
 vllm serve ... --max-model-len 147456 --max-num-seqs 2 --max-num-batched-tokens 12288
@@ -95,7 +112,8 @@ vllm serve ... --max-model-len 147456 --max-num-seqs 2 --max-num-batched-tokens 
 ```
 
 Build: `cpu-run /mnt/vm_8tb/b70/build/vllm-flashnext/f1/build_ep.sh`
-(89 s, MAX_JOBS=1). The package `_C.so` is not replaced.
+(89 s) and `cpu-run .../f1/build_bucket.sh` (wide dequant + bucketed op).
+Neither package `_C.so` is replaced.
 
 ## 4. Results
 
@@ -139,6 +157,53 @@ TTFT arms in p2 (warm): 8K fp32 4.62 s (1773 tok/s); 8K bf16 4.49 s
 (1822); 8K bf16 + card-1 chunk 4096: 4.31 s (1899); 32K bf16 21.3 s
 (1540), chunk 4096 20.3 s (1614). bf16 return keeps 323/667 and the 32K
 filler math exact, so it stays on.
+
+### 4.3 p3/p4 -- card 1 on the bucketed dequant+bmm path
+
+p3: tile 32 without a padded-row cap OOMed card 1 (Level Zero error 40)
+on the hottest expert's 8192-row bucket (1.3 GB pad); health stayed
+HEALTHY. p4 (bf16 return, warm, profile off):
+
+| card-1 path | 8186 tok | 12283 tok | 32763 tok |
+| --- | ---: | ---: | ---: |
+| fused, sub-chunk 4096 | 4.52 s (1811) | 7.56 s (1624) | 20.36 s (1610) |
+| fast:16, maxpad 16384 | 4.21 s (1946) | 6.81 s (1805) | 18.26 s (1794) |
+| fast:32, maxpad 16384 | 3.68 s (2223) | 6.26 s (1961) | 16.92 s (1936) |
+| fast:32, maxpad 32768 | 3.59 s (2278) | 6.02 s (2040) | 16.46 s (1991) |
+
+Card-1 device time per 12288 chunk fell from 4.0-4.1 s (fused) to
+2.0-2.5 s; card-0 wait from 4.4 s to 0.34 s.
+
+### 4.4 p5 -- full sweep with host timers (fast:32 / 32768, bf16)
+
+Clean TTFT: 1018 tok 1.33 s (763 tok/s); 8186 3.57 s (2295); 12283
+5.97 s (2059); 32763 16.33 s (2006); 131067 93.5 s (1402). Gates and
+32K filler math pass; decode C1 ITL p50 18.47 ms, C2 22.73 ms per stream
+(= O4 f4). A push on a card-0 side stream is neutral.
+
+Host budget at 12288 (per chunk): host time inside card 1's Python
+bucket loop 1.9-2.3 s (40-48 ms/layer) against 2.0-2.3 s of card-1
+device time; card-0 non-MoE device time between layers 1.93-1.96 s
+(41 ms/layer); card-0 experts 1.16 s; push 0.27 s; wait+add 0.36 s. The
+host, one thread for both cards, was the critical path. At 128K the
+between-layers term grows from 1.96 s to 7.9 s per chunk (dense FA over
+the context); the MoE terms stay flat.
+
+### 4.5 p6 -- native bucketed op on card 1 (and card 0)
+
+Clean TTFT (bf16, maxpad 32768):
+
+| arm | 1018 | 8186 | 12283 | 32763 |
+| --- | ---: | ---: | ---: | ---: |
+| c0 fast, c1 native:32 | 1.11 s (919) | 3.36 s (2438) | 5.71 s (2150) | 15.67 s (2091) |
+| c0 native:64, c1 native:32 | 1.24 s (820) | 3.53 s (2319) | 4.86 s (2527) | (see JOURNAL) |
+| c0 fast, c1 fast:32 (control) | (see JOURNAL) | | | |
+
+Card-1 host time per 12288 chunk 0.28-0.34 s (6 ms/layer, was 40-48);
+card-1 device 1.74-2.0 s (36-42 ms/layer) is now fully exposed as
+card-0 wait (1.8-2.0 s). Card 0 native helps at 12288 (its own Python
+bucket loop was host-bound there) and hurts below 8192 where its fused
+kernel is cheaper, hence `c0=auto`.
 
 X3's DP2/EP layout measured 2615 tok/s at 12288 (JOURNAL 21:36). There
 each card runs 256 experts with ~10 GB of headroom, so both halves use the

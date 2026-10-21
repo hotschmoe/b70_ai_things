@@ -132,6 +132,13 @@ def _experts(x, ids, w, gate, up, down, gt: int, ut: int, dt: int, h: int, f: in
 
     from b70_gguf_xpu import serve_prefill
 
+    if mode.startswith("auto"):
+        # p6: card 0's fused DPAS kernel wins below the dq threshold (1K/8K);
+        # the native bucketed op wins at the 12288 chunk (host-bound Python
+        # bucket loop otherwise). Threshold = B70_PREFILL_DQ_T (8192).
+        thr = int(os.environ.get("B70_PREFILL_DQ_T", "8192") or 0)
+        tile = mode.split(":", 1)[1] if ":" in mode else "64"
+        mode = f"native:{tile}" if int(x.shape[0]) >= thr else "fast"
     if mode.startswith("native"):
         # One C++ op for the whole bucketed layer (bucket_moe.cpp, in the
         # B70_PREFILL_WIDE_SO library): one host sync per call.

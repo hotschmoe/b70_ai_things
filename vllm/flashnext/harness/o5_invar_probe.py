@@ -190,7 +190,7 @@ def main() -> None:
     log(f"tag={tag} k={k}")
     llm = LLM(**kwargs)
     log("LLM ready")
-    A = "Write a short story about a lighthouse keeper who discovers a message in a bottle."
+    A = os.environ.get("O5_PROBE_PROMPT", "Write a short story about a lighthouse keeper who discovers a message in a bottle.")
     sp = SamplingParams(temperature=0.0, max_tokens=ntok, ignore_eos=True)
     llm.generate([A], SamplingParams(temperature=0.0, max_tokens=2, ignore_eos=True), use_tqdm=False)
     res = {}

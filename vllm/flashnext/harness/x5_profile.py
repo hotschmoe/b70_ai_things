@@ -6,7 +6,7 @@ import time
 
 os.environ.setdefault("VLLM_ENABLE_V1_MULTIPROCESSING", "0")
 
-if any(os.environ.get(k) == "1" for k in ("B70_X5_GDN_BF16", "B70_X5_PACK_LINEAR", "B70_X5_Q8_LINEAR", "B70_X5_EVENTLESS_LAZY")):
+if any(os.environ.get(k) == "1" for k in ("B70_X5_GDN_BF16", "B70_X5_PACK_LINEAR", "B70_X5_Q8_LINEAR", "B70_X5_EVENTLESS_LAZY", "B70_X5_CANONICAL", "B70_X5_BATCH_LINEAR", "B70_X5_Q8_FAST")):
     from x5_api import bootstrap
 
     bootstrap()
