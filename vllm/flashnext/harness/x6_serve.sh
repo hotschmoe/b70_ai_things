@@ -39,8 +39,10 @@ sha256sum "$GGUF_SO" "$(grep -v '^#' "$RECIPE" | sed 's/ *#.*//' | grep '^B70_EP
   "$REPO/vllm/flashnext/plugins/b70_o4_xpu/b70_o4_xpu/_C.so" | cut -c1-16
 # Source/library identity at launch and teardown; detect concurrent edits.
 manifest() {
-  { rg --files "$B/vllm/vllm/models/qwen4_exp/xpu" "$REPO/vllm/flashnext/plugins/b70_qsa_xpu" "$REPO/vllm/flashnext/plugins/b70_ep_xpu/b70_ep_xpu" "$REPO/vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu";
+  { rg --files "$B/vllm/vllm/models/qwen4_exp/xpu" "$B/vllm/vllm/models/qwen4_exp/gguf" "$B/c7b-fa-overlay" "$REPO/vllm/flashnext/plugins/b70_qsa_xpu" "$REPO/vllm/flashnext/plugins/b70_ep_xpu/b70_ep_xpu" "$REPO/vllm/flashnext/plugins/b70_gguf_xpu/b70_gguf_xpu";
     printf '%s\n' "$RECIPE" "$DELTA" "$GGUF_SO" "$B/f1/b70_ep_C.f1c.so" "$B/f1/_C.f1bucket.so" "$B/b70_qsa_xpu/libb70_qsa_xpu.so" "$REPO/vllm/flashnext/plugins/b70_o4_xpu/b70_o4_xpu/_C.so";
+    printf '%s\n' "$H/x6_serve.sh" "$H/x6_probe.py" "$H/bench_latency.py" "$H/xpu-run.sh" "$H/xpu-entrypoint.sh" "$REPO/evals/configs/models.yaml";
+    [ ! -f "$REFERENCES" ] || printf '%s\n' "$REFERENCES";
   } | sort -u | xargs sha256sum
 }
 manifest > "$OUT/source-before.sha256"
@@ -97,9 +99,25 @@ for i in $(seq 1 360); do
      && grep -q "$ALIAS" "$OUT/models.json"; then ready=1; echo "READY $(date -u +%H:%M:%S)"; break; fi
   sleep 5
 done
-GREEDY_RC=2; BENCH_RC=2; PROBE_RC=0; X6_PROBE_RC=2
+GREEDY_RC=2; BENCH_RC=2; PROBE_RC=0; X6_PROBE_RC=2; QSA_BINDING_RC=0
 if [ $ready = 1 ]; then
   awk '/MemAvailable:|AnonPages:/{print}' /proc/meminfo > "$OUT/rss-ready.txt"
+  if [ "$MODE" = qsa ]; then
+    OUT=$OUT python3 - <<'PY'
+import json, os, pathlib, re
+out = pathlib.Path(os.environ['OUT'])
+log = (out / 'serve.log').read_text(errors='replace')
+names = sorted(set(re.findall(r'bound (\S+) backend=B70_QSA pages=', log)))
+bad = [line for line in log.splitlines() if re.search(r'KV page mismatch|private pool|KV spec not installed', line)]
+report = dict(bound_layers=names, expected_layers=12, rejected_lines=bad, passed=len(names) == 12 and not bad)
+(out / 'qsa-bindings.json').write_text(json.dumps(report, indent=2, ensure_ascii=True) + '\n')
+print('QSA_BINDING_GATE', json.dumps(report, ensure_ascii=True))
+raise SystemExit(0 if report['passed'] else 1)
+PY
+    QSA_BINDING_RC=$?
+  fi
+fi
+if [ $ready = 1 ] && [ "$QSA_BINDING_RC" = 0 ]; then
   PORT=$PORT OUT=$OUT X6_ALIAS=$ALIAS python3 - <<'PY'
 import json, os, urllib.request
 port = os.environ["PORT"]; out = os.environ["OUT"]
@@ -138,9 +156,15 @@ if [ $ready = 1 ] && [ $GREEDY_RC = 0 ]; then
   X6_PROBE_RC=$?
   echo "X6_PROBE_RC:$X6_PROBE_RC"
 fi
+echo "QSA_BINDING_RC:$QSA_BINDING_RC"
 echo "BENCH_RC:$BENCH_RC"
 docker stop -t 20 "$NAME" >/dev/null 2>&1 || true
 wait $SP; SERVE_RC=$?; echo "SERVE_RC:$SERVE_RC"
+# A clean API/container exit can follow a fatal or force-killed EngineCore.
+ENGINE_ERROR_RC=0
+if rg -ni 'EngineDeadError|EngineCore encountered an issue|UR_RESULT_ERROR_|force killing remaining process EngineCore' \
+    "$OUT/serve.log" > "$OUT/engine-errors.txt"; then ENGINE_ERROR_RC=1; fi
+echo "ENGINE_ERROR_RC:$ENGINE_ERROR_RC"
 kill $WD 2>/dev/null
 grep -E "PLE device|mlock|fused into|Traceback|Error" "$OUT/serve.log" | tail -n 8
 B70_AGENT="$B70_AGENT" B70_GPU_LOCK_TIMEOUT=21600 "$REPO/bin/gpu-run" "$REPO/bin/xpu-health" > "$OUT/health-after.txt" 2>&1
@@ -152,4 +176,4 @@ if cmp -s "$OUT/source-before.sha256" "$OUT/source-after.sha256"; then echo SOUR
 echo WINDOW_DONE
 [ "$ready" = 1 ] && [ "$GREEDY_RC" = 0 ] && [ "$BENCH_RC" = 0 ] && \
   [ "$PROBE_RC" = 0 ] && [ "$X6_PROBE_RC" = 0 ] && [ "$SERVE_RC" = 0 ] && \
-  [ "$HEALTH_AFTER_RC" = 0 ] && [ "$SOURCE_RC" = 0 ]
+  [ "$HEALTH_AFTER_RC" = 0 ] && [ "$SOURCE_RC" = 0 ] && [ "$ENGINE_ERROR_RC" = 0 ] && [ "$QSA_BINDING_RC" = 0 ]

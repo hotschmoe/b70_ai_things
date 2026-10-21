@@ -182,3 +182,104 @@ remains pending explicit root authorization after D1/N1 full windows.
 Physicalcard1 only, expected1..2min body plus native pre/post health,
 180s alarm/210s outer timeout, no model/PLE/bmm/serve. No speed or
 stability claim. No additional CPU build is needed before the probe.
+
+
+## 2026-10-21 17:04 -- selected-DQ primitive passes; card1 released
+
+CONFIG: root-authorized physicalcard1/logicalxpu0; real Flash-Next GGUF
+packs with the existing traffic-snake card1 placement E374. Selection is
+32 noncontiguous local experts `[373,0,191,7,23,100..126]`. Exact F1 C13
+reference library sha958e5d06 (full hash in window identity file); candidate
+sha0ebb5837 as above. No model load, bmm, bucket op or serving hook.
+
+COMMAND: `TAG=component-r1 bash
+/mnt/vm_8tb/b70/build/vllm-flashnext/p1/window.sh` under cpu-run --quiet
+outside card1 xpu-run lease; 180s alarm,210s outer timeout. Compare
+integer views of complete output tensors, including untouched NaN halves.
+Two warmups then median of five queue-event timings per control/candidate.
+
+RESULT:20/20 actual-weight type/mode cases pass bit-exact; all five gate
+quant types16/17/18/21/22 and both down types20/42. Modes0/1/2 covered
+for each gate type, mode0 for each sampled down pack. GPU body44s exit0,
+P1_COMPONENT_OK; nativepre/post HEALTHY (19s each), normal teardown,
+post identity check passes, no reset. Card1 released immediately to root;
+Q1's Strata references next own both cards. Raw `p1/run-component-r1/`
+contains components.json, summary.json, logs, identity and health.
+
+Gate shape per selected expert is rows640/cols2560; down is
+rows2560/cols640. Every mode0 call writes104857600bytes (100MiB) of BF16.
+Gate modes1/2 allocate209715200bytes, write104857600bytes to gate/up
+interleaved halves and leave the other104857600bytes sentinel unchanged.
+They are exact-layout gates, not separately timed. Input byte counts below
+are the32selected-expert packed copy that the candidate removes; original
+source pack has374/32 times those bytes. The control reads+writes this
+copy (2x packed bytes) before performing the same dequant output writes.
+
+| Layer | Kind | Type | Selected packed bytes | Gather+DQ us | Selected DQ us | Reduction |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 0 | gate | 17 | 15,155,200 | 1318.4 | 1011.2 | 23.3% |
+| 0 | down | 20 | 29,491,200 | 701.0 | 551.4 | 21.3% |
+| 1 | gate | 16 | 13,516,800 | 717.8 | 668.3 | 6.9% |
+| 1 | down | 42 | 14,745,600 | 865.3 | 804.8 | 7.0% |
+| 8 | gate | 21 | 22,528,000 | 601.5 | 503.6 | 16.3% |
+| 8 | down | 42 | 14,745,600 | 606.1 | 532.1 | 12.2% |
+| 12 | gate | 22 | 16,793,600 | 610.2 | 533.6 | 12.5% |
+| 12 | down | 42 | 14,745,600 | 635.1 | 557.7 | 12.2% |
+| 35 | gate | 18 | 20,070,400 | 595.2 | 510.5 | 14.2% |
+| 35 | down | 20 | 29,491,200 | 651.4 | 515.3 | 20.9% |
+
+These primitive medians improve6.9..23.3percent (median across10 sampled
+rows13.4percent), with0.049..0.307ms saved per32-expert call. Packed copy
+traffic removed per call is27.0..59.0MB (decimal read+write bytes).
+Control always precedes candidate; no interleaved statistical validation
+or full card1 expert context was run. Repeated Q2_0/down samples themselves
+vary0.606..0.865ms, so do not treat isolated per-type rankings as stable.
+At E374 with limited free memory, different chunk widths and allocator
+conditions may change the result. No all-layer or serving speed claim.
+
+VERDICT: selected dequant is exact at the component gate and removes a
+measured copy cost; queue a small default-off serving hook after current
+reference priorities. No further P1 GPU window is queued.
+
+## Reproducible campaign checkpoint (path-only port)
+
+CONFIG: root authorized adding the selected primitive and its finite
+build/probe/window to campaign paths. No bucket/mask follow-on ported,
+no automatic vLLM serving registration. Build artifacts stay outside git.
+
+COMMAND: copy three measured native files byte-for-byte into
+`plugins/b70_p1_xpu/csrc/`; copy measured primitive into
+`harness/p1_primitive.py`; adjust build source paths and window invocation
+only; Python syntax/bash-n/ASCII/hash equivalence checks.
+
+RESULT: native files and primitive match measured scratch SHA256s;
+`plugins/b70_p1_xpu/measured-component-r1.json` records them. Added
+`harness/p1_build.sh`, `harness/p1_primitive_window.sh` and an explicit
+Python loader `b70_p1_xpu.load()` (no entrypoint/auto-install). Build forces
+disk TMPDIR=p1/tmp and MAX_JOBS4; uses current shared decode.hpp as before.
+No additional GPU or build was performed for this path-only port.
+
+Measured ABI: PyTorch2.14.0+xpu git08187d9e0fba026dc8217405802ab5381dc88d90,
+XPUversion20260100; oneAPIcompiler2026.1,C++20,C++11ABI1,
+fsycl-device-code-split=per_kernel,libsycl.so.9. Dynamic native dependencies
+include torch_xpu/torch_cpu/torch,c10/c10_xpu and Intel math runtimes.
+Host kernel7.1.0-070100-generic, host loader1.28.2 and IGC2 resolver gate
+passed in the measured window. This binary is ABI-specific and must be
+rebuilt if the stack changes; it is not a generic shelf artifact.
+
+The concrete next hook is isolated to
+`b70_gguf_xpu/csrc/bucket_moe.cpp`: behind default-off
+`B70_PREFILL_SELECTED_DQ=1`, explicitly load P1 once in the prefill setup,
+and call selected dequant on original gate/up/down packs using the
+existing sel vector, expert_rows F/F/H, destination modes1/2/0. Preserve
+host bucket plan, bmm shapes, streams, and combine arithmetic. The native
+bucket can call the registered P1 op through a cached typed dispatcher;
+its default path keeps existing F1 calls. Avoid adding a new hard DT_NEEDED
+on the P1 SO. This is a proposed hook, not installed. Before adoption,
+require matched warm8K/12K prefill, identity/coherence/exact primitive,
+normal teardown/post-health and unchanged short decode under the same
+recipe. Existing strict serving nondeterminism must remain explicit.
+
+VERDICT: finite selected-only checkpoint is ready for root review/commit.
+No additional setup is justified for unchanged code. The serving-hook
+candidate remains a subsequent experiment, not a promotion.

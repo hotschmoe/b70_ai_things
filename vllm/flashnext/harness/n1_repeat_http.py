@@ -20,6 +20,54 @@ class Gate(base.Gate):
         return super().complete(prompt, 128, forced)
 
 
+def summarize_rounds(result, reference=None):
+    """Keep gate HTTP errors and mark unavailable streams incomplete."""
+    rounds = result.get("repeat_rounds")
+    rounds = rounds if isinstance(rounds, dict) else {}
+    checks = result["checks"]
+    expected = len(base.REPEAT_PROMPTS)
+    labels = ("c1_1", "c1_2", "c2_1", "c2_2")
+
+    def tokens(rows, index):
+        if not isinstance(rows, list) or index >= len(rows):
+            return None
+        row = rows[index]
+        ids = row.get("token_ids") if isinstance(row, dict) else None
+        return ids if isinstance(ids, list) and len(ids) == 128 else None
+
+    def compare(left, right):
+        complete = (isinstance(left, list) and isinstance(right, list)
+                    and len(left) == len(right) == expected)
+        same = []
+        for index in range(expected):
+            a, b = tokens(left, index), tokens(right, index)
+            same.append(a == b if a is not None and b is not None else None)
+        complete = complete and None not in same
+        return {"pass": complete and all(same), "complete": complete,
+                "streams": same}
+
+    exact = checks.setdefault("exact_repeat", {"pass": False})
+    exact["forced_tokens"] = 128
+    incomplete = [key for key in labels
+                  if not compare(rounds.get(key), rounds.get(key))["complete"]]
+    exact["complete"] = not incomplete
+    if incomplete:
+        exact["pass"] = False
+        exact["incomplete_rounds"] = incomplete
+    for mode in ("c1", "c2"):
+        checks[mode + "_same_load_repeat"] = compare(
+            rounds.get(mode + "_1"), rounds.get(mode + "_2"))
+    if reference is not None:
+        prior = reference.get("repeat_rounds")
+        prior = prior if isinstance(prior, dict) else {}
+        compared = {key: compare(prior.get(key), rounds.get(key)) for key in labels}
+        row = checks.setdefault("reference_parity", {})
+        row.update({"pass": all(value["pass"] for value in compared.values()),
+                    "complete": all(value["complete"] for value in compared.values()),
+                    "streams": {key: value["streams"] for key, value in compared.items()}})
+    result["pass"] = all(row.get("pass") is True for row in checks.values())
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--base-url", default="http://127.0.0.1:18147")
 parser.add_argument("--out", required=True)
@@ -34,17 +82,19 @@ gate.check("identity", gate.identity)
 gate.check("greedy_17x19", lambda: gate.greedy(17, 19))
 gate.check("greedy_23x29", lambda: gate.greedy(23, 29))
 gate.check("exact_repeat", gate.repeat)
-rounds = gate.result["repeat_rounds"]
 checks = gate.result["checks"]
-checks["exact_repeat"]["forced_tokens"] = 128
-for mode in ("c1", "c2"):
-    same = [a["token_ids"] == b["token_ids"] for a, b in zip(rounds[mode+"_1"], rounds[mode+"_2"], strict=True)]
-    checks[mode+"_same_load_repeat"] = {"pass": all(same), "streams": same}
+reference = None
 if args.reference:
-    reference = json.loads(Path(args.reference).read_text())["repeat_rounds"]
-    same = {key: [a["token_ids"] == b["token_ids"] for a, b in zip(reference[key], rows, strict=True)] for key, rows in rounds.items()}
-    checks["reference_parity"] = {"pass": all(all(row) for row in same.values()), "streams": same, "source": args.reference}
-gate.result["pass"] = all(check.get("pass", check.get("pass_", False)) for check in checks.values())
+    try:
+        reference = json.loads(Path(args.reference).read_text())
+        if not isinstance(reference, dict):
+            raise ValueError("reference result must be an object")
+    except Exception as exc:
+        reference = {}
+        checks["reference_parity"] = {"pass": False, "error": ascii(str(exc))}
+summarize_rounds(gate.result, reference)
+if args.reference:
+    checks["reference_parity"]["source"] = args.reference
 gate.save()
-print(json.dumps(dict(checks={key: {k: v for k,v in value.items() if k in ("pass", "pass_", "streams")} for key,value in checks.items()}, pass_=gate.result["pass"])), flush=True)
+print(json.dumps(dict(checks={key: {k: v for k,v in value.items() if k in ("pass", "pass_", "complete", "streams", "error")} for key,value in checks.items()}, pass_=gate.result["pass"])), flush=True)
 raise SystemExit(0 if gate.result["pass"] else 3)

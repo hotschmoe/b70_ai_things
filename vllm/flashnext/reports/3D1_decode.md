@@ -4,6 +4,13 @@ Owner: Codex D1 (Sol 6.1 requested by user). Parent coordinates both cards,
 DD lifecycle, and shared source ownership. No commits or external submission.
 Scratch: /mnt/vm_8tb/b70/build/vllm-flashnext/d1.
 
+Current verdict: original merged no-spec canonical baseline61.6/61.8
+tok/s remains below Strata66.2. Compact FA plan16 is a component win but
+is disabled/unqualified after full EngineCore resource failure before
+canonical collection. A subsequent bounded lifetime/mixed-T21 probe
+passes; it does not reproduce the full-model failure. No promotion or
+external validation/submission.
+
 ## Recovered Ld trace: short-context native FA owns the growth
 
 CONFIG: CPU-only recovery of O4's completed Ld trace. Ld used O4 f14,
@@ -268,3 +275,104 @@ private treatment. No second control load: all sources and SOs executed
 by the original c7b control are unchanged. Parent may build unrelated
 scratch-only CPU candidates during model load through cpu-run; timed
 client windows retain the same quiet CPU lock. r2 results pending.
+
+## r2 fails before canonical collection; treatment remains disabled
+
+CONFIG: corrected plan16 with actual serve activation proven:
+D1_FA_PLAN_ACTIVE count16,batch4,page1600,KV scale views(4,2).
+
+COMMAND: parent-approved plan16-r2 full window and combined callback.
+
+RESULT: identity, arithmetic, Paris coherence and8K/32K needles pass.
+The strict promotion exact-repeat fails.64-token C1 p50 15.138275 ms,
+C2 20.072390/20.102467. These are diagnostics, not a stable variant.
+Both8K probe requests have n_chunks1 and nonempty first-token events
+(' hotel' and newline text), so their observed TTFTs are35.520950 s then
+3.558202 s: input/observed-first-content rates230.46 and2300.88 tok/s.
+These client rates include request overhead; they are not pure engine
+prefill rates. Control also had n_chunks1 in both8K requests: observed
+TTFT4.202408/3.441812 s, input rates1947.93/2378.69. Do not generalize
+this validity to other probes whose completion token has no content chunk.
+
+At16:48:53, during the separate128-token C2 repeat, EngineCore fails with
+UR_RESULT_ERROR_OUT_OF_RESOURCES(40), surfacing in PLEHistory.conv's
+ring gather (mtp_ple.py:175). The scheduler witness is20 new prefill
+tokens plus1 cached decode token,total21,no speculation. This is before
+attention in that step; it does not locate the originating device fault.
+The subsequent repeat-client KeyError(c2_2) and canonical connection reset
+are secondary. No canonical treatment packets exist; no lmx comparison or
+beat-Strata claim can be made. Preserve d1/plan16-r2/failure-witness.json.
+
+Normal outer serve process exit0 does not hide EngineCore failure.
+Treatment armRC1, native post-health card0OK/card1OK/HEALTHY, effective
+SO check0,410-file final identity bad=[]. No reset or new GPU retry.
+
+VERDICT: plan16 stays disabled/unqualified. Parent assigned N1's next
+serve to original attention only. CPU-only localization facts:
+
+- Capture reclaim500 is enabled in both arms; card1 logs key1 refinalize
+  at500/1000/1500 and key2 at500 before r2 failure. The control crossed
+  key2=500 and key1 through6000 cleanly. A reclaim correlation alone does
+  not establish a cause.
+- Helper counts/work/zeros are capture-local tensors, while native C++
+  allocates BF16 split output and FP32 LSE scratch inside each call.
+  This is a lifetime hypothesis requiring a stress discriminator.
+- Candidate available KV budget8.53 GiB vs control8.50; estimated graph
+  reservation fraction0.0123 vs0.0136. This does not support a larger
+  captured-VRAM footprint. Card1 prefill free1.28 vs1.29 GiB.
+- No matching kernel journal xe/drm/error event was found over the
+  failure interval; native post-health recovered without reset.
+
+Scratch-only bounded stress probe prepared at d1/fa_lifetime_stress.py
+and fa_lifetime_window.sh. It compares original, temporary-plan and
+persistent-plan buffers in separate processes with real head-major,
+interleaved KV views, five shared-pool graph sizes,12 FA calls per graph,
+B1=1501/B2=501 replays and reclaim500. It introduces the exact-shaped
+PLE BF16 ring gather atT8192 after500 replays, then real PLEHistory.conv
+at mixedT21 after the B2 reclaim boundary. No model/host-table pin; no
+GPU run yet. Parent will schedule after N1 closes. Expected60-100s body,
+hard3x60s per-process alarms, plus import/health overhead.
+
+## Bounded lifetime/mixed-shape probe passes; failure not localized
+
+CONFIG: physicalcard1/logical0, three fresh processes: original native
+FA, temporary plan tensors (production helper) and persistent per-layer
+counts/work/zeros. No EP sidecar or near-full VRAM pressure. Real cache
+storage order(block,head,page,2D),transposed/split K/V views,24/2/256;
+five shared-pool captured sizes8/4/3/2/1,12 FA calls per graph. Actual
+graph-reclaim500 overlay, B1=1501 and B2=501 replays. BF16 PLE ring
+[233,10,10240], int64 index arrays; kernel4,dilation3,width1. Ring outer
+size is inferred from r2's232-block pool; trailing dimensions/dtypes and
+mixed20-prefill+1decode metadata follow the actual source and witness.
+
+COMMAND: bash /mnt/vm_8tb/b70/build/vllm-flashnext/d1/fa_lifetime_window.sh,
+explicit root authorization after N1 original-attention window closed and
+native health passed. Raw d1/lifetime-probe-1/{probe.log,reclaim.log,
+status.txt,health-before.txt,health-after.txt}. Body67s; stops on first
+error; no campaign source modification or model/PLE-table load.
+
+RESULT: all3 arms pass every replay boundary and grouped FP32 reference
+check on real cache strides. AtB1=500, PLE8192-row gather takes about5ms;
+atB2=500, the actual PLEHistory.conv mixedT21 call takes0.25-0.27s and
+passes its causal-tap reference. No35s spike or resource error reproduced.
+Memory allocated remains107494912bytes;FDcount6. Both plan arms reserve
+150994944bytes initially, then402653184 after eager PLE8192 allocation,
+and remain flat. Original reserves402653184 throughout. Reclaim log
+records actual instantiate_begin/done at500/1000/1500 for each B1 graph
+and500 for B2. Exit0, leased native pre/post HEALTHY, no crash/reset.
+
+VERDICT: low-VRAM single-card evidence does not support changing to
+persistent buffers as a fix. It does not rule out model-sized resource
+pressure, EP queues/context interactions, a full-graph interaction, or a
+different new eager kernel. Root's N1 original-attention full window also
+stalled, so plan16 is not established as the unique cause. Keep plan16
+disabled; no new full FA serve until a concrete cause/fix and a stronger
+bounded component discriminator justify it. Parent owns next GPU slots.
+
+Stage handoff: no further D1 GPU work or full loads. Parent will review
+and curate the scratch stress source before committing it, then prioritize
+P1's selected-dequant primitive and QSA's first full serve. The control
+remains operationally clean but fails strict repeatability. Full plan16 is
+rejected for serving; component speed and low-VRAM stress results remain
+conditional. Parent's lifecycle review separately detects fatal EngineCore
+errors even when the shell/outer serve process returns0.

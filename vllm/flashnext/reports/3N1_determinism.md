@@ -2,8 +2,10 @@
 
 Owner: Codex / gpt-6.1-sol.
 
-STATUS: primitive p2 PASS including O4 parity and graph replay; full-model
-repeat/batch/MTP parity pending. Current library is the unique-namespace
+STATUS: primitive p2 PASS; whole-model n1-original-r1 UNQUALIFIED.
+Short C1 repeats pass, short C2 repeat and cross-batch exactness fail.
+Later arithmetic stalled; EngineCore required force-kill, posthealth passed.
+O5 128-token repeats and canonical suites were not collected. Current library is the unique-namespace
 r2 SHA c90919594b0e2b355073e2b398ac76755a3ace5eb0094d014a72a05a411246d0.
  Scope: GDN projection only. No DD changes,
 commits, pushes, submissions, or GPU work as of the preparation stage.
@@ -223,3 +225,118 @@ N1 candidate. Paris5tok alone uses <=8 dispatch while paired with the
 15tok Fibonacci prompt produces M20: that also changes HC/MoE prefill
 paths, so N1 alone cannot be assumed to fix every cross-batch mismatch.
 The later plan16 control is the intended matched reference for N1.
+
+## Whole-model n1-original-r1 - unqualified, stalled arithmetic
+
+CONFIG: original c7b FlashAttention ONLY, no D1 attention overlay; O4
+recipe + F1 prefill, N1 flag1, r2 library. Both cards, single-process EP
+sidecar. maxlen131072, batched12288, maxseq4, FULL_DECODE_ONLY1/2/3/4/8,
+no prefix cache, Mamba align, no speculation. Stable hotschmoe-dd first;
+registered alias qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4. Parent reused
+D1-r2 native both-card HEALTHY as prehealth (SKIP_HEALTH_BEFORE=1).
+COMMAND: root-authorized f1_merged_serve.sh TAG=n1-original-r1;
+F1_API_WRAPPER=d1_api.py; F1_POST_PROBE_SCRIPT=d1_combined_callback.sh;
+F1_PYPATH_PRE=plugins/b70_n1_xpu only; O4_SERVE_EXTRA contains
+B70_D1_FA_PLAN=0 B70_GDN_BA_DETERMINISTIC=1 B70_N1_SO=<r2>. Full command
+configuration saved n1-env.json beside raw artifacts at
+/mnt/vm_8tb/b70/build/vllm-flashnext/f1/merged-n1-original-r1/.
+RESULT: started16:52:33UTC, READY16:55:34, identity and323/667 PASS.
+8K/32K needle gates PASS, identity-after unchanged. Promotion96-token
+same-load C1 repeat:[true,true,true,true]; C2:[false,true,true,true].
+Cross-batch gate FAIL: C2Paris differs from C1 at2 on first round but
+matches on second; Fibonacci differs72 both; hash collision prompt
+92both. Strict batch determinism remains unqualified.
+The combined O5 repeat callback reached identity only. Its first
+17*19 request, started approximately16:56:47, never returned before
+abort16:58:35 (>108s, normally subsecond). At16:57:02 engine metrics
+show Running1 and0generation; no later server logs or engine exception.
+At witness time EngineCore hostPID43458 was alive/Rl,181%CPU, API in
+ep_poll. Saved stall-witness-time/processes/client-processes/engine-status/
+engine-stat/serve-tail. No Python stack or GPU trace was obtained, so
+neither an operation nor N1 itself is identified as the stall cause.
+Parent authorized stopping body rather than waiting600s. TERM to only
+the callback and waiting HTTP client returned CALLBACK_RC143, skipped
+canonical suites. O5 128-token same-load C1/C2 repeats are UNAVAILABLE,
+not pass/fail. Native posthealth is HEALTHY(cards0,1), rc0 in34s;
+no reset, both cards released. Source/N1SO/model/originalFA/recipe/
+harness hashes and shared native SO checks all unchanged.
+TEARDOWN: SERVE_RC0 only describes API/container return. EngineCore did
+NOT exit normally: processmanager SIGTERM16:58:36, force-kill of remaining
+EngineCore pid107 at16:58:41. Overall windowrc1, gate3, callback143,
+bench0, F1probe0. This is a failed liveness/teardown qualification.
+VERDICT: keep N1 default-off and unqualified for serving. Diagnose
+serving liveness before another full-model experiment. This one run
+shows a stalled N1-enabled recipe, not a proven causal kernel defect.
+
+Matched original-control diagnostic results (no speed promotion):
+
+| item | D1 original control | N1 original candidate |
+| --- | --- | --- |
+| C1 ITL p50,64tokens |15.168827ms|15.165022ms|
+| C2 ITL p50 per stream |19.582852/19.604523ms|19.564345/19.566278ms|
+| Short C1 same-load repeat |4/4|4/4|
+| Short C2 same-load repeat |2/4|3/4|
+| Cross-batch exact |FAIL|FAIL|
+| O5 long-prompt repeat C1/C2 |2/4 and1/4|unavailable after stall|
+| Native posthealth |HEALTHY|HEALTHY|
+
+Control/candidate effective recipe diff, saved n1-control-config-diff.json,
+is ONLY B70_GDN_BA_DETERMINISTIC0->1 and added B70_N1_SO path. N1 plugin
+path is the only Python-path prefix addition; original FA remains c7b.
+Diagnostic F1 prefill8192: candidate8186/8187tokens, TTFT4.43268/3.57780s,
+1846.74/2288.28tok/s; long arithmetic/coherence PASS. These do not
+establish speed or stability because strict repeat/teardown failed.
+
+## Read-only lineage and cached-weight lifetime
+
+CONFIG: exact N1 whole-model recipe above, no B70_D3_GDN and no
+B70_GDN_SPEC_DECODE flags. No additional GPU work or library loads.
+COMMAND: inspect fork _xpu_ops.py:181/265, platforms/xpu.py:11-13,
+c7b overlay symlinks, ELF DT_NEEDED, D3 source and X5 ragged generator.
+RESULT: Flash-Next uses _gdn_attention_core_xpu_impl ->
+torch.ops._xpu_C.gdn_attention. xpu platform imports installed
+vllm_xpu_kernels._xpu_C.abi3.so via c7b symlink; its ELF requires
+libgdn_attn_kernels_xe_2.so with RUNPATH $ORIGIN. Both resolve under
+venv/lib/python3.12/site-packages/vllm_xpu_kernels. Runtime process maps
+were not preserved, so this is configured import/ELF resolution evidence.
+D3 custom plugin activates only with B70_D3_GDN=1 (sitecustomize.py).
+Its shared gdn_decode.cpp:97 reduce_128 still returns parts[0] without
+a read-complete barrier. X5 x5_gdn_ragged.py:14-21 adds that barrier to
+its private R3 binary. Neither private R3 nor shared D3 is enabled here;
+the proxy fix is therefore NOT active, and its specific helper is also
+NOT the native implementation used by this serving recipe.
+N1 _n1_ba_weight is a strong layer-owned Tensor reference, created once
+with beta|alpha cat/contiguous after device loading, then never replaced
+or freed by the plugin. Existing O4 _apply_dense_cat (gguf/linear.py:224)
+uses the same lazy strong layer-owned cached concatenation. Both N1 and
+O4 obtain per-call output Tensor allocation from their native op; the
+new op uses O4's current-stream submission pattern. N1's cached weight
+outlives graph captures/reinstantiations by the same ownership pattern.
+VERDICT: no demonstrated N1 cached-weight lifetime defect. The R3 race
+cannot be attributed to current native GDN from shared-source similarity.
+Further localization needs liveness/queue/operation evidence, not a blind
+barrier port or a new full-model run.
+
+## Partial repeat-client reporting repair
+
+CONFIG: client-only n1_repeat_http.py change after parent source-freeze
+release and confirmation D1 stress excludes this client. No server,
+model, native kernel, GPU run, build, or new tests file.
+COMMAND: compile syntax; offline AST-extracted summarize_rounds against
+recorded D1 plan16-r2 partial JSON, N1 identity-only aborted JSON, complete
+D1 original-control JSON, and missing/malformed round collections.
+RESULT: preserve original gate.check HTTP500 error exactly. Recorded
+D1-r2 has complete C1 rounds and first C2 round, missing second C2;
+summary marks C1 complete, C2 incomplete/failed, unavailable streams as
+null, and overallFAIL without KeyError. Empty rounds/reference cannot
+pass via an empty zip. References require all four rounds, four streams
+per round,128 token IDs per stream. Complete control self-reference
+matches while its original repeat failure remains failed. Invalid
+reference JSON is recorded without replacing the primary gate error.
+Syntax/diff checks PASS; offline result saved as
+n1/client-partial-r2-offline.json, original evidence untouched.
+VERDICT: partial failures now remain reviewable instead of being masked
+by a later missing-round KeyError. No mathematical behavior changed.
+The first offline assertion initially assumed both D1-r2 C1/C2 rounds
+were absent; inspection showed both C1 rounds complete, so the validation
+expectation was corrected to match that recorded fixture.

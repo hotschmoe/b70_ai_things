@@ -138,6 +138,11 @@ fi
 echo "BENCH_RC:$BENCH_RC GATE_RC:$GATE_RC CALLBACK_RC:$CALLBACK_RC"
 docker stop -t 20 "$NAME" >/dev/null 2>&1 || true
 wait $SP; SERVE_RC=$?; echo "SERVE_RC:$SERVE_RC"
+# A clean API/container exit can follow a fatal or force-killed EngineCore.
+ENGINE_ERROR_RC=0
+if rg -ni 'EngineDeadError|EngineCore encountered an issue|UR_RESULT_ERROR_|force killing remaining process EngineCore' \
+    "$OUT/serve.log" > "$OUT/engine-errors.txt"; then ENGINE_ERROR_RC=1; fi
+echo "ENGINE_ERROR_RC:$ENGINE_ERROR_RC"
 kill $WD 2>/dev/null
 grep -E "PLE device|mlock|fused into|Traceback|Error" "$OUT/serve.log" | tail -n 8
 B70_AGENT=F1 B70_GPU_LOCK_TIMEOUT=1800 "$REPO/bin/gpu-run" "$REPO/bin/xpu-health" > "$OUT/health-after.txt" 2>&1
@@ -148,5 +153,5 @@ sha256sum -c "$OUT/so-before.sha256" > "$OUT/so-after-check.txt" 2>&1
 SO_RC=$?
 if [ "$ready" != 1 ] || [ "$GREEDY_RC" != 0 ] || [ "$BENCH_RC" != 0 ] || \
    [ "$PROBE_RC" != 0 ] || [ "$CALLBACK_RC" != 0 ] || [ "$SERVE_RC" != 0 ] || \
-   [ "$HEALTH_AFTER_RC" != 0 ] || [ "$SO_RC" != 0 ]; then exit 1; fi
+   [ "$HEALTH_AFTER_RC" != 0 ] || [ "$SO_RC" != 0 ] || [ "$ENGINE_ERROR_RC" != 0 ]; then exit 1; fi
 if [ "${RUN_PROMO_GATE:-0}" = 1 ] && [ "$GATE_RC" != 0 ]; then exit 3; fi

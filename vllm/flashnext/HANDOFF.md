@@ -231,3 +231,16 @@ full serve (r2) failed with level_zero OUT_OF_RESOURCES40 before canonical
 measurement. Keep it disabled; the PLE traceback is a surfacing site, not
 a proven cause. Post-health recovered cleanly. No new submission or speed
 promotion. N1 full-model validation uses the original attention path.
+
+N1 original-attention full validation subsequently stalled after prefill
+and required a forced EngineCore shutdown; strict C2 repeat also failed.
+Keep N1 off as well. Its primitive remains valid, not a serving fix.
+Both-card health and source checks passed after teardown. A bounded low-VRAM
+replay/PLE stress test did not reproduce either full-model liveness issue.
+Next liveness work needs loaded-context/EP evidence, not a blind buffer fix.
+
+P1 selected-expert dequant passes20 exact component cases and reduces
+measured mode0 gather+DQ latency6.9-23.3 percent. Reproducible sources are
+plugins/b70_p1_xpu and harness/p1_*. It has no serving hook yet.
+Canonical no-draft Strata4K/16K/32K references are now on disk; first full
+QSA serving comparison is the remaining stage. See the new reports.

@@ -9316,3 +9316,98 @@ Audit clarification: restart-r1 12K hasonecompletiontoken/no content event;
 5047.607ms isrequest-wall fallback,2433inputtok/s proxy,not observed
 first-contentTTFT or pureengineprefill. Raw evidence unchanged; curated
 report relabeled. D1 real8K probes do observefirstcontent.
+
+## 2026-10-21 16:50 D1 -- active plan16-r2 fails mixedT21 before canonical
+
+CONFIG: corrected privateFAplan16 active in realserve (batch4,page1600,
+KVscaleviews4x2), N1OFF; sharedsourcefreeze and410filemanifest.
+COMMAND: plan16-r2 fullwindow+combinedcallback.
+RESULT: arithmetic/coherence/8K+32Kneedles pass; strictrepeatfails.
+EngineCoreerror40 at16:48:53 during128tokenC2repeat, surfaced PLEring
+gather on20prefill+1decode mixedstepT21. No canonical treatmentpackets.
+Outerprocessserveexit0 but armRC1; bothcardsposthealthHEALTHY,
+SOcheck0/source410unchanged. No reset. Cold8KobservedTTFT35.521s,
+warmed3.558s; bothn_chunks1, rates230.46/2300.88inputtok/s perTTFT.
+VERDICT: keepplan16disabled/unqualified; nofullspeedcomparison. CPU
+lifetime/reclaim500/mixednewTorchkernel hypotheses remainconditional.
+Scratchboundedstressprepared, noGPUuntilN1original-attentionwindowcloses.
+Evidence report3D1_decode.md and d1/plan16-r2/failure-witness.json.
+
+## 2026-10-21 17:02 N1 -- wholemodel original-FA candidate stalls, unqualified
+
+CONFIG: bothcards,N1detflag1/r2SO,originalc7bFA,noD1overlay,matchedO4+F1
+maxlen131072/chunk12288; parentprecedingnativeprehealthHEALTHY.
+COMMAND: TAG=n1-original-r1 f1_merged_serve.sh +d1API/combinedcallback;
+raw f1/merged-n1-original-r1/.
+RESULT: ID/323/667/8K+32KneedlePASS. Short96token same-loadC1=4/4;
+C2=3/4; crossbatchFAIL. O5callback firstarithmeticstalls>108s; no128token
+repeat/canonicaldata. Preserved process/timingwitness; noexception.
+CallbackTERM143,APIshellSERVE_RC0 BUT EngineCoreSIGTERM16:58:36 then
+forcekill16:58:41,NOTnormalengineexit. Overallwindow1. Nativeposthealth
+HEALTHYbothcards,allN1/sharedSOsourcehashchecksPASS,noreset,cardsreleased.
+VERDICT: N1unqualified/defaultOFF; nofurtherfullmodeluntil liveness
+diagnosed. ActualGDN is native_xpu_C.gdn_attention via installed
+libgdn_attn_kernels_xe_2.so; customD3/R3reduce_128helperNOTenabled. N1
+weightcache matches existingO4 lazystronglayer-ownedcat; no lifetime
+faultdemonstrated. DiagnosticITL15.165msC1/19.564+19.566C2,no speedclaim.
+
+## 2026-10-21 17:02 D1 -- bounded graph lifetime + mixedPLE probe allPASS
+
+CONFIG: physicalcard1, freshprocess original/tempplan/persistentplan,
+realinterleavedheadmajorKVviews, sharedpoolgraphs8/4/3/2/1,12FAcalls,
+B1=1501/B2=501 replays through actual reclaim500. SyntheticPLEring
+233x10x10240BF16, int64indices; no model/hostpin/EP/nearfullVRAM.
+COMMAND: scratch d1/fa_lifetime_window.sh; rootauthorized.
+RESULT: all3arms FP32refs/reclaims/PLET8192gather/mixed20+1T21conv
+pass; body67s, nativepre/postHEALTHY, exit0, noreset. Allocatedflat
+107494912bytes/FD6; reserves150994944->402653184 aftereagerPLE8192
+thenflat inbothplanarms. No35sdelay/error40reproduced. Card1released.
+VERDICT: no evidence favoring persistentbuffix atthisscope. Fullmodel
+pressure/EP/queue/newkernelfactors remainopen; original-attentionN1
+also stalled, so plan isnotestablishedunique cause. Plan16disabled.
+Raw d1/lifetime-probe-1; report3D1_decode.md. No newfullFAserve.
+
+## 2026-10-21 17:04 N1 -- partial repeat-client preserves primary HTTPerror
+
+CONFIG: clientonly aftersourcefreeze release; noGPU/build/servermathchange.
+COMMAND: n1_repeat_http.py summarize_rounds offline againstrecordedD1r2
+partial,N1abortedidentity-only,completecontrol,missing/malformedrounds;
+py_compile/diffcheck. No newtestsfile.
+RESULT: originalHTTP500error preserved; C1complete/C2incompleteFAIL;
+missingrounds/reference neverpass emptyzip orraiseKeyError. Alloffline
+checksPASS; newartifact n1/client-partial-r2-offline.json; originalJSON
+unchanged.
+VERDICT: reportingrepair only; N1serve remainsunqualified afterstall,
+no furtherfullmodel planneduntilconcrete livenesscause/fix.
+
+## 2026-10-21 17:04 P1 -- selected-DQ exact gate passes; finite port ready
+
+CONFIG: rootauthorized physicalcard1/logical0;realE374traffic-snakepacks;
+32noncontiguousexperts,gate640x2560/down2560x640;no bmm/serve.
+COMMAND: TAG=component-r1 p1/window.sh;actualF1C13reference vsP1;
+20type/modecases,2warmups/5eventtimings;nativepre/posthealth.
+RESULT:20/20bitexact;body44s exit0/P1_COMPONENT_OK;pre/post HEALTHY;
+normalteardown,hashesunchanged,noreset. Card1releasedtorootimmediately.
+Mode0writes104857600bytes;selectedpacked13.5..29.5MB percall; removes
+27.0..59.0MBread+write. Primitive6.9..23.3percentlower,median13.4;
+fixedcontrol-first order and repeateddownvariance limitconclusions.
+VERDICT: noE2Espeedclaim. Rootauthorizedfinite path-onlyport to
+plugins/b70_p1_xpu+harness/p1_*;native/probehashesmatchmeasured,syntax
+ASCIIpass,noredundantGPU/build. Explicitloadonly,noauto vLLMhook;next
+default-offbucketselected-DQbranch proposedinreport3P1. NoGPUqueued.
+
+## 2026-10-21 17:10 Q1 -- canonical Strata no-draft long references PASS
+
+CONFIG: bothcards,canonicaldd-nomtp-c1 recipe,parallel1,spec2verifybuffer,
+noMTP/suffix0/lookup0,ISTA IQ3_XXS,int8QSA,release52d1778c909b9012.
+Researchalias/log only differ; no DDservice lifecycle.
+COMMAND: root-authorized q1/strata-window.sh,8minbodycap,nativepre/post
+health, fixture/inputhash and runtimezero-draft validator.
+RESULT: all4096/16384/32768tokenfixtures generate64outputIDs each.
+Every engine_last has0draftsoffered/accepted/reuse; prompt_read full.
+Actualengine_info/last/rawIDs/textSHA/exeSHA saved in q1 references.
+STRATA_RC0/VALIDATION_RC0/HEALTH_RC0/SOURCE_RC0; nativepre/postboth
+HEALTHY,normalexit,noreset,inputsunchanged. Bothcardsreleased17:08UTC.
+VERDICT: realStrata C1 references ready; noC2parity/latencyclaim. Root
+thenauthorized onefullQSA attempt,started17:09:08UTC,bothcards,
+originalO4/F1 flags,N1/D1off,maxlen65536/chunk12288,4K16K32Krefs.

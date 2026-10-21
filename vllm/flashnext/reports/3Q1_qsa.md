@@ -158,3 +158,50 @@ fixture hashes/counts, nonempty outputs, stored engine_info/engine_last,
 consistent executable SHA and zero offered/accepted draft counters. That
 runtime gate is prepared and syntax checked, not yet exercised. It saves
 a separate reference summary without changing the frozen generator.
+
+## 17:08 - real Strata references close PASS
+
+CONFIG: root-authorized both-card canonical dd-nomtp-c1 engine, release
+52d1778c909b90123a8947a3a2a9700370b76a2f64d293765f0e2510526fdad2,
+parallel1, spec2 verify buffer, no MTP/suffix/lookup drafts. Research
+alias/log only differ from the canonical config; no DD service start.
+
+COMMAND: q1/strata-window.sh, 8-minute body cap, native pre/post health,
+input/source hash checks, host output validator.
+
+RESULT: STRATA_RC0 / VALIDATION_RC0 / HEALTH_RC0 / SOURCE_RC0. All three
+4096/16384/32768-token prompts generate 64 output IDs. Each actual
+engine_last reports zero drafts offered/accepted/reused and full-length
+prompt_read. Engine info, raw and visible IDs, text hash, executable SHA
+and config identity are retained. Native health HEALTHY before/after,
+normal exit, no reset, inputs unchanged. Actual Strata EP split is
+231/281 experts per layer. Canonical config SHA 2e0caec54286b589...;
+research config SHA 9cac99e468e317c3.... All raw q1/strata-* artifacts
+and q1/strata-references.json are under the campaign build root.
+
+VERDICT: qualified independent C1 reference material for the first QSA
+serve comparison. No Strata C2 parity or matched latency claim. The
+64-token outputs include reasoning, so this is an exact continuation
+comparison, not a completed needle-answer score.
+
+## Full QSA attempt q1-r1 - running
+
+CONFIG: original O4+F1 recipes plus QSA, explicitly N1/D1/oneDNN-det
+flags0, original c7b FA library path, no new model/kernel edits. Both
+cards, maxlen65536/chunk12288, FULL_DECODE_ONLY1/2/4, no MTP. Required
+Strata refs and 4K/16K/32K solo-repeat/C2 comparisons; no redundant128K.
+
+COMMAND: `Q1_TAG=q1-r1 bash /mnt/vm_8tb/b70/build/vllm-flashnext/q1/serve-window.sh`.
+Root authorized one bounded attempt; start17:09:08UTC, expected6-10min,
+40-minute outer/20-minute server cap. Monitor post-ready progress with
+the root's120s no-progress abort bound, allowing firstJIT/32KC2 work.
+
+RESULT: pre-health HEALTHY; native engine loading normally at17:10.
+Actual12-layer binding, stable alias,323/667, long refs, engine-error
+scan, normal teardown and post-health remain required.
+
+VERDICT: first integration/fidelity attempt only. Original baseline
+strict nondeterminism remains explicit; no promotion or stability claim.
+The harness preserves root's ENGINE_ERROR_RC gate and now also records
+12unique QSA bindings/no private pool and active GGUF/FA/harness/reference
+source hashes. Shared active sources frozen for the run.

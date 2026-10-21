@@ -1,0 +1,9 @@
+{
+  "measured_binary_sha256": "0ebb5837a9467e5186566243684becc27cd5047bb0064e079763788b6dfcdbbd",
+  "native_sources": {
+    "p1_dequant.cpp": "1e705b2a8f2a1734ac57c3d2d2d14d30ce271a41d4845550f57c20bce0dc87e9",
+    "p1_dequant.hpp": "d0472cf61659b38814bffeb762bdbedb54b1074ff554a2eef07b499f05edcb7f",
+    "p1_selected_register.cpp": "92827be5caa09c3715509267c32eb2b80ba6492ab7865a16aa1705c6c2c11579"
+  },
+  "primitive_sha256": "c60e8b957950b1fd40f0ab7a33b9333a8c71307d9ad0663a40b24507116a62d5"
+}

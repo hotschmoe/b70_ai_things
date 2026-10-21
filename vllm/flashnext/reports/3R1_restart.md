@@ -93,3 +93,36 @@ the engine failure. Both-card post-health and source/SO checks passed.
 Plan16 stays disabled and unqualified. There is no new headline speed
 result. Full-model GDN validation proceeds on the original attention path.
 See reports/3A1_audit.md and reports/3D1_decode.md for the finite evidence.
+
+## Subsequent bounded work
+
+N1's full original-attention serve passed arithmetic, short coherence and
+8K/32K needles, but retained a C2 repeat mismatch and then stalled on an
+arithmetic request after prefill. EngineCore required a forced kill.
+Sources/SOs were unchanged and both-card post-health passed. The 128-token
+repeat packet and canonical suites did not complete. Keep the N1 flag off.
+
+A bounded original/temporary-plan/persistent-plan stress test passed
+1501 B1 plus501 B2 replays per arm through graph re-instantiation every500,
+including a PLE8K gather and mixed21-token PLE convolution. It used low
+VRAM and no EP sidecar; it does not clear loaded-context resource pressure
+or queue interactions. No speculative lifetime fix is justified by it.
+Tracked reproduction: harness/d1_fa_lifetime_window.sh (requires D1_TAG).
+
+P1's selected-expert dequant primitive passes20 real-weight BF16 cases,
+including all five gate types, two down types and three store layouts.
+The measured mode0 calls improve6.9-23.3 percent versus gather+dequant,
+with32 reordered experts; this is component timing, not serving speed.
+Measured native sources are in plugins/b70_p1_xpu and scripts in
+harness/p1_*. No serving hook or automatic registration was added.
+
+Strata references for4096/16384/32768 tokens are now measured using the
+canonical dd-nomtp-c1 config (research alias/log only changed). All three
+produce64 tokens, with drafts_offered=0/drafts_accepted=0, matching native
+tokenizer IDs, unchanged sources and healthy pre/post checks. Raw rows are
+q1/strata-references.json in the build root. Full QSA fidelity is pending.
+
+The lifecycle now rejects explicit native/engine failures and forced
+EngineCore shutdown even when cleanup returns0. The repeat client keeps
+primary HTTP errors and marks missing rounds incomplete instead of raising
+a secondary KeyError. Neither change alters model computation.

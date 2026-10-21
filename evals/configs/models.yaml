@@ -1749,6 +1749,24 @@ models:
     serve_cmd: vllm/flashnext/localmaxxing/l1/l1_window_flashnext.sh
     notes: L1 localmaxxing no-spec run of O4's sidecar decode recipe (EP, card 1 = remote experts), frozen fork branch b70/lmx-20261021. See vllm/flashnext/reports/2L1_localmaxxing.md. Not a qualified shelf.
 
+  - label: flashnext-ista-iq3-xxs-x6-qsa-research
+    served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-x6-qsa
+    family: qwen3.8-flash-next
+    weights: GGUF-IQ3_XXS-ISTA-GSQ-RCO
+    activations: bfloat16
+    calibration: publisher-ISTA-GSQ-RCO
+    serve_cmd: "TAG=qsa bash vllm/flashnext/harness/x6_serve.sh"
+    notes: "X6 research only, no shelf promotion. Primary alias hotschmoe-dd. TP1 EP sidecar, int8 pooled QSA KV, FULL_DECODE_ONLY. Qualification evidence: vllm/flashnext/reports/1X6_qsa_serve.md."
+
+  - label: flashnext-ista-iq3-xxs-x6-dense-research
+    served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-x6-dense
+    family: qwen3.8-flash-next
+    weights: GGUF-IQ3_XXS-ISTA-GSQ-RCO
+    activations: bfloat16
+    calibration: publisher-ISTA-GSQ-RCO
+    serve_cmd: "TAG=dense X6_QSA=0 bash vllm/flashnext/harness/x6_serve.sh"
+    notes: "X6 matched research control, no shelf promotion. Primary alias hotschmoe-dd. TP1 EP sidecar, dense BF16 KV, FULL_DECODE_ONLY. Dense differs from QSA selection above2051 tokens."
+
   - label: o4-flashnext-ista-iq3xxs-merged-research
     served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4
     primary_client_id: hotschmoe-dd
