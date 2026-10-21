@@ -1796,3 +1796,13 @@ models:
     calibration: publisher-ISTA-GSQ-RCO
     serve_cmd: "B70_Q1_SELECTOR=fused TAG=q1-fused-r2 bash vllm/flashnext/harness/q1_selector_window.sh"
     notes: "Q1 opt-in decode-only packed-key topk and bitonic-ID selector candidate, explicit measured SO required. Native prefill selector. Research identity registration only; no serving qualification or promotion."
+
+  - label: flashnext-ista-iq3-xxs-c4-mtp1-research
+    served_model_id: qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-c4-mtp1
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: GGUF-IQ3_XXS-ISTA-GSQ-RCO
+    activations: bfloat16
+    calibration: publisher-ISTA-GSQ-RCO
+    serve_cmd: "bin/cpu-run --quiet python3 vllm/flashnext/harness/c4_compare/run.py flashnext --tag flashnext-r1"
+    notes: "Finite C4/20K-input/512-output comparison. O4+F1, route/Q8F, O5c KREG, fixed FA splits16, GDN spec decode, draft vocabulary, MTP1. Research identity only; no serving or RAM-restore qualification."

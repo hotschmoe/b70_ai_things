@@ -1,0 +1,436 @@
+{
+  "date": "2026-10-21",
+  "scope": "Two B70s; C4; identical 19798-token rendered prompts, output512 each; one warmup and two measured batches per arm",
+  "cold_fixture_hash": "007debf595d3c86136e1b43020c59ddd4cc20c94ee3fc21ebed94f2b3ea46263",
+  "cold": {
+    "strata": {
+      "alias": "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata",
+      "fixture_sha256": "007debf595d3c86136e1b43020c59ddd4cc20c94ee3fc21ebed94f2b3ea46263",
+      "rounds": 2,
+      "definitions": {
+        "PP": "uncached input tokens / batch start to all four first content arrivals; includes scheduling and overlapped decode",
+        "TG": "sum(output tokens - 1) / earliest first content to final response end; includes any remaining prefill",
+        "wall": "all output tokens / first request start to final response end"
+      },
+      "pp_aggregate_effective_tps": 1739.5406905085008,
+      "pp_aggregate_effective_tps_runs": [
+        1737.8158630696025,
+        1741.265517947399
+      ],
+      "tg_aggregate_decode_window_tps": 47.42178521810658,
+      "tg_aggregate_decode_window_tps_runs": [
+        47.267016332309275,
+        47.57655410390389
+      ],
+      "output_aggregate_wall_tps": 38.83562114698746,
+      "output_aggregate_wall_tps_runs": [
+        38.68409684157156,
+        38.987145452403354
+      ],
+      "wall_s": 52.73589341350089,
+      "wall_s_runs": [
+        52.94165218300077,
+        52.53013464400101
+      ],
+      "per_stream_decode_tps_median": 24.069634614790388,
+      "arm": "strata",
+      "tag": "strata-r1",
+      "steady": [
+        {
+          "batch": "measured-1",
+          "steady_window_s": -5.122605391999969,
+          "tokens_in_steady_window": 0,
+          "token_usage_checks": [
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            }
+          ],
+          "steady_tg_valid": false,
+          "steady_tg_aggregate_tps": null
+        },
+        {
+          "batch": "measured-2",
+          "steady_window_s": -5.217741431999457,
+          "tokens_in_steady_window": 0,
+          "token_usage_checks": [
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            }
+          ],
+          "steady_tg_valid": false,
+          "steady_tg_aggregate_tps": null
+        }
+      ],
+      "steady_tg_aggregate_tps": null,
+      "steady_definition": "Retokenized output tokens arriving after all four first content events and through earliest final content; require exact reencoded output count == server usage for every stream"
+    },
+    "qwen27b": {
+      "alias": "qwen3.8-27b-AutoRound-INT4-W4A16-g128-r276phase-mrv1fix-native5802-tp2-mtp3-fp8kv-freshcal-backend-ctx200k",
+      "fixture_sha256": "007debf595d3c86136e1b43020c59ddd4cc20c94ee3fc21ebed94f2b3ea46263",
+      "rounds": 2,
+      "definitions": {
+        "PP": "uncached input tokens / batch start to all four first content arrivals; includes scheduling and overlapped decode",
+        "TG": "sum(output tokens - 1) / earliest first content to final response end; includes any remaining prefill",
+        "wall": "all output tokens / first request start to final response end"
+      },
+      "pp_aggregate_effective_tps": 722.381767026643,
+      "pp_aggregate_effective_tps_runs": [
+        722.4196697848182,
+        722.343864268468
+      ],
+      "tg_aggregate_decode_window_tps": 21.535478369926118,
+      "tg_aggregate_decode_window_tps_runs": [
+        21.524767893251003,
+        21.546188846601236
+      ],
+      "output_aggregate_wall_tps": 16.7468972462725,
+      "output_aggregate_wall_tps_runs": [
+        16.739523936709165,
+        16.754270555835834
+      ],
+      "wall_s": 122.29133354549958,
+      "wall_s_runs": [
+        122.34517586899892,
+        122.23749122200024
+      ],
+      "per_stream_decode_tps_median": 33.774759428372896,
+      "arm": "qwen27b",
+      "tag": "qwen38-27b-autoround-int4-mtp3-r1",
+      "steady": [
+        {
+          "batch": "measured-1",
+          "steady_window_s": 12.12951768700077,
+          "tokens_in_steady_window": 1960,
+          "token_usage_checks": [
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            }
+          ],
+          "steady_tg_valid": true,
+          "steady_tg_aggregate_tps": 161.58927754403095
+        },
+        {
+          "batch": "measured-2",
+          "steady_window_s": 12.181158213999879,
+          "tokens_in_steady_window": 1963,
+          "token_usage_checks": [
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            }
+          ],
+          "steady_tg_valid": true,
+          "steady_tg_aggregate_tps": 161.15052160999863
+        }
+      ],
+      "steady_tg_aggregate_tps": 161.3698995770148,
+      "steady_definition": "Retokenized output tokens arriving after all four first content events and through earliest final content; require exact reencoded output count == server usage for every stream"
+    },
+    "flashnext": {
+      "alias": "qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-c4-mtp1",
+      "fixture_sha256": "007debf595d3c86136e1b43020c59ddd4cc20c94ee3fc21ebed94f2b3ea46263",
+      "rounds": 2,
+      "definitions": {
+        "PP": "uncached input tokens / batch start to all four first content arrivals; includes scheduling and overlapped decode",
+        "TG": "sum(output tokens - 1) / earliest first content to final response end; includes any remaining prefill",
+        "wall": "all output tokens / first request start to final response end"
+      },
+      "pp_aggregate_effective_tps": 2262.2952356784044,
+      "pp_aggregate_effective_tps_runs": [
+        2262.8611075616905,
+        2261.729363795118
+      ],
+      "tg_aggregate_decode_window_tps": 56.76469022539438,
+      "tg_aggregate_decode_window_tps_runs": [
+        56.62030788764989,
+        56.90907256313887
+      ],
+      "output_aggregate_wall_tps": 39.44314530901264,
+      "output_aggregate_wall_tps_runs": [
+        39.37821945380569,
+        39.508071164219594
+      ],
+      "wall_s": 51.922977568499846,
+      "wall_s_runs": [
+        52.00844599899938,
+        51.837509138000314
+      ],
+      "per_stream_decode_tps_median": 22.980515785065364,
+      "arm": "flashnext",
+      "tag": "flashnext-r1",
+      "steady": [
+        {
+          "batch": "measured-1",
+          "steady_window_s": 16.156838061999224,
+          "tokens_in_steady_window": 1953,
+          "token_usage_checks": [
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            }
+          ],
+          "steady_tg_valid": true,
+          "steady_tg_aggregate_tps": 120.87761185113584
+        },
+        {
+          "batch": "measured-2",
+          "steady_window_s": 16.13110676299948,
+          "tokens_in_steady_window": 1967,
+          "token_usage_checks": [
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            },
+            {
+              "encoded_tokens": 512,
+              "usage_tokens": 512,
+              "exact": true
+            }
+          ],
+          "steady_tg_valid": true,
+          "steady_tg_aggregate_tps": 121.93831637837654
+        }
+      ],
+      "steady_tg_aggregate_tps": 121.4079641147562,
+      "steady_definition": "Retokenized output tokens arriving after all four first content events and through earliest final content; require exact reencoded output count == server usage for every stream"
+    }
+  },
+  "strata_steady_tg_supplement": {
+    "alias": "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata",
+    "fixture_sha256": "3d4e742701ed15808a7595fb5cf55705eba4587f91e3c08a141e0983f9b63b34",
+    "rounds": 2,
+    "definitions": {
+      "PP": "uncached input tokens / batch start to all four first content arrivals; includes scheduling and overlapped decode",
+      "TG": "sum(output tokens - 1) / earliest first content to final response end; includes any remaining prefill",
+      "wall": "all output tokens / first request start to final response end"
+    },
+    "pp_aggregate_effective_tps": 13.153898118703367,
+    "pp_aggregate_effective_tps_runs": [
+      13.691023079034922,
+      12.616773158371814
+    ],
+    "tg_aggregate_decode_window_tps": 165.62125454566953,
+    "tg_aggregate_decode_window_tps_runs": [
+      166.64872079807014,
+      164.59378829326891
+    ],
+    "output_aggregate_wall_tps": 157.69351709915856,
+    "output_aggregate_wall_tps_runs": [
+      159.33887767659976,
+      156.04815652171737
+    ],
+    "wall_s": 12.988631496500602,
+    "wall_s_runs": [
+      12.853109233998111,
+      13.124153759003093
+    ],
+    "per_stream_decode_tps_median": 44.58347384315449,
+    "arm": "strata",
+    "tag": "strata-qwen38-flashnext-ista-iq3xxs-mtp1-warm-r1",
+    "steady": [
+      {
+        "batch": "measured-1",
+        "steady_window_s": 10.36414329499894,
+        "tokens_in_steady_window": 1962,
+        "token_usage_checks": [
+          {
+            "encoded_tokens": 512,
+            "usage_tokens": 512,
+            "exact": true
+          },
+          {
+            "encoded_tokens": 512,
+            "usage_tokens": 512,
+            "exact": true
+          },
+          {
+            "encoded_tokens": 512,
+            "usage_tokens": 512,
+            "exact": true
+          },
+          {
+            "encoded_tokens": 512,
+            "usage_tokens": 512,
+            "exact": true
+          }
+        ],
+        "steady_tg_valid": true,
+        "steady_tg_aggregate_tps": 189.30652965274356
+      },
+      {
+        "batch": "measured-2",
+        "steady_window_s": 10.433338255999843,
+        "tokens_in_steady_window": 1958,
+        "token_usage_checks": [
+          {
+            "encoded_tokens": 512,
+            "usage_tokens": 512,
+            "exact": true
+          },
+          {
+            "encoded_tokens": 512,
+            "usage_tokens": 512,
+            "exact": true
+          },
+          {
+            "encoded_tokens": 512,
+            "usage_tokens": 512,
+            "exact": true
+          },
+          {
+            "encoded_tokens": 512,
+            "usage_tokens": 512,
+            "exact": true
+          }
+        ],
+        "steady_tg_valid": true,
+        "steady_tg_aggregate_tps": 187.66764308384458
+      }
+    ],
+    "steady_tg_aggregate_tps": 188.48708636829406,
+    "steady_definition": "Retokenized output tokens arriving after all four first content events and through earliest final content; require exact reencoded output count == server usage for every stream"
+  },
+  "status": {
+    "strata": {
+      "arm": "strata",
+      "benchmark_rc": 0,
+      "server_rc": 0,
+      "teardown": true,
+      "post_health": true
+    },
+    "flashnext": {
+      "arm": "flashnext",
+      "benchmark_rc": 0,
+      "server_rc": 0,
+      "teardown": true,
+      "post_health": true,
+      "pins_unchanged": true,
+      "engine_errors": []
+    },
+    "qwen27b": {
+      "arm": "qwen27b",
+      "benchmark_rc": 0,
+      "server_rc": 0,
+      "teardown": true,
+      "post_health": true
+    }
+  },
+  "strata_supplement_status": {
+    "arm": "strata",
+    "benchmark_rc": 0,
+    "server_rc": 0,
+    "teardown": true,
+    "post_health": true
+  },
+  "raw_directories": {
+    "strata": "/mnt/vm_8tb/b70/results/c4_compare_20261021/strata-qwen38-flashnext-ista-iq3xxs-mtp1-r1",
+    "flashnext": "/mnt/vm_8tb/b70/results/c4_compare_20261021/vllm-qwen38-flashnext-ista-iq3xxs-mtp1-r1",
+    "qwen27b": "/mnt/vm_8tb/b70/results/c4_compare_20261021/vllm-qwen38-27b-autoround-int4-mtp3-r1"
+  },
+  "runtime_identities": {
+    "fork_head": "0a6170da8ca9991972322fa1ca1d27674f0e75cd",
+    "fork_worktree_diff_sha256": "5715e19193a3bc96623daa613ca3c7bc05739472ec3c40b8830956932f4cea74",
+    "strata_release_sha256": "52d1778c909b90123a8947a3a2a9700370b76a2f64d293765f0e2510526fdad2"
+  },
+  "limitations": [
+    "Single fixed-order campaign and two measured batches; no universal performance or quality qualification.",
+    "Cold PP is uncached input divided by batch-start to last first-content; includes scheduler and overlapped decode.",
+    "Burst TG includes unfinished prefills; steady TG counts reencoded text tokens arriving only while all four streams decode.",
+    "Strata steady TG uses exact cached prompt replay because its cold512 batch has no four-way overlap; its cold PP/wall are retained.",
+    "No MTP-depth search,200K occupancy/RAM-restore requalification, daily-driver change or external submission."
+  ]
+}

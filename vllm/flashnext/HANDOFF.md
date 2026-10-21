@@ -487,3 +487,25 @@ Next decision points:
 
 No external submission or daily-driver promotion. All research containers
 are down and leases released; leave Strata DD down per user campaign mode.
+
+
+## 2026-10-21 20:26 -- Matched C4 PP/TG comparison complete
+
+User requested the same~20K prompt/output512 test across Strata Flash-Next,
+vLLM Flash-Next IQ3_XXS, and the retained27B INT4 recipe. See
+reports/20261021_c4_compare.md and .json, harness/c4_compare, and the last
+four JOURNAL stages. All original cold batches are identical79192 input/
+2048 output tokens, zero cache hits, warmup plus two measured repeats.
+
+Steady C4 TG: Strata188.5,27B161.4,vLLM Flash121.4tok/s. Strata uses an
+explicit cached replay supplement because its cold512 scheduling never
+overlaps all four decoders. Effective cold PP: Strata1739.5,27B722.4,
+vLLM Flash2262.3. Cold walls52.74/122.29/51.92s respectively. Definitions
+and raw arrival checks are in the report; do not conflate burst TG with
+steady TG or substitute Strata's13s cached wall for its53s cold result.
+
+All finite runs close normally and pass per-card/compiled pair pre/post
+health; source SO pins unchanged, no GPU faults observed. Servers and
+leases are down/free; DD stays down. No promotion/external submission.
+This is MTP-on C4 serving evidence, not a change to the retained canonical
+no-spec checkpoint above or a new200K/RAM-restore/quality qualification.

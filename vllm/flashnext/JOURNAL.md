@@ -10090,3 +10090,121 @@ containerabsent/released19:32:52. Controlclean27/32s similarlyclosed.
 VERDICT: finitebundle gain only, below512tokenStratabar; no promotion/
 submission/newHCspeed/P1QSAcombination. Defaultsunchanged; nofurtherGPU.
 Details/crossarmhashes/rawrates inreport3D1 andmatched-route-q8f-summary.json.
+
+
+## 2026-10-21 19:55 -- Matched C4 comparison, Strata baseline
+
+CONFIG -> User requested current matched C4 PP/TG on Strata Flash-Next,
+vLLM Flash-Next IQ3_XXS, and vLLM Qwen3.8-27B INT4. Shared fixture: four
+identical-across-arms coding-review texts, 19787 body tokens each, greedy,
+thinking off, max output512; one warmup plus two measured cold-prefix
+batches. Strata night-final-v3 C4, release52d1778c, EP on both B70s,
+4x65536 slots, INT8 KV, batch MTP depth1,32GiB/four-entry RAM parking.
+No200K or RAM-restore qualification in this workload. DD stays down.
+COMMAND -> bin/cpu-run --quiet python3 vllm/flashnext/harness/c4_compare/run.py
+strata --tag strata-r1. All GPU work uses bin/gpu-run, including existing
+Strata launcher and native per-card/compiled P2P0 collective pre/post checks.
+RESULT -> Two measured batches each79192 uncached input/2048 output tokens;
+all12 warm/measured replies reach512, cold cache0, identity/math and manual
+review coherence pass. Median effective PP1739.54tok/s, decode-window
+aggregate47.4218tok/s, output/wall38.8356tok/s, wall52.7359s. Measured walls
+52.9417/52.5301s. PP=uncached input/(start..all-first-content);
+TG=sum(output-1)/(earliest-first-content..last-response-end). These include
+scheduling/prefill-decode overlap. First measured batch has no four-stream
+decode overlap (last-first exceeds earliest-last by5.12s). Normal server
+exit0; both per-card and compiled collective post-health pass. Raw:
+/mnt/vm_8tb/b70/results/c4_compare_20261021/strata-r1/.
+VERDICT -> Finite cold C4 request-burst baseline, not the historical
+short-prompt188tok/s result or a steady four-decoder throughput claim.
+Remaining arms queued manually after clean closure. Consulted requested
+claude-fable-5-1 and claude-opus-5-5 with read-only/tool-free CLI; both55s
+attempts timed out124, no responding model IDs or consultation advice.
+
+
+## 2026-10-21 20:04 -- Matched C4 comparison, vLLM Flash-Next MTP1
+
+CONFIG -> Same c4_compare fixture and HTTP client as Strata-r1:4x19798
+rendered input tokens, output512 each, greedy/thinking-off, cold prefixes,
+one warmup plus two measured batches, quiet CPU/both B70 leases. O4+F1
+EP-sidecar recipe plus retained route/Q8F, O5c KREG/Q8 drafter, fixed FA
+splits16, GDN spec decode,40525-row draft vocabulary, MTP1 (8 verify rows
+at C4). Maxlen131072/chunk12288/maxseq4, prefix off, shutdown30/Docker45.
+Actual /server_info confirms MTP1 and registered detailed alias, hotschmoe-dd
+first. This combines retained components; no best-MTP-depth search claimed.
+COMMAND -> bin/cpu-run --quiet python3 vllm/flashnext/harness/c4_compare/run.py
+flashnext --tag flashnext-r1.
+RESULT -> Same79192 uncached input/2048 output per measured batch; all12
+warm/measured outputs512 tokens, cold cache0. Identity/math pass; inspected
+measured C4 review outputs coherent. Median effective PP2262.2952tok/s,
+decode-window TG56.76469tok/s, output/wall39.44315tok/s, wall51.92298s
+(measured52.00845/51.83751s). Same definitions as Strata baseline; PP/TG
+windows overlap. First measured all-four decode overlap16.15684s.
+Normal server0 and no forced EngineCore/error pattern; pinned libraries
+unchanged, native per-card/compiled P2P0 pair pre/post HEALTHY, no GPU fault
+observed in the saved kernel window. Raw:
+/mnt/vm_8tb/b70/results/c4_compare_20261021/flashnext-r1/.
+VERDICT -> On this finite matched cold burst, +30.05% effective PP and
++19.70% decode-window TG versus Strata, but only1.54% shorter total wall.
+Not a universal C4 speed/quality/repeatability/200K/RAM-restore qualification.
+No runtime/fork/default/shelf changes or external submission. DD stays down;
+27B arm begins only after clean Flash-Next closure and post-health.
+
+
+## 2026-10-21 20:19 -- Matched C4 comparison, vLLM 27B INT4 and TG audit
+
+CONFIG -> Exact retained native5802 monitored-trial recipe: image d55637b3,
+native6717, Qwen3.8-27B AutoRound INT4 g128, TP2/P2P0, MTP3, be02 FP8 KV,
+prefix ON/FULL_DECODE_ONLY, maxlen200000/maxseq4/chunk32768. Private research
+port18149/container; no public frontdoor or DD-unit changes. Same cold
+fixture/client as both Flash-Next arms, outer CPUquiet and pair GPU lease.
+COMMAND -> bin/cpu-run --quiet python3 vllm/flashnext/harness/c4_compare/run.py
+qwen27b --tag qwen38-27b-autoround-int4-mtp3-r1. Existing retained lifecycle
+owns strict per-card/compiled pair pre/post health and graceful stop.
+RESULT -> All12 warm/measured outputs512; identical79192 uncached input
+and2048 output tokens in each measured batch, zero cache hits. Identity/
+math and inspected C4 code-review coherence pass. Median effective PP
+722.38177tok/s, decode-window TG21.53548tok/s, output/wall16.74690tok/s,
+wall122.29133s (122.34518/122.23749s). Warmup124.76809s is excluded.
+Server/lifecycle0, strict per-card and compiled P2P0 post-health HEALTHY,
+no matching GPU fault or forced EngineCore pattern in saved logs. CPUquiet
+arm854s including startup, health and client. Fresh target/draft graph
+compiles82.74/44.88s were setup, not throughput timings; keep disk caches.
+Raw canonical location:
+/mnt/vm_8tb/b70/results/c4_compare_20261021/vllm-qwen38-27b-autoround-int4-mtp3-r1/.
+VERDICT -> Cold-burst wall is2.36x vLLM Flash-Next and2.32x Strata on this
+fixture. Do not interpret the21.5tok/s mixed decode window as isolated TG.
+Offline output-token arrival audit (exact reencoding-count==server512 for
+every measured stream) finds true four-way post-prefill overlap: 27B
+161.37tok/s versus vLLM Flash-Next121.41tok/s. Strata's first stream ends
+~5.1s before its last stream starts, so no comparable all-four TG window.
+A bounded Strata exact-prompt cached replay supplement is now running to
+measure that missing steady C4 TG; its cached PP/wall must not replace the
+matched cold-burst numbers. All three original arms are fully closed.
+
+
+## 2026-10-21 20:26 -- C4 steady TG closed; Strata188.5,27B161.4,vLLM Flash121.4
+
+CONFIG -> Same Strata release/flags/C4/20K prompts as the cold baseline.
+Separate supplement primes original four warmup prompts, then two exact
+cached replays. Original cold PP/wall results remain unchanged.
+COMMAND -> bin/cpu-run --quiet python3 vllm/flashnext/harness/c4_compare/run.py
+strata --tag strata-qwen38-flashnext-ista-iq3xxs-mtp1-warm-r1 --fixture
+/mnt/vm_8tb/b70/results/c4_compare_20261021/strata-warm-fixture.json; offline
+CPU-tokenizer analyze.py after all GPU timings finish.
+RESULT -> Each measured replay has79192 input/2048 output, only28 input
+tokens reread (7/stream, >99.9% reuse), all512 outputs/coherence pass. True
+four-way arrival windows10.3641/10.4333s,1962/1958 output tokens, steady
+TG189.3065/187.6676, median188.4871tok/s. Replay walls12.8531/13.1242s
+are supplementary cached measurements, not the matched cold batch result.
+Server0 and both-card/compiled P2P0 pre/post health pass; kernel clean.
+All32 measured stream reencoding counts match server512 across three cold
+arms plus this supplement. Complete paired table and source/pin/raw paths:
+vllm/flashnext/reports/20261021_c4_compare.md and .json.
+VERDICT -> Strata leads steady C4 TG (188.5 vs27B161.4 vs vLLM Flash121.4);
+vLLM Flash leads effective cold PP (2262.3 vs Strata1739.5 vs27B722.4).
+Cold batch walls51.92/52.74/122.29s: Flash-Next recipes nearly tied overall,
+both~2.3x faster than27B for this workload. Finite client measurements only;
+Strata TG requires the explicitly separate cached replay because original
+cold scheduling has no all-four decode overlap. No general stability/full
+quality/200K/RAM-restore/MTP-depth-optimum/shelf claim. All serves down,
+leases released, DD remains down. No backend/fork/runtime/default changes.
