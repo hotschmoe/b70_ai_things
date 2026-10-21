@@ -107,7 +107,7 @@ PY
     BENCH_RC=$?
     F1_BASE="http://127.0.0.1:$PORT" F1_OUT="$OUT/probe.json" F1_ALIAS=qwen3.8-flash-next-ista-gsq-rco-iq3-xxs-o4 \
       F1_LENGTHS="${F1_LENGTHS:-1024,8192,12288,32768}" F1_REPEAT="${F1_REPEAT:-1}" F1_DECODE="${F1_DECODE:-1}" \
-      F1_COHERENCE_LEN="${F1_COHERENCE_LEN:-32768}" "$REPO/bin/cpu-run" --quiet /usr/bin/python3 "$H/f1_probe.py" > "$OUT/probe.log" 2>&1
+      F1_COHERENCE_LEN="${F1_COHERENCE_LEN:-32768}" F1_NEEDLE_LENS="${F1_NEEDLE_LENS:-}" "$REPO/bin/cpu-run" --quiet /usr/bin/python3 "$H/f1_probe.py" > "$OUT/probe.log" 2>&1
     echo "PROBE_RC:$? $(date -u +%H:%M:%S)"; grep -E "^F1 " "$OUT/probe.log" | sed 's/"usage.*//' | cut -c1-170
   fi
 fi

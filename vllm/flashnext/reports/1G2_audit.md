@@ -6913,3 +6913,173 @@ Evidence: parity.json was compared with the no-spec greedy.json from qwen36-35b-
 Verdict: OK on the 576-id parity and the same-load repeat flags, the wire percentiles, the 91/120 accept count, the packet rates, ranking_eligible false, and no submit. The 6.6182 ms figure is 1000/decode_tok_s, not the harness ITL. WRONG campaign name. WRONG that this dry-run header shows a completed API dry-run. UNVERIFIED for the slot (2,3) fused-kernel sentence. Post-health has since closed, so the queued sentence is stale. Not a promotion. The wire C1 ITL is 17.934 ms.
 
 Suggested fix: cite 17.934 ms as the harness ITL. Post-health is already HEALTHY.
+
+### F283 -- p7 prefill table matches the probe, and post-health is now HEALTHY; only one gate arm is stored
+
+Claim: the 00:40 note says p7 health is HEALTHY before and after, both arms pass 323/667, clean TTFT is 924, 2434, 2511, 2342, and 1587 tok/s at the listed builds, and decode C1 ITL p50 is 18.49 ms with C2 22.70/22.71. It says the 12288 profile is push 0.27 s, card-0 experts 1.02-1.24 s, wait+add 1.3-1.6 s, card-1 experts 1.71-2.03 s, host_c1 0.26-0.37 s, and between-layers 1.92 s rising to 7.9 s.
+
+Evidence: probe.json prefill_tok_s values were already 923.837, 2433.644, 2511.124, 2342.246, and 1586.657. decode_c1 itl_p50_ms is 18.49067909643054 and the C2 pair is 22.696322994306684 and 22.70782506093383. gates_by_arm has one arm, the profile-off line, not two. health-before and health-after are now both HEALTHY, exit 0. The 12288 profile rows show dispatch_push about 272 ms, c0_experts about 1.01-1.06 s, wait_add about 1.30-1.60 s, and c1_experts about 1.71-2.02 s. host_c1 on those rows is about 0.26-0.31 s. The 1.24 s expert line and the 0.37 s host_c1 line are the T=12283 row. between-layers on the first T=12288 row is 1920.5 ms and a later T=12288 row is 7882.5 ms. This decode row is not the s4 harness ITL of 15.247 ms. The READY 00:20:56 clock was already not an engine READY line.
+
+Verdict: OK on the prefill rates, the 18.491 ms decode ITL, and both health files. WRONG that two gate arms are stored. The profile band is OK if the T=12283 row is included; the strict T=12288 host_c1 cap is 0.31 s. UNVERIFIED that this decode equals the older f4 row. These are prefill rates plus a 64-token decode ITL. No promotion.
+
+Suggested fix: say one stored arm, and keep 2511 labeled prefill_tok_s.
+
+### F284 -- MTP3 wire C1 ITL is 17.853 ms; 5.6736 ms is 1000/decode_tok_s, and verified=true is not the validation string
+
+Claim: the 03:40 note says all five final windows pass identity, coherence, repeat, source, exit 0, and pre and post health. It says MTP3 C1 effective is 5.6736 ms and C2 is 11.0375/9.0111, with wire 17.8525 and 27.5076/27.5768, accept 98/159. It says both MTP depths match all 576 no-spec token ids, the three Q4 source maps match, canonical rates are 181.7 and 163.5 tok/s, acceptance is 79.912 and 67.653 percent, and both MTP3 dry-runs have verified true with ranking_eligible false. It says the controller finished at 03:37:12Z and DD is inactive.
+
+Evidence: bench.json C1 itl_p50_ms is 17.852537508588284, n_chunks 19, decode_tok_s 176.25523301627436. 1000/176.25523301627436 is 5.6736. C2 wire is 27.50762295909226 and 27.576814987696707, and 1000 over those rates is 11.0375 and 9.0111. accepted_during_bench is 98 and draft_tokens_during_bench is 159. parity.json baseline is the no-spec greedy.json, identical true, concurrent_identical true, four null mismatches, 4 rows plus 2 concurrent rows of 96 ids. repeat.json matches this serve's own greedy.json. The no-spec, MTP2, and MTP3 source sha256 maps are equal, 56 paths. Payload tokSOut is 181.7 and 163.5. specAcceptanceRate is 0.7991169977924945 and 0.6765285996055227. specMeanAcceptedLength is 3.3973509933774833 and 3.029585798816568. validation.json ranking_eligible is false, submitted is false, and the verification string is the pending dry-run line. The dry-run header says the API dry-run still requires an api key. The no-spec validation files have ranking_eligible true and submitted false. health-before and health-after are HEALTHY, 387 bytes, exit 0. models.json first id is hotschmoe-dd. final-fixed-gdn-launch.log prints X5_FINAL_ALL_DONE 2026-10-21T03:37:12Z. hotschmoe-dd.service is inactive. The wire C1 ITL is slower than the no-spec wire 10.372 ms. Summary c1_effective_ms for the no-spec rows is 1000/decode_tok_s, not the wire p50.
+
+Verdict: OK on the wire numbers, the 576-id parity, the source-map match, the packet rates, ranking_eligible false, no submit, both health files, the controller stamp, and DD inactive. The 5.6736 ms figure is 1000/decode_tok_s, not the harness ITL. WRONG campaign name. WRONG that the validation string or the dry-run header says an API verified badge. MTP3's effective C1 is faster than MTP2's effective C1, and MTP2's effective C2 is faster than MTP3's. No promotion.
+
+Suggested fix: cite 17.853 ms as the harness ITL, and keep verified true off the pending validation string.
+
+### F285 -- f14 replay means are not a steady 14.31 to 14.46 ms rise; La, Lb, and Lc have no result
+
+Claim: the 03:55 note says the f14 card-0 graph grows from 14.31 to 14.46 ms over 96 tokens, about 1.5 us per KV token, the same slope as a 0.8 ms rise over 512 tokens. It says a fused HC mix drops 48 mixes from 1.64 to 1.22 ms at T=1. La, Lb, and Lc are queued. The verdict is pending.
+
+Evidence: steps-c1.jsonl has 95 replay_dev_ms samples. The 16-step means are 14.334, 14.314, 14.254, 14.346, 14.424, and 14.461. The 14.314 and 14.461 ends match the cited rounding, and the third bucket is 14.254, so the series dips. 0.15 ms over about 96 tokens is about 1.6 us per token. The 1.64 to 1.22 line is not in harness/o4_hcq8_fuse_test.py. No La, Lb, or Lc profile directory was graded. The L1 0.8 ms rise was not a labeled mean in the W3 window.
+
+Verdict: OK that the later replay bucket ends near 14.31 and 14.46. WRONG as a steady rise across the six buckets. UNVERIFIED for the 1.64 to 1.22 mix and for the L1 0.8 ms series. La, Lb, and Lc are not results. No promotion.
+
+Suggested fix: print all six bucket means, and wait for a closed La window before citing the mix.
+
+### F286 -- W3b packet rates match 61.3 and 61.5 at max_len 40960; the 66.2 tok/s bar is not the window Strata line
+
+Claim: the 03:52 note says W3b at max_model_len 40960, KV 450560, has health HEALTHY before and after, the same gate shape as W3, and C2 divergence on prompt 1 at token 1 in both rounds. It says reasoning is 61.3 tok/s (TTFT 2315 ms) and code is 61.5 (1448 ms), with per-64-token means 15.92 to 16.73 ms and 15.81 to 16.60 ms, within 0.05 ms of the 131072 window. It says Flash-Next is not submitted because 61.3 is below Strata 66.2.
+
+Evidence: models.json first id is hotschmoe-dd, max_model_len 40960. server-config kv_cache_size_tokens is 450560. health-before and health-after are HEALTHY, exit 0. so-before equals so-after. engine.txt is cfd2b6ffdb8fc2a96c09712e7d04c946b149ca95. gate identity, 323, 667, and both needles pass. exact_repeat fails at c2_1 prompt 1 and c2_2 prompt 1, both first_mismatch 1. Payload tokSOut is 61.3 and 61.5. Reasoning payload ttftMs is 2315.49. Code payload ttftMs is 1448.3, while the validation median ttft is 1915.169. Both validation.json files have submitted false. The s4 window Strata line is 141.0 tok/s and 7.09 ms. 66.2 tok/s is 1000/15.1, and 15.1 is not that line. The 15.92 and 16.73 substrings occur inside stream JSON and were not found as a labeled bucket mean. The directory flashnext-iq3_xxs-NOT-SUBMITTED exists.
+
+Verdict: OK on the context, KV count, both health files, the .so match, the gate indexes, and the 61.3 and 61.5 payload rates. The 1448 ms line is the payload TTFT, not the median. WRONG campaign name. WRONG that 66.2 tok/s is the window Strata rate. UNVERIFIED for the per-64-token means and for equality within 0.05 ms of the 131072 series. Not submitted matches the validation files. No promotion.
+
+Suggested fix: compare 61.3 tok/s with the window 141 tok/s line, and store the bucket means beside the payload.
+
+### F287 -- pass 33 hygiene
+
+Claim: no host change by this audit, and no new secret or large binary was staged.
+
+Evidence: HEAD is 2d5ff2a1ad7335dde315c0c3e3fc8c127397ac8f. Cached diff is empty. Porcelain is 14 rows. Binary porcelain row: M vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so. vllm/flashnext/.gitignore lists *.so. Fork HEAD is 0a6170da8ca9 on b70/flashnext, 13 files changed, 856 insertions(+), 52 deletions(-). This audit made no host change and did not stop or start the daily service.
+
+Verdict: OK.
+
+Suggested fix: none.
+
+### F288 -- merged m1 C1 harness ITL is 15.201 ms with first id hotschmoe-dev; it is not a matched s4 A/B
+
+Claim: the 04:05 note says merged m1 health is HEALTHY before and after, identity is hotschmoe-dev plus the o4 alias, greedy is 323/667, the 32K filler is 323/667, and bench coherence is ok and same. It says bench C1 ITL p50 is 15.20 ms (65.8 tok/s) and C2 is 19.54/19.55, probe C1 is 15.21 and C2 is 19.52/19.54, unchanged from s4 at 15.25/19.62. Warm prefill is 920, 2448, 2397, and 2349 tok/s. Bench prefill is 751 and 2048 tok/s. KV is 356207 tokens, 2.72x at 131072. SERVE_RC is 0. Library prefixes are 790230cb and 249cf94e.
+
+Evidence: bench.json C1 itl_p50_ms is 15.200939029455185, decode_tok_s 65.82580979614309, n_chunks 64. C2 is 19.53622093424201 and 19.550336990505457. identity ids are hotschmoe-dev then the o4 alias, first_ok true, alias_ok true. coherence ok and same are true. mtp.enabled is false. probe C1 itl_p50_ms is 15.205517993308604 and C2 is 19.524318049661815 and 19.537833984941244. Probe prefill_tok_s is 920.151 at built 1018, 2447.816 at 8186, 2396.977 at 12283, and 2349.438 at 32763. Bench prefill_tok_s is 751.338 at built 1017 and 2048.230 at built 8185. Probe gates and the 32788-token long check both match 323 and 667. health-before and health-after are HEALTHY, exit 0. models.json max_model_len is 131072. serve.log prints KV 356,207 tokens and 2.72x, and one Application startup complete line. The window READY stamp is 03:55:59. SERVE_RC in the window is 0. _C.f1bucket.so sha256 starts 790230cb and b70_ep_C.f1c.so starts 249cf94e. s4 was max_model_len 2048 at 15.247 ms. 15.201 is still about 2.1x the window Strata line of 7.09 ms.
+
+Verdict: OK on the harness percentiles, the warm prefill rates, the bench prefill rates, identity, gates, both health files, the KV count, and the library prefixes. The s4 comparison is close on the C1 number and is not a matched max_len A/B. No promotion past 7.09 ms.
+
+Suggested fix: cite s4 as a different context length, and keep 15.201 ms as the harness ITL.
+
+### F289 -- q1 and q2 have empty serve logs; the queued bucket2 sha prefix matches
+
+Claim: the 04:30 note says q1 and q2 are queued and the result is pending. It cites _C.f1bucket2.so sha prefix 958e5d06 and a prior QSA helper time of about 2.4 s per 12288 chunk.
+
+Evidence: merged-q1/serve.log and merged-q2/serve.log are both 0 bytes. No bench or health file is in either directory. _C.f1bucket2.so sha256 starts 958e5d06. The 2.4 s figure was not opened.
+
+Verdict: OK that q1 and q2 are not results, and OK on the bucket2 sha prefix. UNVERIFIED for the 2.4 s helper time. No promotion.
+
+Suggested fix: leave q1 and q2 uncited until bench.json and both health files exist.
+
+### F290 -- recipe c PHASE means match; the c2v denominator is 440; b2v is not a full match
+
+Claim: the 04:20 note says c3v C1 is 9.19 ms/token and C2 is 13.43, with acceptance 284/218/161 of 384, propose 3.3 to 2.2 ms, and verify at T=4 is 21.2 ms. It says c2v C1 is 9.66 and C2 is 12.89, with 336/261 of about 430. It says c0 is 16.21 and 20.23. It says c3v equals b0 on all 8 streams, c0 differs from c3v on the hash-map C1 stream at token 58, that token is 1287 or 17839 in the named arms, every other stream matches in every arm, and k=2 parity of b0 against b2 passes.
+
+Evidence: run-c3v profile.log PHASE c1 eff_ms_per_tok mean is 9.19125 and c2 mean is 13.427. METRIC drafts are 384, draft tokens 1152, accepted 663, per-position 284, 218, 161. run-c2v PHASE c1 mean is 9.6565 and c2 mean is 12.8945. METRIC drafts are 440, draft tokens 880, accepted 597, per-position 336, 261. run-c0 PHASE c1 mean is 16.208 and c2 mean is 20.226. b3v propose_dev_ms medians on the four C1 step files, dropping rows with step_ms at or above 80, are 3.329, 3.335, 3.309, and 3.329. c3v propose_dev_ms medians on ntok 4 rows are 2.204, 2.209, 2.184, and 2.200. c3v replay_dev_ms medians on those rows are 21.034, 21.409, 21.377, and 21.163. Token files: c3v matches b0 on four C1 streams of 128 ids and on both C2 entries. Each C2 entry holds two length-128 sequences, so the stored set is 8 sequences. The only c0 versus c3v C1 difference is stream 1 at index 58: 1287 versus 17839. At that index, n0, b3v, and c0 hold 1287, and n2, n3v, b0, b2, b2v, and c3v hold 17839. b0 matches b2 on every stored sequence. b2v C1 stream 3 first differs from b0 at index 81, 1876 versus 6321. No health-before file is present for c3v, c2v, or c0. Each health-after file is HEALTHY. The served-name string in the profiler kwargs starts with hotschmoe-dev. These means are profiler eff_ms_per_tok, not harness ITL.
+
+Verdict: OK on the PHASE means, the 284/218/161 of 384 counts, the 336 and 261 numerators, the rounded propose and replay figures, the index-58 split, c3v equaling b0 on the 8 sequences, and b0 equaling b2. WRONG that the c2v denominator is about 430, because drafts are 440. WRONG that every other stream matches in every named arm, because b2v stream 3 differs at index 81. Pre-health is UNVERIFIED because the file is absent. No promotion. 9.19125 ms is not under the window Strata line of 7.09 ms, and it is not harness ITL.
+
+Suggested fix: cite drafts 440 for c2v, and do not call b2v a full token match.
+
+### F291 -- FA graph verify rows match decode-graph rows; fixed splits also match eager past 2048
+
+Claim: the 04:20 note says verify rows equal decode graph rows at every past for auto and fixed splits, and fixed splits also make graph equal eager above the 2048 capture bound, where auto differs.
+
+Evidence: fag-0-3, fag-0-4, fag-16-3, and fag-16-4 record cap_maxk 2048. graph_verify_vs_graph_decode is true on every row. For splits 0, graph_decode_vs_eager_decode is false at past 2500 and at the last past, which is 3196 when ql is 3 and 3195 when ql is 4. For splits 16, graph_decode_vs_eager_decode is true on every row, including past 2500 and the last past. health-before2.txt and health-after2.txt both contain HEALTHY, and window2 reports RC 0. This is a card-1 kernel replay, not a serving ITL.
+
+Verdict: OK. The ql=4 series ends at past 3195.
+
+Suggested fix: none.
+
+### F292 -- c3vq ran out of memory on card 1; health-after is HEALTHY
+
+Claim: the 04:20 note says c3vq runs out of memory on card 1 because 412 experts do not fit, and that Q0 cannot go much below 138.
+
+Evidence: run-c3vq/run.log raises torch.OutOfMemoryError on XPU, tried to allocate 364.00 MiB. GPU 1 total capacity is 31.89 GiB, of which 322.47 MiB is free. 31.00 GiB is allocated by PyTorch, and 156.30 MiB is reserved. Split lines say E=512, n0=100, n1=412. Window RUN_RC is 1. health-after is HEALTHY. There is no health-before file. profile.log does not contain the OOM line. The 138 figure was not derived from these logs.
+
+Verdict: OK on the OOM and the 412 expert split. UNVERIFIED for the 138 clause. Not a speed result.
+
+Suggested fix: none.
+
+### F293 -- q1 failed in _rope_ at line 175 with Level Zero error 44; both health files are HEALTHY
+
+Claim: the 04:40 note says QSA registered, the KV block size stayed 64 for FLASH_ATTN, the private path ran, _rope_ failed with Level Zero error 44 because of a host sync inside capture, SERVE_RC is 1, and health-after was still queued.
+
+Evidence: merged-q1/window.log has HEALTH_BEFORE_RC 0, serve exited before ready, BENCH_RC 2, and SERVE_RC 1. serve.log contains the line b70_ep: B70_QSA=1 registered; MTP layers will be marked draft, and the line Setting kv cache block size to 64 for FLASH_ATTN backend(s). The traceback goes through model_hook.py line 675 _forward_private and line 175 _rope_, then RuntimeError level_zero error 44 UR_RESULT_ERROR_UNSUPPORTED_FEATURE. The serve log contains zero copies of the string host sync, zero copies of qsa_cover, and zero copies of uint8. models.json is 0 bytes. health-before.txt and health-after.txt both end HEALTHY with exit 0. In model_hook.py, line 175 is torch.arange on the tensor device. The comment about .item() synchronizing is in _note_mrope, around line 478, and that function does not call .item().
+
+Verdict: OK on the failed serve, the private-path frames, error 44, and both health files. The health-after queued sentence is stale. UNVERIFIED that error 44 is a host sync. The F289 empty-log sentence for q1 is stale and was not rewritten. No bench and no /v1/models identity. No promotion.
+
+Suggested fix: cite health-after as HEALTHY, and do not call line 175 a host sync unless a host operation is shown on that line.
+
+### F294 -- c0r same-load repeat flips index 58; d32v has a profiler result
+
+Claim: the 04:20 note queued c0r to settle whether the hash-map token flip is cross-load only, and it queued d32v. It had not reported either result.
+
+Evidence: run-c0r profile.log PHASE c1 mean is 16.19325 and c2 mean is 20.2295. REPEAT c1 versus c1r is True, False, True, False. Token c1 versus c1r differs on stream 1 at index 58, 1287 versus 17839, and on stream 3 at index 81, 1876 versus 6321. Gates match 323 and 667. RUN_RC is 0. health-after is HEALTHY. There is no health-before file. The kwargs served-name string starts with hotschmoe-dev. run-d32v PHASE c1 mean is 9.2755, median 9.7275, accept_mean 0.561525, and c2 mean is 12.896. REPEAT is True, False, True, True. Gates match 323 and 667. health-after is HEALTHY. There is no health-before file. d32v versus b0 first differs on C1 stream 1 at index 110, 694 versus 321. Index 58 on that stream is in the 17839 group. Both runs are profiler eff_ms_per_tok, not harness ITL.
+
+Verdict: OK that both runs have finished and that the 04:20 queued wording is stale for them. The c0r same-load mismatch shows index 58 can flip inside one load, 1287 versus 17839, so a cross-load-only reading is not supported. Pre-health is UNVERIFIED. No promotion. 9.2755 ms and 16.19325 ms are not harness ITL and are not under 7.09 ms.
+
+Suggested fix: cite the same-load index-58 mismatch, and keep these means labeled as profiler eff.
+
+### F295 -- X6 CPU logs pass; consultations did not log in; the 1GiB estimate was not measured
+
+Claim: the 04:26 and 04:33 notes say the nested Attention binding was repaired, CPU tests print QSA_SERVE_OK and QSA_SPEC_OK, the hybrid slope is 1184 bytes per token, per-token .item() was removed from mRoPE bookkeeping, and both Claude consultations failed with unrecognized_model and not logged in. The 04:44 note says scratch is allocated during the dummy profile, a 12K prefill could need more than 1GiB of extra workspace, two warmups remain, research aliases were added, the stable DD entry is still an older 27B stack, q2 holds both cards, and the graph probe still yields. It claims no latency.
+
+Evidence: x6/cpu-serve.log ends with QSA_SERVE_OK and contains the inner bind line for layers.3.self_attn.attn. x6/cpu-spec.log ends with QSA_SPEC_OK and contains PASS hybrid byte slope. tests/test_kv_spec.py checks page_size_bytes equals 1184 for that slope name, on a block_size 1 spec. harness/x6_serve.sh sets cudagraph_num_of_warmups to 2. model_hook.py _note_mrope does not call .item(). The nearby comment says an .item() there used to synchronize. .item() calls remain in serve.py and batch.py. consult-fable-5.1.log and consult-claude-5.5.log each contain unrecognized_model and the text Not logged in. No responding model id is present. graph-window.log contains only X6_YIELD lines, 71 of them. evals/configs/models.yaml label hotschmoe-dd is family qwen3.8-27b. New labels flashnext-ista-iq3-xxs-x6-qsa-research and flashnext-ista-iq3-xxs-x6-dense-research exist. The scanned entry bodies do not set primary_client_id, and the notes name hotschmoe-dd. prompts.log prints X6_REFERENCE_PROMPTS_READY with three lengths. reference-prompts.json was not read line by line. The dummy-profile allocation and the 1GiB sentence were not found in a measured log.
+
+Verdict: OK on the two OK lines, the 1184 assertion, the warmup count of 2, the consult failures, the yield log, the 27B DD family, and the absence of a latency claim. UNVERIFIED for the dummy-profile scratch story and the 1GiB gap. No GPU serve and no /v1/models identity. q1 already showed that a CPU QSA_SERVE_OK does not mean a captured engine bind.
+
+Suggested fix: keep the 1GiB figure uncited until a profile log records the workspace bytes, and serve the research alias with first id hotschmoe-dev.
+
+### F296 -- pass 34 hygiene
+
+Claim: this pass made no host change, did not stop or start the daily service, and did not stage secrets or a new binary.
+
+Evidence: HEAD is 2d5ff2a1ad7335dde315c0c3e3fc8c127397ac8f. Cached diff shortstat is empty. Porcelain is 33 rows. Binary-looking porcelain rows: M vllm/contrib/vllm_push_allreduce/prebuilt/libxpu_push_ar_graph.so. Secret-like porcelain names: none. Untracked paths at or above 1000000 bytes: none. vllm/flashnext/.gitignore lists *.so: yes. Fork HEAD is 0a6170da8ca9 on b70/flashnext, 13 files changed, 856 insertions(+), 52 deletions(-). systemctl --user is-active hotschmoe-dd printed inactive. This audit made no host change and did not stop or start the daily service.
+
+Verdict: OK.
+
+Suggested fix: none.
+
+### F297 -- q2 harness C1 ITL is 15.233 ms with first id hotschmoe-dev; post-health status is live
+
+Claim: no journal heading has cited a q2 speed number. F289 said the q2 serve log was empty. The bench is now on disk.
+
+Evidence: bench.json C1 itl_p50_ms is 15.233078971505165, decode_tok_s 65.84819237901634, n_chunks 64. C2 itl_p50_ms is 19.4929379504174 and 19.522273913025856. identity ids are hotschmoe-dev then the o4 alias, first_ok true, alias_ok true, expect_first hotschmoe-dev. coherence ok and same are true. mtp.enabled is false. models.json first id is hotschmoe-dev and max_model_len is 131072. Bench prefill_tok_s is 659.182 at built 1017. Probe prefill rows: built 8186 target 8192 prefill_tok_s 2056.349 n_chunks 1; built 12283 target 12288 prefill_tok_s 1949.099 n_chunks 0. Probe gates match 323 and 667, and probe identity first_ok is true. The window GREEDY record matches 323 and 667. The window Strata line is C1 141.0 tok/s, itl 7.09 ms. serve.log contains 1 Application startup complete line. The serve.log READY hits are on the launch line, not a separate engine READY record: -e VLLM_NO_USAGE_STATS=1 -e VLLM_ENGINE_READY_TIMEOUT_S=1200 -e SYCL_CACHE_PERSI. The window stamp is READY 04:48:01. health-before contains HEALTHY. health-after does not. Its last line is: gpu-run: card 0 busy (held by: O5 pid=4013157 since=2026-10-21 04:48:34 cmd: docker run --rm --init --name vllm-fn-o5-p0g --user 1000:1000 --group-add 991 --ipc. Window flags: SERVE_RC=SERVE_RC:0, BENCH_RC=BENCH_RC:0, HEALTH_BEFORE_RC=HEALTH_BEFORE_RC:0, HEALTH_AFTER_RC=absent, WINDOW_DONE=absent. m1 at max_len 131072 was harness C1 15.201 ms. 15.233 ms is not under 7.09 ms.
+
+Verdict: OK on the harness percentiles, identity, coherence, mtp off, the bench prefill rate, and health-before. Post-health is not closed. The 12283 probe row stores a prefill rate with n_chunks 0, so that rate is a weaker record than the 8186 row. F289 is stale about the empty q2 serve log and was not rewritten. No promotion.
+
+Suggested fix: keep 15.233 ms as the harness ITL, and cite post-health only after the file ends HEALTHY.
+
+### F298 -- X6 Strata reference client is prepared; the GPU reference has not run
+
+Claim: the 04:50 note says the Strata reference client is prepared on CPU, does not start the daily service, and has not run. It claims no timing comparison.
+
+Evidence: harness/x6_strata_reference.py contains StrataEngine and does not contain systemctl. harness/x6_strata_window.sh says it does not start or alter hotschmoe-dd, writes pre and post health files, and sets an 8m timeout. It does not contain systemctl. x6/strata-tokenizer.log is the line X6_STRATA_TOKENIZER_OK [4096, 16384, 32768]. x6 has no strata-health file in this listing: no.
+
+Verdict: OK that the GPU reference has not run and that the scripts do not call systemctl. The tokenizer line is a CPU check, not a generate result and not a latency. No promotion.
+
+Suggested fix: none.
+
+### F299 -- Lc profiler step mean is 15.696 ms; the 0.54 ms gap is not harness ITL
+
+Claim: the 04:52 note says La reasoning step mean is 16.25 ms with buckets 15.86 to 16.66, the card-0 graph grows 14.98 to 15.82 while sample stays 0.83, Lb mean is 16.24 with buckets 15.82 to 16.74 and first token diffs at 96 and 20, and Lc reasoning mean is 15.70 with buckets 15.28 to 16.16, code 15.58, and C2 20.08, with token diffs at 96 and 84. It keeps route plus Q8F for a 0.54 ms gain. Gates are 323 and 667, and health is HEALTHY.
+
+Evidence: SUMMARY step_ms means are La c1 16.248, Lb c1 16.238, Lc c1 15.696, Lc code 15.582, and Lc c2 20.078. Printed step bucket medians match 15.86 to 16.66, 15.82 to 16.74, and 15.28 to 16.16. La replay bucket medians on graph steps go from 14.98 to 15.83, and the index-441 bucket is 15.82. Sample bucket medians stay 0.83. 16.238 minus 15.696 is 0.542. Token first diffs are index 96 and index 20 for La versus Lb, and index 96 and index 84 for Lb versus Lc. Gates match 323 and 667 on La, Lb, and Lc. La health-before and health-after contain HEALTHY. Lb and Lc have no health-before file, and their health-after files contain HEALTHY. The kwargs served-name string starts with hotschmoe-dev. run-Ld has a profile header and no SUMMARY. These are profiler step_ms values, not harness ITL.
+
+Verdict: OK on the step means, the printed buckets, the token-diff indexes, the gates, and the 0.54 ms rounding. The cited graph end of 15.82 is the index-441 replay median; the last bucket is 15.83. The streams diverge, so the 0.54 ms gap is not a same-token comparison. Pre-health for Lb and Lc is UNVERIFIED. Ld is not a result. No promotion. 15.696 ms is not under 7.09 ms.
+
+Suggested fix: cite the last replay bucket as 15.83, and keep the 0.54 ms figure labeled as a profiler step-mean gap.

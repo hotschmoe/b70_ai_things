@@ -119,6 +119,43 @@ if COH_LEN > 0:
     log("long_coherence " + json.dumps(report["long_coherence"]))
     save()
 
+NEEDLE_LENS = [int(v) for v in os.environ.get("F1_NEEDLE_LENS", "").split(",") if v.strip()]
+
+
+def needle(n: int, depth: float) -> dict:
+    """Filler of about n tokens with one fact at `depth`; ask for it."""
+    nonce = f"{time.time_ns() % 100000:05d}"
+    word = f"zebra{nonce}"
+    filler, built = make_prompt(BASE, MODEL, n, f"f1-needle-{n}-{nonce}")
+    cut = int(len(filler) * depth)
+    cut = filler.find(". ", cut)
+    cut = cut + 2 if cut > 0 else int(len(filler) * depth)
+    text = filler[:cut] + f"The secret code word is {word}. " + filler[cut:]
+    body = post_json(
+        BASE + "/v1/chat/completions",
+        dict(
+            model=MODEL,
+            messages=[{"role": "user", "content": text + "\nWhat is the secret code word? Answer with the code word only."}],
+            temperature=0,
+            max_tokens=24,
+            chat_template_kwargs={"enable_thinking": False},
+        ),
+        TIMEOUT,
+    )
+    ans = body["choices"][0]["message"]["content"].strip()
+    return dict(n=n, built=built, depth=depth, word=word, text=ans, match=word in ans,
+                prompt_tokens=(body.get("usage") or {}).get("prompt_tokens"))
+
+
+if NEEDLE_LENS:
+    report["needle"] = []
+    for n in NEEDLE_LENS:
+        for depth in (0.25, 0.6):
+            row = needle(n, depth)
+            report["needle"].append(row)
+            log(f"needle n={n} depth={depth} prompt_tokens={row['prompt_tokens']} match={row['match']} text={row['text'][:40]!r}")
+            save()
+
 if os.environ.get("F1_DECODE", "1") == "1":
     report["coherence"] = coherence(BASE, MODEL, TIMEOUT)
     report["decode_c1"] = decode_c1(BASE, MODEL, 64, TIMEOUT)
@@ -129,6 +166,7 @@ if os.environ.get("F1_DECODE", "1") == "1":
 
 ok = all(g["match"] for g in report["gates"]) and all(g["match"] for g in report.get("long_coherence", []))
 ok = ok and all(g["match"] for arm in report.get("gates_by_arm", {}).values() for g in arm)
+ok = ok and all(r["match"] for r in report.get("needle", []))
 report["ok"] = ok
 save()
 log(f"DONE ok={ok}")

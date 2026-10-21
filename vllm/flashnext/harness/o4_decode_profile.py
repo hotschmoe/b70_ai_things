@@ -354,7 +354,12 @@ def main() -> None:
         STATE["last_end"] = None
         STATE["record"] = True
         ut("resume")
-        llm.generate([prompt], SamplingParams(temperature=0.0, max_tokens=24, ignore_eos=True), use_tqdm=False)
+        utn = int(os.environ.get("O4_UT_TOKENS", "24"))
+        if os.environ.get("O4_LMX") == "1":
+            llm.chat([[{"role": "user", "content": "[O4 nonce ut]\n" + texts["reasoning"]}]],
+                     SamplingParams(temperature=0.0, max_tokens=utn, ignore_eos=True), use_tqdm=False)
+        else:
+            llm.generate([prompt], SamplingParams(temperature=0.0, max_tokens=utn, ignore_eos=True), use_tqdm=False)
         torch.xpu.synchronize()
         ut("pause")
         STATE["record"] = False

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 import torch
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from b70_qsa_xpu.batch import QsaBatch
 from b70_qsa_xpu.layout import page_layout
@@ -55,6 +57,8 @@ class _Cache:
 class _Vllm:
     def __init__(self, block_size: int) -> None:
         self.cache_config = _Cache(block_size)
+        self.scheduler_config = SimpleNamespace(max_num_seqs=2)
+        self.model_config = SimpleNamespace(max_model_len=24)
 
 
 def _geom() -> Geom:
@@ -177,14 +181,46 @@ def test_external_pages_and_park() -> None:
 
 def test_spec_patch() -> None:
     attn = _Attn()
+    # Model the actual projection-wrapper/registered-Attention split.
+    # The old flat fake let a serve keep FLASH_ATTN pages unnoticed.
+    cache = type("RegisteredAttention", (), {})()
+    cache.layer_name = "layers.3.self_attn.attn"
+    cache.kv_cache = torch.tensor([])
+    attn.attn = cache
     runner = QsaRunner(attn, attn.indexer, pooled=True)
-    spec = attn.get_kv_cache_spec(_Vllm(8))
+    cfg = _Vllm(8)
+    spec = cache.get_kv_cache_spec(cfg)
+    with patch("vllm.config.get_current_vllm_config_or_none", return_value=None):
+        _check("worker config outside context", runner._limits() == (8, 2, 16))
+        cfg.cache_config.block_size = 16
+        _check("late aligned geometry", runner._limits() == (16, 2, 8))
+        cfg.cache_config.block_size = 8
     _check("patched page", spec.page_size_bytes == page_layout(2, 64, 32, 4, 8, pooled=True)["page_bytes"])
-    _check("patched backend", attn.get_attn_backend().get_name() == "B70_QSA")
+    _check("patched backend", cache.get_attn_backend().get_name() == "B70_QSA")
+    _check("backend attribute", cache.attn_backend is cache.get_attn_backend())
+    _check("wrapper not registered", not hasattr(attn, "get_kv_cache_spec"))
+    cache.kv_cache = torch.zeros(2, 1, 1, spec.page_size_bytes, dtype=torch.uint8)
+    _check("cache from inner layer", runner._cache_id()[0] == cache.kv_cache.data_ptr())
+    runner._limits = lambda: (8, 2, 3)
+    runner._apply_gamma = lambda: None
+    runner._prepare_batch(torch.device("cpu"))
+    scratch_ptr = runner.batch.k_f16.data_ptr()
+    _check("bind inner pages", runner._try_bind(torch.device("cpu")))
+    _check("bound alias", runner.batch.pages.data_ptr() == cache.kv_cache.data_ptr())
+    _check("reuse profiled scratch", runner.batch.k_f16.data_ptr() == scratch_ptr)
+    expected_meta = object()
+    context = SimpleNamespace(attn_metadata={cache.layer_name: expected_meta})
+    with patch("vllm.forward_context.is_forward_context_available", return_value=True), \
+         patch("vllm.forward_context.get_forward_context", return_value=context):
+        _check("metadata from inner name", runner._metadata() is expected_meta)
+    positions = torch.tensor([[0, 2], [1, 3], [2, 4]], dtype=torch.int64)
+    runner._note_mrope(positions, 2, 0, 0)
+    _check("mrope row zero", runner.batch.mrope[0, 0].tolist() == [0, 1, 2])
+    _check("mrope row one", runner.batch.mrope[1, 2].tolist() == [2, 3, 4])
     layer = type("L", (), {})()
     layer.qsa_runner = runner
     mark_draft(layer)
-    draft = attn.get_kv_cache_spec(_Vllm(8))
+    draft = cache.get_kv_cache_spec(_Vllm(8))
     _check("draft page", draft.page_size_bytes == page_layout(2, 64, 32, 4, 8, pooled=False)["page_bytes"])
     _check("draft flag", runner.pooled is False)
 

@@ -8714,3 +8714,269 @@ rebuild from the shared csrc with f1/build_ep.sh, which includes
 prefill_ep.cpp), and serve with --max-num-batched-tokens 12288. The
 delta is all opt-in: with B70_EP_PREFILL unset nothing changes. L1 has
 card priority for its windows; F1 queues nothing further on the cards.
+
+## 2026-10-21 04:30 F1 -- next levers queued: QSA on the merged recipe (q1), card-1 stage profile (q2)
+
+CONFIG: q1 = merged recipe (o4_recipe.env + f1_prefill_delta.env) plus
+B70_QSA=1 B70_PREFILL_QSA=1 B70_PREFILL_QSA_BATCH=256
+B70_PREFILL_QSA_APPEND=batch B70_QSA_MAX_CELLS=131072, max_len 131072,
+chunk 12288. Probe: gates, TTFT 8K/12288/32K/128K, needle (one fact at
+25% and 60% depth) at 32K and 128K, 32K filler math, C1/C2 decode.
+q2 = merged recipe with B70_PREFILL_WIDE_SO=f1/_C.f1bucket2.so (sha
+958e5d06) and B70_BUCKET_PROFILE=1: per-chunk stage times of the native
+bucketed op at 8K and 12288 (serializing; TTFT not meaningful there).
+COMMAND: harness/f1_merged_serve.sh TAG=q1 / q2, chained behind each
+other and a 62 GB host-RAM wait; both cards, about 25 + 15 min after the
+lease. L1 > O4 > O5 > F1 on the cards; these queue behind them.
+RESULT/VERDICT: pending. X3 measured the QSA prefill helper at about
+2.4 s per 12288 chunk for 12 layers (dense FA first chunk 0.3 s), so
+QSA is expected to lose below ~64K and win at 128K; decode with QSA on
+is unqualified on the sidecar (G5b: decode capturable, first forward
+allocates).
+
+## 2026-10-21 04:06 G2b -- audit pass 33
+
+CONFIG: CPU only. No GPU, no commit, no host change. Findings F283-F289
+appended to reports/1G2_audit.md after F282.
+COMMAND: checked F1 run-p7, X5 MTP3 and final-qualified-summary.json,
+O4 run-f14 steps-c1.jsonl, and L1 w3b-fn-40k.
+RESULT: p7 post-health is HEALTHY and decode itl is 18.49068 ms.
+MTP3 wire itl is 17.85254 ms. W3b payload rates are 61.3 and 61.5
+with first id hotschmoe-dd. Merged m1 C1 itl is 15.20094 ms.
+DD is inactive.
+VERDICT: no speed promotion. MTP3 5.6736 ms is 1000/decode_tok_s.
+Not verified in this pass: none
+
+## 2026-10-21 04:20 O5 -- recipe c: k=3 C1 9.19 ms, k=2 C2 12.89 ms; "hash map" token 58 is a near-tie that flips between loads
+
+CONFIG: harness/o5_recipe_c.env (recipe b + _C.o5c.so + B70_KREG_Q8=1 +
+B70_FA_KV_SPLITS=16, O5_PYPATH_PRE=o5/fa-overlay). Arms c3v (k=3 + draft
+vocab), c0 (off), c2v (k=2 + vocab), c3vq (c3v with B70_EP_Q0=100).
+Card-1 FA graph test harness/o5_fa_graph.py (decode and verify graphs
+captured with max_seqlen_k 2048, replayed at past 20..3196).
+COMMAND: o5_window.sh TAG=c3v|c0|c2v|c3vq; o5/fa/run2.sh.
+RESULT: c3v C1 9.19 ms/token (propose 3.3 -> 2.2 ms with Q8 KREG, verify
+T=4 21.2 ms), C2 13.43; acceptance 284/218/161 of 384. c2v C1 9.66,
+C2 12.89 ms/stream (336/261 of ~430). c0 C1 16.21, C2 20.23.
+c3vq: OOM on card 1 at load (412 experts do not fit beside the card-1
+buffers); Q0 cannot go much below 138, so hot-traffic share
+(B70_EP_SHARE0) is the knob to try instead (queued c3vs35).
+FA under graphs: verify rows == decode graph rows at every past for both
+auto and fixed splits (and fixed splits also make graph == eager above
+the 2048 capture bound, where auto differs).
+Parity: c3v == b0 on all 8 streams, but c0 != c3v on "hash map" C1 at
+token 58. Across all arms that token is 1287 or 17839: {n0, b3v, c0} vs
+{n2, n3v, b0, b2, b2v, c3v}. b0 and c0 differ only in settings that
+cannot touch a 1-token decode at 150 tokens of context (Q8_0 is
+drafter-only; FA stays single-split there), so this looks like a
+cross-load nondeterminism at a near-tie, not an MTP effect. Every other
+stream (7/8 x 128 tokens) matches in every arm.
+VERDICT: k=2 parity PASS (b0/b2), k=3 7/8 with the eighth stream
+flipping between loads of the same MTP-off config family. Queued c0r
+(exact repeat of c0, with a new same-load C1 repeat in the harness) to
+settle determinism. Then d32v (dynamic k: 3 at C1, 2 at C2) and the long
+context pair L0/L3v (~6000-token prompts, max_len 8192).
+
+## 2026-10-21 04:40 F1 -- q1: QSA on the sidecar serve takes the private path; capture fails
+
+CONFIG: merged recipe + B70_QSA=1 B70_PREFILL_QSA=1 B70_PREFILL_QSA_BATCH=256
+B70_PREFILL_QSA_APPEND=batch B70_QSA_MAX_CELLS=131072, max_len 131072,
+--attention-backend FLASH_ATTN, FULL_DECODE_ONLY. raw f1/merged-q1/.
+COMMAND: TAG=q1 harness/f1_merged_serve.sh (health before HEALTHY).
+RESULT: "b70_ep: B70_QSA=1 registered" (qsa_cover), then vLLM logged
+"Setting kv cache block size to 64 for FLASH_ATTN backend(s)": the
+attention layers kept the FLASH_ATTN KV spec (bf16), so the QSA runner's
+_paged_live/_try_bind saw no uint8 QSA page and used _forward_private
+(the one-sequence pool, one host round trip per token). The first
+captured decode forward then failed in _rope_ with Level Zero error 44
+(UR_RESULT_ERROR_UNSUPPORTED_FEATURE: host sync inside capture); engine
+core init failed, SERVE_RC 1, no reset needed, health-after queued.
+VERDICT: the QSA prefill helpers cannot be measured on the serve until
+the QSA paged KV spec (b70_qsa_xpu.kv_spec.B70QsaBackend, G5b) is the
+backend of the 12 full-attention layers in a real vLLM serve. G5b's
+QSA_SERVE_OK was a CPU bookkeeping test; no serve has ever bound it.
+Work item (M, owner TBD): make the QSA spec win backend selection for
+those layers (the xpu platform honours --attention-backend; the layer's
+get_kv_cache_spec/get_attn_backend overrides must be applied before
+KV spec collection and without the FLASH_ATTN block-size override),
+then warm the first forward before capture, then requalify decode
+(G5b: capturable, unmeasured on Flash-Next). Expected economics (X3):
+QSA prefill about 2.4 s per 12288 chunk vs dense FA 0.3 s on the first
+chunk, so it only wins beyond roughly 64K of context. F1 proceeds to
+lever (2), the card-1 device floor (q2 stage profile, chained).
+
+## 2026-10-21 04:26 X6 -- QSA serve binding repair; Strata reference request
+
+CONFIG: final X6 assignment, EP sidecar, priority L1 > O4 > O5 > F1 > X6.
+CPU inspection only; DD inactive. Preserve all other agents' dirty files.
+COMMAND: read BRIEF, AGENTS, last 300 journal lines, G3/G5 reports,
+QSA runner/spec and registered Attention source.
+RESULT: QsaRunner installs spec/backend/cache lookup on Qwen3NextAttention
+(the projection wrapper), while vLLM registers its inner .attn Attention.
+The prior CPU fake omitted that nesting, so it did not catch the mistake.
+VERDICT: repair the plugin binding and CPU coverage before short leased
+GPU probes. Planned card-1 graph probe <= 2 min, then both-card QSA serve
+~15 min only after higher-priority work. REQUEST TO ORCHESTRATOR: please
+schedule Strata reference generation for identical tokenized 4K/16K/32K
+prompts, or authorize a Strata-tooling reference window with DD stopped.
+X6 will not start hotschmoe-dd. References/latency not yet qualified.
+
+## 2026-10-21 04:33 X6 -- CPU binding/spec gates pass; graph probe yields
+
+CONFIG: plugin-only changes, no fork edits or commits. Actual nested
+projection/Attention contract; pooled int8 QSA KV, FULL_DECODE_ONLY.
+COMMAND: tests/test_qsa_serve.py and tests/test_kv_spec.py with UV Python
+3.12.13 + campaign venv packages on CPU. Detached graph-window.sh waits
+for all existing L1/O4/O5/F1 GPU wrappers, then card1 <=2min plus health.
+RESULT: QSA_SERVE_OK, QSA_SPEC_OK. Inner backend/cache alias passes;
+hybrid sizing slope=1184 B/token (not dense bf16 2048); pickle roundtrip
+passes. Removed per-token .item() from [3,T] mRoPE decode bookkeeping.
+Profile without metadata bypasses private KV. Serve recipe explicitly
+warms twice before capture. No real GPU measurement yet.
+Claude consultations attempted with --model fable-5.1 and claude-5.5;
+both exit unrecognized_model/Not logged in, no responding model ID.
+VERDICT: graph test pending behind higher priorities. REQUEST details:
+/mnt/vm_8tb/b70/build/vllm-flashnext/x6/reference-prompts.json contains
+exact raw text, token IDs, SHA256, greedy64 parameters at4K/16K/32K.
+Please produce Strata rows {prompt_sha256,text} with Strata tooling in
+a leased window, without X6 starting DD. No long-context match claimed.
+A dense/QSA switch above2051 changes the selected set; any measured
+64K speed crossover alone cannot qualify that as exact QSA behavior.
+
+## 2026-10-21 04:44 X6 -- pre-capture memory accounting prepared
+
+CONFIG: QSA plugin repair only, same O4+F1 sidecar recipe. No GPU yet;
+X6 graph controller yields while higher-priority lease wrappers exist.
+COMMAND: extend CPU nested regression; inspect vLLM profiling/capture
+and QSA temporary shapes. QSA_SERVE_OK after the changes.
+RESULT: persistent QsaBatch scratch now allocated during dummy profile,
+then reused when inner Attention receives live pages. Profiling counts
+FP32 q/gate/[q|gate] and one score tile before the KV budget is chosen.
+Otherwise a 12K prefill could need >1GiB more workspace than the dummy
+pass accounted for. Device-only [3,T] mRoPE bookkeeping covered on CPU.
+Two explicit warmups remain in harness/x6_serve.sh. Research aliases
+for qsa/dense added to evals/configs/models.yaml; its preexisting stable
+DD entry still describes an older27B stack, so use detailed aliases.
+VERDICT: no serve or latency claim. F1 q2 now holds both cards; X6
+requests a <=2min card1 bookkeeping/graph gap after priority work.
+No higher-priority window interrupted; no CPUquiet lock held in queue.
+
+## 2026-10-21 04:50 X6 -- prepared independent Strata reference process
+
+CONFIG: no DD service/container start. Research container name
+vllm-fn-x6-strata-reference, pinned existing Strata image and release,
+copy of DD text config with its own log, same native GGUF/pack/env.
+COMMAND: harness/x6_strata_reference.py imports Strata's StrataEngine,
+engine_args/child_env and native tokenizer. It sends the exact fixture
+IDs to Strata.generate, checks native/HF tokenization, writes raw IDs
+and decoded texts, closes engine. x6_strata_window.sh leases both cards,
+pre/post health,8GiB guard,8min timeout; no timing comparison claimed.
+RESULT: launcher/client prepared on CPU. Not run yet. This fulfills
+reference generation through Strata tooling without starting DD.
+VERDICT: planned after the <=2min card1 graph gate and after all
+higher-priority windows; reference body expected2-4min on both cards.
+This request does not change L1 > O4 > O5 > F1 > X6 or DD ownership.
+
+## 2026-10-21 04:52 O4 -- lmx-shape in-process: growth is in-graph, not FA splits; route + fused Q8 HC -0.54 ms
+
+CONFIG: in-process o4_decode_profile.py O4_LMX=1, max_len 131072, 512
+tokens, reasoning-v1 / code-v1 as chat (thinking default), C2 = two
+reasoning streams. La = f14 recipe; Lb = La + O5 fa-overlay
+B70_FA_KV_SPLITS=8; Lc = Lb + B70_EP_ROUTE=1 (o4e) + B70_DECODE_HC_Q8F=1.
+COMMAND: chain o4/chain-L.sh (L1 gaps); raw o4/run-La, Lb, Lc.
+RESULT: gates 323/667 all three; health HEALTHY. La reasoning step mean
+16.25 ms (L1 server 16.3), 15.86 -> 16.66 ms by 64-token bucket; the
+card-0 graph alone grows 14.98 -> 15.82 ms (sample constant 0.83), so the
+growth is inside the decode graph. Lb (8 fixed FA splits) changes tokens
+(first diff 96 / 20) but not the slope: 15.82 -> 16.74, mean 16.24. FA
+split count is not the cause. Lc: reasoning mean 15.70 ms (15.28 ->
+16.16), code 15.58, C2 20.08 per step; tokens first differ from Lb at 96
+/ 84 (route top-k weights ulps).
+VERDICT: keep route + Q8F (-0.54 ms at the lmx shape). Ld (unitrace over
+a 512-token lmx request) queued to find the kernel(s) that grow by
+~1.6 us per KV token per step.
+
+## 2026-10-21 04:53 G2b -- audit pass 34
+
+CONFIG: CPU only. No GPU, no commit, no host change. Findings F290-F299
+appended to reports/1G2_audit.md after F289. The 20-hour window has elapsed,
+so this pass does not start another sleep.
+COMMAND: checked O5 run-c3v, run-c2v, run-c0, run-c0r, run-d32v, run-c3vq,
+o5/fa fag logs, F1 merged-q1 and merged-q2, and X6 cpu logs.
+RESULT: c3v eff is 9.19125 ms and c2v drafts are 440. q2 harness C1 itl
+is 15.23308 ms with first id hotschmoe-dev. Lc step mean is 15.696 ms.
+VERDICT: no speed promotion. The 9.19 ms figure is profiler eff, not harness ITL.
+Not verified in this pass: none
+
+## 2026-10-21 05:00 O5 -- baseline nondeterminism located: prefill BF16 F.linear (GDN b|a), same input -> different bits
+
+CONFIG: recipe c. c0r = exact repeat of c0 (MTP off) with a same-load C1
+repeat (c1r) added to harness/o5_mtp_profile.py; d32v = MTP k=3 at C1 /
+k=2 at C2 (num_speculative_tokens_per_batch_size 1-1-3,2-4-2) + draft
+vocab; eager probe p0g (MTP off) runs [A], [A,A], [A,A,A], [B], [A] in
+one load and compares [A] with the later [A] module by module.
+COMMAND: o5_window.sh TAG=c0r|d32v|p0g.
+RESULT: MTP OFF is not repeatable: c0 vs c0r (two loads) differ on
+"lighthouse" C1 at token 81; inside c0r, C1 vs its repeat differ on
+"hash map" (58) and "lighthouse" (81). d32v also differs from its own
+same-load repeat ("hash map" at 110). p0g: the second [A] prefill already
+differs from the first at layers.2.linear_attn.in_proj_ba while
+in_proj_qkvz (same input tensor) is identical, i.e. the BF16 GDN b|a
+F.linear at M=20 (prefill, oneDNN; T<=8 decode uses bf_gemv) returns
+different bits for identical input in the same process. The GDN state
+then carries the difference into decode (first row-0 diff at
+layers.2.linear_attn.norm, pos 27). So the "hash map" token-58 flips
+seen across arms are this, not MTP.
+d32v timing: C1 9.28 ms/token (k=3), C2 12.90 ms/stream (k=2), so
+dynamic k gives the best of both in one config.
+VERDICT: new opt-in B70_ONEDNN_DET=1 (fork xpu/model.py, next to O4's
+flags: sets torch.backends.mkldnn.deterministic=True so torch XPU asks
+oneDNN for deterministic kernels). Probe p0h queued to confirm; O4 note:
+this also affects your no-MTP repeatability on near-tie prompts.
+
+## 2026-10-21 05:01 X6 -- bounded graph probe entering the lease queue
+
+CONFIG: card1 only, physical1 pin via xpu-run, <=2min correctness body
+plus native pre/post health. No model load, no latency measurement.
+COMMAND: the CPU preparation is complete; queue bin/gpu-run --card1
+with B70_GPU_LOCK_TIMEOUT=21600 behind the current holder. Remove only
+X6's extra prequeue process-scan wait (it also waited on post-health
+wrappers, rather than entering the shared lease queue).
+RESULT: no GPU touch yet; no active serve interrupted. Other agents'
+leases/processes untouched. Pair serves remain higher priority; this is
+the previously announced bounded card1 graph gap, not a new long serve.
+VERDICT: use the campaign's lease queue for the bounded probe; full
+Strata/QSA serves still yield to higher-priority queued work.
+
+## 2026-10-21 05:11 X6 -- paged QsaRunner graph gate passes on card1
+
+CONFIG: card1/logical0, real24/2/256 QsaRunner, uint8 pooled pages,
+block64,4-row capacity,3-row mRoPE text positions; existing native QSA
+library, random BF16 projections (not a model-quality or latency run).
+COMMAND: detached x6/graph-window.sh -> xpu-run --card1 plus pin ->
+harness/x6_qsa_graph.py;120s body alarm; native health before/after.
+RESULT: pre-health HEALTHY; bound inner Attention pages(520,75776),
+B70_QSA backend. All15 eager/replay outputs bitwise equal at rows1/2/4
+and changing positions0/1/4/2052/4099. No private QsaBuffers pool.
+X6_QSA_RUNNER_GRAPH_OK; GPU body31s, exit0. Post-health still queued.
+Raw x6/graph.log. This tests component graph replay, not a full serve.
+VERDICT: page binding and device-only mRoPE decode pass the component
+GPU gate. No full-model FULL_DECODE_ONLY/greedy/ITL claim yet. Next:
+separate Strata references and full QSA serve after priority windows;
+DD remains inactive. No crash/reset, no commit/push.
+
+## 2026-10-21 05:23 X6 -- synthetic full-engine integration probe prepared
+
+CONFIG: random dummy Qwen4 weights,48 layers/12 QSA24/2/256 layers,
+trunk64,2 tiny experts,PLE off,one physicalcard1. No EP, model-quality
+or performance claim. maxlen4096,chunk128,FULL_DECODE_ONLY captures1/2.
+COMMAND: harness/x6_qsa_tiny.py via x6/tiny-window.sh,180s body alarm,
+gpu-run --card1 and pin, native pre/post health,21600s lease timeout.
+RESULT: CPU preparation only. Previous QsaRunner component window
+closed GRAPH_RC0/HEALTH_RC0, pre/post HEALTHY. Also CPU real-XPUPlatform
+alignment passed12 registered QSA Attention objects+GDN: block2816,
+page3334144, no FLASH_ATTN preferred-size override.
+VERDICT: queue a bounded <=3min one-card integration test to catch
+real KV-planner/capture lifecycle failures before expensive full-model
+loads. Pair Strata/QSA windows remain below O4/O5/F1 priority. No DD
+service changes, no commit, no reset.

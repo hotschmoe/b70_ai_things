@@ -261,7 +261,14 @@ def main() -> None:
     # C1: one prompt at a time. C2: pairs (i, i+1 mod n) so each row sees a
     # different neighbor -- batch invariance across rows and T.
     batches = {"c1": [[p] for p in prompts], "c2": [[prompts[i], prompts[(i + 1) % len(prompts)]] for i in range(0, len(prompts), 2)]}
-    for phase in ("c1", "c2"):
+    phases = ["c1", "c2"]
+    if os.environ.get("O5_REPEAT", "1") == "1":
+        # Same-load repeat of C1 (determinism check, not timed for the table).
+        batches["c1r"] = batches["c1"]
+        result["c1r"] = []
+        timing["c1r"] = []
+        phases.append("c1r")
+    for phase in phases:
         for bi, batch in enumerate(batches[phase]):
             STEPS.clear()
             CUR.clear()
@@ -299,6 +306,9 @@ def main() -> None:
                 f"propose_dev={summ.get('propose_dev_ms', {}).get('p50')} "
                 f"step={summ.get('step_ms', {}).get('p50')} text0={outs[0].outputs[0].text[:80]!r}"
             )
+    if "c1r" in result:
+        same = [a["ids"] == b["ids"] for a, b in zip(result["c1"], result["c1r"])]
+        log(f"REPEAT c1 vs c1r same-load identical: {same}")
     for phase in ("c1", "c2"):
         effs = [r["eff_ms_per_tok"] for r in timing[phase] if r["eff_ms_per_tok"]]
         accs = [r["accept_rate"] for r in timing[phase] if r["accept_rate"] is not None]

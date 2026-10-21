@@ -12,7 +12,7 @@ Registration does not load the SYCL library.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import torch
 
@@ -129,6 +129,10 @@ def _build() -> None:
             return metadata
 
     class B70QsaBackend(AttentionBackend):
+        # Filled by the runner before vLLM aligns hybrid attention/GDN
+        # pages. Alignment probes a synthetic one-token dense spec.
+        indexer_geometry = (128, 4)
+
         @staticmethod
         def get_name() -> str:
             return "B70_QSA"
@@ -141,12 +145,34 @@ def _build() -> None:
         def get_builder_cls():
             return B70QsaMetadataBuilder
 
+        @classmethod
+        def customize_spec(cls, spec):
+            if isinstance(spec, (QsaInt8PooledSpec, QsaInt8DraftSpec)):
+                return spec
+            idx_dim, idx_block = cls.indexer_geometry
+            one_token_bytes = page_layout(
+                spec.num_kv_heads, spec.head_size, idx_dim, idx_block,
+                idx_block, pooled=True,
+            )["page_bytes"] // idx_block
+            # Hybrid sizing calls this with block_size=1, which is not a
+            # complete QSA page. Report its linear byte slope; real pages
+            # come from the registered layer's get_kv_cache_spec.
+            return replace(
+                spec, dtype=torch.uint8, num_head_slots=1,
+                state_content_bytes=one_token_bytes, tokens_per_state=1,
+                page_size_padded=None,
+            )
+
         @staticmethod
         def get_supported_kernel_block_sizes(kv_cache_spec=None):
             if kv_cache_spec is None:
                 return [MultipleOf(4)]
             return [int(kv_cache_spec.block_size)]
 
+    # vLLM passes specs across process boundaries. These lazily-created
+    # classes must resolve by their exported names, not _build.<locals>.
+    for cls in (QsaInt8PooledSpec, QsaInt8DraftSpec, B70QsaBackend):
+        cls.__qualname__ = cls.__name__
     globals()["QsaInt8PooledSpec"] = QsaInt8PooledSpec
     globals()["QsaInt8DraftSpec"] = QsaInt8DraftSpec
     globals()["B70QsaBackend"] = B70QsaBackend

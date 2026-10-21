@@ -7,6 +7,7 @@ Run with the flashnext venv, from the plugin directory:
 from __future__ import annotations
 
 import torch
+import pickle
 
 from b70_qsa_xpu import kv_spec
 from b70_qsa_xpu.layout import page_layout
@@ -49,6 +50,13 @@ def main() -> None:
     _check("pooled class", type(spec).__name__ == "QsaInt8PooledSpec")
     _check("one state", spec.num_states == 1 and spec.num_heads == 1)
     _check("dtype", spec.dtype == torch.uint8)
+    _check("spec process round trip", pickle.loads(pickle.dumps(spec)) == spec)
+    sizing = B70QsaBackend.customize_spec(FullAttentionSpec(
+        block_size=1, num_kv_heads=2, head_size=256, dtype=torch.bfloat16,
+    ))
+    _check("hybrid byte slope", sizing.page_size_bytes == 1184)
+    _check("hybrid sized page", sizing.copy_with_new_block_size(64).page_size_bytes ==
+           make_qsa_spec(**{**flash, "block_size": 64}, pooled=True).page_size_bytes)
     draft_lay = page_layout(**flash, pooled=False)
     draft = make_qsa_spec(**flash, pooled=False)
     _check(

@@ -194,9 +194,10 @@ def main() -> None:
     sp = SamplingParams(temperature=0.0, max_tokens=ntok, ignore_eos=True)
     llm.generate([A], SamplingParams(temperature=0.0, max_tokens=2, ignore_eos=True), use_tqdm=False)
     res = {}
-    for name, prompts in (("solo", [A]), ("dup", [A, A]), ("trip", [A, A, A])):
+    B = "Describe the water cycle in detail for a high school science class."
+    for name, prompts in (("solo", [A]), ("dup", [A, A]), ("trip", [A, A, A]), ("other", [B]), ("solo2", [A])):
         res[name] = run(llm, sp, prompts, name)
-    for x, y in (("solo", "dup"), ("solo", "trip"), ("dup", "trip")):
+    for x, y in (("solo", "dup"), ("solo", "trip"), ("dup", "trip"), ("solo", "solo2")):
         d = first_diff(res[x][0], res[y][0], "hreq")
         d0 = first_diff(res[x][0], res[y][0], "h0")
         log(f"FIRSTDIFF {x} vs {y}: req={json.dumps(d)} row0={json.dumps(d0)}")

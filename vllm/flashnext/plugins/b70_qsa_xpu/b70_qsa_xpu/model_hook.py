@@ -89,6 +89,9 @@ def mark_draft(layer):
 class QsaRunner:
     def __init__(self, attn, indexer, pooled: bool = True) -> None:
         self.attn = attn
+        # Qwen3NextAttention owns the projections; its inner Attention is
+        # registered in vLLM's static forward context and receives KV pages.
+        self.cache_layer = getattr(attn, "attn", attn)
         self.indexer = indexer
         self.pooled = bool(pooled)
         self.buf: QsaBuffers | None = None
@@ -104,6 +107,7 @@ class QsaRunner:
         self.side_length = None
         self._index = None
         self._sink = 0
+        self.vllm_config = None
         self._install_spec()
 
     def _geom(self) -> Geom:
@@ -237,12 +241,19 @@ class QsaRunner:
             from b70_qsa_xpu.kv_spec import make_qsa_spec
 
             kv_spec.register_specs()
+            g = self._geom()
+            kv_spec.B70QsaBackend.indexer_geometry = (g.idx_dim, g.idx_block)
         except Exception as exc:
             self._log_once(f"KV spec not installed ({type(exc).__name__}: {exc})")
             return
         runner = self
 
         def get_kv_cache_spec(vllm_config):
+            # The current-config context is not installed during every
+            # model forward (including profiling capture). Keep the
+            # worker config passed to KV collection; its cache geometry
+            # is updated in place by hybrid alignment before allocation.
+            runner.vllm_config = vllm_config
             g = runner._geom()
             return make_qsa_spec(
                 n_kv=g.n_kv,
@@ -256,20 +267,24 @@ class QsaRunner:
         def get_attn_backend():
             return kv_spec.B70QsaBackend
 
-        self.attn.get_kv_cache_spec = get_kv_cache_spec
-        self.attn.get_attn_backend = get_attn_backend
+        self.cache_layer.get_kv_cache_spec = get_kv_cache_spec
+        self.cache_layer.get_attn_backend = get_attn_backend
+        # Keep direct backend consumers consistent with the accessor. The
+        # original Attention.forward/impl is bypassed by this runner.
+        self.cache_layer.attn_backend = kv_spec.B70QsaBackend
 
     def _limits(self) -> tuple[int, int, int]:
         block_size = int(os.environ.get("B70_QSA_BLOCK", "0") or 0)
         max_seqs = int(os.environ.get("B70_QSA_MAX_SEQS", "0") or 0)
         max_len = int(os.environ.get("B70_QSA_MAX_LEN", "0") or 0)
-        cfg = None
-        try:
-            from vllm.config import get_current_vllm_config_or_none
+        cfg = self.vllm_config
+        if cfg is None:
+            try:
+                from vllm.config import get_current_vllm_config_or_none
 
-            cfg = get_current_vllm_config_or_none()
-        except Exception:
-            cfg = None
+                cfg = get_current_vllm_config_or_none()
+            except Exception:
+                cfg = None
         if cfg is not None:
             if block_size <= 0:
                 block_size = int(cfg.cache_config.block_size)
@@ -284,10 +299,14 @@ class QsaRunner:
         if max_len <= 0:
             max_len = int(os.environ.get("B70_QSA_MAX_CELLS", "8192"))
         max_blocks = max(1, (max_len + block_size - 1) // block_size)
+        if cfg is not None:
+            from vllm.v1.worker.block_table import get_block_table_width
+
+            max_blocks = get_block_table_width(max_blocks, block_size)
         return block_size, max_seqs, max_blocks
 
     def _cache_id(self):
-        cache = getattr(self.attn, "kv_cache", None)
+        cache = getattr(self.cache_layer, "kv_cache", None)
         if not isinstance(cache, torch.Tensor) or cache.numel() == 0:
             return None
         return (int(cache.data_ptr()), tuple(int(n) for n in cache.shape), str(cache.dtype))
@@ -327,27 +346,40 @@ class QsaRunner:
             block_size,
             pooled=self.pooled,
         )
-        pages = as_pages(getattr(self.attn, "kv_cache", None), lay["page_bytes"])
+        pages = as_pages(getattr(self.cache_layer, "kv_cache", None), lay["page_bytes"])
         if pages is None:
-            self._log_once("kv cache is not a QSA uint8 page; using the private pool")
+            cache = getattr(self.cache_layer, "kv_cache", None)
+            self._log_once(
+                f"KV page mismatch: expected block={block_size} bytes={lay['page_bytes']} "
+                f"got dtype={getattr(cache, 'dtype', None)} shape={getattr(cache, 'shape', None)}"
+            )
             return False
         want = torch.device(device)
         if pages.device.type != want.type:
             self._log_once("kv cache device does not match the activation")
             return False
-        table = np.zeros((max_seqs, max_blocks), dtype=np.int32)
-        self.batch = QsaBatch(
-            g,
-            table,
-            block_size,
-            pages.device,
-            pooled=self.pooled,
-            pages=pages,
-        )
+        self._prepare_batch(pages.device)
+        # The dummy profile already allocated the persistent decode
+        # scratch. Reuse it when real pages arrive, before capture.
+        self.batch.pages = pages
+        self.batch.num_pages = int(pages.shape[0])
         self._alloc_side()
         self._apply_gamma()
         self._cache_token = self._cache_id()
+        self._log_once(
+            f"bound {self.cache_layer.layer_name} backend=B70_QSA "
+            f"pages={tuple(pages.shape)} block={block_size} pooled={self.pooled}"
+        )
         return True
+
+    def _prepare_batch(self, device: torch.device) -> None:
+        if self.batch is not None:
+            return
+        g = self._geom()
+        block_size, max_seqs, max_blocks = self._limits()
+        table = np.zeros((max_seqs, max_blocks), dtype=np.int32)
+        self.batch = QsaBatch(g, table, block_size, device, pooled=self.pooled)
+        self._apply_gamma()
 
     def _paged_live(self, device: torch.device) -> bool:
         token = self._cache_id()
@@ -370,7 +402,7 @@ class QsaRunner:
         if isinstance(md, list):
             md = md[0] if md else None
         if isinstance(md, dict):
-            return md.get(getattr(self.attn, "layer_name", ""))
+            return md.get(getattr(self.cache_layer, "layer_name", ""))
         return md
 
     def _copy_table(self, metadata, rows: int) -> None:
@@ -424,16 +456,15 @@ class QsaRunner:
             rope_rows(self, x, positions, token0, n)
             return
         if positions.ndim == 2:
-            for j in range(n):
-                thw = positions[:, token0 + j].to(torch.int32)
-                pair = torch.arange(half, device=x.device)
-                p = thw[pair % 3].to(torch.long)
-                c = self.batch.cos[p, pair]
-                s = self.batch.sin[p, pair]
-                x1 = x[j, :, :half].clone()
-                x2 = x[j, :, half : 2 * half].clone()
-                x[j, :, :half] = x1 * c - x2 * s
-                x[j, :, half : 2 * half] = x2 * c + x1 * s
+            pair = torch.arange(half, device=x.device)
+            p = positions[:, token0 : token0 + n].transpose(0, 1).long()
+            p = p[:, pair % 3]
+            c = self.batch.cos[p, pair]
+            s = self.batch.sin[p, pair]
+            x1 = x[..., :half].clone()
+            x2 = x[..., half : 2 * half].clone()
+            x[..., :half] = x1 * c[:, None, :] - x2 * s[:, None, :]
+            x[..., half : 2 * half] = x2 * c[:, None, :] + x1 * s[:, None, :]
             return
         pos = positions[token0 : token0 + n].to(torch.long)
         c = self.batch.cos[pos]
@@ -446,16 +477,18 @@ class QsaRunner:
     def _note_mrope(self, positions: torch.Tensor, n: int, row_base: int, token0: int) -> None:
         if positions.ndim != 2 or n == 0:
             return
-        if _capturing():
-            raise RuntimeError("B70_QSA image mRoPE decode is eager")
         b = self.batch
         if b.mrope.numel() == 0:
+            if _capturing():
+                raise RuntimeError("B70_QSA mRoPE table needs warmup before capture")
             b.mrope = torch.zeros(
                 b.batch, b.max_cells, 3, dtype=torch.int32, device=b.device
             )
-        for j in range(n):
-            p = int(positions[0, token0 + j].item())
-            b.mrope[row_base + j, p, :].copy_(positions[:, token0 + j].to(torch.int32))
+        rows = torch.arange(row_base, row_base + n, device=b.device)
+        pos = positions[0, token0 : token0 + n].long()
+        # Tensor indices stay on device; .item() here used to synchronize
+        # even language-only decode, whose positions are also [3, T].
+        b.mrope[rows, pos, :] = positions[:, token0 : token0 + n].transpose(0, 1).to(torch.int32)
 
     def _load_rows(
         self, q, k, v, gate, iq, raw, positions, n: int, row0: int = 0, token0: int = 0
@@ -492,8 +525,6 @@ class QsaRunner:
             raise RuntimeError(
                 f"B70_QSA batch {rows} exceeds {self.batch.batch}; set B70_QSA_MAX_SEQS"
             )
-        if positions.ndim == 2 and _capturing():
-            raise RuntimeError("B70_QSA image mRoPE decode is eager")
         self._copy_table(meta, rows)
         pos_src = positions if positions.ndim == 1 else positions[0]
         self.batch.pos[:rows].copy_(pos_src[:rows].to(torch.int32))
@@ -593,7 +624,6 @@ class QsaRunner:
         meta = self._metadata()
         if meta is None or not hasattr(meta, "block_table"):
             raise RuntimeError("B70_QSA paged forward needs attention metadata")
-        self._apply_gamma()
         attn = self.attn
         qkv, _ = attn.qkv_proj(hidden)
         q, k, v, gate = attn._project_qkv_gate(qkv, positions)
@@ -653,8 +683,40 @@ class QsaRunner:
             raise RuntimeError("B70_QSA is TP=1 only")
         if positions is None:
             raise RuntimeError("B70_QSA needs positions")
+        if self.cache_layer is not self.attn and self._metadata() is None:
+            if _capturing():
+                raise RuntimeError("B70_QSA decode capture requires paged attention metadata")
+            # vLLM profiles before KV allocation with attn_metadata=None.
+            # Like Attention.forward, do no cache work on this dummy pass.
+            # In particular never build the private single-request pool for
+            # a flattened multi-request profile batch.
+            self._prepare_batch(hidden.device)
+            b = self.batch
+            if positions.ndim == 2 and b.mrope.numel() == 0:
+                b.mrope = torch.zeros(b.batch, b.max_cells, 3, dtype=torch.int32, device=b.device)
+            qkv, _ = self.attn.qkv_proj(hidden)
+            self.attn._project_qkv_gate(qkv, positions)
+            self.indexer.index_qk_proj(hidden)
+            # The real prefill holds fp32 q, gate and [q|gate] (four
+            # vectors per head) plus one score tile. Count their peak
+            # before vLLM chooses the KV budget, without running top-k
+            # over the flattened dummy multi-request profile batch.
+            scratch = torch.empty(
+                hidden.shape[0], self.attn.num_heads, self.attn.head_dim * 4,
+                dtype=torch.float32, device=hidden.device,
+            )
+            score_tile = torch.empty(
+                min(int(hidden.shape[0]), int(os.environ.get("B70_PREFILL_QSA_BATCH", "8"))),
+                b.max_cells, dtype=torch.float32, device=hidden.device,
+            )
+            y = hidden.new_zeros((hidden.shape[0], self.attn.num_heads * self.attn.head_dim))
+            out, _ = self.attn.o_proj(y)
+            del scratch, score_tile
+            return out
         if self._paged_live(hidden.device):
             return self._forward_paged(hidden, positions)
+        if self.cache_layer is not self.attn:
+            raise RuntimeError("B70_QSA registered Attention did not receive QSA uint8 pages")
         return self._forward_private(hidden, positions)
 
     def _forward_private(self, hidden: torch.Tensor, positions: torch.Tensor) -> torch.Tensor:
