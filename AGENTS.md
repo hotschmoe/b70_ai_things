@@ -33,13 +33,16 @@ recompute works, prioritize concurrency, decode and MTP. Cached-prefix
 
 ## Development loop (user, 2026-10-14)
 
-- Consult Claude Fable 5.1 and Claude 5.5 often at experiment decision points;
-  record the actual responding model IDs and evidence-based decisions.
+- Consult the newest Claude Fable and the newest Claude Opus, at high effort,
+  as needed at experiment decision points (CLI aliases track the latest
+  release: `claude --model fable --effort high`, `claude --model opus
+  --effort high`). Record the actual responding model IDs and the
+  evidence-based decisions (user, 2026-11-19).
 - Reflect on setup and testing cost each stage. Remove redundant tests and
   repeated setup while preserving required correctness and GPU health checks.
 - Do not restore the qualified daily server routinely between experiments.
   Use the fastest safe loop; queue prepared GPU probes between server runs.
-- Have Claude Fable 5.1 and Claude 5.5 prepare independent fixes/profiling
+- Have the newest Fable and Opus (high effort) prepare independent fixes/profiling
   candidates in parallel. Keep GPU execution leased and coordinated, with
   quiet CPU conditions when needed for meaningful latency comparisons.
 - Profile individual GPU/software operations, shapes, tiles, quant/dequant and
