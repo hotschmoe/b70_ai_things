@@ -1597,6 +1597,16 @@ models:
     serve_cmd: ""
     notes: "Won the 20261014 langs/sysadmin A/B on a0116b27/v0.1.43.1. Current bounded serving qualification: clean upstream 296b59d2/v0.1.44.1, split27, two200k, MTP4, parking16384 MiB/4 entries; strata/flash-next/serve-iq3xxs-200k.json. Exact weights in model-lock-ista-iq3.json. Verify live identity/config before graded use; new backend has short coherence/retrieval checks, no full quality re-eval or multi-day soak qualification."
 
+  - label: qwen38-flash-next-ista-gsq-rco-iq3xxs-strata-0216
+    served_model_id: qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata-0216
+    primary_client_id: hotschmoe-dd
+    family: qwen3.8-flash-next
+    weights: ISTA-DASLab-Qwen3.8-Flash-Next-GSQ-RCO-GGUF-IQ3_XXS
+    activations: strata-native
+    calibration: ista-gsq-rco
+    serve_cmd: ""
+    notes: "Experimental Strata 0.2.16 DD port. Qualification is pending; verify live identity and configuration before use."
+
   - label: x1-qwen36-35b-ud-iq3xxs-vllm-mtp0
     served_model_id: qwen3.6-35b-a3b-ud-iq3-xxs-mtp0
     primary_client_id: hotschmoe-dd

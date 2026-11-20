@@ -16,6 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base-url", default="http://127.0.0.1:18085")
     parser.add_argument("--model", default="hotschmoe-dd")
+    parser.add_argument("--alias", default="qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata")
     parser.add_argument("--template", type=Path, required=True,
                         help="Saved bench_serving coding response JSON")
     parser.add_argument("--output", type=Path, required=True)
@@ -27,7 +28,7 @@ def main():
     base = args.base_url.rstrip("/")
     identity = get(base, "/v1/models")
     ids = [r["id"] for r in identity["data"]]
-    alias = "qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata"
+    alias = args.alias
     registry = (Path(__file__).resolve().parents[2]/"evals/configs/models.yaml").read_text()
     if ids[0] != args.model or alias not in ids or alias not in registry:
         raise RuntimeError("Model identity mismatch")

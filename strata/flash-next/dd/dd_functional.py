@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
-"""hotschmoe-dd functional checks through the frontdoor (API key): thinking, tools round trip, concurrency, long."""
-import json, time, urllib.request
+"""Functional checks for a Strata endpoint: thinking, tools, concurrency, images and long output."""
+import argparse, base64, json, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
-BASE = 'http://127.0.0.1:18080/v1'
-KEY = open('/mnt/vm_8tb/b70/secrets/dd_api_key').read().strip()
+from pathlib import Path
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--base-url', default='http://127.0.0.1:18080/v1')
+parser.add_argument('--api-key-file', default='/mnt/vm_8tb/b70/secrets/dd_api_key')
+parser.add_argument('--no-api-key', action='store_true')
+parser.add_argument('--image-fixture', type=Path, help='PNG with a blue circle, for the vision check')
+args = parser.parse_args()
+BASE = args.base_url.rstrip('/')
+KEY = '' if args.no_api_key else Path(args.api_key_file).read_text().strip()
 
 def post(body, stream=False):
-    req = urllib.request.Request(BASE + '/chat/completions', json.dumps(body).encode(),
-                                 {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + KEY})
+    headers = {'Content-Type': 'application/json'}
+    if KEY:
+        headers['Authorization'] = 'Bearer ' + KEY
+    req = urllib.request.Request(BASE + '/chat/completions', json.dumps(body).encode(), headers)
     with urllib.request.urlopen(req, timeout=900) as r:
         if not stream: return json.load(r)
         text, n, t0, first = [], 0, time.time(), None
@@ -45,9 +55,23 @@ with ThreadPoolExecutor(4) as ex:
     outs = list(ex.map(lambda q: post(dict(model='hotschmoe-dd', max_tokens=32, temperature=0, chat_template_kwargs={'enable_thinking': False},
                      messages=[{'role': 'user', 'content': f'Return only the integer: {q[0]} * {q[1]}.'}]))['choices'][0]['message']['content'].strip(), qs))
 res['concurrent'] = dict(ok=outs == [q[2] for q in qs], outs=outs)
+if args.image_fixture:
+    url = 'data:image/png;base64,' + base64.b64encode(args.image_fixture.read_bytes()).decode('ascii')
+    r = post(dict(model='hotschmoe-dd', max_tokens=32, temperature=0,
+                  chat_template_kwargs={'enable_thinking': False},
+                  messages=[{'role': 'user', 'content': [
+                      {'type': 'text', 'text': 'What color is the circle? Answer with one color word.'},
+                      {'type': 'image_url', 'image_url': {'url': url}}]}]))
+    answer = r['choices'][0]['message'].get('content') or ''
+    res['vision'] = dict(ok='blue' in answer.lower(), answer=answer)
 # 4 long streamed answer
 text, n, dt = post(dict(model='hotschmoe-dd', max_tokens=2048, temperature=0, stream=True, stream_options={'include_usage': True},
                         chat_template_kwargs={'enable_thinking': False},
                         messages=[{'role': 'user', 'content': 'Write a complete, well-commented Python implementation of an LRU cache with TTL expiry, plus pytest tests.'}]), stream=True)
 res['long'] = dict(tokens=n, tok_s=round((n - 1) / dt, 1) if dt > 0 else None, has_code='def ' in text and 'class ' in text)
 print(json.dumps(res, indent=1))
+if not (res['thinking']['ok'] and res['thinking']['reasoning_chars'] > 0 and
+        res['tool_call']['name'] == 'get_weather' and res.get('tool_roundtrip', {}).get('ok') and
+        res['concurrent']['ok'] and res['long']['has_code'] and res['long']['tokens'] >= 512 and
+        (not args.image_fixture or res['vision']['ok'])):
+    raise SystemExit('Functional check failed')

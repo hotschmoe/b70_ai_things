@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Four distinct near-200K chats, two GPU slots, measured 32 GiB RAM parking.
+"""Distinct near-200K chats, two or four GPU slots, measured RAM parking.
 
 Run through an already pair-leased server. Sample host RSS and container cgroup
 RAM during this bounded test; do not start the persistent soak observer.
@@ -42,14 +42,30 @@ def classify_restores(rows, records, count):
     return [None]*len(rows)
 
 
+def parse_restore_records(text):
+    """Parse both old payload-bearing and newer token-only native restore records."""
+    records = []
+    for tokens, elapsed, details in re.findall(
+            r'conversation cache: restored (\d+) tokens[^\n]*? in ([\d.]+) ms;([^\n]*)', text):
+        payload = re.search(r'restored_payload_bytes=(\d+)', details)
+        records.append(dict(tokens=int(tokens), elapsed_ms=float(elapsed),
+                            payload_bytes=int(payload[1]) if payload else None))
+    return records
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--base-url', default='http://127.0.0.1:18085')
+    parser.add_argument('--alias', default='qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata')
     parser.add_argument('--target', type=int, default=199600)
     parser.add_argument('--context-size', type=int, default=200000, help='Expected slot capacity; use8192 for the small cache oracle')
     parser.add_argument('--cached-ttft-target-s', type=float, default=2.0)
+    parser.add_argument('--slots', type=int, choices=[2, 4], default=2,
+                        help='Active engine slots; four slots add two conversations to force eviction')
+    parser.add_argument('--allow-batch-mtp-disabled', action='store_true',
+                        help='Measure a server that explicitly reports batch MTP disabled')
     parser.add_argument('--resume', action='store_true', help='Continue saved phases on the same live engine PID/container')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=args.resume)
@@ -61,16 +77,17 @@ def main():
     batch_depth = int(depths[-1]) if depths else 1
     if int(config.get('env', {}).get('STRATA_BATCH_MTP_DEPTH', '1')) > 1 and not depths:
         raise RuntimeError('Deeper batch MTP lacks native startup confirmation')
-    if re.search(r'WARNING: --batch-mtp is off:', startup_log):
+    batch_mtp_disabled = bool(re.search(r'WARNING: --batch-mtp is off:', startup_log))
+    if batch_mtp_disabled and not args.allow_batch_mtp_disabled:
         raise RuntimeError('Native startup disabled the requested batch MTP')
-    single_slot_max_rows = batch_depth+1
+    single_slot_max_rows = 1 if batch_mtp_disabled else batch_depth+1
     if int(argv[argv.index('--conversation-cache-mib')+1]) != 32768:
         raise RuntimeError('This qualification requires a configured 32768 MiB parking budget')
     container = json.loads(subprocess.check_output(['docker','inspect','strata-ab-serve']))[0]
     if str(args.config.resolve()) not in container['Config']['Cmd']:
         raise RuntimeError('Container is not using the supplied config')
     identity = get(base, '/v1/models')
-    alias = 'qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata'
+    alias = args.alias
     ids = [r['id'] for r in identity['data']]
     registry = (Path(__file__).resolve().parents[2]/'evals/configs/models.yaml').read_text()
     if ids[0] != 'hotschmoe-dd' or alias not in ids or alias not in registry:
@@ -91,11 +108,14 @@ def main():
     run_meta=dict(native_pid=pid,container_id=container['Id'],
                   config_sha256=hashlib.sha256(args.config.read_bytes()).hexdigest(),
                   log_start=Path(config['log']).stat().st_size,
-                  prompt_target=args.target,context_size=args.context_size)
+                  prompt_target=args.target,context_size=args.context_size,slots=args.slots,alias=args.alias,
+                  batch_mtp_disabled=batch_mtp_disabled)
     if args.resume:
         prior=json.loads(meta_path.read_text())
         if any(prior[k]!=run_meta[k] for k in ['native_pid','container_id','config_sha256']) or \
-           prior.get('prompt_target',199600)!=args.target or prior.get('context_size',200000)!=args.context_size:
+           prior.get('prompt_target',199600)!=args.target or prior.get('context_size',200000)!=args.context_size or \
+           prior.get('slots',2)!=args.slots or prior.get('alias',alias)!=alias or \
+           prior.get('batch_mtp_disabled',False)!=batch_mtp_disabled:
             raise RuntimeError('Resume requires the original live engine and config')
         run_meta=prior
     else:
@@ -140,7 +160,8 @@ def main():
     codes = {}
     all_rows = []
     phase_reports = []
-    for label in 'ABCD':
+    labels = 'ABCDEF' if args.slots == 4 else 'ABCD'
+    for label in labels:
         codes[label] = [f'{label}-COBALT-7291',f'{label}-RIVER-5183',f'{label}-ORBIT-9462']
         prompt = f'[Independent full conversation {label}] '
         previous = 0
@@ -207,7 +228,7 @@ def main():
         text = row['text']
         if not all(code in text for code in codes[label]):
             raise RuntimeError(name+' '+label+' lost its needles: '+text)
-        if any(code in text for other in 'ABCD' if other!=label for code in codes[other]):
+        if any(code in text for other in labels if other!=label for code in codes[other]):
             raise RuntimeError('Cross-conversation state leak')
         if row['usage']['prompt_tokens'] < args.target-1000:
             raise RuntimeError('Context too short')
@@ -233,8 +254,8 @@ def main():
         slots=get(base,'/slots');metrics=get(base,'/metrics')
         (args.output/(phase+'-state.json')).write_text(json.dumps(dict(slots=slots,metrics=metrics,
             wall_s=time.perf_counter()-start),indent=2)+'\n')
-        if len(slots)!=2 or any(slot['n_prompt_tokens']<args.target-1000 for slot in slots):
-            raise RuntimeError('Both GPU slots must retain near-200K conversations')
+        if len(slots)!=args.slots or sum(slot['n_prompt_tokens']>=args.target-1000 for slot in slots)<2:
+            raise RuntimeError('Expected slot count and at least two long conversations are required')
         cache=metrics['conversation_cache']
         restored=cache['restores']-before['restores']
         # stderr cache/batch summaries can arrive just after HTTP completion.
@@ -249,17 +270,15 @@ def main():
             time.sleep(.05)
             cache=get(base,'/metrics')['conversation_cache']
             restored=cache['restores']-before['restores']
-        restore_records=[dict(tokens=int(n),elapsed_ms=float(ms),payload_bytes=int(nb))
-                         for n,ms,nb in re.findall(
-                             r'conversation cache: restored (\d+) tokens.*? in ([\d.]+) ms;[^\n]* restored_payload_bytes=(\d+)',
-                             phase_log)]
+        restore_records=parse_restore_records(phase_log)
         overlap=min(row['last_content_mono_s'] for row in rows)-max(row['first_content_mono_s'] for row in rows)
         report=dict(phase=phase,content_interval_overlap_s=overlap,
                     native_batch_depth=batch_depth,single_slot_max_emitted_rows=single_slot_max_rows,
                     native_batch_windows=[dict(windows=int(n),emitted_rows_per_window=float(nr))
                                           for n,nr in batch_stats],actual_ram_restores=restored,
                     snapshot_restore_records=restore_records,
-                    snapshot_restore_payload_bytes=sum(r["payload_bytes"] for r in restore_records))
+                    snapshot_restore_payload_bytes=(sum(r["payload_bytes"] for r in restore_records)
+                        if all(r["payload_bytes"] is not None for r in restore_records) else None))
         phase_reports.append(report)
         (args.output/(phase+'-overlap.json')).write_text(json.dumps(report,indent=2)+'\n')
         (args.output/(phase+'-engine.log')).write_text(phase_log)
@@ -269,7 +288,8 @@ def main():
             raise RuntimeError('Two near-full active decodes were not proven: '+json.dumps(report))
         report['intended_ram_exchange']=restore
         report['forced_exchange_passed']=not restore or (restored==2 and len(restore_records)==2
-            and all(r['tokens']>=args.target-1000 and r['payload_bytes']>0 for r in restore_records))
+            and all(r['tokens']>=args.target-1000 and
+                    (r['payload_bytes'] is None or r['payload_bytes']>0) for r in restore_records))
         report['restore_classification']='resident_only' if restored==0 else 'ram_only' if restored==2 else 'mixed'
         # Idle-slot handoff can park one return before its partner is admitted.
         # Classify observed restores; an intended resident pair need not stay resident.
@@ -295,6 +315,8 @@ def main():
         # Add C/D without repeating A/B's huge prefills. Both pairs retain all turns.
         pair('CD','initial',False)
         pair('CD','resident1',False)
+        if args.slots == 4:
+            pair('EF','initial',False)
         pair('AB','exchange1',True)
         pair('CD','exchange1',True)
         phase='complete'
@@ -304,9 +326,7 @@ def main():
     if memory_errors or not memory:
         raise RuntimeError('RAM telemetry unavailable: '+repr(memory_errors))
     segment=(args.output/'engine-segment.log').read_text()
-    restores=re.findall(r'conversation cache: restored (\d+) tokens.*? in ([\d.]+) ms;[^\n]* restored_payload_bytes=(\d+)',segment)
-    full_restores=[dict(tokens=int(n),elapsed_ms=float(ms),payload_bytes=int(nb))
-                   for n,ms,nb in restores if int(n)>=args.target-1000]
+    full_restores=[r for r in parse_restore_records(segment) if r['tokens']>=args.target-1000]
     forced_exchange_passed=len(full_restores)>=4 and all(p['forced_exchange_passed'] for p in phase_reports if p['intended_ram_exchange'])
     cached=[r for r in all_rows if r['phase']!='initial']
     categories={}
@@ -330,10 +350,10 @@ def main():
                      requests=[dict(phase=r['phase'],ttft_s=r['ttft_s'],wall_s=r['wall_s'],
                                     client_decode_tps=r['client_decode_tps'],
                                     gaps_ms=r['content_event_gap_ms'],timings=r['timings'])
-                               for r in cached if r['conversation']==label]) for label in 'ABCD'},
+                               for r in cached if r['conversation']==label]) for label in labels if any(r['conversation']==label for r in cached)},
                  phase_reports=phase_reports,
                  total_context_tokens_at_end={label:next(r['usage']['total_tokens'] for r in reversed(all_rows)
-                                                        if r['conversation']==label) for label in 'ABCD'},
+                                                        if r['conversation']==label) for label in labels},
                  sampled_peak_native_rss_bytes=max(r['VmRSS'] for r in memory),
                  native_hwm_before_bytes=memory[0]['VmHWM'],
                  native_hwm_after_bytes=memory[-1]['VmHWM'],
@@ -349,7 +369,7 @@ def main():
                  ram_sample_period_s=.05,ram_samples=len(memory),native_pid=pid,
                  config_sha256=hashlib.sha256(args.config.read_bytes()).hexdigest(),
                  note='Empirical p95 on bounded samples; sampled exchange peaks and lifetime cgroup peak are separate. '
-                      'Restore bytes are snapshot restore API payload, not physical PCIe traffic; '
+                      'Restore payload bytes are null when the engine does not report them, and never physical PCIe traffic; '
                       'native records belong to each request pair and are not assigned to individual streams.')
     (args.output/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps(summary),flush=True)
