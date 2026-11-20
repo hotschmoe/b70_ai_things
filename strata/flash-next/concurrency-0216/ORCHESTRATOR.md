@@ -38,3 +38,24 @@
   candidate is gated on C1 within noise of the Stage-A winner.
 - Stage B capture lesson noted: keep STRATA_WATCHDOG_S raised only in diagnostic copies; split multi-scenario captures
   into one capture per scenario so a flush cannot kill the run.
+- 2026-11-20 04:15 UTC: FYI a separate TensorFold/Qwen3.8-27B-pi-adapted probe is being prepared (CPU only now: Zig build,
+  LoRA merge, RTN quantization under bin/cpu-run). Later it will need GPU time; the orchestrator will schedule that at one of
+  your stage boundaries and tell you here first. Expect cpu-run lease waits. Your campaign priorities are unchanged.
+- 2026-11-20 04:15 UTC GPU worker: no GPU workload is running. The Stage C candidate release build holds cpu-run; after it releases I plan the remaining card-0 parity retest (about 2 minutes), then matched C1/C2/C4 serves on cards 0+1 (about 5 minutes each for original, switch-off, switch-on), C8 if qualified, then depth arms. I will report boundary/lease availability here; do not start another GPU workload while a pair-leased serve is active.
+- 2026-11-20 04:21 UTC GPU worker: candidate binary built (SHA256 1914c6f0...); the TensorFold CPU build acquired cpu-run before the queued checked-in parity rebuild. Both GPUs are free. I am waiting for that heavy CPU phase rather than starting a memory-intensive server concurrently; matched windows require the quiet CPU lease.
+- 2026-11-20 04:25 UTC GPU worker: checked-in parity build is already queued for cpu-run; the preceding synthetic parity passed and the candidate binary is ready. To avoid leaving a model server loaded while waiting for a large CPU/RAM job, please sequence subsequent TensorFold heavy prep between my matched serve arms where practical. Each serve has about 1 minute startup plus 3-4 minutes under cpu-run --quiet; pair GPU lease remains coordinated.
+- 2026-11-20 04:35 UTC GPU worker: checked-in parity build completed. Running the two small parity tests pinned to card 0 under gpu-run for about 2 minutes; card 1 remains free. TensorFold LoRA merge now holds the CPU lease, so no serving/timed window will overlap it.
+- 2026-11-20 04:36 UTC GPU worker: checked-in parity retest passed and card 0 is free. The TensorFold LoRA merge is holding cpu-run; both GPUs remain free until it finishes and the paired Stage C serve begins.
+- 2026-11-20 04:44 UTC GPU worker: the LoRA merge and copy completed; the four-variant quantization job immediately acquired cpu-run. Both cards remain free. Candidate parity passed; C1/C2/C4 comparisons still await an uncontended CPU window.
+- 2026-11-20 05:05 UTC GPU worker: CPU lease is free; starting original-binary Stage C control on cards 0+1 under pair lease, expected about 5 minutes. Timed clients will take cpu-run --quiet.
+- 2026-11-20 05:10 UTC ORCHESTRATOR: GPU YIELD REQUEST. TensorFold prep is finished (no more heavy CPU from it for now). After you
+  complete the current attention-rows Stage C A/B (original / switch-off / switch-on, C1/C2/C4) and its post-health, please
+  yield both GPUs and the CPU lease for the TensorFold GPU probe (~60-90 min): append a line "GPU YIELDED <time>" here,
+  then poll this file every 2 minutes (sleep loop) until a line "GPU RESUME" appears, then continue with C8/C16 and the
+  depth arms. While waiting you may do CPU-light analysis (ledger, parsers, source reading) but no gpu-run and no
+  heavy cpu-run. If you are mid-arm, finish the arm first.
+- 2026-11-20 05:12 UTC GPU worker: original control completed with clean teardown; starting candidate switch-OFF server on cards 0+1, expected 5-7 minutes, with quiet CPU client windows.
+- 2026-11-20 05:19 UTC GPU worker: candidate switch-OFF arm passed coherence and exited cleanly. Starting candidate switch-ON on cards 0+1 under pair lease, expected 5-7 minutes; quiet CPU clients.
+- 2026-11-20 05:26 UTC GPU worker: attention ON clients passed and server stopped cleanly. Running both-card post-health now, expected under 2 minutes; will release both GPUs and append GPU YIELDED immediately afterward. C4 outputs differ OFF/ON, requiring follow-up before promotion.
+GPU YIELDED 2026-11-20 05:26:03 UTC
+GPU RESUME 2026-11-20 06:10:20 UTC (TensorFold probe done)

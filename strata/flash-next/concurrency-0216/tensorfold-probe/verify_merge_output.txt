@@ -1,0 +1,18 @@
+adapter modules 256 all in base: True
+tensors 1199 shape mismatches 0 dtype mismatches 0
+untouched tensors 943 bit-exact sample 40 differing 0 | vision tensors in checkpoint 333
+model.language_model.layers.24.mlp.gate_proj.weight: ||delta||=0.2119 ||merged-base||=0.2120 ratio=1.0001 cos=0.81829 rel|W|=0.00194
+model.language_model.layers.16.mlp.down_proj.weight: ||delta||=0.1142 ||merged-base||=0.0988 ratio=0.8651 cos=0.67325 rel|W|=0.00113
+model.language_model.layers.38.mlp.up_proj.weight: ||delta||=0.2541 ||merged-base||=0.2610 ratio=1.0275 cos=0.87509 rel|W|=0.00246
+model.language_model.layers.23.mlp.down_proj.weight: ||delta||=0.1152 ||merged-base||=0.0993 ratio=0.8622 cos=0.67134 rel|W|=0.00111
+model.language_model.layers.9.mlp.down_proj.weight: ||delta||=0.1150 ||merged-base||=0.0993 ratio=0.8641 cos=0.67201 rel|W|=0.00112
+model.language_model.layers.61.mlp.down_proj.weight: ||delta||=0.1384 ||merged-base||=0.1239 ratio=0.8953 cos=0.70310 rel|W|=0.00118
+model.language_model.layers.63.self_attn.q_proj.weight: ||delta||=0.2149 ||merged-base||=0.2144 ratio=0.9976 cos=0.82726 rel|W|=0.00191
+model.language_model.layers.52.mlp.up_proj.weight: ||delta||=0.2349 ||merged-base||=0.2377 ratio=1.0119 cos=0.83774 rel|W|=0.00212
+model.language_model.layers.32.mlp.gate_proj.weight: ||delta||=0.2349 ||merged-base||=0.2403 ratio=1.0226 cos=0.86603 rel|W|=0.00233
+model.language_model.layers.2.mlp.down_proj.weight: ||delta||=0.1208 ||merged-base||=0.1080 ratio=0.8941 cos=0.70354 rel|W|=0.00118
+model.language_model.layers.7.self_attn.v_proj.weight: ||delta||=0.0515 ||merged-base||=0.0497 ratio=0.9645 cos=0.78984 rel|W|=0.00142
+model.language_model.layers.11.self_attn.q_proj.weight: ||delta||=0.1686 ||merged-base||=0.1620 ratio=0.9604 cos=0.78324 rel|W|=0.00131
+worst |1-ratio| over sample: 0.13779
+merge_stats modules 256 max err_over_delta 0.7758545596696639 min changed_frac 0.23201999068260193
+VERIFY OK

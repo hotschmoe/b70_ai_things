@@ -1,0 +1,250 @@
+[
+ {
+  "label": "",
+  "prompt": "fibonacci-raw",
+  "temperature": 1.0,
+  "tokens": 256,
+  "thinking": "not applicable",
+  "thinking_off_requested": false,
+  "thinking_switch": true,
+  "thinking_applicable": true,
+  "decode_tps_median": 145.18419213657205,
+  "decode_tps_all": [
+   131.55,
+   158.82
+  ],
+  "ttft_s_median": 0.07347426912747324,
+  "prompt_ttft_tps_median": 190.577,
+  "prefill_tps_median": 190.577,
+  "itl_mean_ms_median": null,
+  "itl_p50_ms_median": null,
+  "itl_p95_ms_median": null,
+  "tpot_ms_median": null,
+  "chunk_tpot_estimate_ms_median": 6.949,
+  "round_gap_p50_ms_median": 41.243,
+  "round_gap_p95_ms_median": 42.124,
+  "tokens_per_chunk_median": 5.867,
+  "headers_s_median": 0.002,
+  "first_payload_s_median": 0.073,
+  "first_content_s_median": 0.073,
+  "first_reasoning_s_median": null,
+  "first_tool_s_median": null,
+  "first_output_s_median": 0.073,
+  "last_output_s_median": 1.845,
+  "evidence": [
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "f4eec160e4be",
+    "output_sha256": "8f8c47c96eaed07f6afd1fb2aea3155c1f57a33622b74c5f0e9597ce0f9d811b",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "fd7d60d5417b",
+    "output_sha256": "6522180a03e26cc2ba73827668911ce7e800d3a311188a9c70bc4e51fd9affbd",
+    "completion": "truncated",
+    "tool_sha256": null
+   }
+  ],
+  "sample": "\n\n<think>\nThe user wants a short Python function that computes the Fibonacci sequence, plus an explanation. Let me think about the best approach.\n\nOptions:\n1. I",
+  "deprecated_keys": {
+   "prefill_tps": "deprecated: same value as prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time",
+   "aggregate_prefill_tps": "deprecated: same value as aggregate_prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time"
+  }
+ },
+ {
+  "label": "",
+  "prompt": "gpu-chat-no-think",
+  "temperature": 1.0,
+  "tokens": 256,
+  "thinking": "off",
+  "thinking_off_requested": true,
+  "thinking_switch": true,
+  "thinking_applicable": true,
+  "decode_tps_median": 88.87324717273711,
+  "decode_tps_all": [
+   88.98,
+   88.77
+  ],
+  "ttft_s_median": 0.07265712646767497,
+  "prompt_ttft_tps_median": 426.662,
+  "prefill_tps_median": 426.662,
+  "itl_mean_ms_median": null,
+  "itl_p50_ms_median": null,
+  "itl_p95_ms_median": null,
+  "tpot_ms_median": null,
+  "chunk_tpot_estimate_ms_median": 11.252,
+  "round_gap_p50_ms_median": 41.549,
+  "round_gap_p95_ms_median": 42.621,
+  "tokens_per_chunk_median": 3.657,
+  "headers_s_median": 0.002,
+  "first_payload_s_median": 0.002,
+  "first_content_s_median": 0.073,
+  "first_reasoning_s_median": null,
+  "first_tool_s_median": null,
+  "first_output_s_median": 0.073,
+  "last_output_s_median": 2.942,
+  "evidence": [
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "94698c2674c2",
+    "output_sha256": "1608262a0a2c4e7d42b74075988bc14394c31754be413cdf9e6934da7a20fb5a",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "414fe82aeadc",
+    "output_sha256": "292698d9c4663877b0da45d9777299ec9d7ff5aec0742b0808f0cc5651f53ae3",
+    "completion": "truncated",
+    "tool_sha256": null
+   }
+  ],
+  "sample": "### Part 1: The Plain English Explanation\n\nTo understand how a GPU (Graphics Processing Unit) handles matrix multiplication, it helps to first understand why a ",
+  "deprecated_keys": {
+   "prefill_tps": "deprecated: same value as prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time",
+   "aggregate_prefill_tps": "deprecated: same value as aggregate_prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time"
+  }
+ },
+ {
+  "label": "",
+  "prompt": "fibonacci-raw",
+  "temperature": 0.0,
+  "tokens": 256,
+  "thinking": "not applicable",
+  "thinking_off_requested": false,
+  "thinking_switch": true,
+  "thinking_applicable": true,
+  "decode_tps_median": 142.0976745393,
+  "decode_tps_all": [
+   142.09,
+   142.11
+  ],
+  "ttft_s_median": 0.07146088045556098,
+  "prompt_ttft_tps_median": 195.912,
+  "prefill_tps_median": 195.912,
+  "itl_mean_ms_median": null,
+  "itl_p50_ms_median": null,
+  "itl_p95_ms_median": null,
+  "tpot_ms_median": null,
+  "chunk_tpot_estimate_ms_median": 7.037,
+  "round_gap_p50_ms_median": 39.949,
+  "round_gap_p95_ms_median": 40.839,
+  "tokens_per_chunk_median": 5.565,
+  "headers_s_median": 0.002,
+  "first_payload_s_median": 0.071,
+  "first_content_s_median": 0.071,
+  "first_reasoning_s_median": null,
+  "first_tool_s_median": null,
+  "first_output_s_median": 0.071,
+  "last_output_s_median": 1.866,
+  "evidence": [
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "ed215d96c597",
+    "output_sha256": "28b8bd4dd0a33617f81d544ae7173e9824c14f57e7fb2d7b66d21d801838edad",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "ed215d96c597",
+    "output_sha256": "28b8bd4dd0a33617f81d544ae7173e9824c14f57e7fb2d7b66d21d801838edad",
+    "completion": "truncated",
+    "tool_sha256": null
+   }
+  ],
+  "sample": "\n\n<think>\nThe user wants a short Python function for the Fibonacci sequence plus an explanation. Let me think about what makes a good, concise Fibonacci functio",
+  "deprecated_keys": {
+   "prefill_tps": "deprecated: same value as prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time",
+   "aggregate_prefill_tps": "deprecated: same value as aggregate_prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time"
+  }
+ },
+ {
+  "label": "",
+  "prompt": "gpu-chat-no-think",
+  "temperature": 0.0,
+  "tokens": 256,
+  "thinking": "off",
+  "thinking_off_requested": true,
+  "thinking_switch": true,
+  "thinking_applicable": true,
+  "decode_tps_median": 91.39410855765624,
+  "decode_tps_all": [
+   91.41,
+   91.38
+  ],
+  "ttft_s_median": 0.07065073156263679,
+  "prompt_ttft_tps_median": 438.781,
+  "prefill_tps_median": 438.781,
+  "itl_mean_ms_median": null,
+  "itl_p50_ms_median": null,
+  "itl_p95_ms_median": null,
+  "tpot_ms_median": null,
+  "chunk_tpot_estimate_ms_median": 10.942,
+  "round_gap_p50_ms_median": 40.529,
+  "round_gap_p95_ms_median": 41.383,
+  "tokens_per_chunk_median": 3.657,
+  "headers_s_median": 0.002,
+  "first_payload_s_median": 0.002,
+  "first_content_s_median": 0.071,
+  "first_reasoning_s_median": null,
+  "first_tool_s_median": null,
+  "first_output_s_median": 0.071,
+  "last_output_s_median": 2.861,
+  "evidence": [
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "98d350398897",
+    "output_sha256": "61f8c40f2f60fd1eeb151b4aaacca86ca3b523379e71c814a84231551ce13cd3",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "98d350398897",
+    "output_sha256": "61f8c40f2f60fd1eeb151b4aaacca86ca3b523379e71c814a84231551ce13cd3",
+    "completion": "truncated",
+    "tool_sha256": null
+   }
+  ],
+  "sample": "Here is an explanation of how GPU matrix multiplication works, followed by a small numerical example.\n\n### Part 1: How a GPU Handles Matrix Multiplication (Plai",
+  "deprecated_keys": {
+   "prefill_tps": "deprecated: same value as prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time",
+   "aggregate_prefill_tps": "deprecated: same value as aggregate_prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time"
+  }
+ }
+]

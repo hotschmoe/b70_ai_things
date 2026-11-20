@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "fixture_sha256": "7a4cf921ef64625226d9d91144c62cfc814a98faab0cf3fcd65ea11a976c987e",
+  "requested_reply_tokens": 16,
+  "temperature": 0,
+  "seed": 1234,
+  "rows": [
+    {
+      "phase": "first",
+      "prompt_tokens": 1024,
+      "cached_tokens": 0,
+      "tokens": 16,
+      "cache_state": "cold",
+      "complete": true,
+      "token_sha": "1264c23c5d24",
+      "token_sha256": "1264c23c5d24b71a6640b197bc2fe92f2407d9d360f6f750bba26c7b6748d9e0",
+      "output_sha256": "5dac634dcd1b8875c78e9d3f8748866bc7174fd1342894d5f79973345204eecf",
+      "ttft_s": 0.37644143495708704,
+      "decode_tps": 52.38132264849311,
+      "elapsed_s": 0.6629647249355912,
+      "chunk_offsets_s": [
+        0.37644143495708704,
+        0.42930841189809144,
+        0.47675734106451273,
+        0.5236239889636636,
+        0.570258755935356,
+        0.6166911569889635,
+        0.6628030471038073
+      ],
+      "chunk_gaps_ms": {
+        "count": 6,
+        "p50": 46.750707435421646,
+        "p95": 52.866976941004395,
+        "max": 52.866976941004395
+      },
+      "completion": "truncated",
+      "headers_s": 0.01044436008669436,
+      "first_payload_s": 0.37644143495708704,
+      "first_output_s": 0.37644143495708704,
+      "last_output_s": 0.6628030471038073,
+      "tool_calls": 0,
+      "tool_sha256": null
+    },
+    {
+      "phase": "repeated",
+      "prompt_tokens": 1024,
+      "cached_tokens": 0,
+      "tokens": 16,
+      "cache_state": "cold",
+      "complete": true,
+      "token_sha": "1264c23c5d24",
+      "token_sha256": "1264c23c5d24b71a6640b197bc2fe92f2407d9d360f6f750bba26c7b6748d9e0",
+      "output_sha256": "5dac634dcd1b8875c78e9d3f8748866bc7174fd1342894d5f79973345204eecf",
+      "ttft_s": 0.3720042258501053,
+      "decode_tps": 52.418209584988446,
+      "elapsed_s": 0.6584017458371818,
+      "chunk_offsets_s": [
+        0.3720042258501053,
+        0.42470081779174507,
+        0.4723511708434671,
+        0.5190738448873162,
+        0.5657235099934042,
+        0.6122887039091438,
+        0.6581643240060657
+      ],
+      "chunk_gaps_ms": {
+        "count": 6,
+        "p50": 46.68616957496852,
+        "p95": 52.69659194163978,
+        "max": 52.69659194163978
+      },
+      "completion": "truncated",
+      "headers_s": 0.002122945850715041,
+      "first_payload_s": 0.3720042258501053,
+      "first_output_s": 0.3720042258501053,
+      "last_output_s": 0.6581643240060657,
+      "tool_calls": 0,
+      "tool_sha256": null,
+      "equal_first_tokens": true,
+      "equal_first_output": true
+    },
+    {
+      "phase": "concurrent",
+      "prompt_tokens": 1024,
+      "cached_tokens": 0,
+      "tokens": 16,
+      "cache_state": "cold",
+      "complete": true,
+      "token_sha": "1264c23c5d24",
+      "token_sha256": "1264c23c5d24b71a6640b197bc2fe92f2407d9d360f6f750bba26c7b6748d9e0",
+      "output_sha256": "5dac634dcd1b8875c78e9d3f8748866bc7174fd1342894d5f79973345204eecf",
+      "ttft_s": 0.36749671399593353,
+      "decode_tps": 52.32254822491072,
+      "elapsed_s": 0.6543781468644738,
+      "chunk_offsets_s": [
+        0.36749671399593353,
+        0.42030293494462967,
+        0.46817209478467703,
+        0.5148976349737495,
+        0.5616816759575158,
+        0.6082344159949571,
+        0.6541799989063293
+      ],
+      "chunk_gaps_ms": {
+        "count": 6,
+        "p50": 46.754790586419404,
+        "p95": 52.80622094869614,
+        "max": 52.80622094869614
+      },
+      "completion": "truncated",
+      "headers_s": 0.0022126277908682823,
+      "first_payload_s": 0.36749671399593353,
+      "first_output_s": 0.36749671399593353,
+      "last_output_s": 0.6541799989063293,
+      "tool_calls": 0,
+      "tool_sha256": null,
+      "equal_first_tokens": true,
+      "equal_first_output": true
+    }
+  ],
+  "concurrent_timing": {
+    "requested_requests": 1,
+    "timed_requests": 1,
+    "makespan_s": 0.6543781468644738,
+    "end_to_end_tps": 24.450694260903717,
+    "timing_valid": true
+  },
+  "qualified": true
+}

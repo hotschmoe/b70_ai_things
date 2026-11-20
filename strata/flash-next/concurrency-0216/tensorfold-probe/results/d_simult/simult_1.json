@@ -1,0 +1,30 @@
+{
+ "summary": {
+  "n": 1,
+  "prompt_len": 20000,
+  "ttft_s": [
+   11.554498750017956
+  ],
+  "last_ttft_s": 11.554498750017956,
+  "aggregate_prefill_tps": 1730.9275315788943,
+  "errors": []
+ },
+ "results": [
+  {
+   "i": 0,
+   "ttft_s": 11.554498750017956,
+   "usage": {
+    "prompt_tokens": 20000,
+    "completion_tokens": 8,
+    "total_tokens": 20008,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 0
+    }
+   },
+   "done_s": 11.9502061100211
+  }
+ ]
+}

@@ -1,0 +1,31 @@
+{
+ "summary": {
+  "n": 1,
+  "ok": 1,
+  "errors": [],
+  "wall_s": 3.311337127815932,
+  "per_stream_tps_median": 79.66787341836749,
+  "per_stream_tps_min": 79.66787341836749,
+  "per_stream_tps_max": 79.66787341836749,
+  "ttft_p50": 0.10894016595557332,
+  "ttft_p95": 0.10894016595557332,
+  "aggregate_tps": 79.66787341836749,
+  "itl_p50_median_over_streams": 0.040689794113859534,
+  "itl_p95_median_over_streams": 0.04160874499939382,
+  "itl_p95_worst_stream": 0.04160874499939382,
+  "tokens_per_chunk_median": 3.2
+ },
+ "streams": [
+  {
+   "i": 0,
+   "url": "http://127.0.0.1:18144",
+   "ttft": 0.10894016595557332,
+   "tokens": 256,
+   "pieces": 80,
+   "tps": 79.66787341836749,
+   "itl_p50": 0.040689794113859534,
+   "itl_p95": 0.04160874499939382,
+   "tok_per_chunk": 3.2
+  }
+ ]
+}

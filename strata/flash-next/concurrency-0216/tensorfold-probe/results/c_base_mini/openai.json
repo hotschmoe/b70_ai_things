@@ -1,0 +1,298 @@
+[
+ {
+  "label": "",
+  "prompt": "fibonacci-raw",
+  "temperature": 1.0,
+  "tokens": 256,
+  "thinking": "not applicable",
+  "thinking_off_requested": false,
+  "thinking_switch": true,
+  "thinking_applicable": true,
+  "decode_tps_median": 137.62199513807258,
+  "decode_tps_all": [
+   134.46,
+   158.86,
+   137.62
+  ],
+  "ttft_s_median": 0.095234528882429,
+  "prompt_ttft_tps_median": 147.006,
+  "prefill_tps_median": 147.006,
+  "itl_mean_ms_median": null,
+  "itl_p50_ms_median": null,
+  "itl_p95_ms_median": null,
+  "tpot_ms_median": null,
+  "chunk_tpot_estimate_ms_median": 7.266,
+  "round_gap_p50_ms_median": 41.25,
+  "round_gap_p95_ms_median": 42.305,
+  "tokens_per_chunk_median": 5.565,
+  "headers_s_median": 0.002,
+  "first_payload_s_median": 0.095,
+  "first_content_s_median": 0.095,
+  "first_reasoning_s_median": null,
+  "first_tool_s_median": null,
+  "first_output_s_median": 0.095,
+  "last_output_s_median": 1.948,
+  "evidence": [
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "e63af2ea6e11",
+    "output_sha256": "e6fcd544d83abf526992771833ab271551bea65fd7c585604654ef50e2b97f18",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "fd7d60d5417b",
+    "output_sha256": "6522180a03e26cc2ba73827668911ce7e800d3a311188a9c70bc4e51fd9affbd",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "20f5c0a9c356",
+    "output_sha256": "d517dc3d2482847bfe015381e857162ebb000c648a6ed6045706ab5e8bc7b1db",
+    "completion": "truncated",
+    "tool_sha256": null
+   }
+  ],
+  "sample": "\n\n<think>\nThe user wants a short Python function that computes the Fibonacci sequence, plus an explanation. Let me think about the best approach.\n\nOptions:\n1. I",
+  "deprecated_keys": {
+   "prefill_tps": "deprecated: same value as prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time",
+   "aggregate_prefill_tps": "deprecated: same value as aggregate_prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time"
+  }
+ },
+ {
+  "label": "",
+  "prompt": "gpu-chat-no-think",
+  "temperature": 1.0,
+  "tokens": 256,
+  "thinking": "off",
+  "thinking_off_requested": true,
+  "thinking_switch": true,
+  "thinking_applicable": true,
+  "decode_tps_median": 92.83883431653122,
+  "decode_tps_all": [
+   90.23,
+   100.67,
+   92.84
+  ],
+  "ttft_s_median": 0.0898305878508836,
+  "prompt_ttft_tps_median": 345.094,
+  "prefill_tps_median": 345.094,
+  "itl_mean_ms_median": null,
+  "itl_p50_ms_median": null,
+  "itl_p95_ms_median": null,
+  "tpot_ms_median": null,
+  "chunk_tpot_estimate_ms_median": 10.771,
+  "round_gap_p50_ms_median": 41.597,
+  "round_gap_p95_ms_median": 42.511,
+  "tokens_per_chunk_median": 3.821,
+  "headers_s_median": 0.002,
+  "first_payload_s_median": 0.002,
+  "first_content_s_median": 0.09,
+  "first_reasoning_s_median": null,
+  "first_tool_s_median": null,
+  "first_output_s_median": 0.09,
+  "last_output_s_median": 2.837,
+  "evidence": [
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "959621590c6d",
+    "output_sha256": "8bfbff9b600cc8216726308caa7ab7822565da742adf345b486540f8949a78f7",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "6d17b2289f7d",
+    "output_sha256": "0f52da2a1b344acaedcb694aa9067700b25dbf2b07cf19da225311815b66eecb",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "5820e0b4439d",
+    "output_sha256": "d1b0b05208b42c4c0dd2e8a4eced6302c584da92575bd2ab40dfdc5b8f321339",
+    "completion": "truncated",
+    "tool_sha256": null
+   }
+  ],
+  "sample": "### Part 1: The Plain English Explanation\n\nTo understand how a GPU (Graphics Processing Unit) handles matrix multiplication, it helps to first understand why a ",
+  "deprecated_keys": {
+   "prefill_tps": "deprecated: same value as prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time",
+   "aggregate_prefill_tps": "deprecated: same value as aggregate_prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time"
+  }
+ },
+ {
+  "label": "",
+  "prompt": "fibonacci-raw",
+  "temperature": 0.0,
+  "tokens": 256,
+  "thinking": "not applicable",
+  "thinking_off_requested": false,
+  "thinking_switch": true,
+  "thinking_applicable": true,
+  "decode_tps_median": 141.6191668004604,
+  "decode_tps_all": [
+   141.83,
+   141.57,
+   141.62
+  ],
+  "ttft_s_median": 0.09448941913433373,
+  "prompt_ttft_tps_median": 148.165,
+  "prefill_tps_median": 148.165,
+  "itl_mean_ms_median": null,
+  "itl_p50_ms_median": null,
+  "itl_p95_ms_median": null,
+  "tpot_ms_median": null,
+  "chunk_tpot_estimate_ms_median": 7.061,
+  "round_gap_p50_ms_median": 40.087,
+  "round_gap_p95_ms_median": 40.947,
+  "tokens_per_chunk_median": 5.565,
+  "headers_s_median": 0.002,
+  "first_payload_s_median": 0.094,
+  "first_content_s_median": 0.094,
+  "first_reasoning_s_median": null,
+  "first_tool_s_median": null,
+  "first_output_s_median": 0.094,
+  "last_output_s_median": 1.895,
+  "evidence": [
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "ed215d96c597",
+    "output_sha256": "28b8bd4dd0a33617f81d544ae7173e9824c14f57e7fb2d7b66d21d801838edad",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "ed215d96c597",
+    "output_sha256": "28b8bd4dd0a33617f81d544ae7173e9824c14f57e7fb2d7b66d21d801838edad",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 14,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "ed215d96c597",
+    "output_sha256": "28b8bd4dd0a33617f81d544ae7173e9824c14f57e7fb2d7b66d21d801838edad",
+    "completion": "truncated",
+    "tool_sha256": null
+   }
+  ],
+  "sample": "\n\n<think>\nThe user wants a short Python function for the Fibonacci sequence plus an explanation. Let me think about what makes a good, concise Fibonacci functio",
+  "deprecated_keys": {
+   "prefill_tps": "deprecated: same value as prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time",
+   "aggregate_prefill_tps": "deprecated: same value as aggregate_prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time"
+  }
+ },
+ {
+  "label": "",
+  "prompt": "gpu-chat-no-think",
+  "temperature": 0.0,
+  "tokens": 256,
+  "thinking": "off",
+  "thinking_off_requested": true,
+  "thinking_switch": true,
+  "thinking_applicable": true,
+  "decode_tps_median": 101.5910860427504,
+  "decode_tps_all": [
+   101.61,
+   101.59,
+   101.59
+  ],
+  "ttft_s_median": 0.08792564691975713,
+  "prompt_ttft_tps_median": 352.571,
+  "prefill_tps_median": 352.571,
+  "itl_mean_ms_median": null,
+  "itl_p50_ms_median": null,
+  "itl_p95_ms_median": null,
+  "tpot_ms_median": null,
+  "chunk_tpot_estimate_ms_median": 9.843,
+  "round_gap_p50_ms_median": 40.418,
+  "round_gap_p95_ms_median": 41.387,
+  "tokens_per_chunk_median": 4.063,
+  "headers_s_median": 0.003,
+  "first_payload_s_median": 0.003,
+  "first_content_s_median": 0.088,
+  "first_reasoning_s_median": null,
+  "first_tool_s_median": null,
+  "first_output_s_median": 0.088,
+  "last_output_s_median": 2.598,
+  "evidence": [
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "bdd2dcb406d1",
+    "output_sha256": "b79f3e77c7b56fe65625cec2df651e6baba888f3eb35c8b3712d5f32c64fa3cc",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "bdd2dcb406d1",
+    "output_sha256": "b79f3e77c7b56fe65625cec2df651e6baba888f3eb35c8b3712d5f32c64fa3cc",
+    "completion": "truncated",
+    "tool_sha256": null
+   },
+   {
+    "prompt_tokens": 31,
+    "cached_tokens": 0,
+    "tokens": 256,
+    "cache_state": "cold",
+    "complete": true,
+    "token_sha": "bdd2dcb406d1",
+    "output_sha256": "b79f3e77c7b56fe65625cec2df651e6baba888f3eb35c8b3712d5f32c64fa3cc",
+    "completion": "truncated",
+    "tool_sha256": null
+   }
+  ],
+  "sample": "### Part 1: How Matrix Multiplication Uses a GPU (In Plain English)\n\nTo understand this, it helps to compare a **CPU** (Central Processing Unit) with a **GPU** ",
+  "deprecated_keys": {
+   "prefill_tps": "deprecated: same value as prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time",
+   "aggregate_prefill_tps": "deprecated: same value as aggregate_prompt_ttft_tps; prompt tokens over client TTFT, not the engine's prefill time"
+  }
+ }
+]
