@@ -88,6 +88,97 @@ staging, flag-spin, skeleton window (exposed cost with overlap), tp-bench hang v
 - Host USM flag wake-up (kernel writes a host flag, host spins): 1.2 us p50 after kernel end, vs 3.2 us for zeEventHostSynchronize.
 - Host staging variants (D2H, flag, H2D) completed through 1 MiB with verification; timings diagnostic (see NOTES.md).
 
+## 4b. Update 09:25 UTC (measured, B/latbench/PLATFORM_DRAFT.md, B/pushar/NOTES.md)
+- tp.zig-style host-reset event REUSE with peer reads: DEVICE_LOST on both GPUs with default driver settings (compute-engine CAT
+  errors + resets, 08:49); recovered by xe-reset. Same reproducer PASSED with NEOReadDebugKeys=1
+  EnableImplicitConvertionToCounterBasedEvents=0 (4 iterations). Rule for now: fresh events (no zeEventHostReset on cross-card
+  events) AND the workaround env in every two-card process. Stock tp.zig is unsafe as shipped on this driver.
+- Compute-engine PUSH ~ copy-engine PUSH (4 KB 12.6 vs 12.7 us; 64 KB 15.8 vs 17.3; 1 MB 111.5 vs 106.7). Cross-card event
+  signal->wait alone: 8.2 us (compute) / 9.7 us (copy) p50.
+- Host staging (D2H + H2D) is slower than PUSH at every size (4 KB 20.7 us, 64 KB 36.3 us).
+- Push all-reduce candidate (codex-pushar): 16/16 sizes 10 KB-20 MB correct; 20,000 chained 10 KB hops passed; 100-hop window
+  3.5 ms p50 including event retirement (2.5 ms to list drain) = ~25-35 us per all-reduce, host append ~26 us per hop (!).
+  BUT chained 160 KB hops with reused inbox slots returned STALE first elements (2 of 2 variants failed). Not stable yet; the
+  coherence question (cached stale inbox lines vs ordering) is being isolated (codex-lat B, codex-pushar). Lead A: do not build
+  on the pushed AR above 10 KB until this is closed.
+
+## 4c. Skeleton window + chained hops (10:05 UTC, measured, B/latbench/NOTES.md + PLATFORM_DRAFT.md, codex-lat 0696ede)
+- Skeleton (Lead A request): 48 layers, real per-card byte counts from a 3 GiB rotating buffer, 2 dependent exchanges per layer
+  (96 per window), rank-ordered sums, 50 windows, every element checked, health per variant:
+  | R | no-exchange window p50/p99 ms | with fresh-slot push exchanges p50/p99 ms | exposed per exchange (p50 diff / 96) |
+  |---|---:|---:|---:|
+  | 4 | 32.79 / 32.85 | 33.69 / 42.26 | 9.4 us |
+  | 8 | 32.82 / 32.84 | 34.03 / 43.48 | 12.6 us |
+  -> TP2 region on Lead A's rule (<= 35 us). Tails: p99 windows +9-10 ms; individual hop p99 ~48-55 us. The tail, not the p50,
+  is the TP2 risk; record which hops spike in M-A5 with the tracer.
+  (The synthetic read kernels reach only ~13.4 ms of bandwidth floor vs 32.8 ms measured; that is the skeleton kernel, not a
+  platform limit - ignore the absolute window time.)
+- Chained hops, full element check, 4800 hops each: FRESH inbox per hop: 10 KB p50/p99 8.9/49.0 us, 160 KB 20.7/48.0 us,
+  zero mismatches. REUSED inbox at 160 KB: STALE DATA (26,240 bad checks); uncached-only reuse still stale (71,136);
+  uncached + zeCommandListAppendMemoryRangesBarrier on the inbox: 4800/4800 clean (10.8 / 22.0 us p50).
+- Flag spin (Strata-style), peer-memory flag or host-USM flag, written by a copy after the data kernel: bounded spins timed out
+  in thousands of work-groups and read stale data, both sizes. Do not use in-kernel spin flags across cards.
+- RULE for every cross-card exchange (Lead A + push AR): push from the source card; fresh event per exchange (no host reset);
+  the RECEIVER must order its read behind the copy-completion event with a barrier (receiver-side barrier on the inbox), or
+  use a fresh inbox region per hop within a window. Inbox reuse without a receiver barrier returns stale lines. The
+  codex-pushar candidate e766a7a implements the receiver barrier: 21,000 chained 160 KB hops + 16/16 sizes clean.
+
+## 4d. DELIVERED for Lead A (10:40 UTC): push all-reduce behind TpComm, b70/fn-runtime 611566d (= b70/fn-rt-pushar 31b3dae)
+- zig/src/xpu/tp.zig: for tp == 2, allReduceF32 / allReduceF16 / syncAll keep their signatures and now push: source-card
+  compute-list copy of the send slot into the PEER's local inbox (signal on the copy itself), receiver barrier waiting the
+  peer's copy event before the reduction kernel, both operands local, rank-ordered sum starting at +0.0 (bit-identical on
+  both cards), barrier after, and before the next producer a wait on the peer's reduction of the slot being reused
+  (RING_SLOTS ring). Events: fresh host-scope pool, destroyed and recreated in syncAll (no zeEventHostReset). Host syncs
+  bounded (10 s). TP4 unchanged (old path). New: peerInbox(r) + allReduceF32Pushed(...) for producers that write the peer
+  inbox directly (fused producer; saves one copy).
+- Verified (measured, B/pushar/RESULT.md): full-array f16/f32 vs CPU reference incl. -0.0, 10 KB..20 MB; 20,200 chained 10 KB
+  hops single process; 22,400 chained 160 KB hops over 7 processes; health pre/post.
+- Cost (measured, synthetic producer, 10 KB): 100-hop window 3.58/4.11 ms p50/p99 incl. event retirement (~1 ms of it =
+  pool recreate); host append ~25.7 us per all-reduce (8 L0 calls per rank). Isolated append-to-drain 79/124 us.
+- Caveats for M-A5 (record/replay): fresh events are incompatible with replaying a recorded list as-is (baked event handles
+  need a reset or a counter-based event). Counter-based host-scope events work one-way (12.1 us at 4 KB, same as regular);
+  reuse in a replayed regular list across both cards is NOT yet tested - Lead B's next transport item. Until then the
+  immediate-list path is the qualified one.
+
+## 4e. DELIVERED (13:25 UTC): recorded-list TP2 all-reduce for M-A5, b70/fn-runtime (merge of b70/fn-rt-pushar c9c9efe)
+- API (zig/src/xpu/tp.zig): rec = comm.beginRecording(gpus, hops, .device_reset); per position: append the producer writing
+  rec.currentSendBuf(rank) on both in-order REGULAR lists, then rec.recordAllReduceF32(gpus, lists, dst, count); then
+  rec.finish(gpus, lists); close lists; execute on one async ordinal-0 queue per card, same window order on both cards.
+  Everything referenced (comm, rec, lists, dst, counts, buffers) fixed for all replays; producers may read changing device data
+  (e.g. the v1.3 window descriptor). Single-flight: re-execute a list only after both queues drained its previous execution;
+  two DISTINCT recordings (own event sets) may alternate (double submission verified). Do not share the comm's slots with
+  other work. F32 only so far.
+- Mechanism: fixed events per position (push-complete + reduce-complete per rank); consumer waits with a barrier then resets
+  the event ON DEVICE (zeCommandListAppendEventReset); slot reuse waits on the peer's reduce-complete; finish consumes the tail.
+  No host event reset anywhere; no workaround env needed.
+- Measured (10,000 verified replays each, health pre/post, incl. per-hop verify kernels): 10 KB x 96 hops 1.416/1.432 ms device
+  window p50/p99, host submit 5.6/8.0 us per window; 10 KB x 192: 2.823/2.844 ms; 160 KB x 96: 2.896/2.921 ms; 160 KB x 192:
+  5.778/5.830 ms; double submission 160 KB x 192: p99 5.831 ms. => ~14.7 us per 10 KB hop incl. verify, flat p99 (tail gone vs
+  immediate path's ~50 us p99), and host cost per window ~6 us instead of ~2.5 ms.
+- Counter-based events: FAILED (non-immediate: wrong data at replay 67; immediate: 0x78000004 at setup). Do not use.
+
 ## 5. Still being measured
 - counter-based events and reuse; EU peer stores vs copy-engine push; skeleton window (Lead A request); D2H/H2D on both cards
   and engines (KV eviction); push all-reduce behind TpComm (codex-pushar, M-B2b).
+
+
+## 4f. Host memory for the PLE table (Lead A request) [B 15:40]
+
+CONFIG: fn-runtime probe b60f30b (tools/ple_host_probe), card 1, host RLIMIT_MEMLOCK 8 MiB; container vllm-xpu-env:int8g-v0251
+with --ulimit memlock=-1:-1, --network none. Full record: /mnt/vm_8tb/b70/results/tf-flashnext/B/pushar/PLE_HOST.md.
+COMMAND: ple-host/run.sh imports | container | buffered | direct (card-1 gpu-run, health pre/post, all passed).
+RESULT (measured):
+- zexDriverImportExternalPointer: anonymous MAP_PRIVATE populated 4 MiB and 64 MiB -> 0, GPU kernel reads every page correctly
+  (64 MiB is 8x the memlock limit). Read-only MAP_PRIVATE FILE mapping (4 MiB) -> 0x70000002, on host AND with unlimited memlock.
+- Fill one 4 GiB zeMemAllocHost from the shard: buffered pread + POSIX_FADV_DONTNEED behind the cursor 1.86 GB/s (slice page
+  cache dropped to 0 pages); O_DIRECT into the 4 KiB-aligned USM buffer 3.85 GB/s (accepted by the filesystem; leaves a
+  pre-existing cached copy in place). Both warm-cache samples, not a controlled ranking.
+VERDICT: memlock is NOT the cause of the file-import failure; file-backed pages cannot be imported on this stack (FOLL_LONGTERM
+is Lead B's inference, not traced). Recommendation for Lead A: allocate the PLE table once with zeMemAllocHost (28.8 GB proven by
+worker P, both cards read it) and fill it with O_DIRECT reads (~7.5 s for 28.8 GB at the measured rate), then
+posix_fadvise(DONTNEED) on the table's file range to shed any old cached copy. Page cache is reclaimable, so the only hard,
+unswappable cost is the one 28.8 GB USM allocation; with the 47 GiB park ceiling that is ~76 GB of 121 GB. Untested
+alternative: pread into anonymous memory and import it (avoids USM allocator limits; full-size and two-card import untested).
+
+Note for Lead A (Lead B, 15:45): core/checkpoint_file_cache.zig release() is macOS-only (msync INVALIDATE); on Linux it is a no-op,
+so after an O_DIRECT/pread PLE load add a posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED) branch there to shed the shard's cache.

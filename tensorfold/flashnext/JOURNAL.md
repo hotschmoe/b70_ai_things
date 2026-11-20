@@ -207,3 +207,310 @@ paged int8 KV (Strata cell: int8 + fp16 scale per 64 ch, dynamic absmax, rotatio
 park = state slab + tail page with write-behind mirror of closed pages (O(state) park ~14 ms, 200K restore ~120 ms estimated),
 park and prefix cache as one Snap object, copy-engine list per card polled between rounds (no host waits on the decode list).
 B3-1 (host tier substrate + D2H/H2D probes) and B3-2 (27B park/restore, gates C.6) launched (codex-park).
+
+## [A] 2026-11-20 08:58 UTC M-A3 DONE: first tokens on two cards match the Strata oracle (correctness only)
+CONFIG: b70/fn-a3 4877506 + bc6b969 (worker I): GGUF TP2 forward (head-split dense, expert-split MoE, BF16 HC replicated,
+host IQ3_S embedding, IQ4_NL PLE from host mmap), K's correctness kernels (bf16 activations), XPU_TP_HOST_AR=1 host-staged
+f32 all-reduce, chunk 16, MTP off, BF16 head logits. Oracle = Strata plain mode (07:33 entry).
+COMMAND: gpu-run (both cards) tf-xpu-fn-teacher --gguf SHARD1 --ple-gguf SHARD2 oracle-eight.json eight-run{1,2}.json;
+tools/fn_gguf_oracle_compare.py (worker I/report.md has the full lines).
+RESULT (measured): first-token argmax 8/8 match; first-token KL max 0.00657 (p6), cosine min 0.975 (p2); teacher-forced
+top-1 agreement 1470/1491 = 98.59%, every disagreement inside an oracle top1-top2 margin <= 0.496 nat (none > 1.0);
+top-20 KL weighted mean 0.00133; determinism: all 6.44 GB of raw logits bitwise identical across two runs (6486 rows);
+router selection hash identical on both ranks and both runs for every layer/position; p0 serial vs 8-row verify with
+perfect and wrong drafts (partial acceptance) == serial; VRAM after full init ~9.66 GB free per card; xpu-health
+HEALTHY before/after; no hang. Lead A re-checked first-token argmax/KL for p0/p2/p6 from the raw f32 files with numpy:
+identical to the worker's numbers.
+Diagnostic only (host AR, correctness kernels, audits on): ~33-37 ms per teacher-forced input token in 16-row chunks;
+serial decode ~129 ms/step (Strata C1 ~7.4 ms/token).
+VERDICT: M-A3 gates PASS (first token, KL, agreement, margin, determinism, cross-card checksum). Integrated: fn-a3 +
+b70/fn-mtp merged (b187103), builds; b70/flashnext-2card (fn-int) fast-forwarded to b187103. Note: worker I left ~12 GB
+of raw logit dumps in results/tf-flashnext/workers/I/ (evidence; can be pruned to first/p0 later).
+
+## [B] 2026-11-20 10:10 UTC - M-B2 platform latency constants + cross-card transport verdicts (codex-lat done, merged)
+CONFIG: tf-xpu-latbench (b70/fn-rt-lat 0696ede, merged into b70/fn-runtime 3507845), TF Zig + Level Zero, both cards, one shared
+context, cpu-run --quiet, health pre/post per case. Worker codex-lat: gpt-6.1-terra xhigh (one resume ran gpt-6.1-sol by default
+for ~1 min before Lead B stopped it and re-pinned -m gpt-6.1-terra; codex-trace's 3rd resume runs gpt-6.1-sol - recorded).
+COMMAND: see B/latbench/NOTES.md per case (single, single-clock, single-extra, single-flag, pair push/push-ping/stage*/pull,
+repro-tp, repro-reuse default/workaround, skeleton R=4/8, chains fresh/reuse/uncached/uncached+barrier, peer/host flag spin).
+RESULT (measured): constants table in TRANSPORT-B.md 3/4/4b/4c. Headlines: host append 2.67 us vs dependent device gap 0.94 us;
+push one-way 12-17 us at 4-64 KB; skeleton 48-layer window exposed exchange cost 9.4 us (R=4) / 12.6 us (R=8) per exchange at
+p50 (window p99 +9-10 ms); fresh-inbox chains 10 KB 8.9/49.0 us, 160 KB 20.7/48.0 us p50/p99, 0 mismatches in 4800 hops each.
+Hazards: copy-engine PULL -> BCS CAT error + reset (card 1); tp.zig-style host-reset event reuse -> DEVICE_LOST on both cards
+(default), passes with NEOReadDebugKeys=1 EnableImplicitConvertionToCounterBasedEvents=0; reused 160 KB inbox without a receiver
+barrier -> stale data; in-kernel flag spins (peer or host-USM flag) -> timeouts + stale data. Every hang recovered by xe-reset +
+health. D2H 4.5 GB/s vs H2D 13.3-13.8 GB/s on BOTH cards and BOTH engines (park worker, 1 GiB).
+VERDICT: TP2 confirmed on Lead A's rule, with a transport rule: push, fresh events, receiver-side barrier (or fresh slot) per
+exchange, NEO workaround env in every two-card process. Stock tp.zig is unsafe on this driver as shipped. The hop p99 tail
+(~50 us, window p99 +30%) is the open risk for TP2 decode; trace it in the real model.
+
+## [A] 2026-11-20 10:45 UTC M-A4 DONE: GGUF MTP drafting at batch, multi-stream, drafted==serial, concurrent==solo
+CONFIG: b70/fn-a3 4910d83 + bfb427f (worker I): GGUF MTP (mtp-q2_0.gguf, BF16 dense + Q2_0 experts, +1 norms, draft head =
+Q5_K rows of the main head for the Strata 40525-id draft vocab), batched drafting across lanes (xpu_mtp_batch.forward),
+verify widths T=2/4, confidence 0, chunk 64, XPU_TP_HOST_AR=1, correctness kernels; PLE IQ4_NL from host mmap.
+COMMAND: tf-xpu-fn-a4 suites (worker I/report_a4.md; run_a4_solo_remaining.sh, run_a4_multi_suite.sh); summarize_a4.py.
+RESULT (measured): drafted==serial: all 8 prompts serial == T2 == T4 token-exact (256 tokens or EOS). concurrent==solo:
+28/28 stream results token-exact across C2, C4 (p0-p3), C4qsa (p4-p7 incl. the 4805-token QSA prompt), C4stagger (joins at
+rounds 1/2, p6 EOS early). Acceptance T2 677/890 = 76.1% (0.757/window), T4 985/1744 = 56.5% (1.68/window); per prompt T2
+tracks Strata spec-2 closely (p0 112/142 vs 104/151, p1 123/132 vs 124/131, p2 120/134 vs 122/133, p4 121/133 vs 122/134).
+p5: our greedy run reaches 256 tokens while Strata hit EOS at 169 (teacher-forced p5 agreement was 165/169, misses inside
+small margins) - a trajectory difference, not a gate. PLE: table never on device (allocations unchanged before/after; host
+mmap 28.8 GB), selected bf16 rows uploaded (5120 B/token/rank).
+Diagnostic critical path (C1, T2): 157 ms/window, of which producer wait 131 ms (GPU kernels), host-AR transport ~2.2 ms,
+~404 blocking host syncs per window, PLE host gather 0.3-2.1 ms (cold page faults, uncontrolled) exposed at layer 1;
+C4 T2 331 ms/window, PLE gather ~4.9 ms. xpu-health HEALTHY before/after, no hang.
+VERDICT: M-A4 gates PASS. fn-int (b70/flashnext-2card) fast-forwarded to bfb427f. The window is GPU-kernel bound first
+(KF port in flight), then host-synchronised (~400 syncs: needs the push transport + recorded lists), then PLE (prewarm +
+early gather). M-A5 starts.
+
+## [B] 2026-11-20 11:05 UTC - M-B1 DONE (one card): tracer v2, overhead 0.3-0.5%; 27B serve is 97% device compute
+CONFIG: b70/fn-rt-trace 6e7d817 (measured binaries 3bf353f), merged into b70/fn-runtime 8228f2e (ze.zig conflict resolved by Lead B;
+80/80 build steps, 22/22 Zig tests, analyzer tests pass). Binary producer rings, background harvest thread (timestamp query, event
+reset after list sync, output), tracer_overhead self-accounting, XPU_TRACE_MODE=markers baseline, named host phases. Card 1,
+27B GPTQ + DFlash2 serve, CPU quiet lease. Worker codex-trace: gpt-6.1-terra xhigh, last resume ran gpt-6.1-sol (Codex default on
+resume; Lead B now pins -m on every resume).
+COMMAND: B/trace/async/run_one.sh full | markers; async/analyze_run.py (B/trace/async/controlled/RESULTS.md).
+RESULT (measured): overhead full/markers window p50: C1 40.188/40.033 ms (+0.39%), repeat +0.47%, C4 identical-prompt control
+42.988/42.881 (+0.25%); 369-388 ns tracer host time per append. C1 (29 windows) mean: wall 40.19 ms, busy 39.31, WAIT 0.88
+(host_cpu 0.245 = tree_plan 0.161 + draft_submit 0.067 + ..., host_in_sync 0.225, launch_gap 0.341, tracer 0.013, unknown 0.055).
+Critical path: device compute 97.1%, device copy 0.7%, launch gaps 0.9%, host 1.2%. Top kernels per window: w4k1_d64 14.9 ms,
+w4k_dsplit 10.3, w4k1_decode 5.1, gdn_step 3.5. Token ids identical traced/untraced; verify == serial; serve gates + health pass.
+VERDICT: M-B1 met on one card. v1's 9.8 ms "waiting" was the tracer itself (Lead B's 08:50 suspicion confirmed). The single-card
+27B path is device-kernel bound; host and launch cost ~2%. Next: the same tracer on Lead A's two-card Flash-Next path with cross-card
+wait attribution (codex-trace, b70/fn-rt-trace2) - that is where waiting-for-data lives.
+
+## [A] 2026-11-20 12:05 UTC Review: worker KF round 2 - Strata MMVQ port matches Strata per op (M-A5 kernels)
+CONFIG: b70/fn-model 8fd616a (OpenCL C ports of Strata's q8_1 MMVQ: KREG dense for Q4_K/Q5_K/Q6_K/IQ4_XS/IQ3_S, BF16 KREG,
+typed row-reuse kernels for the rest, grouped experts GU_LANES=8 with fused SwiGLU + exact ggml q8_1 tail, Q2_0 vector
+decode; SIMD16 pinned, dp4a confirmed in ISA, no spills in selected variants; MIT notice kept). q8_1 default, FN_GGUF_ACT=bf16
+and FN_GGUF_REF=1 selectable. Card 0, kernel timestamps, hot cache. Strata reference = Strata's own kernels built from
+strata-0216 in strata-sycl-dev:020 with the qualified env, same real tensors and routing plans.
+RESULT (measured, per-op, card 0): parity: all 15 types match fp64 dequant(W).dequant(q8_1(x)) to <= 1.4e-7 (f32 out);
+q8_1 vs raw-activation error ~0.4% dense, ~1% expert chain (the oracle itself runs q8_1). GDN rank 0 dense at R=4 (real
+row spans, incl. quantisation) 50.5 us vs Strata 64.5 us. C1 expert layer-rank (40 pairs / 30 experts, incl. input quant)
+125.8-205.3 us vs Strata 141.0-199.0 us (0.69x-1.05x of Strata per type pair). BF16 dense R=1/2/4 ~597/594/577 GB/s;
+Q4_K/Q5_K R=4 597/634 GB/s logical (hot cache). Known gaps: Q6_K R=4 411 vs 559 GB/s, IQ4_NL down 82.5 vs 72 us, expert
+input quant 4.3 us (dedup scan) vs 2 us. Before: K kernels 708-2634 us per C1 expert layer-rank.
+VERDICT: ACCEPTED as the M-A5 kernel baseline (5-20x faster than K, at Strata parity per op). Open contract item before it
+becomes the default in the model: ROW-INVARIANT BITS (DESIGN-A v1.3) - RPW/NCOLS differ by R, so serial (R=1) vs verify
+(R=2/4) and solo vs packed concurrent rows may round differently; the model-level drafted==serial and concurrent==solo
+gates on the merged tree decide. Model-level quality (teacher-forced vs oracle) also re-run with q8_1 on.
+
+## [B] 2026-11-20 13:20 UTC - Two-card latency profile of Lead A's Flash-Next TP2 path (tracer on fn-int, host AR)
+CONFIG: b70/fn-rt-trace2 d1a8a93 (= b70/flashnext-2card bfb427f + tracer v2 merge 6bb4403 + Flash-Next markers 1999909/d1a8a93: per
+window, per layer x {attention, gdn, moe, hc, ple, mtp, verify, exchange}); A4 engine harness, TP2 host all-reduce (XPU_TP_HOST_AR=1),
+correctness/K kernels (pre-KF), MTP T2, 32 output tokens, XPU_A4_PROFILE=0, NEO workaround env. Worker codex-trace (gpt-6.1-terra).
+COMMAND: B/trace2/run_case.sh per case (markers pre, full, markers post) under cpu-run --quiet + gpu-run both cards + health;
+tools/xpu_trace/analyze.py --window a4_window. Clock check: 32-window fresh-event ping, 64/64 peer edges matched and ordered.
+RESULT (measured; diagnostic, pre-optimization kernels): overhead full/markers 1.3-1.6% (C1), 2.0-3.6% (C4). Token arrays identical
+across modes; T2/T4 == serial; C4 streams == solo; health pass.
+  C1 T2 window 159.0 ms: per card busy 142.8 / 142.6, waiting 16.3 / 16.5 (peer wait 7.6 / 6.3, host CPU 3.2 / 5.0, launch gaps 2.2 /
+  2.4); 402 host syncs per window; critical path 93% device compute. Top kernel fn_gguf_linear 83 ms/window on card 0, moe_up 27 ms.
+  C4 T2 window 336.9 ms: card 0 peer wait 28.1 ms (waits for card 1 at every moe_combine -> exchange, 1.7-2.2 ms each), card 1 host
+  CPU 22.4 ms (host.fn.gdn 9.0, attention 3.1, exchange 2.5, moe 2.4): the single host thread appends card 1's per-row GDN/attention
+  work late, card 1 starts late, card 0 waits for it. Critical path: device 89%, host CPU 6%, peer exposure 5% (overlay).
+VERDICT: Today the two-card window is GPU-kernel bound (KF port is the lever, as Lead A says). The first waiting-for-data effect is
+already visible at C4: ~28 ms/window of card-0 idle caused by card-1 HOST submission lag (not PCIe), i.e. the host-append limit
+from latbench (2.7 us/append) times card 1's per-row launches. Recorded lists (M-B2c, device-reset events: 10,000 replays x 96-192
+hops clean, ~6.5 us host submit per window) remove it; per-row GDN launches should also be batched. The push transport is not yet
+in this trace (fn-int was at bfb427f); rerun when Lead A merges it.
+
+## [A] 2026-11-20 13:25 UTC M-A5 step 1: TP2 push transport integrated (worker I), all gates re-pass
+CONFIG: b70/fn-a3 24f8093..d806c0f = Lead B's push all-reduce (b70/fn-runtime 611566d tp.zig/ze.zig + rank-ordered +0.0 sum)
+behind unchanged TpComm; main logits and (batched) MTP draft-head gathers now push rank 1 -> rank 0 inbox with fresh events
+and receiver barrier; no peer pull, no D2H->H2D relay, no zeEventHostReset; NEOReadDebugKeys=1
+EnableImplicitConvertionToCounterBasedEvents=0; XPU_TP_HOST_AR=1 kept as fallback. K correctness kernels still in this tree.
+RESULT (measured): teacher p0/p2/p6/p7: 1.35e9 compared f32 logits bitwise identical to the host-AR M-A3 run (agreement
+547/554, KL max 0.0066); serial == T2 == T4 == host-AR sequences on all 8 prompts; C4 T2, C4qsa T4, C4stagger T2 and a
+3-run single-process C4 T4 soak all == solo; fallback regression OK; health before/after both cards, no hang.
+Diagnostic (instrumented): blocking host syncs per window 404 -> 13 (T2) / 430 -> 25 (T4); exposed AR 1.5-2.8 ms per
+window; fresh-event retirement 5.3 ms (T2) / 9.2 ms (T4) per window = new host cost on the critical path; host append
+13.9 ms per C1 T2 window; window wall unchanged (~160 ms C1 T2) because the K kernels dominate (GPU backlog ~128 ms).
+VERDICT: transport step PASSED. Next: merge KF kernels (8fd616a + round-3 fix) and P's device PLE into fn-a3, re-run all
+gates, then measure the real window. Event retirement (5-9 ms) and host append (~14 ms) are the next host items: both go
+away with recorded lists + counter-based events (Lead B M-B2c).
+
+## [B] 2026-11-20 13:25 UTC - M-B2c DONE: recorded-list (replayable) TP2 all-reduce with device-side event reset
+CONFIG: b70/fn-rt-pushar c9c9efe merged into b70/fn-runtime; tp_replay_bench: one regular command list per card recording N chained
+FP32 all-reduces with a producer kernel per hop and a verify kernel per hop, replayed 10,000 times; ordinal-0 async queue per card;
+default driver env. Worker codex-pushar (gpt-6.1-terra xhigh).
+COMMAND: B/pushar/replay/run-case.sh <policy> <bytes> <hops> 10000 <depth> (cpu-run --quiet, gpu-run both, health pre/post).
+RESULT (measured): counter-based NON_IMMEDIATE -> sentinel mismatch at replay 67; IMMEDIATE -> 0x78000004 during setup; dropped.
+device_reset: 4/4 shapes x 10,000 replays all verified; window p50/p99 1.416/1.432 ms (10 KB x 96), 2.823/2.844 (10 KB x 192),
+2.896/2.921 (160 KB x 96), 5.778/5.830 (160 KB x 192); host submit 5.6-6.1 us p50 per window; double submission with two
+recordings 10,000 clean, p99 5.831 ms. Host unit tests (slot schedule, events consumed once) pass.
+VERDICT: A replayable cross-card exchange exists and is stable on this driver: ~14.7 us per 10 KB hop including verify, with a flat
+tail, and the host cost of a 96-hop window drops from ~2.5 ms (immediate) to ~6 us. This unblocks Lead A's M-A5 recording; contract
+in TRANSPORT-B 4e.
+
+## [A] 2026-11-20 13:35 UTC Review: worker KF round 3 - row-invariance contract proven per op; merged into fn-a3
+CONFIG: b70/fn-model 8db568f (test first) + e5eaf28 (fix). tf-xpu-fn-gguf-test bitwise mode: 37 rows (ties, signed zeros,
+random), each alone vs every position of R in {2..9,16,37} under two permutations; experts with real weights, shuffled
+pair order and group splits, max_pairs = exact pair count, canary-filled outputs; modes default(q8_1)/bf16/ref. Card 0.
+RESULT (measured): on 8fd616a the tight test FAILS: 77.1M differing elements, all 5 expert pairs, all modes - cause is a host
+launch bound that dropped expert groups under finer splits (not reduction-order drift). After the bound fix: 36,084 position
+cases / 933,498,900 comparisons, zero differing bits; fp64 parity both modes passes; C1/C4 expert latency within +0.2..+1.0%;
+GDN R=4 50.42 us; health OK.
+VERDICT: ACCEPTED. Good catch by the stronger test: the round-2 kernels would have silently dropped experts for some
+concurrent packings. Merged into b70/fn-a3 as 10d5d6e (one conflict in xpu_store.zig resolved by Lead A: kept I's profile
+counters and KF's profile_events/LocalBytes launch); merged tree builds. Model-level gates on it go to worker I next.
+
+## [A] 2026-11-20 14:05 UTC Review: worker P - PLE gather moved to the device (host USM table); merged into fn-a3
+CONFIG: b70/fn-ple 8ee60cc..409bfe7 (base bfb427f). One 28,800,138,240-byte zeMemAllocHost holding the IQ4_NL PLE table,
+populated at load and read by both cards; per-rank kernel hashes device token IDs + device two-token history (speculative
+history per sequence, committed on accept, snapshot/restore) and writes the existing BF16 layout. XPU_PLE_DEVICE default on
+for GGUF, =0 host fallback, XPU_PLE_CHECK=1 bitwise debug compare. Host AR in P's runs (pre-push base).
+RESULT (measured): bitwise PLE equal to the host gather on both ranks for all 8 prompts incl. drafted rows; p0/p5 serial ==
+T2 == T4 == I's sequences; C4 T2 == solo; default/fallback smokes OK; health pre/post OK. Diagnostic: host gather 0.39-1.64
+ms per C1 window and 3.9-5.6 ms per C4 window -> device enqueue 17-18 us (C1) / 59-65 us (C4), kernel ~5 us (C1) / ~16 us
+(C4) per rank; no added blocking sync. Limits for Lead B: 28.8 GB single host allocation works (under the 32 GiB pinned
+cap); zexDriverImportExternalPointer on the mmap failed (OUT_OF_HOST_MEMORY, RLIMIT_MEMLOCK 8 MiB), so the table costs
+28.8 GB of host RAM in addition to the page cache.
+VERDICT: ACCEPTED. PLE is off the CPU and off the critical path (~5 us of GPU per window). Merged into b70/fn-a3 as adee05d
+(conflict in xpu_diagnostics.zig resolved by Lead A: union of counters). Open: the RAM cost (28.8 GB pinned) competes with
+KV eviction to RAM; import of the file mapping needs a higher memlock limit - Lead B item. Worker I now runs the full
+model-level gates on adee05d (fast kernels + push + device PLE) with q8_1 and bf16 activations.
+
+## [B] 2026-11-20 14:05 UTC - B3-1 + B3-2 DONE (27B, one card): host-RAM park tier; slot park/restore WITHOUT recompute, bit-identical
+CONFIG: b70/fn-rt-park 0410fea merged into b70/fn-runtime 620851f (80/80 build steps, 22/22 tests). host_tier.zig (pinned 1 GiB
+zeMemAllocHost slabs, 47 GiB process ceiling), park_list.zig (in-order immediate list on copy ordinal 1, fresh single-device event
+per batch, zeEventQueryStatus polling, never a host wait or reset), slot_park.zig (27B: GDN recurrent + conv + KV (bf16 or int8 +
+scales) + DFlash2 ring + position/last token). Default off. Card 1, 27B GPTQ + DFlash2. Worker codex-park (gpt-6.1-terra xhigh).
+COMMAND: B/park/run-*.sh (cpu-run --quiet, gpu-run --card 1, health pre/post); B/park/RESULT.md + NOTES.md.
+RESULT (measured): byte round trips 1 MiB-2 GiB on both cards and both engines; 10,000-batch soak; 1 GiB H2D/D2H 13.3-13.8 / 4.5-4.7
+GB/s (all four card/engine combos); EU stores to host USM only 1.4 GB/s. Forced park/restore every K rounds, same and other slot,
+K = 1/7/64: greedy bf16 and int8 token ids AND full-logit SHA256 identical to never-parked; int8 + DFlash2 drafted same matrix
+(K=64: 512 ids, 1,000 drafted-row logit hashes identical); every saved byte verified. Park/prepare/restore (warm, 2 samples):
+1K ctx 188 MB 44/23/15 ms; 8K 97/23/34 ms; 16K 699 MB 155/24/53 ms. Non-interference (T decoding while S parks/restores every
+window, batches of 4 copies, fast no-zero restore alloc): T == solo for 256 tokens; T window p50 +2.13%, p99 +0.11% (gate was 2%/5%:
+p50 narrowly FAILS). Controlled restore-failure drill returns frames and device allocations.
+VERDICT: "Evict to RAM, restore without recompute" works and is bit-exact on the 27B (standalone hook, not yet a serve admission
+policy). Park is D2H-bound (4.5 GB/s on both cards: a platform constant, not NUMA - the host is UMA) so the B3 design's write-behind
+mirror (copy closed KV pages ahead of time, park = state slab + tail page) is required for O(state) parks; restore is ~13 GB/s.
+The 2.1% p50 cost of concurrent copy traffic is real and should be scheduled into idle gaps (tracer can show them). Next: B3-5 on
+the Flash-Next page pool (two cards).
+
+## [A] 2026-11-20 14:10 UTC Decision: recorded decode windows (worker R), consult recorded
+CONFIG: Lead B delivered M-B2c (recorded-list TP2 AR, device-reset events, 10k replays, ~15 us/hop, flat p99, ~6 us host
+submit/window; counter-based events FAILED) and tracer v2 (b70/fn-rt-trace2 d1a8a93; C4 card 0 idles ~28 ms/window waiting
+for card 1's late host appends). With KF kernels the GPU work per window should be ~10-15 ms, so host append (~14 ms),
+event retirement (5-9 ms) and cross-card append skew become the critical path.
+COMMAND: draft task for worker R reviewed by claude --model fable --effort high (responding model claude-fable-5-2) and
+claude --model opus --effort high (claude-opus-5-5); answers in workers/consult_rec_{fable,opus}.json.
+RESULT: both independently flagged the same top items: (1) do not fuse descriptor-driven grids with recording - first an
+invariant-immediate path gated bitwise vs today, then recorded == invariant-immediate bitwise; (2) speculative commit of
+GDN/conv state, KV length and PLE history must be specified and forced-reject tested; (3) MoE routing counts/grids must not
+depend on padding - pad to trash KV/GDN/PLE slots via the descriptor; (4) a fixed-shape spike with a written floor
+(~96 hops x 15 us transport + kernel time) as go/no-go before building buckets; (5) bucket rows only, n_seq as descriptor
+data, pre-record, no reallocation; single-flight per transport channel; timed syncs + abort/re-record path; (6) full-vocab
+logits push only in gate mode, device argmax/accept with host-equal tie/NaN rules; (7) soak against golden hashes from a
+separate immediate run; per-layer timestamp variant to see inside recorded lists.
+VERDICT: adopted all of them. Worker R (Codex gpt-6.1-terra xhigh, worktree fn-rec, branch b70/fn-rec from adee05d) runs
+phases R0 merge gate + audit + spike (go/no-go), R1 invariant-immediate (XPU_FN_DESC=1, bitwise), R2 recorded
+(XPU_FN_RECORD=1, default off), R3 device draft/argmax/accept with one readback per window. Prompt workers/R_prompt.md.
+Worker I meanwhile runs model-level gates + window breakdown on adee05d (task I5).
+
+## [B] 15:10 UTC - prefill baseline: chunk-invariant ~55 tok/s; trace worker narrowed
+
+CONFIG: codex-trace2 probe bc8acee on Lead A push AR 24f8093 (pre-KF kernels), TP2, MTP on, 20000-token fresh prompt,
+markers-only, explicit per-chunk sync, no HTTP.
+COMMAND: B/prefill/run_case.sh <case> markers <chunk> single prompt-20000.json 1300 (metadata.json per run; gpu-run pair lease,
+health pre/post).
+RESULT (measured): chunk 256 / 512 / 1024 / 2048 -> 53.7 / 55.4 / 55.6 / 55.4 tok/s (372 / 361 / 360 / 361 s); first token 351
+in all; health passed. A 1024-row chunk took 18.3 s and tripped the 10 s list-wait bound once (fixed: 60 s bound for the probe
+only, 238e252).
+VERDICT: Prefill on this path is chunk-invariant, so its cost is per-row serial work, not per-chunk launch/sync overhead
+[inferred until the per-op trace attributes it]. ~40x short of Strata (~2200 tok/s); cold C4 TTFT cannot approach Strata's
+17/39/61/84 s by scheduling alone - the prefill kernels must batch rows. Lead B decision: stopped the remaining 20K full-trace
+runs (about 25 min of both-card time on pre-KF kernels) and narrowed the worker to CPU analysis of the captured 256-row trace
+plus one <= 5 min run on fn-a3 (KF kernels), output B/prefill/CRITICAL_PATH.md. Lead A: this is in your kernel domain (KF);
+the attribution will name the per-row loops.
+
+## [B] 15:40 UTC - PLE host memory answer for Lead A
+
+CONFIG/COMMAND: see TRANSPORT-B 4f; probe b60f30b merged into b70/fn-runtime; worker codex-pushar on gpt-6.1-terra xhigh.
+RESULT (measured): anonymous import 4/64 MiB OK; file-mapping import 0x70000002 on host and with --ulimit memlock=-1;
+zeMemAllocHost fill 1.86 GB/s buffered+DONTNEED, 3.85 GB/s O_DIRECT (4 GiB slice, card 1, health passed).
+VERDICT: one zeMemAllocHost copy filled by O_DIRECT + DONTNEED is the recommended PLE load; memlock is ruled out.
+
+## [B] 15:50 UTC - prefill attribution; KF integration prefill 362 tok/s; DPAS prefill started
+
+CONFIG: (a) captured 20K full trace, chunk 256, pre-KF 238e252 (bfb427f + push); (b) same lease, 2048 ids (first 2048 of the
+20K stream), chunk 512, markers-only: bfb427f baseline vs fn-a3 adee05d integration (q8_1, device PLE) merged at fn-rt-prefill3
+6d7adb2. Model load excluded.
+COMMAND: tools/xpu_trace/prefill_summary.py over runs/single-256-full/trace (cpu-run); runs per B/prefill/NOTES.md (gpu-run
+both cards, 194 s lease, health pre/post passed).
+RESULT (measured): (a) 79 chunks, 8.86M timed ops, 0 dropped. Device busy by class, card 0/1: dense GEMM 60.0/60.5%, experts
+24.7/27.6%, HC 5.9/6.0%, AR+peer 5.4/1.8%, MTP absorb 1.9%, QSA 0.8%, GDN 0.4%. 29.1 kernel launches and 192.4 copy appends
+per row per card (project() issues one memcpy per row per projection). Tracing added 13.8% wall. (b) 55.79 -> 362.20 tok/s
+(6.49x), first token 9687 in both.
+VERDICT: Prefill is weight-sweep bound per 16-row tile (dense dominates); KF kernels gave 6.5x, ~6x more is needed for
+Strata's ~2200. Cross-card critical path unresolved (end-only events). Next: Lead B DPAS prefill GEMM, standalone and default
+off (proposal to Lead A in STATUS). The per-row projection memcpy (192/row) is a cheap fix in Lead A's forward.
+Workers: codex-trace -> DPAS prefill (b70/fn-rt-prefill3); codex-pushar -> B3-6 host admission (b70/fn-rt-admit, CPU only).
+
+## [A] 2026-11-20 16:35 UTC M-A5 step 2: fast kernels + push + device PLE pass every model gate; critical path measured
+CONFIG: b70/fn-a3 46afffb (= adee05d + I's streaming digests/unprofiled gates + per-card kernel timestamp profiler). Push
+TP2, device PLE, FN_GGUF_ACT=q8_1 default (bf16 run as comparison). Same model/MTP/draft-vocab identity as M-A3/M-A4.
+Report: workers/I/report_a5k.md.
+RESULT (measured, gates profiling off): teacher p0/p2/p6/p7: q8_1 agreement 547/554 (98.74%), first-token KL max 0.0080,
+max miss margin 0.18 nat; bf16 547/554, KL max 0.0057, margin 0.13 nat; both deterministic (SHA256 over all 5.4 GB of
+logits, two processes), router consumption identical across ranks. serial == T2 == T4 on all 8 prompts; C4 T2, C4qsa T4,
+C4stagger T2, 3-run C4 T4 soak all == solo; host-PLE fallback OK; host tests 28/28; health OK.
+Diagnostic (profiled; NOT speed claims): ms/window C1 serial 47.3, C1 T2 55.2, C1 T4 66.5, C4 T2 80.0, C4 T4 116.2.
+Card 0 C1 T2: kernels 31.7 ms, of which HC 20.1 ms (fn_hc_down_bf16_1 16.7 ms = 96 calls x ~170 us; fn_hc_upmix 2.5 ms,
+grows to 11 ms at 16 rows), dense 5.0 ms, experts ~3 ms; submission gap 16.8 ms (host append of ~1720 kernels per card
+falls behind; largest single gap 13.3 ms before fn_logits_part); exposed AR 1.65 ms; event retirement 5.2 ms. Prefill p7
+(4805 tok) 287 tok/s (decode-type kernels, no XMX prefill yet).
+VERDICT: M-A5 correctness on the fast path PASSED; q8_1 stays the default (same agreement, matches the oracle's own
+activation path; bf16 slightly lower KL - kept selectable). fn-int (b70/flashnext-2card) fast-forwarded to 46afffb.
+Critical path now = (1) HC kernels: fn_hc_down is one thread per output column looping K=10240 serially (324 work-items,
+6 work-groups) - ~170 us for 6.6 MB of weights where ~12 us is the bandwidth floor; upmix reloads weights per row;
+(2) host submission lag (~17 ms) and event churn - worker R's recorded windows (R0 spike GO: 32.3 ms recorded vs 31.8 ms
+kernel+transport floor, host submit 13.8 ms -> 39 us, bitwise logits). Next: worker H = HC kernels; R continues R1-R3.
+
+## [B] 16:35 UTC - DPAS prefill first cut (standalone Q6_K): correct, 1.8-2.1x at M=512 (gate 3x missed); B3-6 host prototype
+
+CONFIG: (a) b70/fn-rt-prefill3 7f4efc6/fef67a4, card 1, real Q6_K weights, synthetic BF16 activations, FP32 out; candidate =
+Q6_K -> FP16 unpack + BF16->FP16 convert + f16 DPAS (sub_group 16), baseline = current Q8_1 path. (b) b70/fn-rt-admit 853d273,
+CPU only.
+COMMAND: (a) gpu-run --card 1 ... B/prefill/dpas/lease_inner.sh (health pre/post passed); (b) zig test xpu_resident_test.zig;
+resident-sim 40 120 750 0 2000 2 (B/admit/NOTES.md).
+RESULT (measured, device timestamps): (a) 2560x5120: M=512 2105 -> 1146 us (1.84x), M=2048 8881 -> 2425 us (3.66x);
+3072x2560: M=512 1346 -> 652 us (2.07x), M=2048 5600 -> 1498 us (3.74x). Unpack is 59-63% of candidate time at M=512; DPAS-only
+~34 TFLOP/s. fp64 rel L2 2.0e-4; bitwise row invariance M=64..2048; full-output repeatable. (b) 18/18 host tests incl. 4 seeds x
+10k random steps (no overcommit). Sim [I]: int8 C4x200K 0.25% lost capacity; C8/C16 x 200K 15.5% lost, worst gap 5.3/11.1 s;
+C16 x 16K 0.1%.
+VERDICT: (a) the path is sound; the unpack kernel (one work-item per weight, byte gathers) and the 16-column tiles with per-lane
+B gathers and split-K are the measured losses -> optimization round authorized (VNNI B layout, bigger tiles, no split-K,
+shared activation convert, fused dequant stretch). (b) accepted as a host prototype; found a fairness flaw (least-remaining
+protection starves equal streams: duty 15-99.9% at C16x200K) - fix + write-behind mirror model in progress. The 15.5% loss at
+200K is the full-copy park (1.6 GB at 4.5 GB/s): the write-behind mirror is what makes C8/C16 x 200K cheap [I].
+Note: Lead A fn-int advanced to 46afffb (all M-A5 correctness gates); kv8/park2 branches are on the older fn-int and will
+need a merge before acceptance.
+
+## [B] 16:40 UTC - B3-6 policy fix + write-behind mirror model (CPU only)
+
+CONFIG: b70/fn-rt-admit e0db34d (74eaac2 protection only at <= protect_tokens, default one quantum of tokens; a3e1ea5 mirror
+traffic serialized with parks on the modeled D2H queue).
+COMMAND: zig test xpu_resident_test.zig + sim matrix (B/admit/NOTES.md), cpu-run.
+RESULT: 24/24 policy + 6/6 sim/layout tests. [I] C16 x 200K int8, 2 s quantum: mirror off 20.6% lost capacity, duty 18.6-20.6%,
+worst gap 8.8 s; mirror on 9.25%, duty 21.7-23.3%, worst gap 7.1 s. Full matrix + 1/2/4 s quantum sweep in NOTES.md.
+VERDICT: accepted (host prototype; merges with B3-3 later). Fairness flaw fixed (duty spread within 10% of mean). With the
+mirror, the remaining swap cost is the 1.6 GB H2D restore (~120 ms per swap) [I]; C16 x 200K is time-sliced at ~22% duty per
+stream by construction - concurrency beyond 4 x 200K needs smaller per-stream KV (int8 already) or more VRAM, not scheduling.
+
+## [A] 2026-11-20 16:55 UTC Review: worker KF round 4 - Q6_K / IQ4_NL / shared q8_1 activations
+CONFIG: b70/fn-model bb7f449 (Q6_K SSA aligned loads, 128 GRF, RPW4), 0118f23 (IQ4_NL register LUT, 2 output rows, 16
+cyclic group slots, exact 4B-aligned load8), 4bafdb4 (ops.prepareInput / linearQPrepared / moeUpQPrepared; call pattern in
+GGUF_Q8.md). Card 0, device timestamps, same Strata-kernel comparison method as round 2.
+RESULT (measured, per op): Q6_K dense R=4 52.5 -> 32.0 us (409.6 -> 672 GB/s logical; Strata 38.2 us); IQ4_NL C1 expert
+down 82.5 -> 70.5-71.0 us (Strata 72.2-72.7); expert input quantisation 4.3 -> 1.7-2.1 us (Strata 2.0-2.1). Bitwise
+suite 83,214 cases / 2.36e9 comparisons zero differing bits; fp64 parity both modes; prepared == unprepared bitwise; health.
+Projection sums per layer-rank (C1 R=4): GDN 50.3 us vs Strata 64.4; QSA 45.9 vs 46.2; GDN layer-0 dense+experts 237 vs
+Strata 284 us.
+VERDICT: ACCEPTED. All per-op gaps KF was asked to close are closed; our projection kernels now match or beat Strata's.
+Not yet in fn-a3 (numerics of IQ4_NL association changed -> needs the model gates; will merge together with worker H's
+HC kernels and gate once). Prepared-input wiring waits for worker R's forward rewrite. Round 5: C4 IQ3_S/IQ2_S up, decode
+GDN/QSA non-projection kernels (gdn_rows, attn_sparse, ...), window-invariant grids. Prefill DPAS is Lead B's prototype
+(B/prefill/DPAS_PLAN.md) - not duplicated.

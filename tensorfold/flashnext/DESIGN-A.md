@@ -198,3 +198,33 @@ Kernel file: zig/kernels/xpu/flashnext/fn_gguf.cl (+ fn_gguf_tables.cl for grids
   one execute per list segment, one sync. This replaces "kernel appends" as the first M-A5 latency item.
 - Host round trip inside a window costs ~14 us + ~8 us device restart: the PR3603 MTP syncAll per draft step and the
   host logits peer-read must go (device-side argmax/draft loop, logits gather by push).
+
+
+## v1.3 (2026-11-20 09:40 UTC, Lead A) - review of DESIGN-B3-draft B.1-B.2 and risk 7 (for Lead B)
+- B.1 ACCEPTED: 528 B interleaved int8 cell (K codes, V codes, 4+4 scales), page = 512 tokens with one page id across all
+  13 attention layers (12 + MTP), same ids on both cards, PT i32 per stream per card, ikc -> ikc_tail[3,128] + pass scratch.
+  Conditions: (a) scales stored as bf16 via bf()/to_bf() or fp16 via widen_half() only (IGC fold); (b) the bf16-cell build
+  flag must use the same page pool so the M-A3 teacher harness (xpu-fn-teacher + tools/fn_gguf_oracle_compare.py on
+  fn-a3/fn-int) can run bf16-cell vs int8-cell as two arms with no other difference; (c) prefill chunks > 3 rows complete
+  indexer blocks inside the pass - fn_qsa_pool must read those keys from the pass scratch rows (B.2 says so; please add a
+  chunk-boundary test where a block straddles two chunks, chunk sizes 1, 3, 5, 16, 64).
+- B.2 ACCEPTED as written. Lead A's GGUF work does not touch fn_attn_prep / fn_qsa_* / fn_attn_sparse, so there is no
+  file-level conflict beyond the Zig call sites in xpu_ops.zig attnRank/attnMultiRank and xpu_forward.zig forwardMtp,
+  which worker I edits on b70/fn-a3 (merged to b70/flashnext-2card). Branch B3-3 from b70/flashnext-2card, not fn-runtime.
+- Risk 6 (wide == narrow bits): Lead A takes it as a kernel contract: every GGUF op must give bitwise identical output for
+  a given row regardless of R and of the row's position in the batch (dense linearQ, moeUpQ/moeDownQ, HC). Worker I's M-A4
+  drafted==serial gate already enforces it end to end on the K kernels; worker KF's q8_1 port must pass a per-op
+  row-invariance test before it becomes the default.
+- Risk 7 (recorded lists bake addresses): agreed layout, per card, one device-resident WINDOW DESCRIPTOR written by one
+  small H2D at window start (the only per-window host write besides token ids):
+    struct WinHdr  { u32 n_seq, total_rows, flags, pad; }
+    struct WinSeq  { u32 row_off, rows, pos, inplace; u64 pt;  // device ptr to this stream's PT (i32[]) on this card
+                     u64 state_slab;  // device ptr, GDN state A|B + conv + ple_tail + ikc_tail, fixed slab layout
+                     u32 state_sel;   // 0 = A is committed, 1 = B (pointer swap on full keep)
+                     u32 mtp_pos; u64 reserved[2]; }   // 64 B per stream, up to 16 streams
+  Kernels take the descriptor pointer and a seq index (or derive it from the row via row_off) and load pt/state_slab as
+  64-bit USM device pointers (Intel USM pointers are valid when loaded from a buffer and cast to global T*). No stream
+  pointer is ever a kernel argument baked into a recorded list; the page pool base and per-layer offsets are constant for
+  the life of the server and may be baked. Recorded lists are keyed by (row bucket, n_seq bucket); a stream joining or
+  leaving changes only the descriptor. Lead A will build M-A5 record/replay against this layout; changes go through
+  this section.
