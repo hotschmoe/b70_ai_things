@@ -966,3 +966,197 @@
 2026-11-20 18:25:53 UTC [orchestrator] claim card 1 ~3 min: latbench single (copy H2D/D2H) pinned to cpus 8-15 for NUMA probe
 2026-11-20 18:28:05 UTC [A-S] released cards 0+1: post-serve health rc=0
 2026-11-20 18:30:22 UTC [orchestrator] release card 1
+2026-11-20 18:33:05 UTC [A-I] released cards 0+1
+2026-11-20 18:33:47 UTC [B-worker codex-park] claim cards 0+1 ~3 min: two-prompt K=7 T2 smoke
+2026-11-20 18:36:38 UTC [A-KF] released card 0
+2026-11-20 18:36:38 UTC [A-KF] claim card 0 ~5 min: R5 final Strata rank profiling
+2026-11-20 18:38:37 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 18:38:37 UTC [A-KF] claim card 0 ~5 min: R5 attention64 before-after device timing
+2026-11-20 18:38:37 UTC [A-H] claim cards 0+1 ~10 min: a5k-C4-T2.log
+2026-11-20 18:42:06 UTC [A-R] released cards 0+1 rc=0
+2026-11-20 18:42:06 UTC [A-R] claim cards 0+1 ~20 min: r1-teacher.log
+2026-11-20 18:43:37 UTC [B-worker codex-kv8] claim cards 0+1 ~3 min: final GPU health
+2026-11-20 18:43:47 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 18:44:05 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 18:44:47 UTC [B-worker codex-park] claim cards 0+1 ~3 min: two-prompt K=7 T2 smoke
+2026-11-20 18:47:20 UTC [B-worker codex-park] release cards 0+1 (CPU wait canceled; no GPU claim acquired)
+2026-11-20 18:47:23 UTC [B-worker codex-park] claim cards 0+1 ~3 min: two-prompt K=7 T2 smoke
+2026-11-20 18:48:10 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-round4
+2026-11-20 18:48:55 UTC [A-KF] released card 0
+2026-11-20 18:48:56 UTC [A-KF] released card 0
+2026-11-20 18:49:12 UTC [A-S] claim cards 0+1 ~20 min: round2-policy policy serve, no-MTP, pre/post health
+2026-11-20 18:50:17 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 18:50:17 UTC [A-KF] claim card 0 ~5 min: R5 final Strata rank profiling
+2026-11-20 18:50:17 UTC [A-KF] claim card 0 ~5 min: R5 attention64 before-after device timing
+2026-11-20 18:51:44 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 18:51:44 UTC [A-H] claim cards 0+1 ~10 min: a5k-C4-T4.log
+2026-11-20 18:53:58 UTC [A-R] released cards 0+1 rc=127
+2026-11-20 18:54:48 UTC [B-worker codex-kv8] claim cards 0+1 ~4 min: merge smoke int8 greedy
+2026-11-20 18:54:49 UTC [B-worker codex-park] claim cards 0+1 ~3 min: post-smoke GPU health
+2026-11-20 18:54:54 UTC [B-worker codex-park] release cards 0+1 (post-smoke health rc=124)
+2026-11-20 18:55:46 UTC [B-worker codex-park] claim cards 0+1 ~3 min: retry post-smoke GPU health
+2026-11-20 18:55:59 UTC [A-R] claim cards 0+1 ~40 min: r1m11fecc6-suite.log
+2026-11-20 18:56:13 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 18:56:13 UTC [A-KF] claim card 0 ~5 min: R5 final SIMD16 and decode qualification
+2026-11-20 18:56:40 UTC [B-worker codex-park] release cards 0+1 (post-smoke health retry rc=0)
+2026-11-20 18:58:15 UTC [B-worker codex-kv8] claim cards 0+1 ~4 min: merge smoke int8 concurrent
+2026-11-20 18:59:39 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 19:02:40 UTC [A-I] released cards 0+1
+2026-11-20 19:03:29 UTC [A-I] claim cards 0+1 ~5 min: M-A5 fast kernels smoke-reset-health.log
+2026-11-20 19:06:58 UTC [A-S] released cards 0+1: round2-policy rc=0
+2026-11-20 19:08:15 UTC [A-KF] released card 0
+2026-11-20 19:09:01 UTC [A-H] released cards 0+1 (rc=124)
+2026-11-20 19:10:14 UTC [A-KF] released card 0
+2026-11-20 19:10:42 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/state
+2026-11-20 19:13:24 UTC [A-KF] released card 0
+2026-11-20 19:14:20 UTC [A-R] release child run r1m11fecc6/state rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:14:20 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/teacher-desc0
+2026-11-20 19:16:33 UTC [A-R] release child run r1m11fecc6/teacher-desc0 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:16:34 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/teacher-desc1
+2026-11-20 19:18:20 UTC [A-R] claim-note cards 0+1: r1m11fecc6 bounded batch active since19:10:14; both health and140 state cases PASS, immediate teacher clean; descriptor teacher running, then remaining token/concurrency gates. Initial claim18:55:59 included queue wait.
+2026-11-20 19:18:50 UTC [A-R] release child run r1m11fecc6/teacher-desc1 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:18:50 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/group0-desc0
+2026-11-20 19:21:25 UTC [A-R] release child run r1m11fecc6/group0-desc0 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:21:25 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/group1-desc0
+2026-11-20 19:23:46 UTC [A-R] release child run r1m11fecc6/group1-desc0 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:23:47 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/group0-desc1
+2026-11-20 19:25:12 UTC [A] NOTE to all Lead A workers (user: faster loop): correctness/gate runs use gpu-run only, NOT cpu-run --quiet (quiet blocks every build on the host); quiet only around timed benchmark windows. Split GPU batches into <=15 min leases.
+2026-11-20 19:26:19 UTC [A-R] release child run r1m11fecc6/group0-desc1 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:26:19 UTC [A-R] claim-note cards 0+1: r1m11fecc6 batch still running bounded gates; elapsed 16.1 min
+2026-11-20 19:26:19 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/group1-desc1
+2026-11-20 19:29:10 UTC [A-R] released cards 0+1 rc=143
+2026-11-20 19:29:29 UTC [A-R] release child r1m11fecc6/group1-desc1 rc=0, native teardown verified via reaped child/timeout exit0; outer quiet batch intentionally split for new host rules.
+2026-11-20 19:29:29 UTC [A-R] claim cards 0+1 ~15 min: r1m11fecc6-concurrency.log
+2026-11-20 19:30:44 UTC [A-I] released cards 0+1
+2026-11-20 19:30:44 UTC [B-worker codex-trace2] claim cards 0+1 ~3 min: DPAS prefill smoke
+2026-11-20 19:30:45 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 19:30:48 UTC [A-H] claim cards 0+1 ~10 min: a5k-C4-T4.log
+2026-11-20 19:31:03 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-round4-retry
+2026-11-20 19:31:16 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/C4-T2
+2026-11-20 19:31:44 UTC [B-worker codex-trace2] claim cards 0+1 ~3 min: DPAS prefill smoke
+2026-11-20 19:31:45 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 19:32:49 UTC [A-R] release child run r1m11fecc6/C4-T2 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:32:49 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/C4qsa-T4
+2026-11-20 19:34:33 UTC [A-R] release child run r1m11fecc6/C4qsa-T4 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:34:33 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/C4stagger-T2
+2026-11-20 19:35:59 UTC [A-R] release child run r1m11fecc6/C4stagger-T2 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:35:59 UTC [A-R] claim cards 0+1 (inherited batch lease): r1m11fecc6/C4soak-T4
+2026-11-20 19:37:47 UTC [A-R] release child run r1m11fecc6/C4soak-T4 rc=0; outer cards 0+1 batch lease retained
+2026-11-20 19:38:17 UTC [A-R] released cards 0+1 rc=0
+2026-11-20 19:39:44 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 19:39:44 UTC [A-H] claim cards 0+1 ~10 min: a5k-prof-p2.log
+2026-11-20 19:42:09 UTC [A-I] released cards 0+1
+2026-11-20 19:42:09 UTC [A-KF] claim card 0 ~5 min: R5 hybrid decode full qualification
+2026-11-20 19:42:09 UTC [B-worker codex-trace2] claim cards 0+1 ~3 min: DPAS prefill smoke
+2026-11-20 19:45:15 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 19:47:44 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 19:47:44 UTC [A-H] claim cards 0+1 ~10 min: a5k-prof-C4-T4.log
+2026-11-20 19:50:12 UTC [A-KF] released card 0
+2026-11-20 19:50:33 UTC [A-KF] claim card 0 ~5 min: R5 qualified hybrid timings Strata experts and final health
+2026-11-20 19:52:35 UTC [B-worker codex-park] claim cards 0+1 ~28 min: push smoke and 1K/8K/32K park latency
+2026-11-20 19:54:47 UTC [B-worker codex-trace2] claim cards 0+1 ~15 min: DPAS prefill perf
+2026-11-20 19:54:48 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 20:09:50 UTC [A] REQUEST to all (Lead B workers too): cpu-run --quiet blocks every build host-wide; use it only around timed windows, not whole sessions or correctness runs.
+2026-11-20 20:10:08 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 20:11:23 UTC [B-worker codex-park] claim cards 0+1 ~3 min: post-latency GPU health
+2026-11-20 20:11:48 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 20:11:48 UTC [A-H] claim cards 0+1 ~3 min: health-final.log
+2026-11-20 20:12:18 UTC [B-worker codex-park] release cards 0+1 (post-latency health rc=0)
+2026-11-20 20:15:13 UTC [A-KF] released card 0
+2026-11-20 20:15:13 UTC [B-worker codex-trace2] claim cards 0+1 ~15 min: DPAS prefill perf
+2026-11-20 20:16:49 UTC [A-H] released cards 0+1 (rc=124)
+2026-11-20 20:17:05 UTC [A-H] claim cards 0+1 ~3 min: health-final-retry.log
+2026-11-20 20:21:31 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 20:22:02 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 20:25:53 UTC [A-H] claim cards 0+1 ~3 min: hc2-health-pre.log
+2026-11-20 20:26:21 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 20:29:06 UTC [A-R] claim cards 0+1 ~15 min: r2-light1.log
+2026-11-20 20:33:09 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-hc
+2026-11-20 20:33:38 UTC [A-R] released cards 0+1 rc=1
+2026-11-20 20:35:21 UTC [A-KF] claim card 0 ~5 min: R5 scalar staging pair prefetch and expert pipeline full qualification
+2026-11-20 20:35:38 UTC [A-H] claim card 0 ~5 min: hc2/check1.log
+2026-11-20 20:35:39 UTC [A-H] claim card 0 ~5 min: hc2/time1.log
+2026-11-20 20:35:39 UTC [A-H] released card 0 (rc=0)
+2026-11-20 20:36:01 UTC [A-R] claim cards 0+1 ~15 min: r2-ref-session.log
+2026-11-20 20:40:35 UTC [A-R] released cards 0+1 rc=0
+2026-11-20 20:41:49 UTC [A-R] claim cards 0+1 ~15 min: r2 policy serve, no-MTP, pre/post health
+2026-11-20 20:42:57 UTC [A-I] released cards 0+1
+2026-11-20 20:42:57 UTC [B-worker codex-trace2] claim cards 0+1 ~6 min: DPAS prefill profile
+2026-11-20 20:42:58 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 20:43:05 UTC [A-S] claim cards 0+1 ~20 min: int-hc policy serve, no-MTP, pre/post health
+2026-11-20 20:43:07 UTC [A-KF] released card 0
+2026-11-20 20:45:53 UTC [A-R] released cards 0+1: r2 rc=75
+2026-11-20 20:45:53 UTC [A-KF] claim card 0 ~5 min: R5 scalar staging pair prefetch and expert pipeline full qualification
+2026-11-20 20:45:55 UTC [A-H] released card 0 (rc=0)
+2026-11-20 20:50:12 UTC [B-worker codex-park] claim cards 0+1 ~9 min: serve eviction correctness smoke and health
+2026-11-20 20:52:39 UTC [A-S] released cards 0+1: int-hc rc=1
+2026-11-20 20:52:39 UTC [B-worker codex-trace2] claim cards 0+1 ~6 min: DPAS prefill profile
+2026-11-20 20:52:40 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 20:52:41 UTC [A-KF] released card 0
+2026-11-20 20:52:55 UTC [A-S] claim cards 0+1 ~20 min: int-hc2 policy serve, no-MTP, pre/post health
+2026-11-20 20:53:54 UTC [A-H] claim cards 0+1 ~3 min: smoke hc2-h
+2026-11-20 20:57:08 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 20:57:08 UTC [A-KF] claim card 0 ~5 min: R5 scalar staging pair prefetch and expert pipeline full qualification
+2026-11-20 20:57:36 UTC [B-worker codex-park] claim cards 0+1 ~9 min: serve eviction correctness smoke and health
+2026-11-20 20:57:43 UTC [B-worker codex-trace2] claim cards 0+1 ~6 min: DPAS prefill profile
+2026-11-20 20:57:44 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 20:59:31 UTC [A-H] released cards 0+1
+2026-11-20 21:02:08 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 21:02:18 UTC [B-worker codex-park] claim cards 0+1 ~9 min: serve eviction correctness smoke and health
+2026-11-20 21:03:56 UTC [A-R] claim cards 0+1 ~15 min: r2 policy serve, no-MTP, pre/post health; GPU-only startup then ~2min timed client CPU quiet (avoid quiet waits behind this lease)
+2026-11-20 21:04:56 UTC [A-S] released cards 0+1: int-hc2 rc=1
+2026-11-20 21:05:32 UTC [A-S] claim cards 0+1 ~20 min: int-hc3 policy serve, no-MTP, pre/post health
+2026-11-20 21:05:55 UTC [A-KF] released card 0
+2026-11-20 21:05:55 UTC [B-worker codex-trace2] claim cards 0+1 ~6 min: DPAS prefill profile
+2026-11-20 21:05:56 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 21:07:36 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 21:07:47 UTC [B-worker codex-park] claim cards 0+1 ~9 min: serve eviction correctness smoke and health
+2026-11-20 21:10:41 UTC [A-R] released cards 0+1: r2 rc=75
+2026-11-20 21:10:41 UTC [A-KF] claim card 0 ~5 min: R5 scalar staging pair prefetch and expert pipeline full qualification
+2026-11-20 21:11:01 UTC [A-R] claim cards 0+1 ~15 min: r2-off policy serve, no-MTP, pre/post health; GPU-only startup then ~2min timed client CPU quiet (avoid quiet waits behind this lease)
+2026-11-20 21:12:39 UTC [A-KF] released card 0 (queued probe canceled; no GPU workload started)
+2026-11-20 21:12:39 UTC [A-KF] claim card 0 ~5 min: R5 final pair-prefetch full parity fixed queue
+2026-11-20 21:13:13 UTC [A-R] released cards 0+1: r2-off rc=126
+2026-11-20 21:15:09 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 21:19:00 UTC [A-S] released cards 0+1: int-hc3 rc=0
+2026-11-20 21:19:00 UTC [B-worker codex-trace2] claim cards 0+1 ~6 min: DPAS prefill profile
+2026-11-20 21:21:19 UTC [B-worker codex-trace2] release cards 0+1
+2026-11-20 21:21:20 UTC [A-H] claim cards 0+1 ~15 min: hc2 policy serve, no-MTP, pre/post health
+2026-11-20 21:23:49 UTC [A-KF] released card 0
+2026-11-20 21:23:50 UTC [A-R] claim cards 0+1 ~15 min: r2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-20 21:25:48 UTC [A-KF] claim card 0 ~5 min: R5 qualified final pair-prefetch device times and closing health
+2026-11-20 21:26:25 UTC [A-R] released cards 0+1: r2 rc=1
+2026-11-20 21:31:48 UTC [B-worker codex-park] claim cards 0+1 ~9 min: serve eviction correctness smoke and health
+2026-11-20 21:34:25 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 21:34:57 UTC [B-worker codex-park] claim cards 0+1 ~17 min: eviction C2/C4 benchmark and health
+2026-11-20 21:35:50 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-kv8off
+2026-11-20 21:37:26 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 21:37:51 UTC [B-worker codex-park] claim cards 0+1 ~17 min: eviction C2/C4 benchmark and health
+2026-11-20 21:41:07 UTC [A-H] released cards 0+1: hc2 rc=0
+2026-11-20 21:45:36 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 21:45:48 UTC [A-H] claim cards 0+1 ~3 min: hc3/health-pre.log
+2026-11-20 21:47:50 UTC [A-KF] released card 0
+2026-11-20 21:47:50 UTC [B-worker codex-trace2] claim cards 1 ~4 min: grouped expert adapter parity
+2026-11-20 21:47:51 UTC [B-worker codex-trace2] release cards 1
+2026-11-20 21:48:20 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 21:54:14 UTC [A-R] claim cards 0+1 ~15 min: r2-light2-session.log
+2026-11-20 21:56:20 UTC [A-I] released cards 0+1
+2026-11-20 22:00:17 UTC [A-R] released cards 0+1 rc=0
+2026-11-20 22:01:47 UTC [B-worker codex-park] claim cards 0+1 ~9 min: serve eviction correctness smoke and health
+2026-11-20 22:02:10 UTC [A-H] claim cards 0+1 ~5 min: hc3/profile-baseline.log
+2026-11-20 22:04:24 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 22:04:41 UTC [B-worker codex-park] claim cards 0+1 ~17 min: eviction C2/C4 benchmark and health
+2026-11-20 22:06:31 UTC [A-R] claim cards 0+1 ~15 min: r2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-20 22:07:33 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 22:07:52 UTC [B-worker codex-park] claim cards 0+1 ~17 min: eviction C2/C4 benchmark and health
+2026-11-20 22:12:35 UTC [A-R] released cards 0+1: r2 rc=1
+2026-11-20 22:15:36 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 22:17:01 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 22:21:44 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-comb
+2026-11-20 22:31:20 UTC [B-worker codex-park] claim cards 0+1 ~9 min: serve eviction correctness smoke and health
+2026-11-20 22:34:10 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 22:34:46 UTC [B-worker codex-park] claim cards 0+1 ~17 min: eviction C2/C4 benchmark and health
+2026-11-20 22:37:41 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 22:40:07 UTC [A-I] released cards 0+1
+2026-11-20 22:41:25 UTC [A-S] claim cards 0+1 ~15 min: comb-r2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-20 22:41:52 UTC [A-KF] claim cards 0+1 ~3 min: smoke prep-r6-imm

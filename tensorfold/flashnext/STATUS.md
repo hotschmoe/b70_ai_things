@@ -1,6 +1,24 @@
 # Status (each lead keeps its own section current)
 
-## Lead A (model path)  [updated 18:30 UTC]
+## Lead A (model path)  [updated 21:56 UTC]
+- FOR LEAD B LEDGER (builds/tags as they land): int-hc3 = fn-int 186329a; hc2 = b70/fn-hc 9fb00f5 (S/hc2-results.json:
+  C1 69.2 / C2 96.9 / C4 115.1 / C8 135.9 agg, prefill 2k 430).
+  COMBINED BUILD READY: fn-a3 99e31ff = hc2 + kv8 (off) + R2 recorded windows (fn-rec 99bda20, incl. C2 cross-stream keep fix
+  bc39d16). Worktree /mnt/vm_8tb/b70/build/tensorfold/fn-a3; build+smoke running 22:07, then serve_bench comb-r2 (XPU_FN_RECORD=1)
+  and comb-imm (off). Ledger it with XPU_FN_RECORD=1. Lead A takes kernel work from B's ledger: KF6 = BYTES-hc2 items
+  (one quantize per input, no per-row project() memcpy); H3 = MTP draft step (35 ms depth-3 window vs 18.4 ms forward).
+  KF5 (fn-model 6cb4f56: GDN/QSA decode, expert dots) folds in via KF6's b70/fn-prep.
+- SERVE NUMBERS #2 (21:19, fn-int 186329a = KF4 + HC kernels + serve wiring; S/int-hc3-results.json; smoke PASS, health OK):
+    C1 65.5 tok/s (was 45.8, +43%), C2 92.0 agg, C4 110.5 agg, C8 128.9 agg; ITL p50 C1 11.6 ms; TTFT C1 97 ms;
+    prefill 386 / 379 / 367 tok/s at 512 / 2k / 8k (was ~300). no-MTP: C1 54.2 (18.4 ms/token), C4 110.9.
+  Read: one C1 forward is now ~18 ms, but an MTP depth-3 window costs 35 ms -> draft steps ~5 ms each (host-driven), so MTP
+  only buys +21% at C1 and nothing at C4. Next levers: recorded windows (R2, host lag) and device draft loop (R3).
+- 20:20: HC kernels (worker H, ee86b66) PASS full gates (teacher, 8-prompt serial==T2==T4, C4 T2/T4 == solo); profiled C1 T2
+  kernel time/card 31.7 -> 17.4 ms (HC 20.1 -> 5.8 ms), C4 T4 68.8 -> 51.7 ms (HC 30.2 -> 12.9). hc_down R1 ~190 -> 16.6 us.
+  Merged into fn-a3 b329393 with KF4; smoke + serve_bench running now (results -> S/summary.tsv, tag int-hc).
+- fn-int = 8524431 (KF4 + serve wiring + bench baseline selector). R (recorded windows): R1 PASS, R2 in progress but Codex
+  503s 20:12-20:20 were transient: at 20:52 all Lead A Codex workers (R4, KF6, H2) are active (logs < 1 min old), so no
+  Claude handoff yet; will hand off any worker idle on 503 for > 10 min.
 - FIRST SERVE-LEVEL NUMBERS (18:26, worker S, workers/S/report.md + first-results.json): tensorfold-native OpenAI serve,
   TP2 GGUF IQ3_XXS + MTP, fn-serve c3ac6cf (= fn-int 46afffb + server wiring), :18150, unprofiled, greedy,
   256 tok, p0 tokens == solo serial (exact), chat coherent, health pre OK:
@@ -20,10 +38,51 @@
 - Workers now: R (fn-rec) recorded windows: R0 GO (recorded 32.3 ms vs 31.8 ms floor, host submit 13.8 ms -> 39 us, bitwise);
   R1 invariant-immediate in progress. H (fn-hc) HC kernels (target hc_down <= 20 us/call). KF (fn-model) round 4: Q6_K,
   IQ4_NL down (82.5 -> 70.1 us, now beats Strata 72), prepared shared q8_1 activations.
-- Lead B: thanks for M-B2c, tracer v2, PLE-import analysis. No new requests.
+- Lead B REQUEST (20:10, dev-loop speed): cpu-run --quiet blocks every build on the host (my xpu-native build waited
+  behind a 28-min quiet park session). Please keep --quiet to the timed windows only, not whole GPU sessions/correctness runs;
+  Lead A workers have the same rule (GPU.md note 19:25).
 - Next GPU need: both cards in short leased runs (R, H gates), card 0 (KF, H microbench).
 
-## Lead B (runtime, latency, features)  [updated 17:58 UTC]
+## Lead B (runtime, latency, features)  [updated 21:55 UTC]
+- CRITICAL-PATH LEDGER (user 21:50, orchestrator ask): codex-trace on fn-hc e12b9610 + tracer v2 (b70/fn-rt-ledger, serve :18154),
+  C1 and C4 steady windows, per card: every kernel (ns, GB/s, % of 608, bytes needed), every queue gap with cause, every data
+  movement, totals, top-10 recoverable us with owner. Output B/ledger/LEDGER-hc2.{md,json} + regen.sh for each Lead A merge.
+  ETA ~23:00 UTC. Lead A: one short both-card lease per capture.
+  BYTES MODEL READY (B/ledger/BYTES-hc2.{md,json}, CPU model of fn-hc e12b9610 [I], Claude claude-opus-5-5 worker): bytes a window
+  SHOULD move per card: C1 5.26 GB -> 8.65 ms at 608 GB/s vs ~32.7 ms measured (26%); C4 7.37 GB -> 12.1 ms vs ~55 ms (22%).
+  Largest: routed experts 1.64/3.16 GB; HC readout weights 1.33 GB/window/card (13.2 MB per sublayer, replicated on both
+  cards, read regardless of rows = 25% of C1 bytes); dense 0.95 GB; MTP head 170 MB/pass; LM head 218 MB/verify; GDN state
+  226 MB/stream. Code-level waste: fn_hc_down_bf16_1 re-reads its 6.6 MB weight per 4-row grid row (+~705 MB/card at C4);
+  project() re-quantizes the same input per matrix (3x/layer) + 768 (C1) / 1536 (C4) per-row memcpy appends per window.
+  FOR LEAD A: HC weights replicated per card -> split HC readout across ranks (TP) or fuse; one quantize per input.
+- HEADLINE (B3-5, b70/fn-rt-park2 6b6af10, fn-int 46afffb + kv8, two cards, push transport, int8 KV, unprofiled, 1 sample):
+  park to host RAM / restore without recompute, per card (both in parallel):
+    1K: 66 MB, park 17.1 ms, restore 6.1 ms | 8K: 121 MB, park 29.9 ms, restore 10.2 ms | 32K: 310 MB, park 75.6 ms, restore 24.9 ms
+  (D2H ~4.2 GB/s, H2D ~13 GB/s; restore to first window 89-110 ms incl. one window). K=7 T2 parked == unparked tokens.
+- EVICTION ON THE REAL SERVE (b70/fn-rt-evict 4275ddc, fn-int 8524431 + kv8 + park2 + admit; XPU_TP=2 XPU_FN_KV=int8
+  XPU_FN_EVICT=1, XPU_FN_EVICT_PAGES=2 to force pressure; :18153, unprofiled, 1 sample, 256 tok greedy):
+    C2 uncapped 48.8 agg (ITL p50 40.0 ms); C4 on a 2-stream cap 43.4 agg (89% of C2), 44 parks + 44 restores, all four outputs
+    == solo, each prompt prefilled once (no recompute). Park wall p50/p99 43.7/585.9 ms, restore 37.1/42.6 ms. C4 TTFT
+    117/307/1352/1768 ms; ITL p99 1.1-1.6 s = time-slicing quantum. READY for Lead A merge (HANDOFF in B/evict/).
+    Limits: prompt cache off in eviction mode; parked streams keep their state slot. Next: p99 park fix, write-behind mirror,
+    idle Snaps as RAM-tier prompt cache.
+- DPAS prefill smoke (b70/fn-rt-dpas, XPU_FN_DPAS=1, Q6_K dense only): off == fn-int hashes; on: first-token top-1 equal,
+  KL <= 0.0047, greedy agrees 11-32/32 tokens (non-bitwise path, expected), chunk 512 vs 2048 bitwise equal, C2 == solo.
+  Prefill (fn-int 46afffb, unprofiled): off 362 / on 378 tok/s at 2048 ids (+4.3%), 20K: 350 -> 363 (+3.6%). Profiled
+  128-row chunk, sum of kernel time per card 310 ms: HC down 80.7 + HC up 68.0 = 48%, Q6 DPAS 20, BF16 K2560 14, IQ4_XS 13,
+  IQ3_S expert up 12. => FOR LEAD A / worker H: HC is also the prefill critical item; H's hc_down/up must be fast at M=128-2048
+  rows, not only decode R<=16. Lead B can put HC on the DPAS path for rows > 16 if H does not cover it - say which.
+- Ack Lead A 20:10: Lead B workers told to use cpu-run --quiet only around timed windows.
+- 20:52 Codex 503 check: both Lead B Codex workers (prefill DPAS, serve eviction) are live (WebSocket -> HTTPS fallback, logs
+  advancing); no handover needed. Will switch to Claude workers if either stalls > 10 min.
+- READY TO MERGE (Lead A): B3-3 paged KV, b70/fn-rt-kv8 36738f3 (= fn-int 46afffb merged at 004ef6e), default off,
+  XPU_FN_KV=int8|bf16page. Smoke: off == your 46afffb hashes (3 x 32), bf16page == off. Teacher 2420 pos: int8 dNLL +0.0001,
+  top-1 99.0% vs bf16; 32K 8/8 vs Strata. KV bytes/token/card: int8 7,696, bf16page 14,144 (legacy bf16 more; see HANDOFF).
+  int8 smoke c8d48ab: 3 hashes recorded, C2 == solo; +1 MiB/card allocated during C2 (unexplained, small). int8 chunk 512 != 64:
+  KV append is per-token absmax (same kernel both widths); the >16-row passes select different ROUTER kernels - likely a
+  forward-path (Lead A) row-invariance gap at 512 rows, not KV; check bf16page/legacy at 512 vs 64 to confirm. B/kv8/HANDOFF.md.
+- Lead A first serve (C1 42 tok/s, prefill ~300 tok/s): prefill is the Lead B lever -> DPAS wired in b70/fn-rt-dpas (flag
+  XPU_FN_DPAS=1), smoke + prefill tok/s pending a lease.
 - SPEED DIRECTIVE (17:25) applied: kv8 and park2 wrapping up now -> merge fn-int 46afffb, one fast smoke each, HANDOFF.md for
   Lead A to merge (B/kv8/HANDOFF.md, B/park2/HANDOFF.md, ETA ~18:45). park2 delivers unprofiled park/restore ms at 1K/8K/32K.
   DPAS prefill next gets wired into fn-int prefill behind a flag (Lead B branch) for a real prefill tok/s on the serve.

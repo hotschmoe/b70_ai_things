@@ -545,3 +545,76 @@ and D2H 4.5-4.7 GB/s on BOTH cards, from either die, on both copy ordinals.
 VERDICT: the D2H ~4.5 GB/s limit is not a placement/NUMA effect we can fix by pinning (identical everywhere). Park/eviction
 designs should assume ~4.5 GB/s D2H per card (write-behind mirror stays the plan). Cross-card push is device-to-device and
 does not touch host DRAM. No BIOS change needed for the current campaign.
+
+## [B] 18:47 UTC - B3-3 handed to Lead A for merge
+kv8 36738f3 (fn-int 46afffb merged): off == fn-int hashes, bf16page == off (3 x 32); teacher int8 dNLL +0.0001, top-1 99.0%;
+int8 7,696 / bf16page 14,144 B per token slot per card. Open: int8 C2 smoke, int8 chunk 512 != 64. B/kv8/HANDOFF.md.
+
+## [A] 2026-11-20 19:10 UTC Serve round 2 (worker S, fn-serve 3649184)
+RESULT: MTP depth policy (cap 3 at 1 lane, 1 at >=2): C1 45.8, C2 66.8, C4 89.2, C8 111.1 agg tok/s; ITL p50/p99 C1 16.8/50.8
+ms, C4 34.6/91.7 ms; no-MTP C1 30.3 (33 ms/token), C4 79.8 agg; prefill 2k 298 tok/s. p0 == serial in all rows, health OK.
+Re-run: workers/S/serve_bench.sh <worktree> <tag> -> S/summary.tsv.
+
+## [B] 19:25 UTC - kv8 int8 smoke: C2 == solo; chunk-512 divergence points at router kernel selection (>16 rows), not KV append.
+
+## [A] 2026-11-20 19:42 UTC Worker R: R0 GO, R1 PASS (fn-rec 11fecc6); R2 started
+RESULT: descriptor-driven immediate path (XPU_FN_DESC=1) == merged immediate bitwise: 140 raw-state/padding/commit cases
+(incl. 0-accepted-draft commit), 4 teacher hashes, 8x serial/T2/T4, C4 T2/qsa/stagger, 3-run soak; health OK. Baseline moved
+with KF4 merge (IQ4_NL/Q6_K reduction order): oracle 545/554, KL max 0.0081 - approved by Lead A as the new reference.
+VERDICT: R2 (recorded) next, light per-iteration gates, then serve_bench on fn-rec with XPU_FN_RECORD=1.
+
+## [B] 20:16 UTC - B3-5 headline: park/restore without recompute on two-card Flash-Next
+CONFIG: b70/fn-rt-park2 6b6af10 (fn-int 46afffb + kv8), push, int8 KV, bf16 act, prealloc; COMMAND: run-headline-*.sh (B/park2).
+RESULT (1 sample, per card): 1K 66 MB park 17.1 / restore 6.1 ms; 8K 121 MB 29.9 / 10.2 ms; 32K 310 MB 75.6 / 24.9 ms. K=7 T2
+parked == unparked (push). VERDICT: user's eviction-to-RAM primitive works on the real path; serve wiring next (fn-rt-evict).
+DPAS prefill smoke passed (off == fn-int; on KL <= 0.0047, top-1 equal, chunk-invariant bitwise); perf pending.
+
+## [A] 2026-11-20 20:20 UTC Worker H: HC kernels PASS; merged
+RESULT: fn-hc ee86b66: hc_down split-K/row-reuse (R1 ~190 -> 16.6 us, R4 152 -> 13.5 us, R16 32.5 us), upmix R16 101 -> 74 us
+(targets partly missed: R2 down 20.4 us, upmix R16/R1 4.4x); bitwise row-invariance + fp64 pass; model gates: teacher,
+8-prompt serial==T2==T4, C4 T2/T4 == solo all pass. Profiled C1 T2 kernels/card 31.7 -> 17.4 ms (HC 20.1 -> 5.8).
+VERDICT: merged into fn-a3 (b329393, with KF4 + serve wiring); smoke + serve_bench next.
+
+## [A] 2026-11-20 21:20 UTC Serve numbers #2 after HC + KF4 merge
+CONFIG: fn-int 186329a (KF4 + HC ee86b66 + serve wiring), serve_bench int-hc3, unprofiled, smoke-hc PASS (rebased hashes),
+bench p0 baseline recorded at int-hc2 (identical in int-hc3). Bench fixes: record mode + EOS-before-256 allowed (8524431..186329a).
+RESULT: C1 65.5 / C2 92.0 / C4 110.5 / C8 128.9 agg tok/s (MTP policy); no-MTP C1 54.2, C4 110.9; ITL p50 C1 11.6 ms;
+prefill 386/379/367 tok/s at 512/2k/8k. C1 MTP window 35 ms vs 18.4 ms per no-MTP token.
+VERDICT: +43% C1, +16% C8, +27% prefill vs serve #1. MTP draft steps are now the C1 bottleneck (host-driven draft loop).
+
+## [B] 21:30 UTC - DPAS dense on fn-int: +3.6-4.4% prefill; HC is 48% of prefill kernel time
+fn-rt-dpas, XPU_FN_DPAS=1: 2048 ids 362 -> 378 tok/s, 20K 350 -> 363 (unprofiled, both cards). 128-row profile: HC down+up
+149 of 310 ms kernel time per card; Q6 dense now 20 ms. Next prefill lever is HC (Lead A H) at large M. Eviction-in-serve:
+C4 capped smoke found a fill-retry stall (lane_host_fill zero-progress loop), fix eb61491, re-running.
+
+## [B] 21:55 UTC - critical-path ledger started (user 21:50)
+codex-trace redirected from DPAS to the ledger on fn-hc e12b9610 + tracer v2 (b70/fn-rt-ledger, serve :18154; C1/C4 windows,
+per-kernel/gap/movement accounting, top-10 with owner). Parallel Claude Opus agent (CPU only) builds the bytes-needed model per
+kernel from the GGUF inventory (B/ledger/BYTES-hc2.*). Eviction-in-serve: C4 capped smoke PASS (2 parks / 2 restores, no
+prefill replay); bench found a lease-return bug on stream finish (LaneMemory), fix in progress. C2 uncapped int8 48.8 agg.
+
+## [B] 22:05 UTC - bytes-needed model for fn-hc e12b9610 (CPU, [I])
+CONFIG: Claude worker (claude-opus-5-5), code + GGUF inventory, serve MTP policy (lane=3, C1 4-row verify, C4 8-row).
+RESULT [I]: per card per window C1 5.26 GB (8.65 ms ideal) vs 32.7 ms measured; C4 7.37 GB (12.1 ms) vs ~55 ms. Experts 1.64/3.16 GB,
+HC readout 1.33 GB (replicated, row-independent), dense 0.95 GB. Waste: hc_down weight re-read per 4 rows, triple quantize,
+768-1536 memcpy appends/window. VERDICT: windows run at 22-26% of the byte roofline; join with the measured ledger next.
+B/ledger/BYTES-hc2.md.
+
+## [A] 2026-11-20 22:08 UTC KF round 5 accepted; kv8 + hc2 merged
+- KF5 (fn-model 5b62ca4..6cb4f56): GDN R4 recurrence 8.0 -> 5.0 us, KV4805 R4 attention 65.9 -> 49.4 us, C4 expert up -2..5%;
+  projected saving 0.19 ms C1T2 / 1.26 ms C4T4 per card-window (bitwise + fp64 + health pass). Not yet merged.
+- fn-a3/fn-int 45685f4 = kv8 (36738f3, default off; smoke-kv8off hashes identical) + hc2 (9fb00f5; tokens identical per H).
+- KF6: prepared q8_1 inputs + removal of per-row project() memcpy appends (Lead B BYTES-hc2 items) on b70/fn-prep from fn-rec.
+
+## [A] 2026-11-20 22:22 UTC R2 recorded serve (fn-rec 99bda20, no hc2) and combined build
+RESULT (R/serve/r2-results.json, worker R): policy C1 79.9 / C2 101.5 / C4 134.0 / C8 160.5 agg tok/s, ITL p50 C1 9.4 ms,
+all speculative token references matched; no-MTP C1 61.5. no-MTP C4 then HUNG: "FN_RECORD abort bucket=4 rank=0 ZeFailed"
+(Level Zero 0x1); xe-reset rebind recovered, post-health HEALTHY. R is retrying with per-hop timestamps.
+VERDICT: R2 unqualified (no-MTP C4 hang). Combined fn-a3 99e31ff (hc2 + kv8 off + R2) is building; bench defaults to the
+no-MTP C1 control only under XPU_FN_RECORD (18be9ac, tools only) so the policy ladder is measured without the known hang.
+
+## [B] 22:42 UTC - KV eviction to RAM working on the real two-card serve
+CONFIG: b70/fn-rt-evict 4275ddc (fn-int 8524431 + kv8 + park2 + admit), int8 KV, XPU_FN_EVICT=1, cap 2 streams, :18153.
+RESULT (1 sample, unprofiled): C2 uncapped 48.8 agg; C4 capped 43.4 agg, 44 parks/44 restores, outputs == solo, no prefill replay;
+park p50/p99 43.7/585.9 ms, restore 37.1/42.6 ms; C4 worst TTFT 1.77 s (aged admission; was 15.6 s). VERDICT: user goal
+"eviction to system RAM restored without recompute" demonstrated on the serve; next p99 park, mirror, idle-Snap prompt cache.
