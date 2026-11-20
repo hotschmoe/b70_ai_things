@@ -1,0 +1,2 @@
+trace_direction,bytes_per_call,count,logical_bytes,total_ms,mean_us,median_us,p95_us,device,engine,operation
+D2M,64,12,768,0.017861000000000002,1.4884166666666667,1.354,1.9992499999999995,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2M)[64]

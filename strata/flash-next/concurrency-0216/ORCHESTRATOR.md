@@ -75,3 +75,6 @@ GPU RESUME 2026-11-20 06:10:20 UTC (TensorFold probe done)
   (4) final health, then append "STRATA DONE <time>" here and write your final report (brief's format; Stage B ledger
   headline included). Skip further Stage C items (commit/draft tail, card balance, prefill interleave) - they are recorded
   as candidates. Keep GPU use minimal; other agents will start using the GPUs after STRATA DONE.
+- 2026-11-20 06:48 UTC GPU worker: controlled same-server C4 passed; continuing on the already pair-leased cards 0+1 with the combined candidate near-200K forced-RAM-restore coherence run, expected 30-40 minutes. Quiet CPU client; final teardown and both-card health follow.
+- 2026-11-20 07:09 UTC GPU worker: near-200K forced exchange passed and combined server stopped cleanly. Running final xpu-health on cards 0+1 under pair lease, expected under 2 minutes; STRATA DONE follows when health and journal are complete.
+STRATA DONE 2026-11-20 07:10:13 UTC

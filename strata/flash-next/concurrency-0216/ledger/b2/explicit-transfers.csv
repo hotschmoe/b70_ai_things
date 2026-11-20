@@ -1,0 +1,11 @@
+trace_direction,bytes_per_call,count,logical_bytes,total_ms,mean_us,median_us,p95_us,device,engine,operation
+D2D,81920,269,22036480,0.6096659999999999,2.2664163568773232,2.291,3.229,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2D)[81920]
+D2D,512,24,12288,0.029936,1.2473333333333334,1.2235,1.354,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2D)[512]
+D2M,64,12,768,0.01859,1.5491666666666666,1.484,2.1166999999999994,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2M)[64]
+D2D,1536,12,18432,0.017963999999999997,1.4969999999999999,1.51,1.9218,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2D)[1536]
+D2D,13824,12,165888,0.017808,1.484,1.51,1.6088,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2D)[13824]
+D2D,4,12,48,0.015881,1.3234166666666667,1.354,1.4294,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2D)[4]
+H2D,55296,2,110592,0.014739,7.3695,7.3695,7.5337499999999995,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(H2D)[55296]
+H2D,1728,2,3456,0.003906,1.953,1.953,2.0232,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(H2D)[1728]
+D2D,368640,1,368640,0.0038540000000000002,3.854,3.854,3.854,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2D)[368640]
+D2D,40960,1,40960,0.002083,2.083,2.083,2.083,DEVICE<b70s4dayz>[Intel(R) Arc(TM) Pro B70 Graphics] 0:b:0:0 #0,"Thread 453 L0 Compute Engine<0,0>",zeCommandListAppendMemoryCopy(D2D)[40960]

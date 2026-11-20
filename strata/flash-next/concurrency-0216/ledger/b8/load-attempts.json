@@ -1,0 +1,23 @@
+{
+  "attempts": [
+    {
+      "slots_requested": 16,
+      "max_context": 200000,
+      "resident_cells": 32768,
+      "peer_experts_required_gib": 35.59,
+      "peer_free_gib": 31.66,
+      "reserve_mib": 1024,
+      "result": "clean startup refusal"
+    },
+    {
+      "slots_requested": 16,
+      "max_context": 200000,
+      "resident_cells": 20480,
+      "peer_experts_required_gib": 33.1,
+      "peer_free_gib": 31.66,
+      "reserve_mib": 1024,
+      "result": "clean startup refusal"
+    }
+  ],
+  "note": "No C16 requests or latency measured; 20480 is source-enforced minimum resident KV."
+}
