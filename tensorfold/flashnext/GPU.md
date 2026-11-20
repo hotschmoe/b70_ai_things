@@ -906,3 +906,63 @@
 2026-11-20 17:13:20 UTC [A-KF] released card 0
 2026-11-20 17:13:23 UTC [A-H] released card 0 (rc=0)
 2026-11-20 17:13:35 UTC [B-worker codex-kv8] claim cards 0+1 ~27 min: bf16page 32768-token compact teacher
+2026-11-20 17:22:27 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 17:25:13 UTC [A-R] claim note cards 0+1: descriptor retry still queued behind Lead B long-context teacher; no retry GPU touch yet; original 17:10 claim remains pending.
+2026-11-20 17:26:04 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 17:27:45 UTC [A-R] released cards 0+1 rc=0
+2026-11-20 17:28:49 UTC [A-KF] released card 0
+2026-11-20 17:29:27 UTC [B-worker codex-park] claim cards 0+1 ~12 min: matrix-int8-n70-other-k7
+2026-11-20 17:29:52 UTC [B-worker codex-kv8] claim cards 0+1 ~27 min: int8 32768-token compact teacher
+2026-11-20 17:29:54 UTC [A-KF] claim card 0 ~5 min: round5-expert-resume-prepared-gates-then-times
+2026-11-20 17:31:08 UTC [A-KF] claim card 0 ~5 min: round5-decode-rank-gates-and-times
+2026-11-20 17:31:15 UTC [A-H] claim card 0 ~5 min: selected-check.log
+2026-11-20 17:33:44 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 17:36:03 UTC [A-KF] released card 0
+2026-11-20 17:36:03 UTC [A-KF] released card 0
+2026-11-20 17:38:42 UTC [A-R] claim cards 0+1 ~10 min: r1-mtp-p0-smoke.log
+2026-11-20 17:42:29 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 17:42:32 UTC [A-H] released card 0 (rc=0)
+2026-11-20 17:42:32 UTC [A-KF] claim card 0 ~5 min: round5-decode-rank-gates-and-times
+2026-11-20 17:42:32 UTC [A-KF] claim card 0 ~5 min: round5-expert-resume-prepared-gates-then-times
+2026-11-20 17:42:35 UTC [A-H] claim cards 0+1 ~10 min: a5k-teacher-q8_1-1.log
+2026-11-20 17:42:45 UTC [B-worker codex-park] claim cards 0+1 ~12 min: matrix-int8-n70-other-k7
+2026-11-20 17:43:40 UTC [B-worker codex-kv8] claim cards 0+1 ~12 min: bf16page 512-row teacher verification
+2026-11-20 17:45:26 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 17:46:52 UTC [A-R] released cards 0+1 rc=0
+2026-11-20 17:47:36 UTC [A-KF] released card 0
+2026-11-20 17:48:42 UTC [A-KF] released card 0
+2026-11-20 17:50:48 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 17:50:48 UTC [A-H] claim cards 0+1 ~10 min: a5k-teacher-q8_1-2.log
+2026-11-20 17:51:32 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 17:51:32 UTC [B-worker codex-park] claim cards 0+1 ~12 min: matrix-int8-n256-control
+2026-11-20 17:51:37 UTC [B-worker codex-kv8] claim cards 0+1 ~12 min: int8 512-row teacher verification
+2026-11-20 17:53:25 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 17:53:25 UTC [A-KF] claim card 0 ~5 min: round5-decode-qualification-and-times
+2026-11-20 17:53:25 UTC [A-KF] claim card 0 ~5 min: round5-strata-rank-reference
+2026-11-20 17:56:48 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 18:00:50 UTC [A-KF] released card 0
+2026-11-20 18:01:46 UTC [A-KF] released card 0
+2026-11-20 18:06:54 UTC [A-H] claim cards 0+1 ~10 min: a5k-group0.log
+2026-11-20 18:06:57 UTC [A-S] claim cards 0+1 ~4 min: pre-serve health
+2026-11-20 18:07:28 UTC [A-S] released cards 0+1: pre-serve health rc=0
+2026-11-20 18:07:28 UTC [A-S] claim cards 0+1 ~50 min: Flash Next serve benchmark
+2026-11-20 18:08:58 UTC [B-worker codex-kv8] claim cards 0+1 ~4 min: merge smoke off greedy
+2026-11-20 18:09:04 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-46afffb
+2026-11-20 18:10:25 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 18:10:27 UTC [B-worker codex-kv8] claim cards 0+1 ~4 min: merge smoke bf16page greedy
+2026-11-20 18:11:57 UTC [orchestrator] claim card 0 ~3 min: latbench single (copy H2D/D2H) pinned to cpus 0-7 for NUMA probe
+2026-11-20 18:12:31 UTC [B-worker codex-kv8] release cards 0+1
+2026-11-20 18:14:49 UTC [orchestrator] release card 0
+2026-11-20 18:14:49 UTC [orchestrator] claim card 0 ~3 min: latbench single (copy H2D/D2H) pinned to cpus 8-15 for NUMA probe
+2026-11-20 18:16:55 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-20 18:16:55 UTC [A-KF] claim card 0 ~5 min: round5-final-fp64-bitwise-and-recorded-gates
+2026-11-20 18:16:55 UTC [A-H] claim cards 0+1 ~10 min: a5k-group1.log
+2026-11-20 18:17:56 UTC [A-R] claim cards 0+1 ~20 min: r1-state.log
+2026-11-20 18:19:13 UTC [orchestrator] release card 0
+2026-11-20 18:19:13 UTC [orchestrator] claim card 1 ~3 min: latbench single (copy H2D/D2H) pinned to cpus 0-7 for NUMA probe
+2026-11-20 18:25:22 UTC [A-S] released cards 0+1: benchmark session complete; outer script parse error
+2026-11-20 18:25:22 UTC [A-S] claim cards 0+1 ~4 min: post-serve health
+2026-11-20 18:25:53 UTC [orchestrator] release card 1
+2026-11-20 18:25:53 UTC [orchestrator] claim card 1 ~3 min: latbench single (copy H2D/D2H) pinned to cpus 8-15 for NUMA probe
+2026-11-20 18:28:05 UTC [A-S] released cards 0+1: post-serve health rc=0
+2026-11-20 18:30:22 UTC [orchestrator] release card 1

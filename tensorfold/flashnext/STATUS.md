@@ -1,6 +1,13 @@
 # Status (each lead keeps its own section current)
 
-## Lead A (model path)  [updated 16:40 UTC]
+## Lead A (model path)  [updated 18:30 UTC]
+- FIRST SERVE-LEVEL NUMBERS (18:26, worker S, workers/S/report.md + first-results.json): tensorfold-native OpenAI serve,
+  TP2 GGUF IQ3_XXS + MTP, fn-serve c3ac6cf (= fn-int 46afffb + server wiring), :18150, unprofiled, greedy,
+  256 tok, p0 tokens == solo serial (exact), chat coherent, health pre OK:
+    C1 42.4 tok/s (T2) / 45.5 (T4); C2 66.5 agg (33-38/stream); C4 89.9 agg; C8 111.8 agg (T2; T4 worse at C>=4);
+    TTFT C1 107 ms (short prompt); prefill 309 / 299 / 286 tok/s at 512 / 2k / 8k.
+  Not merged yet into this number: HC kernels (H; ~18 ms/window GPU), recorded windows (R; ~17 ms/window host lag), KF4/KF5.
+  Strata DD reference: C1 ~141, C2 ~92/stream, prefill ~2200. Re-measure after each merge with S/serve_bench.sh.
 - Milestones: M-A1..M-A4 DONE. M-A5 (speed) in progress: correctness on the fast path DONE (16:35).
 - Integration: b70/flashnext-2card (fn-int) = 46afffb = M-A4 + push transport + Strata-parity q8_1 kernels (row-invariant)
   + device PLE + per-card kernel-timestamp profiler. All gates pass on it: teacher vs Strata oracle 547/554 top-1, KL <= 0.008,
@@ -8,13 +15,18 @@
 - Critical path (diagnostic, profiled), C1 T2 55 ms/window per card: kernels 31.7 ms (HC 20.1 ms: fn_hc_down 16.7 ms = naive
   324-work-item GEMV; dense 5.0; experts ~3) + host submission lag 16.8 ms (~1720 appends/card) + event churn 5.2 ms; exposed
   AR 1.65 ms. C4 T4 116 ms/window. Prefill p7 287 tok/s (no XMX prefill yet).
+- USER PRIORITY (17:25): serve-level numbers first. Worker S builds/benchmarks the OpenAI serve on :18150 (first numbers
+  today); I6 = 3-min smoke gate + KF4 merge; merges to fn-int on smoke pass, full gates only at milestones.
 - Workers now: R (fn-rec) recorded windows: R0 GO (recorded 32.3 ms vs 31.8 ms floor, host submit 13.8 ms -> 39 us, bitwise);
   R1 invariant-immediate in progress. H (fn-hc) HC kernels (target hc_down <= 20 us/call). KF (fn-model) round 4: Q6_K,
   IQ4_NL down (82.5 -> 70.1 us, now beats Strata 72), prepared shared q8_1 activations.
 - Lead B: thanks for M-B2c, tracer v2, PLE-import analysis. No new requests.
 - Next GPU need: both cards in short leased runs (R, H gates), card 0 (KF, H microbench).
 
-## Lead B (runtime, latency, features)  [updated 17:20 UTC]
+## Lead B (runtime, latency, features)  [updated 17:58 UTC]
+- SPEED DIRECTIVE (17:25) applied: kv8 and park2 wrapping up now -> merge fn-int 46afffb, one fast smoke each, HANDOFF.md for
+  Lead A to merge (B/kv8/HANDOFF.md, B/park2/HANDOFF.md, ETA ~18:45). park2 delivers unprofiled park/restore ms at 1K/8K/32K.
+  DPAS prefill next gets wired into fn-int prefill behind a flag (Lead B branch) for a real prefill tok/s on the serve.
 - FOR LEAD A, ready now:
   * Tracer for your path: b70/fn-rt-trace2 d1a8a93 (based on fn-int bfb427f; default off, XPU_TRACE=<fresh dir>,
     XPU_TRACE_MODE=markers for baselines; analyzer: tools/xpu_trace/analyze.py TRACE --output OUT --window a4_window --streams N

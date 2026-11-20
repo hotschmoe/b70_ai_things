@@ -514,3 +514,34 @@ Not yet in fn-a3 (numerics of IQ4_NL association changed -> needs the model gate
 HC kernels and gate once). Prepared-input wiring waits for worker R's forward rewrite. Round 5: C4 IQ3_S/IQ2_S up, decode
 GDN/QSA non-projection kernels (gdn_rows, attn_sparse, ...), window-invariant grids. Prefill DPAS is Lead B's prototype
 (B/prefill/DPAS_PLAN.md) - not duplicated.
+
+## [B] 17:58 UTC - user speed directive applied to Lead B workers
+Stopped and redirected codex-kv8 and codex-park to wrap-up: merge fn-int 46afffb, one < 3 min smoke each, HANDOFF.md for Lead A;
+park2 to report unprofiled park/restore ms at 1K/8K/32K. Full suites only at milestone merges. DPAS worker continues (expert
+timing), then wires DPAS prefill on fn-int behind a flag for a real prefill tok/s number. Lead A owns the serve (fn-serve).
+
+## [A] 2026-11-20 17:56 UTC Direction change (user via orchestrator 17:25): serve numbers first, faster loop
+- Worker S (fn-serve from fn-int 46afffb): tensorfold-native xpu-native OpenAI serve on :18150 (research ID, not
+  hotschmoe-dd), unprofiled C1/C2/C4/C8 tok/s, TTFT, ITL, prefill 512/2k/8k; reusable S/serve_bench.sh for re-runs per merge.
+- Worker I6: smoke gate I/smoke.sh (<3 min GPU: identity, greedy token hashes 3 prompts, serial==T2, C2==solo, health),
+  then merge KF round 4 into fn-a3 -> smoke -> fast-forward fn-int; full gate suite only at milestone merges.
+- H (HC kernels), R (recorded windows), KF5 (decode kernels) continue; each merges into fn-int on smoke pass.
+
+## [A] 2026-11-20 18:30 UTC First serve numbers (worker S)
+CONFIG: tensorfold-native serve, TP2 GGUF IQ3_XXS + MTP (adaptive, caps T2/T4), 8 lanes, ctx 16384, q8_1, push TP2, device
+PLE, unprofiled; fn-serve = fn-int 46afffb + server wiring. COMMAND: workers/S/serve_bench.sh fn-serve first.
+RESULT: C1 42.4 (T2) / 45.5 (T4) tok/s; C2 66.5 agg; C4 89.9 agg; C8 111.8 agg (T2); TTFT C1 107 ms; prefill 309/299/286
+tok/s at 512/2k/8k. p0 serve tokens == solo serial exactly; /v1/models identity tf-flashnext-iq3xxs-tp2-mtp; coherent chat.
+VERDICT: baseline for the merge train (HC, recorded windows, KF4/5). 3.3x below Strata C1; prefill 7x below.
+
+## [O] 2026-11-20 18:35 UTC - Orchestrator NUMA probe (host memory layout and host copy rates)
+CONFIG: ASRock X399 Professional Gaming, BIOS P4.05, Linux sees 1 NUMA node. Card 0 root port pci0000:00 (die 0), card 1
+pci0000:40 (die 1), both Gen3 x16. Probes in /mnt/vm_8tb/b70/results/tf-flashnext/orch-numa/.
+COMMAND: per-cache-line DRAM latency (clflush + timed load) for the same 200,000 random lines of one 8 GiB buffer from core 0
+(die 0) and core 8 (die 1); tf-xpu-latbench single on card 0 and card 1, each pinned to cpus 0-7 and to 8-15.
+RESULT: every line is ~80-100 ns from one die and ~150-160 ns from the other, split 96,303 / 94,781 (perfectly
+anti-correlated; mean 129 vs 135 ns) -> BIOS memory interleave across dies (UMA). Copies (64 MiB, p50): H2D 13.0-13.6 GB/s
+and D2H 4.5-4.7 GB/s on BOTH cards, from either die, on both copy ordinals.
+VERDICT: the D2H ~4.5 GB/s limit is not a placement/NUMA effect we can fix by pinning (identical everywhere). Park/eviction
+designs should assume ~4.5 GB/s D2H per card (write-behind mirror stays the plan). Cross-card push is device-to-device and
+does not touch host DRAM. No BIOS change needed for the current campaign.
