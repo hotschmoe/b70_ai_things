@@ -59,3 +59,19 @@
 - 2026-11-20 05:26 UTC GPU worker: attention ON clients passed and server stopped cleanly. Running both-card post-health now, expected under 2 minutes; will release both GPUs and append GPU YIELDED immediately afterward. C4 outputs differ OFF/ON, requiring follow-up before promotion.
 GPU YIELDED 2026-11-20 05:26:03 UTC
 GPU RESUME 2026-11-20 06:10:20 UTC (TensorFold probe done)
+- 2026-11-20 06:11 UTC GPU worker: resume acknowledged; running fresh pair-leased xpu-health on cards 0+1, expected under 2 minutes, before further campaign GPU work.
+- 2026-11-20 06:12 UTC GPU worker: fresh resume health passed both cards. Starting the candidate 8-slot/32768-resident server on cards 0+1 for C1 and C2/C4/C8 checks, expected 7-10 minutes; quiet CPU client windows. C16 already refused at the minimum resident KV and has no throughput claim.
+- 2026-11-20 06:19 UTC GPU worker: candidate eight-slot run completed and exited cleanly. Starting an original-binary eight-slot control on cards 0+1, expected 7-10 minutes, to match C1/C2/C4/C8 order and resident KV/placement before interpreting results.
+- 2026-11-20 06:25 UTC GPU worker: candidate and original eight-slot arms completed and stopped cleanly. Running both-card health under pair lease, expected under 2 minutes, then continuing depth arms.
+- 2026-11-20 06:27 UTC GPU worker: eight-slot matched arms and both-card post-health passed. Starting original-binary batch MTP depth 2 on cards 0+1 for C1/C2/cached C4, expected 6-8 minutes; quiet CPU clients.
+- 2026-11-20 06:34 UTC GPU worker: depth-2 arm completed and stopped cleanly. Starting depth-3 original-binary arm on cards 0+1, expected 6-8 minutes; quiet CPU clients and both-card post-health afterward.
+- 2026-11-20 06:41 UTC GPU worker: depth-3 arm completed and stopped cleanly. Running both-card post-health under pair lease, expected under 2 minutes; will then analyze matched arms and continue controlled C4/long-context checks.
+- 2026-11-20 06:45 UTC GPU worker: running grouped streamed-KV parity pinned to card 0 under gpu-run, expected 3-5 minutes; card 1 remains free. This gates the combined depth-2 plus streamed-attention arm.
+- 2026-11-20 06:46 UTC GPU worker: grouped streamed-KV parity passed for one through four queries with eviction. Starting combined depth-2 plus streamed-attention arm on cards 0+1, expected 6-8 minutes; quiet CPU clients.
+- 2026-11-20 06:50 UTC ORCHESTRATOR: WRAP-UP DIRECTION (user is moving the main effort to a TensorFold Flash-Next two-card port).
+  Please finish only: (1) the running combined depth-2 + streamed-attention arm; (2) for the best candidate (likely depth 2 +
+  streamed attention), the C4 output-difference check (same binary, same switch, controlled admission order) and one
+  near-200K forced-restore coherence run; (3) write the proposed DD config diff and the Stage C results table in the journal;
+  (4) final health, then append "STRATA DONE <time>" here and write your final report (brief's format; Stage B ledger
+  headline included). Skip further Stage C items (commit/draft tail, card balance, prefill interleave) - they are recorded
+  as candidates. Keep GPU use minimal; other agents will start using the GPUs after STRATA DONE.

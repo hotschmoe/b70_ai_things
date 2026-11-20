@@ -52,6 +52,10 @@ recompute works, prioritize concurrency, decode and MTP. Cached-prefix
 
 ## Current scope
 
+ACTIVE (user, 2026-11-20): TensorFold Flash-Next two-card port (Zig/Level Zero engine fork) chasing the
+high-concurrency ceilings; Opus 5.5 leads oversee Sonnet/Codex workers. Brief and evidence:
+tensorfold/flashnext/ (BRIEF.md, STATUS.md, JOURNAL.md). Profile latency/critical path, not bandwidth.
+
 Flash-Next on two B70s, active vLLM campaign (user direction, 2026-10-21).
 Targets are in the "Flash-Next goals" section above. Prefer upstream features
 and out-of-tree plugins, then small default-off fork changes; no long-lived
