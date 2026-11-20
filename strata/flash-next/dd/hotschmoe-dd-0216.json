@@ -61,7 +61,7 @@
     "--vision",
     "--batch-mtp"
   ],
-  "log": "/mnt/vm_8tb/b70/results/strata-0216/candidate-engine.log",
+  "log": "/mnt/vm_8tb/b70/results/hotschmoe-dd/engine-0216.log",
   "env": {
     "STRATA_EP_PREFILL_REDUCE": "1",
     "STRATA_OWNED_PRICE": "exact",

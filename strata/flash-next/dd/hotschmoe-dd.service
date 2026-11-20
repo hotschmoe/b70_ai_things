@@ -1,5 +1,5 @@
 [Unit]
-Description=hotschmoe-dd: Strata Flash-Next IQ3_XXS night-final-v3 (backend 127.0.0.1:18124)
+Description=hotschmoe-dd: Strata 0.2.16 Flash-Next IQ3_XXS DD port (backend 127.0.0.1:18124)
 After=network-online.target
 Wants=hotschmoe-dd-frontdoor.service
 
