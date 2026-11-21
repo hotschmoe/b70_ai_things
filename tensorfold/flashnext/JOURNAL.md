@@ -998,3 +998,8 @@ gpu_window_steps.tsv, then cutover C1-C3), estimated 31 min GPU. dd/: launcher g
 engine env BEFORE sourcing the env file (it used to unset XPU_FN_DESC after); tf-dd-prod.env (200000 x 4, @FREEZE placeholders);
 unit points at tf-dd-prod.env; README.md runbook (freeze, window, cutover, rollback). Nothing installed or started. Waiting for
 KV/SAMP/VIS/API handoffs.
+
+## [O] 2026-11-21 18:56 UTC - Strata down; both cards to TensorFold for the cutover
+CONFIG: owner decision (no users today). COMMAND: systemctl --user stop hotschmoe-dd hotschmoe-dd-soak; bin/gpu-run bin/xpu-health.
+RESULT: Strata inactive, frontdoor active, no container, leases free; xpu-health HEALTHY (cards 0 1). Workers KV/SAMP/VIS/API/INT given quick GPU tests (<=5 min leases, ports 18150-18154).
+VERDICT: cutover only when dd_functional.py passes through :18080 with an image; rollback = Strata unit.

@@ -67,9 +67,40 @@ TF_BIN and TF_BIN_SHA256 into tf-dd-prod.env and run preflight. The window tests
 
 ## KV
 
-(worker KV: add step lines here -- id, hard|soft, timeout <= 180 s, exact command using $TF_URL, PASS gate. Needed:
-90K-token prompt + 256-token decode coherent with TTFT recorded; 4 concurrent long requests admitted at 200000;
-park/restore bitwise; the expected p0 token file for the production KV mode -> TF_PROD_EXPECTED.)
+Owner: worker KV (branch b70/dd-kv on top of b70/dd-serve; merges b70/fn-rt-evict 2c5d885). Production flags for
+tf-dd-prod.env (all default-off in the engine):
+
+    export XPU_FN_KV=int8 XPU_FN_DESC=1 XPU_FN_KV_PAGES=auto XPU_FN_EVICT=1 XPU_FN_EVICT_SLOTS=auto XPU_FN_MIRROR=1
+    export XPU_CHUNK=512 XPU_CHUNK_SOLO=512   # chunk route-around (below); 64/64 is the fallback pair
+
+- Descriptor windows (<= 16 rows) now run over the shared int8 page arena (fn_window_pages.cl); there is no per-slot
+  bf16 context plane, so context is bounded by the arena, not by 16 x context x 17 KB. Prompt chunks > 16 rows use
+  the legacy paged pass. XPU_FN_KV_PAGES=auto sizes the arena from measured free VRAM after weights and activations
+  minus a reserve for 24 slabs + tables + 1.25 GiB margin; the load prints one 'paged KV budget' line. CPU model at
+  the int-rf2 free figure: about 946 pages = 484K tokens = 5 x 90K or 2 x 200K resident; streams beyond that park
+  to host RAM (EVICT_SLOTS=auto = full-context fits, so 4 logical streams on 2 physical slots at 200000).
+- Chunk route-around: int8 512-row vs 64-row prefill is not bitwise (B/kv8: max logit diff 0.0625, argmax equal;
+  bf16page is bitwise). Root cause unproven. Equal XPU_CHUNK and XPU_CHUNK_SOLO make solo and busy prompts take
+  identical pass shapes, so every concurrency == solo gate stays bitwise; 512/512 keeps the prefill rate.
+- TF_PROD_EXPECTED: cannot be made on the CPU. In the first window P1 runs in record mode and writes
+  expected-prod.json in its step dir; set TF_PROD_EXPECTED to that file for every later window.
+
+Steps (TAB-separated lines for gpu_window_steps.tsv, after P1-bench; KV_OUT=$TF_WIN shares files across steps):
+
+| id | kind | timeout | command | PASS gate |
+|---|---|---|---|---|
+| KV0-budget | hard | 10 | python3 $TF_HERE/kv_gate.py budget $TF_SERVER_LOG | source auto, resident_90k >= 4, resident_200k >= 2 |
+| KV1-long90k | hard | 180 | KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py long $TF_URL 90000 256 kv90k | HTTP 200, prompt_tokens >= 81000, needle recalled, 256 tokens or stop; TTFT/prefill/decode recorded (soft: TTFT <= 90 s) |
+| KV2-solo40k | hard | 120 | KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py long $TF_URL 40000 128 kv40k | as KV1 at 40000; ids saved to $TF_WIN/kv40k.json |
+| KV3-conc4 | hard | 180 | python3 $TF_HERE/kv_gate.py conc $TF_URL 40000 4 128 $TF_WIN/kv40k.json | 4 distinct 40K prompts admitted and complete, all needles recalled, stream 0 ids == KV2 bitwise (parked/restored on 2 physical slots) |
+| KV4-parks | hard | 10 | python3 $TF_HERE/kv_gate.py parks $TF_SERVER_LOG 1 | >= 1 'eviction park' and >= 1 'eviction restore' since launch, no eviction errors (park/restore bitwise is KV3 + P1 C4/C8 == solo) |
+| KV5-long180k | soft | 180 | KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py long $TF_URL 180000 32 kv180k | prompt_tokens >= 162000, needle recalled, 32 tokens; TTFT recorded |
+
+GPU time about 9 min (KV1 ~70 s, KV2 ~35 s, KV3 ~120 s, KV5 ~150 s). Fail of KV0..KV4 blocks cutover (rollback as
+G2.0). Fallbacks without a rebuild: XPU_CHUNK=64 XPU_CHUNK_SOLO=64 if P1 C4 != solo; XPU_FN_KV_PAGES=<n> if KV0
+reports too few pages; unset XPU_FN_EVICT* (then 4 x 200K cannot all be resident) if KV4 shows park errors.
+Not in this window (needs a second server config): 512 vs 64 int8 first-divergence diagnostic (per-layer router,
+pre-append K/V, codes, attention at the 4,800-row boundary; B/kv8 NOTES).
 
 ## SAMP
 

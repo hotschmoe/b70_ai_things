@@ -33,6 +33,13 @@ SCRIPTS = {
     "tool_two": {"chunks": [[tool("get_weather", {"city": "Boise"})], ["\n\n"], [tool("get_weather", {"city": "Reno"})], ["<EOS>"]]},
     "tool_long": {"chunks": [["<tool_call>\n<function=write_file>\n<parameter=path>\nnotes.txt\n</parameter>\n<parameter=content>\n"]]
                   + pieces("\n".join(LONG_BODY), 120) + [["\n</parameter>\n</function>\n</tool_call>"], ["<EOS>"]]},
+    # what the model writes AFTER a forced call opening (tool_choice required / named on an engine with no grammar): the server
+    # has already written "<tool_call>\n" (several tools) or "<tool_call>\n<function=NAME>\n" (one tool) at the end of the prompt
+    "tool_after_open": {"chunks": [["<function=get_weather>\n<parameter=city>\nBoise\n</parameter>\n</function>\n</tool_call>"], ["<EOS>"]]},
+    "tool_after_named": {"chunks": [["<parameter=city>\nBoise\n</parameter>\n", "<parameter=units>\ncelsius\n</parameter>\n</function>\n</tool_call>"], ["<EOS>"]]},
+    "tool_typed": {"chunks": [["<tool_call>\n<function=configure>\n<parameter=count>\n5\n</parameter>\n<parameter=ratio>\n0.25\n</parameter>\n"],
+                              ["<parameter=enabled>\ntrue\n</parameter>\n<parameter=tags>\n[\"a\", \"b\"]\n</parameter>\n"],
+                              ["<parameter=options>\n{\"depth\": 2, \"mode\": \"fast\"}\n</parameter>\n<parameter=note>\nhello\n</parameter>\n</function>\n</tool_call>"], ["<EOS>"]]},
     "answer_after_tool": {"chunks": [["It is 58 F and clear in Boise."], ["<EOS>"]]},
     "json_object": {"chunks": [['{"city": "Boise", "temp_f": 58}'], ["<EOS>"]]},
     "json_bad": {"chunks": [["this is not json"], ["<EOS>"]]},

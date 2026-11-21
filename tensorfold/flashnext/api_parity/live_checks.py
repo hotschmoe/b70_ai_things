@@ -146,6 +146,36 @@ code, r = req("/chat/completions", {"model": "hotschmoe-dd", "max_tokens": 200, 
                                     "messages": [{"role": "user", "content": "Count from 1 to 20 separated by commas."}]})
 gates["stop_sequence"] = r["choices"][0]["finish_reason"] == "stop" and "5" not in (r["choices"][0]["message"].get("content") or "")
 
+# forced tool call on an engine with no token grammar (TF_STRUCTURED_FALLBACK=1): the call opening is written into the prompt
+code, r = req("/chat/completions", {"model": "hotschmoe-dd", "max_tokens": 512, "temperature": 0, "tools": TOOLS, "tool_choice": "required",
+                                    "messages": [{"role": "user", "content": "Hello there, how are you today?"}]})
+msg = (r.get("choices") or [{}])[0].get("message", {}) if code == 200 else {}
+tc = (msg.get("tool_calls") or [{}])[0].get("function", {})
+res["tool_choice_required"] = {"code": code, "name": tc.get("name")}
+gates["tool_choice_required_forces_call"] = code == 200 and tc.get("name") in ("write_file", "get_weather") \
+    and r["choices"][0]["finish_reason"] == "tool_calls"
+code, r = req("/chat/completions", {"model": "hotschmoe-dd", "max_tokens": 512, "temperature": 0, "tools": TOOLS,
+                                    "tool_choice": {"type": "function", "function": {"name": "get_weather"}},
+                                    "messages": [{"role": "user", "content": "Tell me a joke."}]})
+tc = ((r.get("choices") or [{}])[0].get("message", {}).get("tool_calls") or [{}])[0].get("function", {}) if code == 200 else {}
+gates["tool_choice_named_forces_call"] = code == 200 and tc.get("name") == "get_weather"
+
+# response_format json_schema in the prompt (no validation server-side): at least 2 of 3 replies are a JSON object with the keys
+ok = 0
+for i in range(3):
+    code, r = req("/chat/completions", {"model": "hotschmoe-dd", "max_tokens": 300, "temperature": 0, "chat_template_kwargs": NOTHINK,
+                                        "response_format": {"type": "json_schema", "json_schema": {"name": "city", "strict": True, "schema": {
+                                            "type": "object", "properties": {"city": {"type": "string"}, "population": {"type": "integer"}},
+                                            "required": ["city", "population"], "additionalProperties": False}}},
+                                        "messages": [{"role": "user", "content": ["Boise", "Reno", "Spokane"][i] + ": give the city and a rough population."}]})
+    try:
+        obj = json.loads(r["choices"][0]["message"]["content"]) if code == 200 else None
+        ok += isinstance(obj, dict) and isinstance(obj.get("city"), str) and isinstance(obj.get("population"), int)
+    except (ValueError, KeyError, TypeError):
+        pass
+res["response_format_ok_of_3"] = ok
+gates["response_format_json_schema"] = ok >= 2
+
 # queueing: more concurrent requests than --parallel all complete (no 429/503), none is refused
 def one(i):
     t0 = time.time()
