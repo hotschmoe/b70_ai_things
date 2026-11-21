@@ -1261,3 +1261,8 @@ CONFIG: frozen b70/dd-serve 2cb54319 (sha 6ce1f656), tf-dd-prod.env (paged int8 
 COMMAND: gpu_window.sh cutover (WIN_DIR final-2cb54319); then XPU_FN_EVICT_SLOTS=auto -> 4 (KV q21/q22 gated) + unit restart + dd_functional.py through :18080 with image.
 RESULT: C1-start PASS (116 s), C2 dd_functional through :18080 PASS (thinking, tool call + roundtrip, 4 concurrent exact, vision blue, 2048 tok at 141.6 tok/s); after the slot change physical_slots=4 state_fit=4, dd_functional PASS again (142.3 tok/s). TF unit enabled, Strata unit disabled, passive record --backend tf.
 VERDICT: LIVE. Rollback = tensorfold/flashnext/dd/gpu_window.sh rollback. Next: performance with all features on (prod config C1 100 / C2 144 / C4 123 / C8 123 / PF2k 1390; MTP acceptance at 0.6 = 0.29).
+
+## [O] 2026-11-21 22:58 UTC - performance phase started on the production config
+CONFIG: owner: endpoint may go down any time; bring the frozen build up only for relevant tests (+ dd_functional with image after each bring-up). TF unit stopped + disabled, soak stopped; xpu-health HEALTHY 22:57. Frozen 2cb54319 kept as rollback.
+COMMAND: workers dispatched on NEXT-QUEUE.md: INT = perf runner + integrator (re-rank vs 2cb54319, row 9/B1 confirm from source + A/B, production-config ledger first, section 2 rows on both configs, stacked arm + freeze); KV = KVP1/KVP2 prefill, rows 10/12, B1'; SAMP = MTP acceptance (row 8/B2), row 6, sampling cost at C4/C8; SCHED (ex-VIS) = B6, B8, --parallel 8 at C8; API = pictures cap, TIFF/AVIF, per-request metrics line, TF Grafana draft; KRN (new) = B3 GDN replay, B4 DP drafter.
+RESULT: pending. VERDICT: pending; per-row before/after us vs byte ideal, launch delta, C1/C2/C4/C8/PF2k/90K TTFT on both configs.
