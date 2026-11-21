@@ -213,7 +213,7 @@ class Monitor:
             if m:
                 s = m.group("status")
                 self.w["http"][s] = self.w["http"].get(s, 0) + 1
-                if s[0] in "45" and m.group("path").split("?")[0] not in ("/favicon.ico",):
+                if s[0] in "45" and m.group("path").split("?")[0] not in ("/favicon.ico", "/_clamp/stats"):
                     self.alert(f"backend HTTP {s} {m.group('method')} {m.group('path').split('?')[0]}")
                 continue
             if BAD.search(ln) and not IGNORE_BAD.search(ln):
@@ -243,7 +243,7 @@ class Monitor:
             self.health_fail += 1
             if self.health_fail == 2:
                 self.alert(f"health failing (status {code}) for 2 consecutive samples")
-        if self.backend == "tf":
+        if self.backend == "tf" and os.environ.get("SOAK_CLAMP") == "1":  # clamp proxy retired (real sampling)
             c, stats = http_get("/_clamp/stats", 2.0)
             if c == 200 and stats:
                 self.w["clamp"] = {k: stats.get(k) for k in ("requests", "temperature_clamped", "dropped", "upstream_errors")}
