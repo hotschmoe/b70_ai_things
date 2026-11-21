@@ -2397,3 +2397,13 @@
 2026-11-21 21:39:08 UTC [KV] released cards 0+1 (rc=0): KV quick 19: 5 x 20K concurrent, 1200-token replies, every stream vs its solo ref (park/restore bitwise)
 2026-11-21 21:39:18 UTC [KV] claim cards 0+1 ~5 min: KV quick 20: f70795f7 prefill rates 8K / 32K (prod KV mode) (port 18151, bef2f1a8)
 2026-11-21 21:42:01 UTC [KV] released cards 0+1 (rc=0): KV quick 20: f70795f7 prefill rates 8K / 32K (prod KV mode)
+2026-11-21 21:44:33 UTC [KV] claim cards 0+1 ~5 min: KV quick 21: XPU_FN_EVICT_SLOTS=4 at 200000: 5 x 20K 1200-token replies vs q18 solo refs (expect ~0 parks) (port 18151, bin 4ddf7dac)
+2026-11-21 21:49:17 UTC [KV] released cards 0+1 (rc=0): KV quick 21: XPU_FN_EVICT_SLOTS=4 at 200000: 5 x 20K 1200-token replies vs q18 solo refs (expect ~0 parks)
+2026-11-21 21:49:29 UTC [KV] claim cards 0+1 ~5 min: KV quick 22: EVICT_SLOTS=4 under page pressure (KV_PAGES=150, ctx 65536): 5 x 20K 1200-token vs q18 refs (port 18151, bin 4ddf7dac)
+2026-11-21 21:54:07 UTC [KV] released cards 0+1 (rc=0): KV quick 22: EVICT_SLOTS=4 under page pressure (KV_PAGES=150, ctx 65536): 5 x 20K 1200-token vs q18 refs
+2026-11-21 21:57:33 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod 2cb54319 (port 18150, steps P0-identity KV0-budget KV1-short-c4 S1-samp VIS-I VIS-F P9-functional)
+2026-11-21 22:00:32 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod 2cb54319 rc=0
+2026-11-21 22:09:25 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 22:11:52 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
+2026-11-21 22:11:52 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 2400 s: gpu_window prod final-2cb54319 (port 18150)
+2026-11-21 22:18:44 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod final-2cb54319 rc=0

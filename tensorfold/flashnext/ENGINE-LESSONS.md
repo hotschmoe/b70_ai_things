@@ -66,6 +66,12 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
 - 2026-11-21 [KV] Gates must send what clients send: raw-completion prompts without the chat template gave false
   "EOS at long context" failures; Strata had no raw endpoint to compare. Evidence: workers/KV/q5, q12, strata-ref.
 
+- 2026-11-21 [KV] A scheduler that already handles pressure needs no up-front reservation: slot count was set
+  to reserve a full context per slot (3 at 200K), so 4 users rotated every 250 ms (113 parks in 88 s) although
+  4 fit. Sizing slots by the state fit and letting page pressure drive parking gave 0 parks. Also, async copy
+  jobs that advance only at engine-round boundaries inherit the round length (450 ms during prefill). Evidence:
+  tensorfold/flashnext/JOURNAL.md [KV] 2026-11-21 22:25; workers/KV/q19, q21, q22.
+
 ## Strata features that were hard to port, and why
 
 - Long context + parking (Strata: 200K, int8 KV, --kv-resident 65536 + RAM-backed slots): TensorFold had no paged

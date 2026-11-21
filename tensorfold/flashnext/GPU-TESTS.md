@@ -105,6 +105,17 @@ KV5 make conc compare every stream (q18/q19: all 5 streams == solo bitwise over 
 Fail of KV0..KV6 blocks cutover (rollback as G2.0). Fallbacks without a rebuild: XPU_CHUNK=64 XPU_CHUNK_SOLO=64 if
 C4 != solo; XPU_FN_KV_PAGES=<n> if KV0 reports too few pages; unset XPU_FN_EVICT* if KV6 shows park errors.
 
+Physical slots (KV, 2026-11-21 21:55): add XPU_FN_EVICT_SLOTS=4 to the prod env for head f70795f7, or take
+8d1dd2d6, where auto means the same. The old auto reserved a full 200K per slot (3 slots), so 4 live streams
+rotated every 250 ms quantum: 113 parks in 88 s. With 4 slots the pages are shared and streams park only when the
+pool is short: q21 0 parks; q22 at 150 pages 4 parks / 3 restores; every stream == solo bitwise in both.
+
+Queued GPU probes (not run; GPU frozen at cutover), binary sha 65d17dbb (a61851bf):
+- KVP1, 3 min: KV_SLOTS=4 XPU_FN_PREFILL_PROFILE=1 kv-quick.sh ... "long $U 8000 32 kv8k" "long $U 32000 32 kv32k".
+  Read the 'prefill profile' lines in server.log.
+- KVP2, 3 min: KV_KV=off KV_CONTEXT=16384 XPU_FN_PREFILL_PROFILE=1 ... "long $U 8000 32 kv8k" (legacy control).
+  The difference between the two tables names the kernels behind 1170 vs 1373 tok/s at 8K.
+
 Prefill tok/s, prod KV mode, f70795f7 (bef2f1a8 in brackets): 8K 1170 [870], 20K 1143 [828], 32K 1119 [811],
 70K 1059 [779], 90K 1031 [764]. Strata 0.2.16 same prompts, cold: 20K 1120, 70K 919; repeat TTFT 32K 0.169 s,
 90K 0.836 s (TF 0.051 s / 0.113 s). Legacy bf16 desc (KV off, 16K ctx) 8K 1373.

@@ -1199,3 +1199,65 @@ RESULT:
 VERDICT: KV handoff gates PASS (90K, 4+ long streams at 200000 with park/restore bitwise, RAM prompt cache). The
 early-EOS is raw-prompt model behaviour, not a KV bug. Head f70795f7 to INT. Open, perf: park thrash at 4 live
 streams on 3 slots (113 parks in 88 s); prefill is still below the legacy bf16 desc path (1373 at 8K).
+
+## [INT] 2026-11-21 22:00 UTC -- KV f70795f7 + VIS 097ff79c merged -> dd-serve 2cb54319; production-mode quick check PASS at 200000 x 4
+CONFIG: dd-serve 7d08051e -> 8f35325a (merge dd-vis 097ff79c, which carries KV bef2f1a8 already resolved against VIS; conflicts vs
+SAMP in xpu_lane.zig (profiler + has_evict side by side; stepOne keeps SAMP's stream arg, then KV roundDone) and xpu_lane_prompt.zig
+(KV draw timing around SAMP's drawRows signature)) -> 2cb54319 (merge dd-kv f70795f7, clean on top). Merging VIS-with-KV first left
+only SAMP-vs-KV conflicts; merging KV first conflicted in 4 files incl. VIS's setVision placement, which 097ff79c had moved.
+tf-dd-prod.env: KV flags (int8 + desc + pages auto + evict + mirror, XPU_CHUNK=XPU_CHUNK_SOLO=512), --prompt-cache-gib 2, VIS libs.
+COMMAND: host_suite2.sh merge-2cb54319 build (31 steps incl. 6 KV host steps); quick_check.sh 2cb54319 200000
+"P0-identity KV0-budget KV1-short-c4 S1-samp VIS-I VIS-F P9-functional" (one lease on :18150, ~3 min).
+RESULT: host tests_rc=0, build_rc=0 (399 s, sha a1d8f027). Load 80 s, 29.63 GiB/GPU, context 200000, 4 streams. P0 PASS (context
+200000). KV0 pages 1175 = 601,600 tokens/card, resident_200k 3, resident_90k 6. KV1 p0 == KV ref, 4 concurrent == solo, solo decode
+95.8 tok/s. S1-samp PASS. VIS-I blue x2 (encode 923 ms, TTFT 1.09 s / 0.03 s cached). VIS-F jpeg EXIF "left", webp "right".
+P9 dd_functional with image PASS (long 2048 tokens at 142.0 tok/s). Log clean, HEALTHY pre/post.
+VERDICT: all items integrated. Freeze 2cb54319 with build_dd.sh, then the full window (regress + prod, all 20 steps).
+
+## [INT] 2026-11-21 22:18 UTC -- full GPU window on the frozen build 2cb54319: 0 hard failures (26 gates); awaiting orchestrator go for cutover
+CONFIG: frozen /mnt/vm_8tb/b70/build/tensorfold-dd/2cb54319 (build_dd.sh, 387 s, sha 6ce1f656...), tf-dd-prod.env filled; preflight rc 0.
+Strata down since 18:55 (owner), so gpu_window.sh regress + prod were run directly (no window(): it would restart Strata on failure).
+COMMAND: WIN_TAG=final-2cb54319 gpu_window.sh regress; WIN_TAG=final-2cb54319 gpu_window.sh prod. Results:
+/mnt/vm_8tb/b70/results/hotschmoe-dd/gpu-window/final-2cb54319/gates.tsv.
+RESULT:
+- G1 regress (int-rf2 config, frozen binary): p0 bitwise == int-rf2 (f8caa42cc5b4), concurrent == solo, HEALTHY; C1 110.1 / C2 144.2 /
+  C4 174.3 / C8 210.7 / PF2k 1556 (1.006 / 1.034 / 1.037 / 1.008 / 0.997 x int-rf2): no regression in the default path.
+- G2 prod (200000 x 4, all features): load 79 s, 29.62 GiB/GPU. P0 identity PASS. P1 bench (soft) C1 100.0 / C2 144.1 / C4 123.0 /
+  C8 123.2 (queued on 4 lanes) / PF2k 1390 = 0.91 / 1.03 / 0.73 / 0.59 / 0.89 x int-rf2: soft FAIL at C4, C8, PF2k.
+- KV0 1174 pages = 601,088 tokens/card (resident_200k 3, resident_90k 6); KV1 p0 == ref, 4 concurrent == solo; KV2 90K chat needle
+  TTFT 88.7 s (1013 tok/s), decode 130 tok/s; KV3 repeat 89881 cached, TTFT 0.102 s, same ids; KV4 20K solo 1200 tokens needle; KV5
+  5 x 20K concurrent (3 physical slots) all needles, stream 0 == solo; KV6 71 parks / 70 restores, 0 errors.
+- S1-samp all PASS; MTP accept at T 0.6 = 0.286 (105 drafted / 30 accepted), above the 0.25 floor (0.274 at 7d08051e, SAMP saw 0.37-0.42).
+- VIS-T0/I/F/T1 PASS (blue x2, EXIF jpeg "left", webp "right", text hash unchanged). API1-5 PASS (API5 incl. window 200000, overflow
+  400, queue 8 on 4 lanes). P9 dd_functional with image PASS (long 2048 tokens 141.4 tok/s). Server log clean; HEALTHY pre/post.
+VERDICT: every hard gate PASS -> ready for cutover (C1-C3) on the orchestrator's go. Open (soft): C4/C8 aggregate at the production
+config are 0.73/0.59 x int-rf2 (int8 desc+paged + 4 lanes); performance phase item, not a cutover blocker.
+
+
+## 2026-11-21 22:25 [KV] park thrash: physical slots bounded by policy, not memory; 4 slots fit at 200000
+
+CONFIG: b70/dd-kv f70795f7 binary 4ddf7dac, prod KV env (int8 paged desc, evict, mirror, chunk 512/512), --parallel 4
+--context 200000 --prompt-cache-gib 2; KV_LONG_ANSWER=1 prompts (copy ledger lines, 1200 greedy tokens).
+COMMAND: workers/KV/kv-quick.sh q21 (KV_SLOTS=4) and q22 (KV_SLOTS=4 KV_PAGES=150 KV_CONTEXT=65536):
+kv_gate.py conc 20000 5 1200 against q18 per-seed solo refs, then parks.
+RESULT:
+- Cause: native/xpu_flashnext.zig set auto = pages / pageCount(context) = 1175 / 391 = 3. The load line already
+  showed state_fit=4: GDN/SSM state, MTP state and desc buffers fit 4 streams after the arena. The scheduler
+  (xpu_resident.zig) charges pages by tokens held and parks on page pressure, but with 3 slots, 4 live streams
+  rotated every 250 ms quantum: q19, 113 parks in 88 s.
+- Park "copy_ms" of ~450 ms is tick granularity, not PCIe: a park job advances once per engine round, and a round
+  during a 512-row prefill chunk is ~450 ms. The same size park finishes in ~20 ms when decode rounds run (q19).
+- q21, 4 slots at 200000: 0 parks; 5 streams each == solo bitwise over 1200 tokens; 105 s.
+- q22, 4 slots, pool forced to 150 pages (76,800 tokens for 4 x 20.6K): 4 parks / 3 restores, no errors, all
+  5 streams == solo bitwise.
+- 8d1dd2d6: auto = state fit (=full keeps the old policy). a61851bf: XPU_FN_PREFILL_PROFILE=1 chunk-pass kernel
+  profile, built (65d17dbb), not run: GPU frozen for the cutover at 22:19.
+VERDICT: 4 users at 200K context stay resident (601K tokens of pages shared) and never rotate. Parking happens
+only when the live total exceeds the pool, and it is bitwise. Prod: XPU_FN_EVICT_SLOTS=4 now, or 8d1dd2d6.
+Prefill gap profile (KVP1/KVP2 in GPU-TESTS.md) waits for the next GPU window.
+
+## [O] 2026-11-21 22:26 UTC - CUTOVER: hotschmoe-dd served by TensorFold
+CONFIG: frozen b70/dd-serve 2cb54319 (sha 6ce1f656), tf-dd-prod.env (paged int8 KV + desc, 200000 x 4, evict+mirror, prompt cache 2 GiB, sampling card defaults, vision, API flags).
+COMMAND: gpu_window.sh cutover (WIN_DIR final-2cb54319); then XPU_FN_EVICT_SLOTS=auto -> 4 (KV q21/q22 gated) + unit restart + dd_functional.py through :18080 with image.
+RESULT: C1-start PASS (116 s), C2 dd_functional through :18080 PASS (thinking, tool call + roundtrip, 4 concurrent exact, vision blue, 2048 tok at 141.6 tok/s); after the slot change physical_slots=4 state_fit=4, dd_functional PASS again (142.3 tok/s). TF unit enabled, Strata unit disabled, passive record --backend tf.
+VERDICT: LIVE. Rollback = tensorfold/flashnext/dd/gpu_window.sh rollback. Next: performance with all features on (prod config C1 100 / C2 144 / C4 123 / C8 123 / PF2k 1390; MTP acceptance at 0.6 = 0.29).

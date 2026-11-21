@@ -6,7 +6,14 @@
 # Never print prompt or response text beyond what the gate needs. Owners add their steps only via INT (GPU-TESTS.md).
 P0-identity	INT	hard	30	python3 $TF_HERE/gpu_window_checks.py identity $TF_URL
 P1-bench	INT	soft	180	FN_BENCH_PORT=$TF_PORT FN_BENCH_MODEL=$TF_MODEL FN_BENCH_ROOT=$TF_OUT FN_BENCH_EXPECTED=${TF_PROD_EXPECTED:-record} FN_BENCH_QUICK=1 python3 $TF_WT/tools/flashnext_serve_bench.py prod > bench.log 2>&1; rc=$?; ((rc)) && { tail -5 bench.log; exit $rc; }; python3 $TF_HERE/gpu_window_checks.py compare prod-results.json $TF_REF 0.90
-# KV steps (worker KV): 90K prompt + decode (TTFT recorded, coherent), 200K x 4 admission, park/restore bitwise.
+# KV steps (worker KV, b70/dd-kv f70795f7). KV_OUT=$TF_WIN shares files across steps.
+KV0-budget	KV	hard	10	python3 $TF_HERE/kv_gate.py budget $TF_SERVER_LOG
+KV1-short-c4	KV	hard	30	KV_OUT=$TF_WIN KV_P0_REF=$TF_KV_P0_REF python3 $TF_HERE/kv_gate.py short $TF_URL 4 64
+KV2-long90k	KV	hard	150	KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py long $TF_URL 90000 160 kv90k
+KV3-cache90k	KV	hard	30	KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py again $TF_URL 90000 160 $TF_WIN/kv90k.json
+KV4-solo20k	KV	hard	40	KV_OUT=$TF_WIN KV_LONG_ANSWER=1 python3 $TF_HERE/kv_gate.py long $TF_URL 20000 1200 kv20kL
+KV5-conc5	KV	hard	150	KV_OUT=$TF_WIN KV_LONG_ANSWER=1 python3 $TF_HERE/kv_gate.py conc $TF_URL 20000 5 1200 $TF_WIN/kv20kL.json
+KV6-parks	KV	hard	10	python3 $TF_HERE/kv_gate.py parks $TF_SERVER_LOG 1
 # SAMP steps (worker SAMP): sampled distribution sanity, seed repeatability, MTP acceptance at temperature 0.6.
 S1-samp	SAMP	hard	150	SAMP_P0_EXPECTED=${TF_SAMP_P0:-} python3 $TF_HERE/samp_gate.py $TF_URL $TF_MODEL > samp.log 2>&1; rc=$?; grep '^GATE' samp.log; exit $rc
 # VIS steps (worker VIS, b70/dd-vis a2e63f48). Each step runs in its own dir $TF_OUT, so VIS-T1 reads ../VIS-T0.
