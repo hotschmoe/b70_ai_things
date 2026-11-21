@@ -2275,3 +2275,22 @@
 2026-11-21 17:21:39 UTC [A] note: ORCHESTRATOR owner decision relayed: INK stopped, card 1 returns to TensorFold after the [INK] release + health line. First two-card user = A-S quick serve bench of the fn-a3 tip under PRIORITY.hold (C1/C2/C4/C8 + prefill). Lead B Codex workers (arfuse/park/lane/kv8/ttft): no two-card claims until that bench releases.
 2026-11-21 17:22:13 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 2f022b5f
 2026-11-21 17:23:27 UTC [INK] release card 1: Inkling eval stopped by owner; server down; xpu-health --card 1 HEALTHY
+2026-11-21 17:24:48 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 17:25:08 UTC [A-S] queued: two-card quick serve bench fn-a3 2f022b5f (int-rf) under PRIORITY.hold, ~25-40 min, cards 0+1
+2026-11-21 17:26:13 UTC [A-HS] claim card 0 ~3 min: slice gate ff4
+2026-11-21 17:26:45 UTC [A-HS] released card 0 (rc=0): slice gate ff4
+2026-11-21 17:29:02 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-int-rf
+2026-11-21 17:32:41 UTC [A-I] released cards 0+1
+2026-11-21 17:32:41 UTC [A-S] claim cards 0+1 ~15 min: int-rf bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 17:35:14 UTC [A-S] released cards 0+1: int-rf rc=0
+2026-11-21 17:35:18 UTC [A-HS] claim card 0 ~3 min: slice gate ff5
+2026-11-21 17:35:19 UTC [A-PF] claim card 0 ~170s: pf1
+2026-11-21 17:35:50 UTC [A-HS] released card 0 (rc=0): slice gate ff5
+2026-11-21 17:36:10 UTC [A-PF] release card 0: pf1 rc=0
+2026-11-21 17:37:44 UTC [A-LY] claim card 0 ~3 min: MTP tail profile on 2f022b5f
+2026-11-21 17:39:45 UTC [A-LY] release card 0: MTP tail profile on 2f022b5f rc=0
+2026-11-21 17:40:20 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-int-rf2
+2026-11-21 17:43:23 UTC [A-I] released cards 0+1
+2026-11-21 17:43:24 UTC [A-S] claim cards 0+1 ~15 min: int-rf2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 17:45:57 UTC [A-S] released cards 0+1: int-rf2 rc=0
+2026-11-21 17:46:02 UTC [A-PF] claim card 0 ~120s: pf2

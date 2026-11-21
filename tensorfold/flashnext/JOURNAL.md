@@ -938,3 +938,19 @@ RESULT:
 - Kernels already at their best: the lm head and DPAS heads.
 - PF saw two health-probe timeouts at 20 s, not real wedges: no xe/GuC dmesg, and a 60 s rerun passed.
 VERDICT: accepted (bitwise, default on). Estimated -45 us per C1 window.
+
+### [A] 2026-11-21 17:25 UTC -- merge KF e52617fe (route+compact fusion, q8 producers on norm/gate)
+CONFIG: fn-a3 merge of b70/fn-prep e52617fe (XPU_FN_ROUTE_FUSE=1, XPU_FN_Q8_PRODUCERS=2 by default). The additive conflict in xpu_store.zig (project4h vs shared_quant fields/loads) was resolved by keeping both. Card 0.
+COMMAND: buildGate one-card session on 2f022b5f.
+RESULT:
+- recOOO [450.2, 576.9, 779.7, 1189.0] {1: {'b59c8b'}, 4: {'bf6ff7'}, 8: {'a2f6ea'}, 16: {'debff3'}}
+  SLICE_BITWISE PASS samples=32 rows=1,4,8,16 event_pool_capacity=1024 event_pool_reused=true lanes=16 transport_pool=true
+  SLICE_LAUNCHES PASS rows=1,4,8,16 counts=104,104,105,117
+  TAIL_KEEP_BATCH PASS rows=1,4,8,16 lanes=1,4,8,16 odd_lanes=3,7,9,15 mixed_windows=true reversed_lanes=true banks=both scratch_canaries=true
+  xpu-health: HEALTHY (cards 0)
+- KF matrices:
+  - dense ROW_BITS 11640 cases, route/plan 661, shared 2640, HC 54, all zero differing bits;
+  - route+compact R4 19.2 -> 10.2 us per layer;
+  - TAIL launches 109 -> 104.
+- HC/shared producer tails (mode 1) were latency-rejected and stay opt-in.
+VERDICT: accepted, bitwise default-on. fn-a3 2f022b5f is the quick-bench candidate once card 1 is released.
