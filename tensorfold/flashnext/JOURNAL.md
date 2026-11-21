@@ -618,3 +618,43 @@ CONFIG: b70/fn-rt-evict 4275ddc (fn-int 8524431 + kv8 + park2 + admit), int8 KV,
 RESULT (1 sample, unprofiled): C2 uncapped 48.8 agg; C4 capped 43.4 agg, 44 parks/44 restores, outputs == solo, no prefill replay;
 park p50/p99 43.7/585.9 ms, restore 37.1/42.6 ms; C4 worst TTFT 1.77 s (aged admission; was 15.6 s). VERDICT: user goal
 "eviction to system RAM restored without recompute" demonstrated on the serve; next p99 park, mirror, idle-Snap prompt cache.
+
+## [A] 2026-11-20 22:57 UTC Serve numbers #3: combined hc2 + R2 recorded windows
+CONFIG: fn-a3 99e31ff binary (merge fn-rec 99bda20 + hc2 9fb00f5 + kv8 off), HEAD 18be9ac (bench tools only), smoke-comb PASS (hashes equal),
+serve_bench comb-r2 (XPU_FN_RECORD=1, no-MTP C4 control skipped) and comb-imm (off), back to back.
+RESULT: RECORD C1 86.4 / C2 108.1 / C4 143.2 / C8 183.4 agg tok/s, ITL p50 C1 8.9 ms, no-MTP C1 66.1, prefill 2k 428;
+off C1 69.3 / C2 98.0 / C4 115.2 / C8 134.3, no-MTP C4 115.8. p0 exact, health OK both runs.
+VERDICT: recorded windows +25% C1, +37% C8. Not default until R fixes the recorded no-MTP C4 hang.
+
+## [A] 2026-11-20 23:40 UTC R2 NO-GO (stop gate); new path = protocol model + microrepro
+RESULT: R retry 7660564 hung again at no-MTP C4 (card 0 in layer-1 MoE AR peer-ready, card 1 at the next attention AR); KF prep-rec
+hung at bucket 8 C2. Recovery by rebind each time, post-health HEALTHY. Recorded upside measured: comb-r2 C1 86.4 vs 69.3 immediate.
+VERDICT: recorded serve path stopped; R5 does a CPU event-lifecycle model + Fable/Opus consult + device microrepro before any serve.
+
+## [A] 2026-11-20 23:46 UTC LEDGER-hc2 owners accepted
+DECISION: from Lead B's traced ledger (cards wait on host: host CPU 11-14 ms/40 ms C1 window; peer wait <= 0.23 ms):
+host.fn.mtp -> H3 (re-scoped: device-side draft chain, no inter-depth readback); host.fn.gdn -> KF8 (auto-queued after KF7);
+launch_gap -> R5 (recorded windows, after hang fix). R5 restarted with orchestrator H1 (ABA stale ready across replays) and
+H2 (rank bucket/AR-count mismatch, add always-on host assert) as first checks.
+
+## [B] 23:58 UTC - LEDGER-hc2 delivered; R5 hang review; three workers launched
+RESULT: LEDGER-hc2 (fn-rt-ledger c2a4854 = hc2 + tracer): markers-only overhead ~0 (C1 33.0 vs 33.0 ms off), full trace +20%/+28%.
+Per card per traced window: host CPU 11-19 ms, launch 3-7 ms, peer wait <= 0.5 ms; cards wait on the HOST, not on the peer.
+Chain attribution 85-96% unknown (end-only edges) -> ledger v2 asked. R5 review (TRANSPORT-B 4g): ABA and bucket mismatch excluded
+by construction; immediate lists not drained at execute() entry = real hole; abort-time event dump + parity entries proposed.
+Workers: vplan (codex-kv8), arfuse (codex-pushar), ledger v2 (codex-trace), evict round 2 (codex-park, running).
+
+## [B] 00:30 UTC - ledger v2 (int-da583ba)
+RESULT: timelines conserve wall; unknown idle < 5%/card; markers overhead +0.8%/+0.4%. Host-bound: per card per C1 window 12-13.5 ms
+host CPU vs 22-24.5 ms busy; untraced MTP 9.2 ms, GDN host 6.9 ms (C4 14.0), verify span 23 ms is inclusive of submit.
+VERDICT: the critical path is host submission (per-layer launches + MTP host steps); peer waits are negligible. B/ledger/LEDGER-int-da583ba.md.
+
+## [B] 01:25 UTC - host split: event-pool churn found
+RESULT (API-traced, +25% overhead): host time per card per C1 window is mostly L0 API (10.7-12.1 ms); Zig code 1.5-1.9 ms. TpComm.syncAll
+recreates all MAX_PIPE_STEPS*4 events per sync: 8,192 events/window C1, ~8 ms traced API time. VERDICT: fix (b70/fn-rt-evpool) in progress.
+
+## [B] 01:55 UTC - eviction round 2: mirror + RAM prompt cache
+CONFIG: b70/fn-rt-evict a139dab (+ fn-int bf8415b), int8 KV, XPU_FN_EVICT=1 XPU_FN_MIRROR=1, :18153, single samples.
+RESULT: park 14.4/14.4/14.6 ms at 1K/8K/32K with mirror (32.0/30.0/76.3 off); park p99 586->118 ms (frame prealloc); ITL p50 cost <0.3%;
+repeat-prompt TTFT 25.4 ms via RAM-tier restore (no recompute), tokens identical; post-merge C4 smoke == solo. VERDICT: ready to merge.
+Also: verify_plan exclusive 0.06 us (item closed, the marker was inclusive).

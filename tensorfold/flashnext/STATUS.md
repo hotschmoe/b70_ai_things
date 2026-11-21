@@ -1,6 +1,35 @@
 # Status (each lead keeps its own section current)
 
-## Lead A (model path)  [updated 21:56 UTC]
+## Lead A (model path)  [updated 00:10 UTC]
+- R5 handed to a Claude Opus worker (00:08): the Codex session died (false-positive content filter, then the thread was lost). The work
+  is intact: CPU model (R/report5.md) finds no H1/H2 source defect; F1 candidate transport fix (Ready/Done published by explicit
+  SignalEvent after copy+barrier) + always-on pair manifest guard + standalone microrepro (r5-old vs r5-fixed) are uncommitted in
+  fn-rec. Next: micro old must FAIL / fixed must PASS, then the serve pair r5-rec/r5-imm.
+- LEDGER-hc2 OWNERS (orchestrator 23:50): Lead A AGREES.
+  host.fn.mtp -> H3 (re-scoped 23:45: fully device-side draft chain, on-device argmax feeding the next embedding, no inter-depth
+  readback, immediate path first). host.fn.gdn -> KF8, queued as soon as KF7 lands (KF7 is mid-build on b70/fn-prep:
+  prepared inputs + pitched copies replace the per-row project() memcpy appends; re-measure launch_gap/d2d on it). launch_gap via
+  recorded windows -> R5 once the hang is fixed. Lead B: verify_plan off the critical path, AR fused into consumer prologue,
+  ledger chain binding + markers-only host-phase split.
+- R2 RECORDED WINDOWS: NO-GO under the 2-failure stop gate (R/report.md, R_report3.md). Two serve hangs at no-MTP C4 + KF's at
+  bucket 8 C2: card 0 waits in layer 1 MoE AR peer-ready while card 1 is already at the next attention AR (cross-card desync, L0 0x1
+  after 30 s, rebind recovered, health OK). Cause unproven. NEW PATH (R5): CPU state model of the recorded AR event/slot lifecycle,
+  Fable+Opus consult, then a device microrepro (not serve) that must fail before / pass after the fix. LEAD B: this touches your
+  M-B2c recorded transport (beginRecording/recordAllReduceF32/device-reset events) - please review R's model when it lands
+  (R/report5.md) and post any known replay-reuse constraints here. Orchestrator 23:45 hypotheses relayed to R (first checks):
+  H1 ABA stale ready/ack across back-to-back replays (fix: epoch-tagged flags via a device replay counter, or parity double-buffered
+  slots + final cross-card ack, or per-hop sequence numbers); H2 ranks choosing different buckets / AR counts in one window (add an
+  always-on host assert that aborts cleanly instead of a 30 s hang).
+- SERVE NUMBERS #3 (22:55, COMBINED fn-int/fn-a3 18be9ac = binary of 99e31ff: hc2 + kv8 off + R2 recorded windows; smoke-comb PASS
+  hashes unchanged; p0 exact; pre/post HEALTHY; S/comb-r2-results.json, S/comb-imm-results.json):
+    XPU_FN_RECORD=1: C1 86.4 / C2 108.1 / C4 143.2 / C8 183.4 agg tok/s; ITL p50 C1 8.9 ms; TTFT C1 85 ms; C8 TTFT 470 ms;
+                     no-MTP C1 66.1 (15.1 ms/token); prefill 439 / 428 / 413 tok/s at 512 / 2k / 8k.
+    immediate (off): C1 69.3 / C2 98.0 / C4 115.2 / C8 134.3; no-MTP C1 57.7, C4 115.8.
+  Recording = +25% C1, +37% C8. KNOWN BUG: recorded no-MTP C4 (bucket 4, no drafts) HUNG/ZeFailed on R's run -> bench skips that
+  control under RECORD (default FN_BENCH_NO_MTP_LEVELS=1); R is fixing it, so RECORD stays default-off until it is fixed.
+  23:11 KF's prep-rec (fn-prep, RECORD=1) hit the same abort at bucket=8 during policy C2 (KF/round6/serve/prep-rec-server.log):
+  the recorded-replay ZeFailed (L0 0x1) is INTERMITTENT and not tied to no-MTP C4. comb-r2's clean pass was lucky; RECORD unqualified.
+  Gap to Strata DD: C1 86 vs ~141, prefill 428 vs ~2200.
 - FOR LEAD B LEDGER (builds/tags as they land): int-hc3 = fn-int 186329a; hc2 = b70/fn-hc 9fb00f5 (S/hc2-results.json:
   C1 69.2 / C2 96.9 / C4 115.1 / C8 135.9 agg, prefill 2k 430).
   COMBINED BUILD READY: fn-a3 99e31ff = hc2 + kv8 (off) + R2 recorded windows (fn-rec 99bda20, incl. C2 cross-stream keep fix
@@ -43,7 +72,66 @@
   Lead A workers have the same rule (GPU.md note 19:25).
 - Next GPU need: both cards in short leased runs (R, H gates), card 0 (KF, H microbench).
 
-## Lead B (runtime, latency, features)  [updated 21:55 UTC]
+- [A-R R5 CPU model] Model/source audit published at workers/R/report5.md and fn-rec tools/xpu_trace/record_model.py;
+  results workers/R/r5-model.json. Ideal binary-event semantics + actual both-queue drain show no H1 ABA/reset race in bounded
+  same/alternate-bucket exploration; injected lost-ready matches marker10/14 but is NOT a demonstrated source defect. One b
+  selects both rank lists, static96 ARs, dedicated channel1; no per-window host append touches recorded events in7660564.
+  Adding cheap bucket/list-id/per-rank AR-count guard before either submit. Lead B: please review whether any legal device-reset/
+  in-order event completion detail is missing, and known replay constraints beyond4e. Attribution currently UNKNOWN; no GPU yet.
+
+- [A-R R5 response to B4g] Agreed H1/H2 are excluded under the modeled contracts; no epoch spin planned. Check item4's
+  caller chain: the only Cache.execute caller is wf.forward, immediately preceded by Runtime.prepare -> Runner.syncAll ->
+  TpComm.syncAll, which ALWAYS waits both immediate lists even when step==0 (tp.zig:163). No commands are appended between
+  prepare and execute. Thus an execute-entry drain is useful API hardening, not a demonstrated hole in7660564. Will add
+  event-status-at-abort and all-reset-after-drain diagnostics in the microrepro. Fable/Opus reviews pending, no GPU yet.
+
+- [A-R R5 00:01] Consults complete (claude-fable-5-2 / claude-opus-5-5, read-only high). Both exclude app ABA/H2. Fable
+  identified an unverified NEO lowering hypothesis: producer also waits on its walker-attached completion event; peer reset
+  can strand that hidden waiter within the SAME window. Augmented CPU model reproduces exact rank0 hop3 / rank1 hop4 pattern;
+  standalone event publication removes it. F1 candidate in fn-rec: copy(null event)->barrier->Signal(Ready), sum(local TS or
+  null)->barrier->Signal(Done); same for recorded head/gate copies. Immediate unchanged. Not yet hardware-proven. Micro build
+  queued, with exact766 tp.zig negative control, four shape phases and event-status dump. NO GPU/serve yet. Report5 updated.
+  Fable also found B's old replay script UNSETS NEO workaround keys, unlike serve; new micro retains required keys throughout.
+
+## Lead B (runtime, latency, features)  [updated 01:55 UTC]
+- [B 01:55] EVICT ROUND 2 READY FOR LEAD A MERGE: b70/fn-rt-evict a139dab (already merged with fn-int bf8415b; post-merge C4 smoke has
+  four outputs == solo, 11 parks and 11 restores). Enable: XPU_FN_EVICT=1 XPU_FN_KV=int8 XPU_FN_MIRROR=1 --prompt-cache-gib N.
+    Park p99 586 -> 118 ms: the outlier was first-use pinned-frame allocation (324 of 395 ms), now preallocated.
+    Write-behind mirror: park wall 14.4 / 14.4 / 14.6 ms at 1K / 8K / 32K, vs 32.0 / 30.0 / 76.3 off. Bytes per park per card are
+    a flat 62 MB (state + open tail). Decode ITL p50 cost -0.1..+0.2%.
+    RAM-tier prompt cache: an idle snapshot is parked, not dropped. A repeat prompt restores 21/22 rows, tokens are identical,
+    TTFT 25.4 ms (restore 5.9 ms).
+  Open: ITL p99 under forced 2-slot pressure is still 0.55-0.84 s (time-slice quantum); untested cache fault paths.
+  codex-park -> parked streams release their state slot, so logical streams > physical slots; C8/C16 bench.
+- [B 01:50] ORCHESTRATOR ITEM 2 CLOSED. host.verify_plan EXCLUSIVE time is 0.06 us at C1 and 0.18 us at C4 (b70/fn-rt-vplan
+  814ef7f, XPU_FN_PHASE_STAMPS=1). The ledger marker was inclusive of the whole verify forward and its waits, so there is
+  nothing to move. The real host cost there is L0 API calls: event churn (B, fn-rt-evpool), launches (R5), per-row copy appends
+  (A KF7). Under-load sample da583ba: C1 33.1 ms lane-round / 71.0 tok/s, C4 50.4 ms / 58.5 tok/s (32-token streams).
+  codex-kv8 -> B3-7 cold C4 TTFT / scheduler (b70/fn-rt-ttft).
+- [B 01:25] HOST SPLIT on da583ba (B/ledger/HOSTSPLIT-int-da583ba.md): per card per C1 window, L0 API time 10.7-12.1 ms (C4 17-19.6),
+  our Zig code 1.5-1.9 ms, kernel-argument API calls 1.2-1.3 ms, ~1,870 launches and ~900 copies (800 of them unsignalled).
+  BIGGEST SINGLE ITEM: TpComm.syncAll destroys and recreates ALL MAX_PIPE_STEPS*4 shared events on every sync. That is 8,192
+  events per C1 window (10,240 at C4) and ~8 ms of traced API time per window (C4 ~9.8 ms). FIX in progress, B-owned (codex-trace,
+  b70/fn-rt-evpool): lazy chunked pools, fresh-event rule kept, replacements pre-created off the critical path.
+  Note for Lead A / R5: pre-baked arguments alone do not remove the host bound. Recorded windows remove the appends; evpool
+  removes the churn.
+- [B 00:30] LEDGER v2 on fn-int da583ba: B/ledger/LEDGER-int-da583ba.md (12 KB) + .json. The timelines conserve wall; unknown idle
+  is < 5% per card (was 85-96%). Markers-only overhead vs off: +0.76% C1, +0.35% C4. USE THE MARKERS FOR A/B. Full trace is +29%.
+  Per card per window (traced), C1 / C4: busy 22.0-24.5 / 34.7-38.8 ms of 42.9 / 65.4; host CPU 12.4-13.5 / 16.9-19.5;
+  launch 3.8-4.0 / 6.6-6.7; peer <= 0.48 ms. Untraced markers p50 (inclusive spans, so they overlap), C1 / C4:
+  MTP 9.2 / 12.7 ms; GDN host 6.9 / 14.0 ms; verify span 23.2 / 35.3 ms. The verify span INCLUDES the whole verify submit,
+  so "verify_plan" alone is small and the exclusive cost is per-layer host submit. Readback 0.14 / 0.27 ms.
+  Regenerate: B/ledger/regen.sh <worktree> <tag>.
+- [B 23:55] TO LEAD A / R5 (hang review, TRANSPORT-B 4g): stale-signal ABA and bucket/AR-count mismatch are EXCLUDED by
+  construction (each event is signalled and device-reset once per replay, HOST scope, both queues drained; one entry serves both
+  ranks; exactly 96 hops). The signature is a lost or stale signal. Do first: (4) drain the immediate lists at execute() entry,
+  a real hole when staggered C4 prefill runs; (1) abort-time event status dump; (2) post-drain all-reset assert (diag);
+  (3) parity double-buffered entries as hardening and ABA test. Epoch flags would need device spins; not recommended.
+- [B 23:55] ACK orchestrator 23:50 owners: B takes verify_plan off the submission path, an AR-into-consumer fusion study, and the
+  ledger tool fix (chain binding + an unprofiled markers-only phase split). Workers (23:58): codex-kv8 -> verify_plan
+  (b70/fn-rt-vplan, :18155); codex-pushar -> AR fused into consumer prologue (b70/fn-rt-arfuse, :18156, XPU_FN_AR_FUSE=1);
+  codex-trace -> ledger v2 (timelines, unprofiled phase split, md summary) regenerated on da583ba. All from fn-int da583ba.
+  LEDGER-hc2 delivered: B/ledger/LEDGER-hc2.md/.json (tracer overhead: full +20% C1 / +28% C4 vs markers; markers ~= off).
 - CRITICAL-PATH LEDGER (user 21:50, orchestrator ask): codex-trace on fn-hc e12b9610 + tracer v2 (b70/fn-rt-ledger, serve :18154),
   C1 and C4 steady windows, per card: every kernel (ns, GB/s, % of 608, bytes needed), every queue gap with cause, every data
   movement, totals, top-10 recoverable us with owner. Output B/ledger/LEDGER-hc2.{md,json} + regen.sh for each Lead A merge.

@@ -182,3 +182,35 @@ alternative: pread into anonymous memory and import it (avoids USM allocator lim
 
 Note for Lead A (Lead B, 15:45): core/checkpoint_file_cache.zig release() is macOS-only (msync INVALIDATE); on Linux it is a no-op,
 so after an O_DIRECT/pread PLE load add a posix_fadvise(fd, 0, 0, POSIX_FADV_DONTNEED) branch there to shed the shard's cache.
+
+## 4g. [B 23:55] Review of the R2/R5 recorded-window hang (orchestrator ABA hypothesis)
+Code read: fn-rec 7660564 xpu_window_record.zig + tp.zig TpRecording + ze.zig events.
+- Stale-signal ABA across replays: EXCLUDED BY CONSTRUCTION, not observed. Every recorded event has one signaller and one
+  consumer per replay; the consumer waits then resets ON DEVICE in the same in-order list (push-complete at the hop;
+  reduce-complete at slot reuse pos+3 or in finish() for the last 3 hops; head events 0-5 likewise). The unit test
+  "consumed exactly once" covers the AR set. Events use HOST signal/wait scope (EventDesc default 1<<2), so the reset is flushed
+  before the queue fence, and execute() synchronizes BOTH queues before returning (single flight). So no event can still be
+  signalled when the next replay starts. The only ABA form left is "a reset lands after the next replay's signal", which
+  would need the fence to complete before an earlier same-engine store landed.
+- Bucket or AR-count mismatch between ranks: EXCLUDED on the recorded path. execute(b) submits e.lists[0] and e.lists[1] from
+  ONE entry, both ranks are appended in one loop per hop, and finish() fails unless exactly 96 hops were recorded. Expert-AR
+  presence is baked in at record time, identical on both ranks.
+- The signature implies card 1 passed hop p: its copy plus post-sync signal of event(p,0,1) retired before its barrier. Card 0
+  never saw it. That is a LOST or ERASED signal, or a stale poll, not an early-consumed one. Cheap tests to tell which, in order:
+  1. Abort-time dump (no shape change): host zeEventQueryStatus of every event in the hung entry (hop, kind, rank), plus
+     each rank's last hop from the diagnostic kernel events. If event(p,0,1) reads SIGNALED -> card 0's wait missed a store that
+     is in memory (poll visibility). If NOT_READY while card 1's reduce-complete(p) is SIGNALED -> the signal was lost or erased.
+  2. Diagnostic-mode post-drain assert in execute(): after both queues sync, all 390 events NOT_READY (~0.1 ms, diag only). Any
+     SIGNALED = leftover = ABA proven.
+  3. Hardening that also tests ABA empirically: two entries per bucket with their own event sets, alternating by replay
+     parity. 4e verified that distinct recordings can alternate. Cost: 2x recorded-list memory and build time. If C4 no-MTP
+     still hangs, ABA is ruled out.
+  4. Real hole found: execute() does not drain the IMMEDIATE lists (r.lists) before submitting on the recorded queues. The
+     r.comm.step==0 check proves only that the immediate AR comm was synced. Other immediate work (staggered C4 admission
+     prefill, page or state copies) can still be running on the same ordinal-0 engine on another queue. Add
+     zeCommandListHostSynchronize(r.lists[rk]) at execute() entry. It is ~us when idle and also closes a data race.
+- Not recommended: (a) epoch flags. L0/zex wait-on-memory takes an immediate value baked into the list, so a per-replay epoch
+  needs a device spin kernel, which breaks the transport rule (no spins). (c) Per-hop sequence numbers in the payload also need
+  consumer polling. (b) is the cheap form of the same protection.
+- Why it fails only in no-MTP C4: back-to-back replays with no immediate MTP work between them, plus staggered admission
+  prefill on the immediate lists. Both point at test 4 first, then 1+2.

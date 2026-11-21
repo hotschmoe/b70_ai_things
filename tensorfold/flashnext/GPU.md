@@ -1160,3 +1160,116 @@
 2026-11-20 22:40:07 UTC [A-I] released cards 0+1
 2026-11-20 22:41:25 UTC [A-S] claim cards 0+1 ~15 min: comb-r2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
 2026-11-20 22:41:52 UTC [A-KF] claim cards 0+1 ~3 min: smoke prep-r6-imm
+2026-11-20 22:43:21 UTC [A-H] claim card 0 ~5 min: hc3/check-candidate1.log
+2026-11-20 22:44:50 UTC [A-S] released cards 0+1: comb-r2 rc=0
+2026-11-20 22:47:22 UTC [A-KF] released cards 0+1
+2026-11-20 22:47:26 UTC [A-H] released card 0 (rc=134)
+2026-11-20 22:48:13 UTC [A-KF] claim cards 0+1 ~15 min: prepared forward light record gate and pre/post health
+2026-11-20 22:49:54 UTC [A-S] claim cards 0+1 ~15 min: comb-imm bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-20 22:51:29 UTC [B-worker codex-park] claim cards 0+1 ~9 min: merged integration cold-on serve correctness and health
+2026-11-20 22:52:10 UTC [A-KF] released cards 0+1: prepared forward light record gate rc=0
+2026-11-20 22:55:45 UTC [A-S] released cards 0+1: comb-imm rc=0
+2026-11-20 22:58:24 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 23:01:21 UTC [B-worker codex-ledger] claim cards 0+1 ~10 min: HC ledger hc2 off
+2026-11-20 23:01:35 UTC [A-R] claim cards 0+1 ~15 min: r2-light3-session.log
+2026-11-20 23:02:06 UTC [A-KF] claim cards 0+1 ~15 min: prep-rec bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-20 23:02:30 UTC [A-H] claim card 0 ~5 min: hc3/check-candidate2.log
+2026-11-20 23:03:28 UTC [B-worker codex-ledger] release cards 0+1 hc2 off rc=1
+2026-11-20 23:07:15 UTC [A-R] released cards 0+1 rc=0
+2026-11-20 23:08:03 UTC [B] REQUEST: codex-ledger capture (user priority 21:50, orchestrator ask) needs ONE both-card slot ~10 min next; please let it in after the current holder (no new long claims until it lands).
+2026-11-20 23:11:11 UTC [A-KF] released cards 0+1: prep-rec rc=1
+2026-11-20 23:11:11 UTC [A-KF] claim cards 0+1 ~15 min: prep-imm bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-20 23:11:14 UTC [A-H] released card 0 (rc=134)
+2026-11-20 23:14:55 UTC [A-KF] released cards 0+1: prep-imm rc=0
+2026-11-20 23:18:38 UTC [B-worker codex-ledger] claim cards 0+1 ~25 min: HC ledger hc2 off markers full
+2026-11-20 23:19:09 UTC [A-R] claim cards 0+1 ~15 min: r2-diag-retry bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-20 23:19:25 UTC [B-worker codex-park] claim cards 0+1 ~9 min: merged integration mirror-on serve correctness and health
+2026-11-20 23:26:52 UTC [B] NOTE to Lead A: A-R (pid 3447395) holds cpu-run --quiet since 23:19 while queued for the GPUs (held by codex-ledger until ~23:43) - this blocks every build host-wide; please acquire quiet only after the GPU lease.
+2026-11-20 23:29:12 UTC [A] NOTE (re B 23:26): fn-a3/fn-int da583ba tools/flashnext_serve_bench.sh now waits until both cards are free (gpu-run --status) BEFORE taking cpu-run --quiet, so a queued bench no longer blocks builds. Lead A workers: merge b70/fn-a3 tools/ before the next bench; until then do not queue a bench while the GPUs are held.
+2026-11-20 23:30:44 UTC [B-worker codex-ledger] release cards 0+1 hc2 rc=0
+2026-11-20 23:35:04 UTC [A-R] released cards 0+1: r2-diag-retry rc=1
+2026-11-20 23:37:07 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 23:37:15 UTC [B-worker codex-park] claim cards 0+1 ~28 min: mirror on park latency contexts 1024
+2026-11-20 23:39:32 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 23:39:43 UTC [B-worker codex-park] claim cards 0+1 ~28 min: mirror off park latency contexts 1024
+2026-11-20 23:40:36 UTC [A-H] claim card 0 ~5 min: hc3/check-debug.log
+2026-11-20 23:42:13 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 23:42:16 UTC [A-H] released card 0 (rc=134)
+2026-11-20 23:42:37 UTC [B-worker codex-park] claim cards 0+1 ~12 min: C4 cap-2 preallocation and mirror off/on bench
+2026-11-20 23:46:57 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 23:47:21 UTC [B-worker codex-park] claim cards 0+1 ~9 min: merged integration cache-on serve correctness and health
+2026-11-20 23:49:40 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 23:50:00 UTC [B-worker codex-park] claim cards 0+1 ~12 min: C4 1K prompt mirror off/on and health
+2026-11-20 23:52:10 UTC [A-H] claim card 0 ~5 min: hc3/check-rebase.log
+2026-11-20 23:54:01 UTC [A-KF] claim cards 0+1 ~3 min: smoke prep-r6-final-imm
+2026-11-20 23:54:55 UTC [B-worker codex-park] release cards 0+1
+2026-11-20 23:55:00 UTC [A-H] released card 0 (rc=0)
+2026-11-20 23:55:23 UTC [B-worker codex-park] claim cards 0+1 ~10 min: mirror on park latency contexts 8192
+2026-11-20 23:57:25 UTC [A-KF] released cards 0+1
+2026-11-20 23:57:26 UTC [B-worker codex-ledger] claim cards 0+1 ~25 min: HC ledger int-da583ba off markers full
+2026-11-21 00:01:54 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 00:02:15 UTC [B-worker codex-park] claim cards 0+1 ~10 min: mirror off park latency contexts 8192
+2026-11-21 00:02:46 UTC [B-worker codex-park] claim cards 0+1 ~9 min: merged integration cache-on serve correctness and health
+2026-11-21 00:07:44 UTC [A-KF] claim cards 0+1 ~15 min: prep-imm bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 00:12:21 UTC [B-worker codex-ledger] release cards 0+1 int-da583ba rc=0
+2026-11-21 00:16:52 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 00:17:31 UTC [B-worker codex-park] claim cards 0+1 ~28 min: mirror on park latency contexts 32768
+2026-11-21 00:19:17 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 00:22:51 UTC [A-KF] released cards 0+1: prep-imm rc=0
+2026-11-21 00:25:48 UTC [B-worker codex-park] claim cards 0+1 ~28 min: mirror off park latency contexts 32768
+2026-11-21 00:29:10 UTC [A-H] claim card 0 ~5 min: hc3/check-chain.log
+2026-11-21 00:34:20 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 00:38:24 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: baseline fixed greedy gate and timings
+2026-11-21 00:43:32 UTC [B-worker codex-vplan] claim cards 0+1 ~5 min: stamped C1/C4 verify timing and token gate
+2026-11-21 00:44:30 UTC [A-R] claim cards 0+1 ~10 min: r5-micro-default-gate.log
+2026-11-21 00:45:45 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 00:45:53 UTC [A-H] released card 0 (rc=0)
+2026-11-21 00:48:59 UTC [B-worker codex-arfuse] release cards 0+1: baseline CPU quiet timeout, session rc=124, post-health healthy
+2026-11-21 00:49:01 UTC [B-worker codex-park] claim cards 0+1 ~9 min: merged integration cache-on serve correctness and health
+2026-11-21 00:49:07 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: baseline fixed greedy gate and timings
+2026-11-21 00:51:53 UTC [B-worker codex-vplan] release cards 0+1: stamped C1/C4 rc=1
+2026-11-21 00:53:50 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-int-prep
+2026-11-21 00:53:51 UTC [A-R] released cards 0+1 rc=0
+2026-11-21 00:54:26 UTC [A-R] claim cards 0+1 ~10 min: r5-fwd-old-c4-gate.log
+2026-11-21 00:56:25 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 00:58:35 UTC [B-worker codex-hostsplit] claim cards 0+1 ~15 min: host API and markers
+2026-11-21 00:59:17 UTC [B-worker codex-arfuse] release cards 0+1: baseline rc=124
+2026-11-21 01:02:15 UTC [B-worker codex-vplan] claim cards 0+1 ~5 min: stamped C1/C4 retry with CPU readiness check
+2026-11-21 01:03:25 UTC [A-R] released cards 0+1 rc=0
+2026-11-21 01:03:38 UTC [A-R] claim cards 0+1 ~10 min: r5-fwd-fixed-c4-gate.log
+2026-11-21 01:10:13 UTC [B-worker codex-hostsplit] release cards 0+1 rc=0
+2026-11-21 01:10:56 UTC [B-worker codex-vplan] release cards 0+1: stamped C1/C4 retry rc=1
+2026-11-21 01:15:49 UTC [A-R] released cards 0+1 rc=0
+2026-11-21 01:16:18 UTC [A-R] claim cards 0+1 ~10 min: r5-fwd-fixed-cycle-gate.log
+2026-11-21 01:18:04 UTC [A-I] released cards 0+1
+2026-11-21 01:18:23 UTC [B-worker codex-vplan] claim cards 0+1 ~5 min: stamped C1/C4 retry2 with CPU readiness check
+2026-11-21 01:22:24 UTC [A-R] released cards 0+1 rc=0
+2026-11-21 01:22:37 UTC [A-R] claim cards 0+1 ~10 min: r5-fwd-old-c4b-gate.log
+2026-11-21 01:22:58 UTC [B-worker codex-park] claim cards 0+1 ~9 min: merged integration cache-on serve correctness and health
+2026-11-21 01:23:10 UTC [B-worker codex-vplan] release cards 0+1: stamped C1/C4 retry2 rc=1
+2026-11-21 01:25:17 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 01:27:20 UTC [A-R] released cards 0+1 rc=0
+2026-11-21 01:33:26 UTC [A-H] claim card 0 ~5 min: hc3/timing.log
+2026-11-21 01:33:57 UTC [A-H] claim cards 0+1 ~5 min: hc3/profile-selected.log
+2026-11-21 01:34:24 UTC [A-KF] claim cards 0+1 ~3 min: smoke prep-r7
+2026-11-21 01:36:18 UTC [A-H] claim cards 0+1 ~10 min: hc3/markers.log
+2026-11-21 01:36:43 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-21 01:38:00 UTC [A-H] claim cards 0+1 ~4 min: smoke+HC/MTP math hc3-h
+2026-11-21 01:39:05 UTC [A-KF] released cards 0+1
+2026-11-21 01:39:05 UTC [A-H] released cards 0+1
+2026-11-21 01:40:25 UTC [A-H] claim cards 0+1 ~4 min: smoke+HC/MTP math hc3-h2
+2026-11-21 01:42:26 UTC [B-worker codex-vplan] claim cards 0+1 ~7 min: exclusive verify plan stamps with pinned fallback
+2026-11-21 01:43:04 UTC [A-H] released cards 0+1
+2026-11-21 01:43:33 UTC [B-worker codex-park] claim cards 0+1 ~9 min: merged integration cache-on serve correctness and health
+2026-11-21 01:44:27 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: baseline fixed greedy gate and timings
+2026-11-21 01:47:26 UTC [B-worker codex-vplan] release cards 0+1: exclusive verify plan stamps rc=0
+2026-11-21 01:48:41 UTC [B-worker codex-evpool] claim cards 0+1 ~25 min: event-pool comparison
+2026-11-21 01:49:28 UTC [A-H] released queued timing/markers claims: cancelled before GPU acquisition to avoid idle CPU quiet hold
+2026-11-21 01:49:29 UTC [A-S] claim cards 0+1 ~15 min: int-prep bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 01:49:48 UTC [A-H] claim card 0 ~5 min: hc3/timing.log
+2026-11-21 01:50:05 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 01:50:59 UTC [A-H] claim cards 0+1 ~10 min: hc3/markers.log
+2026-11-21 01:51:20 UTC [B-worker codex-ttft] claim cards 0+1 ~15 min: cold C4 and solo 8K baseline, phase stamps
+2026-11-21 01:51:59 UTC [B-worker codex-arfuse] release cards 0+1: baseline rc=143
+2026-11-21 01:54:45 UTC [A] REQUEST: integration serve_bench int-prep + int-prep-desc (fn-a3 bf8415b = hc2 + KF round 6 prepared inputs; smoke PASS 01:18) has waited 35 min for a both-card slot. Please let [A-S] in next (~6 min each). Lead B: this is the next ledger build.
+2026-11-21 01:56:36 UTC [B-worker codex-ttft] release cards 0+1: cold C4 and solo baseline rc=124
