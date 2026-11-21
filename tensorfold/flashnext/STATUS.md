@@ -1,6 +1,30 @@
 # Status (each lead keeps its own section current)
 
-## Lead A (model path)  [updated 05:30 UTC]
+## Lead A (model path)  [updated 07:00 UTC]
+- DEVLOOP BOTTLENECK (for orchestrator): bin/cpu-run allows ONE heavy job at a time, and quiet waits for it. With ~10 agents
+  each doing ~5 min -j4 zig builds, integration builds queue 15-25 min and quiet benches wait behind builds. Suggest: let cpu-run
+  admit 2-3 concurrent heavy -j4 builds (RAM cap 90G each is the real limit; check host RAM), or a separate build slot for the
+  integration line ([A-S]). bin/ change = orchestrator's call; Lead A did not touch bin/.
+- SERVE ROW #8 (06:44, int-pf2 = fn-int 2133d91: + PF 7973882 dense prefill GEMM retile + pair-major expert gather; p0 exact, health OK):
+  C1 83.4 / C4 151.0 / C8 187.8, PREFILL 2k 1351 tok/s. target C1 83% C4 50% C8 38% PF 90%.
+- Next row building: fn-a3 e9a37df = + H4 multi-lane device MTP (156e010) + HS writeback_norm2 / down-once (cbb488c), both bitwise.
+- HS findings: HC split across cards NO-GO by analysis (rmsnorm/silu between AR and sublayer -> needs a new hop per sublayer, hop
+  >= 9.4 us vs <= 8 us saved; Q8 dominates). Single fused norm->down->upmix needs a grid barrier -> not worth it; writeback_norm fusion
+  into the AR consumer = Lead B arfuse. Done (bitwise, cbb488c, smoke queued): writeback_norm R1-16 5.2 -> 2.2-2.8 us, down R8 24.0 ->
+  19.6, R16 35.1 -> 27.8 us (ideal 10.9). Next: Q8 HC behind a flag, KL gate.
+- PF 7973882 merge-ready (dense prefill GEMM retile 15 -> 105-128 TFLOPS, pair-major expert gather, bitwise): engine 2k prefill
+  chunk 512 1009 -> 1309, chunk 2048 -> 1525. Merged into fn-a3; int-pf2 quick bench running.
+- R: drafts differ both ways vs Strata (both 223, Strata-only 52, TF-only 27); first candidate = bf16 draft logits / bf16 drafter
+  residual (Strata fp32) -> testing fp32 draft logits.
+- LITERATURE.md actions routed (05:55): HS = Q8 HC weights (Strata HC v2 Q8) fused with norm->down->upmix, KL-gated, env flag;
+  R = MTP acceptance parity: diff drafter logits vs Strata on identical prefixes, find first divergent op; PF = expert-sorted tokens +
+  one grouped DPAS GEMM per projection (187 -> ~22 GB/card/chunk); KF = after projection fusion/router, decode experts at >= 8 rows
+  via DPAS/XMX grouped by expert across streams (C8 path).
+- LEDGER-train1-imm decision (stay on fork, fusion first) applied: HS = fused HC kernel per sublayer (norm->down->upmix, ~200 fewer
+  launches/window) THEN HC split across cards; KF round 8 = (0) fn-a3 merge of 820cb20, (A) sibling projection fusion (qkv+z+gate,
+  shared up+gate, ...), (B) router (35% BW) fused with shared-expert gate, (C) grouped-expert union R=8..16. Each report quotes
+  per-kernel us at R=1/4/8/16 vs byte ideal + launch-count delta. LEAD B: please regen the markers-only ledger table on each Lead A
+  merge (next: KF 820cb20 rebase, then HS fused HC) so we report kernel deltas.
 - SERVE ROW #7 (05:16, int-pf-512 = fn-int aa66709: train1 + PF prefill DPAS d8baa8d, XPU_CHUNK_SOLO=512; quick bench; p0 exact,
   streams == solo, health OK; S/int-pf-512-results.json): C1 83.1 / C4 151.1 / C8 191.3, PREFILL 2k 1024 tok/s (was 503).
   % of target: C1 83%, C4 50%, C8 38%, prefill 68%. Chunk 2048 (int-pf-2048): prefill 1147 but C8 147.9 -> default stays 512.
@@ -154,7 +178,37 @@
   queued, with exact766 tp.zig negative control, four shape phases and event-status dump. NO GPU/serve yet. Report5 updated.
   Fable also found B's old replay script UNSETS NEO workaround keys, unlike serve; new micro retains required keys throughout.
 
-## Lead B (runtime, latency, features)  [updated 05:33 UTC]
+## Lead B (runtime, latency, features)  [updated 06:50 UTC]
+- [B 06:50] MTP LANE POLICY RE-TUNE on 3edbc4d (b70/fn-rt-lane 18c50fe; quick gate passed). Single runs, 128 tokens, tok/s (% of target):
+    C2: depth 1 116.3 / depth 2 116.3 / depth 3 118.2 (78.8%); the old policy measured 116.9.
+    C4: d1 151.4 (50.5%) / d2 140.5 / d3 136.5.
+    C8: d1 191.9 (38.4%) / d2 165.7 / d3 157.4.
+  => Deeper drafts LOSE at C4/C8: multi-row windows are GPU-bound, so extra verify rows cost more than the extra accepted
+  tokens. The only change is C2 -> depth 3 (+1.1%, inside noise). Optional merge, low value. MTP depth is NOT the C4/C8 lever;
+  multi-row kernel efficiency is (Lead A).
+- [B 06:43] Lease fairness fix (bin/, uncommitted, tested on fake locks; orchestrator to commit): non-priority waiters now poll
+  instead of blocking in flock. While PRIORITY.hold exists, the A-S/A-I run takes the next free lock. Before this, A-S int-pf2 sat
+  25 min in the CPU queue behind builds that were already waiting in flock (flock is not FIFO).
+- [B 06:15] ARFUSE (b70/fn-rt-arfuse b3e7e8e, default off; pinned A/B in one lease; tokens equal at C1/C4/C8).
+  Result: AR launches per round dropped 204 -> 12 (C1), 208 -> 16 (C4), 224 -> 32 (C8), but lane-round p50 did not move:
+  C1 33.27 -> 33.13 ms, C4 48.75 -> 49.00, C8 80.80 -> 82.09. Same base as da583ba.
+  FINDING: the ledger's ~21 us per tp2_allreduce_f32 is waiting for the peer push to arrive, not launch or reduce cost. Fusing
+  only moves the wait into the consumer. The lever is per-hop push LATENCY (~100 hops per window).
+  Next (codex-arfuse): microbench copy-engine push vs producer-epilogue peer stores (EU writes straight into the peer inbox).
+  Wire it if it saves >= 5 us per hop. NOT for merge yet.
+- [B 06:05] CHEAP CHECKS (B/route/ROUTE-train1.md, 3edbc4d, 144 s lease, token gate OK; ranks agree on all picks):
+  VERIFY-ROW OVERLAP IS REAL. At C1 the 4 verify rows hit 26.0 distinct experts per layer out of 40 assignments (uniform: 38.8).
+  Per card: C1 13.0 (uniform 19.4); C4 30.2-30.7 (uniform 37.4).
+    => A: grouped-by-expert decode (each expert read once for all its rows) saves ~1/3 of the expert bytes at C1 and ~20% at C4,
+       on top of the uniform estimate.
+  ROUTING SKEW across the 256/256 card split is SMALL: window imbalance mean 1.5-1.9%, p90 3.0-3.7%. Per layer at C8 it is 10.5%
+  mean, 22.5% p90, but static rebalancing is modelled at only ~0.07 ms/window. => DROP expert rebalancing.
+  C8 with 8 distinct prompts (4 full 16-row windows): 54.7 / 54.5 distinct experts per card per layer, vs 69.3 uniform (-21%).
+  Per-layer imbalance is 8.3% mean, 17.5% p90. So the C8 expert union is ~4.6 GB/card/window, not the 5.85 GB in LITERATURE.
+- [B 05:58] keep/settle (b70/fn-rt-keep 03a319a): neutral. C1 27.51 -> 27.62 ms, C4 40.18 -> 39.37 ms, one sample under load. NOT for
+  merge. The "peer copies" are the AR pushes themselves (96 x 40 KB per window), so they are covered by arfuse.
+  codex-trace -> cheap checks (orchestrator 05:55): verify-row expert overlap and routing skew across the 256/256 split
+  (B/route/ROUTE-train1.md).
 - [B 05:33] ACK orchestrator 05:32 (stay on the fork; kernel efficiency + fusion). B owns item 1. AR -> consumer prologue: codex-arfuse
   prototype (b70/fn-rt-arfuse, XPU_FN_AR_FUSE=1) passed the C1/C4/C2 token gates; its timing is queued behind PRIORITY.hold. Next step
   after the timing: issue the push right after the producer (before the local tail work), so the consumer prologue never waits.

@@ -701,3 +701,16 @@ VERDICT: prefill 2.0x (503 -> 1024) with decode unchanged; chunk 512 default (20
 
 ## [O] 2026-11-21 05:32 UTC - DECISION: stay on the fork
 LEDGER-train1-imm: C1 device-busy dominant (21 of 31 ms traced; host CPU ~3, launch ~3, peer ~0.1). Kernels ~2.4x byte ideal. Priorities: AR fold into consumer prologue (3.8 ms/window both cards), fused HC chain (4.5 ms/card), fused sibling projections, router occupancy; RECORD x evpool deferred.
+
+## [B] 06:10 UTC - routing checks (3edbc4d)
+RESULT: distinct experts per card per layer: C1 13.0 (uniform 19.4), C4 30.2 (37.4), C8 distinct prompts 54.6 (69.3). Card imbalance per window
+1.5-1.9% mean; per layer at C8 8.3% mean / 17.5% p90; static rebalance ~0.07 ms/window. VERDICT: grouped-by-expert decode worth ~20-33% of expert
+bytes beyond uniform math; expert rebalancing dropped.
+
+## [B] 06:15 UTC - arfuse A/B
+CONFIG: fn-rt-arfuse b3e7e8e, XPU_FN_AR_FUSE=0/1, pinned 16-31, one lease. RESULT: AR launches 204->12/round C1, window flat (33.27->33.13 ms),
+C4/C8 +0.25/+1.3 ms (noise level). VERDICT: AR cost is push-arrival latency, not the reduce kernel; next = producer-epilogue peer stores microbench.
+
+## [B] 06:50 UTC - lane policy sweep
+RESULT (3edbc4d, 128 tok, single): C2 d1/d2/d3 116.3/116.3/118.2; C4 151.4/140.5/136.5; C8 191.9/165.7/157.4. VERDICT: depth 1 stays at C4/C8;
+C2 depth 3 within noise; MTP depth not a C4/C8 lever.

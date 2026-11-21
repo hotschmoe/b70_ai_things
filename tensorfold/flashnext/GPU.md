@@ -1412,3 +1412,197 @@
 2026-11-21 05:29:11 UTC [A-S] released cards 0+1: int-pf-2048 rc=0
 2026-11-21 05:29:14 UTC [O-HW] claim card 1 ~3 min: hwprobe smoke
 2026-11-21 05:29:16 UTC [A-PF] claim card 1 ~120s: gemm2
+2026-11-21 05:30:51 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 05:32:49 UTC [B-worker codex-keep] release cards 0+1 rc=0
+2026-11-21 05:32:50 UTC [O-HW] release card 1: hwprobe smoke rc=0
+2026-11-21 05:32:53 UTC [A-PF] release card 1: gemm2 rc=0
+2026-11-21 05:33:03 UTC [A-PF] claim cards 0+1 ~5 min: prefill profile pf3 (512:1 2048:1)
+2026-11-21 05:34:18 UTC [O-HW] claim card 1 ~3 min: hwprobe main
+2026-11-21 05:35:20 UTC [A-H] claim cards 0+1 ~5 min: hc4/depth3q-a1.log
+2026-11-21 05:35:30 UTC [B-worker codex-arfuse] release cards 0+1: perf-off rc=75
+2026-11-21 05:36:17 UTC [B-worker codex-lane] claim cards 0+1 ~5 min: single-server MTP lane depth sweep
+2026-11-21 05:38:12 UTC [B-worker codex-arfuse] release cards 0+1: perf-off rc=75
+2026-11-21 05:40:05 UTC [A-H] queued depth3 claim resource note: only ~20s CPU quiet is needed after model ready; no CPU quiet during load/waits. Depth1/depth2 follow as separate <=5m leases. Core quick gate already PASS; no repeats.
+2026-11-21 05:40:30 UTC [A-PF] released cards 0+1: pf3 rc=0
+2026-11-21 05:40:53 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:40:54 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:40:56 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:40:57 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:40:59 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:00 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:02 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:03 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21T05:41:05Z [A-PF] claim cards 0+1 ~3 min: smoke gate 7973882
+2026-11-21 05:41:05 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:05 UTC [A-I] claim cards 0+1 ~3 min: smoke pf-7973882
+2026-11-21 05:41:06 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:08 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:09 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:11 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:12 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:14 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:15 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:17 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:18 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:20 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:21 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:23 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:24 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:26 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:27 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:29 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:30 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:32 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:33 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:35 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:36 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:38 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:40 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:42 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:43 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:45 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:46 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:48 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:49 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:51 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:52 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:54 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:55 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:41:57 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:41:58 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:00 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:01 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:03 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:04 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:06 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:07 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:09 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:10 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:12 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:13 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:15 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:16 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:18 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:19 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:21 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:22 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:24 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:25 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:27 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:28 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:30 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:31 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:33 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:35 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:37 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:38 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:40 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:41 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:43 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:44 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:46 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:47 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:49 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:50 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:52 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:53 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:55 UTC [A-H] released cards 0+1 (rc=75)
+2026-11-21 05:42:55 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:56 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:42:58 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:42:59 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:01 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:02 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:04 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:05 UTC [A-H] claim cards 0+1 ~5 min: hc4/depth3q-a2.log
+2026-11-21 05:43:05 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:07 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:08 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:10 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:11 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:13 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:14 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:16 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:17 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:19 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:20 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:22 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:23 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:25 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:26 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:28 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:29 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:32 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:33 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:35 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:36 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:38 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:43:39 UTC [A-KF] released cards 0+1: kf8-merge rc=124
+2026-11-21 05:43:40 UTC [A-KF] R8 merge gate polling correction: prior attempts were lock-acquisition timeouts only; no GPU lease or client acquired. Waiting on owner files outside all locks.
+2026-11-21 05:43:57 UTC [A-H] released queued depth3q-a2 before GPU acquisition: dispatcher replaced with CPU-readiness guard; no workload started.
+2026-11-21 05:45:36 UTC [A-HS] claim card 0 ~3 min: cold1.log
+2026-11-21 05:45:59 UTC [B-worker codex-lane] release cards 0+1
+2026-11-21 05:46:00 UTC [A-HS] released card 0 (rc=0): cold1.log
+2026-11-21 05:46:15 UTC [O-HW] release card 1: hwprobe main rc=0
+2026-11-21 05:46:15 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-merge
+2026-11-21 05:46:29 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 05:46:41 UTC [B-worker codex-arfuse] release cards 0+1: perf-off rc=124
+2026-11-21 05:46:51 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 05:47:13 UTC [B-worker codex-lane] claim cards 0+1 ~5 min: existing C2 policy control
+2026-11-21 05:48:37 UTC [A-KF] released cards 0+1: kf8-merge rc=0
+2026-11-21 05:49:05 UTC [O-HW] claim card 1 ~3 min: hwprobe main-v2
+2026-11-21 05:49:37 UTC [A-R] claim cards 0+1 ~3 min: Strata oracle draftdbg strata-s2
+2026-11-21 05:50:42 UTC [A-H] timing dependency: H4 core156e010 merge-ready. Need one ~3m GPU session with CPU build-dispatch gap through model load and ~20s timed client (CPU quiet only during client). Current queued builders have prevented every timed attempt; H owns no leases.
+2026-11-21 05:50:51 UTC [B-worker codex-route] claim cards 0+1 ~5 min: C1 C4 C8 routing ids
+2026-11-21 05:51:11 UTC [B-worker codex-arfuse] release cards 0+1: perf-off rc=75
+2026-11-21 05:51:20 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 05:53:33 UTC [B-worker codex-lane] release cards 0+1
+2026-11-21 05:55:05 UTC [B-worker codex-lane] claim cards 0+1 ~5 min: reset and health after timed-out card-1 health probe
+2026-11-21 05:56:19 UTC [A-I] released cards 0+1
+2026-11-21T05:56:19Z [A-PF] release cards 0+1: smoke gate 7973882
+2026-11-21 05:58:43 UTC [B-worker codex-route] release cards 0+1 rc=0
+2026-11-21 06:00:10 UTC [B-worker codex-lane] release cards 0+1
+2026-11-21 06:00:36 UTC [A-R] released cards 0+1: Strata oracle draftdbg strata-s2 rc=0
+2026-11-21 06:01:13 UTC [A-HS] claim card 1 ~3 min: cold2.log
+2026-11-21 06:01:27 UTC [O-HW] release card 1: hwprobe main-v2 rc=0
+2026-11-21 06:01:27 UTC [A-HS] released card 1 (rc=0): cold2.log
+2026-11-21 06:01:40 UTC [A-I] claim cards 0+1 ~3 min: smoke hs-once-cbb488c
+2026-11-21 06:01:58 UTC [O-HW] claim card 0 ~3 min: hwprobe main-v2
+2026-11-21 06:04:38 UTC [B-worker codex-route] claim cards 0+1 ~3 min: distinct-prompt C8 routing
+2026-11-21 06:06:14 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: pinned fusion off/on A/B
+2026-11-21 06:06:56 UTC [B-worker codex-route] release cards 0+1 distinct C8 rc=0
+2026-11-21 06:10:31 UTC [A-PF] claim card 1 ~120s: gemm3
+2026-11-21 06:11:25 UTC [B-worker codex-arfuse] release cards 0+1: pinned fusion off/on A/B rc=0
+2026-11-21 06:11:26 UTC [A-PF] release card 1: gemm3 rc=0
+2026-11-21 06:11:26 UTC [A-PF] claim cards 0+1 ~5 min: prefill profile pf4 (512:1 2048:1)
+2026-11-21 06:13:44 UTC [A-PF] released cards 0+1: pf4 rc=0
+2026-11-21 06:22:45 UTC [A-I] released cards 0+1
+2026-11-21 06:23:12 UTC [A-H] released-session scheduling note: GPU0/GPU1 owner files empty; CPU quiet O-HW pid3781195 (hwprobe/in-main.sh 0), child gpu-run3796143 waits behind PRIORITY.hold A-S/A-I mtime06:15. Integration may be blocked by this cycle. H owns no resources; core156e010 gatePASS, timing still pending.
+2026-11-21 06:27:58 UTC [A-H] released/waiting dispatchers stopped BEFORE acquisition: H4 core156e010 merge-ready (tipca25bbe), quick gatePASS. Depth tuning/hc4 BLOCKED on CPU quiet/hold scheduling; no H resources remain. See workers/H_report4.md.
+2026-11-21 06:28:22 UTC [B-worker codex-lane] claim cards 0+1 ~5 min: new C2 policy quick gate
+2026-11-21 06:33:09 UTC [O-HW] released: stopped hwprobe main-v2 card 0 session (held cpu-run --quiet while gpu-run waited behind PRIORITY.hold; never acquired GPU). Sorry for the deadlock. Future O-HW runs: hold-clear -> gpu-run, no --quiet (device-timed).
+2026-11-21 06:41:26 UTC [B] bin/gpu-run + bin/cpu-run: non-priority waiters now POLL (flock -n every 2 s, re-checking PRIORITY.hold), priority agents keep a blocking flock, so the integration run wins the next release instead of losing the non-FIFO flock race (A-S int-pf2 waited 25 min behind builds). Tested on fake locks. Applies to new invocations only.
+2026-11-21 06:42:11 UTC [A-S] claim cards 0+1 ~15 min: int-pf2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 06:44:57 UTC [A-S] released cards 0+1: int-pf2 rc=0
+2026-11-21 06:44:59 UTC [O-HW] claim card 0 ~3 min: hwprobe main-v2
+2026-11-21 06:45:04 UTC [A-PF] claim cards 0+1 ~5 min: prefill profile pf5 (2048:1:256:2 512:1:256:3 2048:1:256:3)
+2026-11-21 06:45:21 UTC [O-HW] release card 0: hwprobe main-v2 rc=0
+2026-11-21 06:45:40 UTC [B-worker codex-arfuse] claim cards 0+1 ~3 min: peer-store hop microbench
+2026-11-21 06:45:48 UTC [O-HW] claim card 1 ~3 min: hwprobe alu-bw+sustain
+2026-11-21 06:47:58 UTC [B-worker codex-lane] release cards 0+1
+2026-11-21 06:50:26 UTC [A-PF] released cards 0+1: pf5 rc=0
+2026-11-21T06:50:43Z [A-PF] claim cards 0+1 ~3 min: smoke gate 4974075
+2026-11-21 06:50:43 UTC [A-I] claim cards 0+1 ~3 min: smoke pf-4974075
+2026-11-21 06:52:23 UTC [B-worker codex-arfuse] release cards 0+1: peer-store hop microbench rc=137
+2026-11-21 06:52:51 UTC [O-HW] release card 1: hwprobe alu-bw+sustain rc=0
+2026-11-21 06:53:05 UTC [O-HW] claim card 0 ~3 min: hwprobe alu-bw+sustain
+2026-11-21 06:55:09 UTC [A-R] claim cards 0+1 ~15 min: d1-bf16 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 06:55:29 UTC [O-HW] release card 0: hwprobe alu-bw+sustain rc=0
+2026-11-21 06:55:29 UTC [O-HW] claim cards 0+1 ~1 min: hwprobe p2p properties query
+2026-11-21 06:55:29 UTC [O-HW] release cards 0+1: hwprobe p2p rc=0
+2026-11-21 06:55:35 UTC [B-worker codex-arfuse] claim cards 0+1 ~3 min: peer-store hop microbench
+2026-11-21 06:55:47 UTC [O-HW] claim card 1 ~3 min: hwprobe hostusm-atomic
+2026-11-21 06:58:14 UTC [A-R] released cards 0+1: d1-bf16 rc=0
+2026-11-21 06:58:15 UTC [O-HW] release card 1: hwprobe hostusm-atomic rc=0
+2026-11-21 06:59:17 UTC [B-worker codex-arfuse] release cards 0+1: peer-store hop microbench rc=0
+2026-11-21 06:59:28 UTC [A-H] planned H5 controls cards 0+1 ~3m each: depth2/depth3, 128 tokens, AFTER A-S int-mtp2 release. Baseline has not reached GPU yet: int-mtp2-build.log still queued since06:45, current CPU owner A-KF since06:58. H owns no resources; exact integration binary will be captured after release.
