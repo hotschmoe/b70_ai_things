@@ -5,9 +5,11 @@
   same  A B                     two text records' hashes are equal (vision handling leaves text bit-identical)
   image URL FIXTURE LOG OUT     the fixture's circle answers "blue" (streamed: TTFT), twice (second = encoder cache);
                                 the server log's encoder lines give image tokens and encode ms
+  formats URL FIXDIR           a phone-style JPEG stored turned (EXIF orientation 6) answers "left" (Strata turns it
+                                upright; unturned it would read "bottom"), and a WebP answers "right" (Strata converts it)
 Each prints one GATE line and exits 0 on PASS, 1 on FAIL. Never prints prompt or response text beyond one color word.
 """
-import base64, hashlib, json, re, sys, time, urllib.request
+import base64, hashlib, json, re, sys, time, urllib.error, urllib.request
 
 MODEL = 'hotschmoe-dd'
 TEXT = ('List the planets of the solar system in order from the Sun, one per line, '
@@ -86,6 +88,24 @@ def image(url, fixture, log, out):
     gate('vis-image', ok, rec)
 
 
+def formats(url, fixdir):
+    q = 'Where is the red square in the image: left, right, top or bottom? Answer with one word.'
+    rec = {}
+    for name, mime, want in (('vis_red_left_exif6.jpg', 'image/jpeg', 'left'), ('vis_red_right.webp', 'image/webp', 'right')):
+        data = f'data:{mime};base64,' + base64.b64encode(open(f'{fixdir}/{name}', 'rb').read()).decode('ascii')
+        body = dict(model=MODEL, max_tokens=16, temperature=0, stream=True, stream_options={'include_usage': True},
+                    chat_template_kwargs={'enable_thinking': False},
+                    messages=[{'role': 'user', 'content': [{'type': 'image_url', 'image_url': {'url': data}},
+                                                           {'type': 'text', 'text': q}]}])
+        try:
+            s, usage, ttft, _ = post(url, body)
+            word = re.sub(r'[^a-z]', '', s.lower())[:12]
+            rec[mime] = {'ok': word.startswith(want), 'word': word, 'prompt_tokens': usage.get('prompt_tokens')}
+        except urllib.error.HTTPError as e:
+            rec[mime] = {'ok': False, 'http': e.code}
+    gate('vis-formats', all(v['ok'] for v in rec.values()), rec)
+
+
 if __name__ == '__main__':
     cmd, args = sys.argv[1], sys.argv[2:]
-    {'text': text, 'same': same, 'image': image}[cmd](*args)
+    {'text': text, 'same': same, 'image': image, 'formats': formats}[cmd](*args)

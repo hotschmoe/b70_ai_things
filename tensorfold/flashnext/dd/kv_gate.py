@@ -36,17 +36,31 @@ def prompt(seed, tokens):
         lines.append(f"Line {i}: the {a} crate moved to dock {rnd.randint(1, 99)} with {rnd.randint(100, 9999)} {b} units.")
         if i == 40:
             lines.append(f"Note: the vault code word is {code}. Remember it.")
+    if os.environ.get('KV_LONG_ANSWER') == '1':
+        # Long deterministic reply so concurrent streams overlap in decode (park/restore gate).
+        return ('Ledger of shipments.\n' + '\n'.join(lines) +
+                '\nQuestion: what is the vault code word from the note near the start? State it, then copy lines 0 to 199'
+                ' of the ledger verbatim.'), code
     return ('Ledger of shipments.\n' + '\n'.join(lines) +
             '\nQuestion: what is the vault code word from the note near the start? Answer: The vault code word is'), code
 
-def complete(url, text, decode):
+def complete(url, text, decode, chat=None):
+    """Greedy streamed request. Text prompts go through /v1/chat/completions (the chat template, as clients send
+    them) unless KV_RAW=1; token-id prompts (oracle p0) use /v1/completions."""
+    if chat is None:
+        chat = isinstance(text, str) and os.environ.get('KV_RAW', '0') != '1'
     host, port = url.split('//')[-1].split(':')
     conn = http.client.HTTPConnection(host, int(port), timeout=900)
-    body = {'model': os.environ.get('TF_MODEL', 'hotschmoe-dd'), 'prompt': text, 'temperature': 0,
+    body = {'model': os.environ.get('TF_MODEL', 'hotschmoe-dd'), 'temperature': 0,
             'max_tokens': decode, 'stream': True, 'return_token_ids': True,
             'stream_options': {'include_usage': True, 'tensorfold_token_stream_version': 1}}
+    if chat:
+        body['messages'] = [{'role': 'user', 'content': text}]
+    else:
+        body['prompt'] = text
     start = time.monotonic()
-    conn.request('POST', '/v1/completions', body=json.dumps(body), headers={'Content-Type': 'application/json'})
+    conn.request('POST', '/v1/chat/completions' if chat else '/v1/completions', body=json.dumps(body),
+                 headers={'Content-Type': 'application/json'})
     reply = conn.getresponse()
     if reply.status != 200:
         return {'status': reply.status, 'error': reply.read()[:300].decode(errors='replace')}
@@ -67,8 +81,11 @@ def complete(url, text, decode):
             last = time.monotonic()
             first = first or last
         for c in obj.get('choices', []):
-            if c.get('text'):
-                out.append(c['text'])
+            piece = c.get('text') or ''
+            delta = c.get('delta') or {}
+            piece += (delta.get('reasoning_content') or '') + (delta.get('content') or '')
+            if piece:
+                out.append(piece)
                 last = time.monotonic()
                 first = first or last
             finish = c.get('finish_reason') or finish
@@ -88,24 +105,41 @@ def complete(url, text, decode):
 
 def summary(r, code):
     keep = {k: r.get(k) for k in ('status', 'prompt_tokens', 'cached_tokens', 'ttft_s', 'prefill_tok_s', 'decode_tok_s', 'finish')}
-    keep['tokens'] = len(r.get('ids') or [])
+    keep['tokens'] = len(r.get('ids') or []) or len(r.get('text') or '') // 4
     keep['needle'] = code.lower() in (r.get('text') or '').lower()
     keep['text_ok'] = bool(re.search(r'[A-Za-z]{3}', r.get('text') or ''))
     if r.get('error'):
         keep['error_head'] = r['error'][:120]
     return keep
 
-def long(url, tokens, decode, tag):
-    text, code = prompt(0, int(tokens))
+def long(url, tokens, decode, tag, seed='0'):
+    text, code = prompt(int(seed), int(tokens))
     r = complete(url, text, int(decode))
     s = summary(r, code)
     out = os.environ.get('KV_OUT') or os.environ.get('TF_OUT', '.')
-    if r.get('ids'):
-        json.dump({'seed': 0, 'tokens': int(tokens), 'prompt_tokens': s['prompt_tokens'], 'ttft_s': s['ttft_s'], 'token_ids': r['ids']},
+    if r.get('ids') or r.get('text'):
+        json.dump({'seed': int(seed), 'tokens': int(tokens), 'prompt_tokens': s['prompt_tokens'], 'ttft_s': s['ttft_s'],
+                   'token_ids': r.get('ids') or [], 'text': r.get('text') or ''},
                   open(os.path.join(out, f'{tag}.json'), 'w'))
+        # Synthetic prompt only (no user data): the reply stays in the results dir for diagnosis, never on stdout.
+        open(os.path.join(out, f'{tag}.reply.txt'), 'w').write(r.get('text') or '')
     ok = (s['status'] == 200 and s['prompt_tokens'] >= 0.9 * int(tokens) and s['needle'] and s['text_ok']
           and (s['tokens'] == int(decode) or s['finish'] == 'stop'))
     gate(f'kv-long-{tag}', ok, s)
+
+def tail(url, tokens, decode, tag):
+    """Filler of about TOKENS tokens with the note and question at the very end: separates long-range
+    retrieval from attention/position breakage at large positions."""
+    text, code = prompt(0, int(tokens))
+    note = f'Note: the vault code word is {code}. Remember it.\n'
+    head = text.split('\nQuestion:')[0].replace(note, '')
+    text = head + '\n' + note + 'Question: what is the vault code word? Answer: The vault code word is'
+    r = complete(url, text, int(decode))
+    s = summary(r, code)
+    out = os.environ.get('KV_OUT') or os.environ.get('TF_OUT', '.')
+    open(os.path.join(out, f'{tag}.reply.txt'), 'w').write(r.get('text') or '')
+    json.dump({'token_ids': r.get('ids')}, open(os.path.join(out, f'{tag}.json'), 'w'))
+    gate(f'kv-tail-{tag}', s['status'] == 200 and s['needle'], s)
 
 def again(url, tokens, decode, ref):
     """Repeat REF's prompt: same ids bitwise, served from the RAM prompt cache (cached_tokens, fast TTFT)."""
@@ -113,8 +147,11 @@ def again(url, tokens, decode, ref):
     text, code = prompt(0, int(tokens))
     r = complete(url, text, int(decode))
     s = summary(r, code)
-    m = min(len(r.get('ids') or []), len(base['token_ids']))
-    s['equal'] = m > 0 and r['ids'][:m] == base['token_ids'][:m]
+    if r.get('ids') and base.get('token_ids'):
+        m = min(len(r['ids']), len(base['token_ids']))
+        s['equal'] = m > 0 and r['ids'][:m] == base['token_ids'][:m]
+    else:
+        s['equal'] = bool(r.get('text')) and r.get('text') == base.get('text')
     s['first_ttft_s'] = base.get('ttft_s')
     s['ttft_ratio'] = round(s['ttft_s'] / base['ttft_s'], 3) if base.get('ttft_s') else None
     # cached_tokens is checked when the server reports it (API item); TTFT is checked always.
@@ -128,11 +165,24 @@ def conc(url, tokens, n, decode, solo):
     with concurrent.futures.ThreadPoolExecutor(max_workers=int(n)) as pool:
         runs = list(pool.map(lambda j: complete(url, j[0], int(decode)), jobs))
     sums = [summary(r, j[1]) for r, j in zip(runs, jobs)]
-    m = min(len(runs[0].get('ids') or []), len(ref['token_ids']))
-    equal = m > 0 and runs[0]['ids'][:m] == ref['token_ids'][:m]
+    def same(run, r):
+        if run.get('ids') and r.get('token_ids'):
+            k = min(len(run['ids']), len(r['token_ids']))
+            return k > 0 and run['ids'][:k] == r['token_ids'][:k], k
+        k = len(run.get('text') or '')
+        return k > 0 and run.get('text') == r.get('text'), k
+    equal, m = same(runs[0], ref)
+    # Optional per-seed solo refs next to SOLO (NAME-s<i>.json, from "long ... NAME-s<i> <i>"): every stream that
+    # has one must match it bitwise (streams that parked and restored included).
+    others = {}
+    for i in range(1, int(n)):
+        p = solo[:-5] + f'-s{i}.json'
+        if os.path.exists(p):
+            others[i] = same(runs[i], json.load(open(p)))[0]
     ok = (all(s['status'] == 200 and s['needle'] and s['text_ok'] for s in sums) and equal
-          and ref['tokens'] == int(tokens))
-    gate(f'kv-conc{n}', ok, {'streams': sums, 'stream0_equals_solo': equal, 'compared_tokens': m})
+          and ref['tokens'] == int(tokens) and all(others.values()))
+    gate(f'kv-conc{n}', ok, {'streams': sums, 'stream0_equals_solo': equal, 'compared_tokens': m,
+                             'streams_equal_solo': others})
 
 def short(url, n, decode):
     """Oracle p0 ids solo, then N concurrent copies: every stream == solo bitwise (parks on fewer physical slots)."""
@@ -144,8 +194,10 @@ def short(url, n, decode):
     out = os.environ.get('KV_OUT') or os.environ.get('TF_OUT', '.')
     if solo.get('ids'):
         json.dump(solo['ids'], open(os.path.join(out, 'expected-p0-kv.json'), 'w'))
-    ok = solo.get('status') == 200 and len(solo.get('ids') or []) > 0 and all(same)
-    gate(f'kv-short-c{n}', ok, {'solo_tokens': len(solo.get('ids') or []), 'equal': same,
+    ref = os.environ.get('KV_P0_REF')
+    ref_equal = None if not ref else json.load(open(ref)) == solo.get('ids')
+    ok = solo.get('status') == 200 and len(solo.get('ids') or []) > 0 and all(same) and ref_equal is not False
+    gate(f'kv-short-c{n}', ok, {'solo_tokens': len(solo.get('ids') or []), 'equal': same, 'ref_equal': ref_equal,
          'solo_decode_tok_s': solo.get('decode_tok_s'), 'ttft_s': [r.get('ttft_s') for r in runs]})
 
 def launch_tail(log):
@@ -173,4 +225,4 @@ def parks(log, least):
 
 if __name__ == '__main__':
     mode, args = sys.argv[1], sys.argv[2:]
-    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again}[mode](*args)
+    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail}[mode](*args)

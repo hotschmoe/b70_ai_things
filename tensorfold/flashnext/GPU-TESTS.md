@@ -67,44 +67,52 @@ TF_BIN and TF_BIN_SHA256 into tf-dd-prod.env and run preflight. The window tests
 
 ## KV
 
-Owner: worker KV (branch b70/dd-kv on top of b70/dd-serve; merges b70/fn-rt-evict 2c5d885). Production flags for
-tf-dd-prod.env (all default-off in the engine):
+Owner: worker KV. Branch b70/dd-kv (on b70/dd-serve, merges b70/fn-rt-evict 2c5d885), head f70795f7, xpu-native
+sha256 4ddf7dac (built in /mnt/vm_8tb/b70/build/tensorfold/dd-kv). Production flags for tf-dd-prod.env (all
+default-off in the engine):
 
     export XPU_FN_KV=int8 XPU_FN_DESC=1 XPU_FN_KV_PAGES=auto XPU_FN_EVICT=1 XPU_FN_EVICT_SLOTS=auto XPU_FN_MIRROR=1
     export XPU_CHUNK=512 XPU_CHUNK_SOLO=512   # chunk route-around (below); 64/64 is the fallback pair
+    server args: --parallel 4 --context 200000 --prompt-cache-gib 2   # RAM prompt cache: real cached_tokens
 
-- Descriptor windows (<= 16 rows) now run over the shared int8 page arena (fn_window_pages.cl); there is no per-slot
-  bf16 context plane, so context is bounded by the arena, not by 16 x context x 17 KB. Prompt chunks > 16 rows use
-  the legacy paged pass. XPU_FN_KV_PAGES=auto sizes the arena from measured free VRAM after weights and activations
-  minus a reserve for 24 slabs + tables + 1.25 GiB margin; the load prints one 'paged KV budget' line. CPU model at
-  the int-rf2 free figure: about 946 pages = 484K tokens = 5 x 90K or 2 x 200K resident; streams beyond that park
-  to host RAM (EVICT_SLOTS=auto = full-context fits, so 4 logical streams on 2 physical slots at 200000).
+- Descriptor windows (<= 16 rows) run over the shared int8 page arena (fn_window_pages.cl); no per-slot bf16
+  context plane. Prompt chunks > 16 rows use the legacy paged pass. XPU_FN_KV_PAGES=auto sizes the arena from free
+  VRAM after weights minus a reserve; the load prints one 'paged KV budget' line. Measured (q2-q20, 200000 x 4):
+  pages=1175 = 601,600 tokens/card, resident_90k=6, resident_200k=3; eviction physical_slots=3, logical 4;
+  29.63 GiB/GPU; load 77-82 s.
 - Chunk route-around: int8 512-row vs 64-row prefill is not bitwise (B/kv8: max logit diff 0.0625, argmax equal;
-  bf16page is bitwise). Root cause unproven. Equal XPU_CHUNK and XPU_CHUNK_SOLO make solo and busy prompts take
-  identical pass shapes, so every concurrency == solo gate stays bitwise; 512/512 keeps the prefill rate.
-- TF_PROD_EXPECTED: cannot be made on the CPU. In the first window P1 runs in record mode and writes
-  expected-prod.json in its step dir; set TF_PROD_EXPECTED to that file for every later window.
+  bf16page is bitwise). Equal XPU_CHUNK and XPU_CHUNK_SOLO keep every concurrency == solo gate bitwise.
+- Gates use /v1/chat/completions (KV_RAW=1 for raw completions). A raw /v1/completions ledger prompt without the
+  chat template can end at once with <|im_end|> (seed 2 at 20K; needle-early at 70K/90K); through chat both are
+  correct on TF and on Strata 0.2.16 (Strata has no /v1/completions). Model/prompt behaviour, not a KV bug.
+- TF_PROD_EXPECTED: p0 64-token greedy ids for this binary/config are workers/KV/q12/expected-p0-kv.json (== the
+  bef2f1a8 ref, workers/KV/p0-ref-bef2f1a8.json). P1 record mode in the first window remains the authority.
 
 Steps (TAB-separated lines for gpu_window_steps.tsv, after P1-bench; KV_OUT=$TF_WIN shares files across steps):
 
 | id | kind | timeout | command | PASS gate |
 |---|---|---|---|---|
 | KV0-budget | hard | 10 | python3 $TF_HERE/kv_gate.py budget $TF_SERVER_LOG | source auto, resident_90k >= 4, resident_200k >= 2 |
-| KV1-long90k | hard | 180 | KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py long $TF_URL 90000 256 kv90k | HTTP 200, prompt_tokens >= 81000, needle recalled, 256 tokens or stop; TTFT/prefill/decode recorded (soft: TTFT <= 90 s) |
-| KV2-solo40k | hard | 120 | KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py long $TF_URL 40000 128 kv40k | as KV1 at 40000; ids saved to $TF_WIN/kv40k.json |
-| KV3-conc4 | hard | 180 | python3 $TF_HERE/kv_gate.py conc $TF_URL 40000 4 128 $TF_WIN/kv40k.json | 4 distinct 40K prompts admitted and complete, all needles recalled, stream 0 ids == KV2 bitwise (parked/restored on 2 physical slots) |
-| KV4-parks | hard | 10 | python3 $TF_HERE/kv_gate.py parks $TF_SERVER_LOG 1 | >= 1 'eviction park' and >= 1 'eviction restore' since launch, no eviction errors (park/restore bitwise is KV3 + P1 C4/C8 == solo) |
-| KV5-long180k | soft | 180 | KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py long $TF_URL 180000 32 kv180k | prompt_tokens >= 162000, needle recalled, 32 tokens; TTFT recorded |
+| KV1-short-c4 | hard | 30 | KV_OUT=$TF_WIN KV_P0_REF=$TF_PROD_EXPECTED python3 $TF_HERE/kv_gate.py short $TF_URL 4 64 | p0 solo == ref, 4 concurrent == solo bitwise |
+| KV2-long90k | hard | 150 | KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py long $TF_URL 90000 160 kv90k | 200, prompt_tokens >= 81000, needle recalled (measured TTFT 87.2 s, 1031 tok/s) |
+| KV3-cache90k | hard | 30 | KV_OUT=$TF_WIN python3 $TF_HERE/kv_gate.py again $TF_URL 90000 160 $TF_WIN/kv90k.json | ids == KV2, cached_tokens >= 90%, TTFT ratio <= 0.25 (measured 89881 cached, 0.113 s) |
+| KV4-solo20k | hard | 40 | KV_OUT=$TF_WIN KV_LONG_ANSWER=1 python3 $TF_HERE/kv_gate.py long $TF_URL 20000 1200 kv20kL | needle, 1200 tokens; ids saved |
+| KV5-conc5 | hard | 150 | KV_LONG_ANSWER=1 python3 $TF_HERE/kv_gate.py conc $TF_URL 20000 5 1200 $TF_WIN/kv20kL.json | 5 x 20K (4 cold on 3 physical slots) all needles, stream 0 == KV4 bitwise (measured 88 s) |
+| KV6-parks | hard | 10 | python3 $TF_HERE/kv_gate.py parks $TF_SERVER_LOG 1 | >= 1 park and >= 1 restore, no eviction errors (measured 76-113 parks) |
 
-GPU time about 9 min (KV1 ~70 s, KV2 ~35 s, KV3 ~120 s, KV5 ~150 s). Fail of KV0..KV4 blocks cutover (rollback as
-G2.0). Fallbacks without a rebuild: XPU_CHUNK=64 XPU_CHUNK_SOLO=64 if P1 C4 != solo; XPU_FN_KV_PAGES=<n> if KV0
-reports too few pages; unset XPU_FN_EVICT* (then 4 x 200K cannot all be resident) if KV4 shows park errors.
-Not in this window (needs a second server config): 512 vs 64 int8 first-divergence diagnostic (per-layer router,
-pre-append K/V, codes, attention at the 4,800-row boundary; B/kv8 NOTES).
+GPU time about 6 min. Optional (stronger, +85 s): per-seed solo refs "long ... kv20kL-s<i> <i>" for i=1..4 before
+KV5 make conc compare every stream (q18/q19: all 5 streams == solo bitwise over 1200 tokens, 113 parks, 0 errors).
+Fail of KV0..KV6 blocks cutover (rollback as G2.0). Fallbacks without a rebuild: XPU_CHUNK=64 XPU_CHUNK_SOLO=64 if
+C4 != solo; XPU_FN_KV_PAGES=<n> if KV0 reports too few pages; unset XPU_FN_EVICT* if KV6 shows park errors.
+
+Prefill tok/s, prod KV mode, f70795f7 (bef2f1a8 in brackets): 8K 1170 [870], 20K 1143 [828], 32K 1119 [811],
+70K 1059 [779], 90K 1031 [764]. Strata 0.2.16 same prompts, cold: 20K 1120, 70K 919; repeat TTFT 32K 0.169 s,
+90K 0.836 s (TF 0.051 s / 0.113 s). Legacy bf16 desc (KV off, 16K ctx) 8K 1373.
 
 ## SAMP
 
-Branch b70/fn-samp (worker SAMP), head 28030ff0 on b70/dd-serve 1a5a57d0. Sampling is on by request: temperature
+Branch b70/fn-samp (worker SAMP), head a00ab802 (2026-11-21 20:47; 28030ff0 + 57d05a50 + a00ab802, merges cleanly
+into b70/dd-serve fb0e6006 per git merge-tree). Sampling is on by request: temperature
 > 0 (or nonzero penalties) takes Strata 0.2.16's chain on the host over each rank's head-shard top 64 (whole shard
 rows when penalties apply); temperature 0 without penalties keeps the device argmax, bitwise unchanged. MTP stays
 lossless: draws are keyed per position and drafts are accepted by exact match (Strata's own rule with
@@ -147,6 +155,13 @@ bitwise == expected-current; s0b top_k 1 == greedy; T 0.6 seed repeat; drafts on
 63 tokens at 60.3 tok/s incl. TTFT vs greedy 71 tokens in 0.75 s), server log clean, xpu-health HEALTHY pre/post.
 Evidence: /mnt/vm_8tb/b70/results/tf-flashnext/workers/SAMP/g1-28030ff0/.
 
+a00ab802 (device top-K merge + penalty gather; binary sha 8baa0056): samp_gate 12/12 PASS, xpu-health HEALTHY
+pre/post, XPU_FN_SAMPLE_CHECK=1 run: 356K merged candidates and 2176 gathered penalized rows, 0 mismatches against
+the host references. Evidence: workers/SAMP/check-final/, prof-final/. The S1-samp step line above is unchanged.
+
+Knobs (all default as shipped): XPU_FN_SAMPLE_MERGE=0 (old host merge), XPU_FN_SAMPLE_CHECK=1 (cross-check, slow),
+XPU_FN_COUPLED=1 (coupled drafts, off), FN_SAMPLE_PROFILE=1 (per-window timing log, off).
+
 ## VIS
 
 Branch b70/dd-vis head 2b552f0c (worker VIS; includes b70/dd-kv bef2f1a8). Quick gate PASSED 19:42 UTC in desc+paged int8 ctx 65536 (also classic, int8). Behaviour is off unless the server gets `--vision` and the TF_VISION_* env below
@@ -158,6 +173,10 @@ tokens an image). Production env lines for tf-dd-prod.env (INT):
     export TF_VISION_MMPROJ=/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs/mmproj-Qwen3.8-Flash-Next-BF16.gguf
     export TF_VISION_MODEL=$FN_GGUF
     export TF_VISION_LIB=/mnt/vm_8tb/b70/build/tensorfold/vision-lib   # libgomp.so.1 (from strata-sycl-dev:020; the host has none)
+    # pinned decoders (Strata turns EXIF JPEGs upright and converts WebP with Pillow; TF decodes with the same releases):
+    # libjpeg-turbo 3.1.4.1 + libwebp 1.6.0, built by /mnt/vm_8tb/b70/build/tensorfold/vision-codecs/build.sh
+    export TENSORFOLD_LIBTURBOJPEG=/mnt/vm_8tb/b70/build/tensorfold/vision-lib/libturbojpeg.so.0
+    export TENSORFOLD_LIBWEBP=/mnt/vm_8tb/b70/build/tensorfold/vision-lib/libwebpdecoder.so.3
     export TF_VISION_THREADS=8 TF_VISION_MAX_TOKENS=300
     WIN_EXPECT_CAPS: add vision=true
 
@@ -169,12 +188,14 @@ Steps (gate script tensorfold/flashnext/dd/vis_gate.py; INT transcribes into gpu
     VIS-T0	VIS	hard	60	python3 $TF_HERE/vis_gate.py text $TF_URL vis_t0.json
     VIS-I	VIS	hard	120	python3 $TF_HERE/vis_gate.py image $TF_URL $TF_FIXTURE $TF_SERVER_LOG vis_img.json
     VIS-T1	VIS	hard	60	python3 $TF_HERE/vis_gate.py text $TF_URL vis_t1.json && python3 $TF_HERE/vis_gate.py same vis_t0.json vis_t1.json
+    VIS-F	VIS	hard	60	python3 $TF_HERE/vis_gate.py formats $TF_URL $TF_HERE/fixtures
 
 | Step | Kind | GPU time | PASS gate |
 |---|---|---|---|
 | VIS-T0 | hard | 0.2 min | fixed text prompt, greedy, thinking off, 128 tokens: completes; hash recorded |
 | VIS-I | hard | 0.5 min | the fixture answers "blue" twice (second = encoder cache hit), same word; two encoder log lines with tokens == WxH; prompt_tokens > image tokens; TTFT and encoder ms recorded (soft: TTFT < 3 s on the 224x224 fixture) |
 | VIS-T1 | hard | 0.2 min | the same text prompt after the image requests: hash and token count == VIS-T0 (image handling leaves text bit-identical) |
+| VIS-F | hard | 0.2 min | dd/fixtures/vis_red_left_exif6.jpg (stored turned, EXIF orientation 6) answers "left" (unturned it reads "bottom") and dd/fixtures/vis_red_right.webp answers "right": Strata's normalize (exif_transpose, WebP to PNG) parity; needs TENSORFOLD_LIBTURBOJPEG and TENSORFOLD_LIBWEBP |
 
 Rollback: as G2.0 (a VIS failure ends the session; cutover can go text-only by dropping --vision).
 

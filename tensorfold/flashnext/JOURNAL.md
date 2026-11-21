@@ -1093,3 +1093,109 @@ VERDICT: VIS works in the serving path in the production KV mode; handed to INT 
 (10.4 s / 9K tokens) not yet compared with a text-only 9K prompt in desc+paged mode; JPEG EXIF turn and WebP need
 libturbojpeg / libwebp on the host (else JPEG passes through unturned, WebP is refused); encodes are serial on 8 CPU threads
 like Strata's.
+
+## 2026-11-21 [VIS] Image vs text prefill cost at 9K tokens (desc+paged int8, 2b552f0c)
+
+CONFIG: XPU_FN_KV=int8 XPU_FN_DESC=1 XPU_FN_KV_PAGES=auto, ctx 65536, port 18153, encoder cache warm.
+COMMAND: gpu-run vis_quick.sh gpu5 desc + vis_long.py (8909-token text prompt vs the same + one 64-token image, x2).
+RESULT: TTFT text 10.447 / 10.463 s, image 10.453 / 10.488 s; health HEALTHY pre/post.
+VERDICT: the M-RoPE path adds no measurable prefill cost. The ~850 tok/s long-prompt prefill is the KV mode's own (int-rf2
+quick bench prefill 1560 is a 2K row); a perf item for KV/INT, not VIS.
+
+## 2026-11-21 [VIS] JPEG EXIF orientation and WebP parity with Strata
+
+CONFIG: Strata 0.2.16 terminal/serve/server.py Vision.normalize: JPEG/PNG/BMP/GIF pass to strata-vision (stb_image) as
+sent; a JPEG whose EXIF Orientation is not 1 and every other format (WebP, TIFF, AVIF) go through Pillow
+(ImageOps.exif_transpose, alpha over white) to PNG. TF before: PNG passed, JPEG/WebP needed the pinned libturbojpeg /
+libwebpdecoder (missing on host: EXIF JPEG went unturned, WebP refused), BMP/GIF refused. Fix: built the pinned releases
+(libjpeg-turbo 3.1.4.1, WITH_SIMD=0; libwebp 1.6.0 = Pillow 13.0.0's) with zig cc + cmake/ninja into
+/mnt/vm_8tb/b70/build/tensorfold/vision-lib (vision-codecs/build.sh, 32 s under cpu-run); 097ff79c passes BMP/GIF through.
+COMMAND: zig build test-picture-host test-fn-vision-host xpu-native with TENSORFOLD_LIBTURBOJPEG/TENSORFOLD_LIBWEBP set (cpu-run);
+gpu-run vis_quick.sh gpu6 desc (XPU_FN_KV=int8 XPU_FN_DESC=1 XPU_FN_KV_PAGES=auto, ctx 65536, port 18153) incl. new
+vis_gate.py formats (dd/fixtures/vis_red_left_exif6.jpg stored 320x640 + EXIF 6; dd/fixtures/vis_red_right.webp).
+strata-vision peak RSS via /usr/bin/time -v (two 289-token encodes).
+RESULT: test-picture-host 31/31 (Pillow pixel goldens, pinned libs required), vision 10/10. GPU: vis-formats PASS: JPEG
+answers "left" with a 20x10 grid (upright 640x320; unturned would be 10x20 "bottom"), WebP "right"; text/image gates
+unchanged (hash bc270033aa5d, blue x2, 921 ms encode); HEALTHY pre/post. Encoder peak RSS 1.0 GiB.
+VERDICT: JPEG/WebP parity-equal with Strata given the two env vars (INT: add to tf-dd-prod.env). Still not parity: TIFF/AVIF
+(Strata converts via Pillow, TF refuses). dd/README.md records the encoder memory headroom (2 GiB for two encoders).
+
+## [INT] 2026-11-21 20:36 UTC -- b70/dd-serve fb0e6006 = SAMP + API + VIS merged; host suite green; dd_functional.py PASS on :18150
+CONFIG: b70/dd-serve 28030ff0 (fn-samp, fast-forward) -> dc8370e5 (merge dd-api 32b27d57; openai.zig field list = union of SAMP
+penalty fields and API budget aliases + response_format fallback) -> fb0e6006 (merge dd-vis a2e63f48; xpu_forward.zig fields side by
+side, xpu_flashnext.zig SAMP caps then openVision, greedy_only stays removed). Merge resolution in a scratch worktree (dd-merge),
+then fast-forward. Quick env = tf-dd-prod.env with the worktree binary (sha 98b56885), context 16384, XPU_FN_KV=int8 (paged, no
+desc), --instruct-sampling card --vision, TF_FIT_MAX_TOKENS=1 TF_STRUCTURED_FALLBACK=1.
+COMMAND: workers/INT/host_suite2.sh (25 host steps in one zig build + xpu-native ReleaseFast, one cpu-run lease, 959 s incl. 408 s
+build); workers/INT/quick_check.sh fb0e6006-a|b|c (gpu_window.sh prod with WIN_ONLY, three leases of 165 / ~200 / ~180 s, port 18150).
+RESULT:
+- Host: tests_rc=0 build_rc=0 (25 steps incl. test-fn-sampling-host, test-penalty-request-host, test-dd-api, test-fn-mrope-host,
+  test-fn-vision-host).
+- a: P0 identity PASS (hotschmoe-dd first + 2 aliases, reasoning default medium, caps vision/penalties/repetition_penalty, greedy_only
+  off); S1-samp 12 gates PASS (drafts on == off); VIS-T0/I/T1 PASS (blue x2, encode 918 ms, image TTFT 1.06 s / 0.12 s cached,
+  text hash bc270033aa5d unchanged). P1 bench (soft) C1 87.7 / C2 115.8 / C4 136.2 / C8 140.7 (4 lanes) / PF2k 1119 = 0.67-0.83 x
+  int-rf2: expected for the legacy-window int8 paged mode (not the desc fast path); KV's desc+paged is the production mode.
+- b: API1-4 PASS (reasoning 342 chars, 36 streamed arg deltas max gap 0.05 s, forced/named calls, response_format 3/3, budget 86
+  chars); API5-edge FAIL only on its window >= 100000 check (quick context 16384 by design); overflow 400, clamp, finish, usage,
+  queue8 parts PASS.
+- c: P9 dd_functional.py direct to :18150 with the image: PASS (thinking 334 chars, tool call + round trip, 4 concurrent exact,
+  vision blue, long 2048 tokens at 123.8 tok/s, code present). Server logs clean; xpu-health HEALTHY pre/post every lease.
+VERDICT: SAMP + API + VIS integrated and functional at 16K. Remaining for production: KV (200K desc+paged, parking), then
+dd-vis 097ff79c (formats; contains KV bef2f1a8, merged after KV's gated head), re-gate VIS + full window in desc+paged mode.
+gpu_window.sh prod no longer holds cpu-run --quiet while queued for the cards (it blocked builds during other workers' leases).
+
+## 2026-11-21 [SAMP] sampled decode profile and fix (b70/fn-samp a00ab802)
+
+CONFIG: b70/fn-samp; int-rf2 serve flags (ctx 16384, --parallel auto, thinking off) + --instruct-sampling card, port
+18152; 256-token fixed-length chat decode (ignore_eos), C1 and C4 (4 prompts), configs greedy / T 0.6 top_k 1 / T 0.6
+top_p 0.95 top_k 20 / instruct card (T 0.7 top_p 0.8 top_k 20 presence 1.5). FN_SAMPLE_PROFILE=1 per-window timings.
+Baseline = 28030ff0 behaviour (XPU_FN_SAMPLE_MERGE=0 XPU_FN_COUPLED=0); final = a00ab802 defaults.
+COMMAND: bin/gpu-run (cards 0+1) timeout 290 workers/SAMP/samp_session.sh with SAMP_PROFILE=1 (prof_client.py);
+leases prof-base, prof-new, check-new, check-final (XPU_FN_SAMPLE_CHECK=1 + samp_gate), prof-final; each <= 290 s.
+RESULT (per-stream decode tok/s, base -> final): C1 greedy 101.9 -> 102.6, T 0.6 95.0 -> 97.8, top_k 1 99.1 ->
+102.5, instruct card 70.3 -> 95.2. C4 greedy 45.6 -> 46.1, T 0.6 47.3 -> 47.4, instruct card 28.7 -> 43.3
+(aggregate 106.6 -> 164.9). Per window at C1: verify 16.0 ms, draft 1.5 ms; sampled draw 1.47 -> 0.21-0.39 ms,
+penalized draw 7.6 -> 0.86 ms (whole shard rows no longer read). MTP acceptance at T 0.6 is 0.36-0.37 against 0.38
+greedy (C1), 0.63 against 0.65 (C4): sampling is not what limits acceptance. Coupled drafts (keyed Gumbel in the
+MTP pick, XPU_FN_COUPLED=1) measured 0.35 at C1: no gain, shipped off. Exactness: 356K device-merged candidates and
+2176 gathered penalized rows, 0 mismatches against the host references; samp_gate 12/12 PASS (p0 greedy bitwise,
+drafts on == off); xpu-health HEALTHY in every lease. The earlier "60.3 vs 95" was a 63-token reply including TTFT,
+not a decode rate.
+VERDICT: PASS. The sampled-decode gap is closed (T 0.6 within 5% of greedy at C1, equal at C4); the instruct card
+(open-webui thinking-off default) went from 0.69x to 0.93x greedy at C1 and 0.63x to 0.94x at C4. What remains is
+greedy itself: C4 at ~46/stream, verify-bound (21-22 ms a window). Hand a00ab802 to INT.
+
+## [INT] 2026-11-21 20:58 UTC -- merge fn-samp a00ab802 (device top-K per card, coupled draws off) -> dd-serve 7d08051e: PASS
+CONFIG: b70/dd-serve 7d08051e = fb0e6006 + merge of b70/fn-samp a00ab802 (57d05a50 XPU_FN_COUPLED=1 default off; a00ab802 K candidates
+per card, XPU_FN_SAMPLE_MERGE=0 restores the old merge). Clean merge. Quick env as fb0e6006 (16384, int8 paged, card defaults, vision).
+COMMAND: workers/INT/host_suite2.sh <wt> merge-7d08051e build; workers/INT/quick_check.sh 7d08051e 16384
+"P0-identity S1-samp VIS-T0 VIS-I VIS-T1 P9-functional" (one lease, :18150).
+RESULT: host 25 steps tests_rc=0, build_rc=0 (367 s, sha b946865d). Lease: HEALTHY pre/post, load 77 s, P0 PASS, S1-samp PASS (all
+gates), VIS-T0/I/T1 PASS (text hash bc270033aa5d unchanged), P9 dd_functional with image PASS (thinking 438 chars, tool round trip,
+4 concurrent exact, blue, 2048 tokens at 122.2 tok/s), server log clean.
+VERDICT: merged. Next: KV handoff, then dd-vis 097ff79c.
+NOTE [INT]: S1 MTP accept at T 0.6 was 0.274 (117 drafted / 32 accepted, 72 tokens at 68.7 tok/s), above the 0.25 soft floor but below SAMP's 0.419 at 28030ff0; one sample each, flagged to SAMP.
+
+
+## 2026-11-21 21:45 [KV] paged int8 descriptor windows at 200000 x 4: gates pass, prefill +38%
+
+CONFIG: b70/dd-kv f70795f7 (bef2f1a8 desc over paged int8 + 0929b00c spare page + f70795f7 scale hoist), xpu-native
+sha256 4ddf7dac; XPU_FN_KV=int8 XPU_FN_DESC=1 XPU_FN_KV_PAGES=auto XPU_FN_EVICT=1 XPU_FN_EVICT_SLOTS=auto
+XPU_FN_MIRROR=1 XPU_CHUNK=XPU_CHUNK_SOLO=512; --parallel 4 --context 200000 --prompt-cache-gib 2, greedy, port 18151.
+Reference: Strata 0.2.16 hotschmoe-dd-0216.json via nl_launch_0216.sh (container strata-ref, port 18151).
+COMMAND: workers/KV/kv-quick.sh leases q2-q20 (gpu-run both cards, timeout 295) with tensorfold/flashnext/dd/kv_gate.py;
+workers/KV/strata-ref.sh (one lease). Evidence: /mnt/vm_8tb/b70/results/tf-flashnext/workers/KV/q*/ and strata-ref/.
+RESULT:
+- Load 77-82 s; paged KV budget pages=1175 = 601,600 tokens/card, resident_90k=6, resident_200k=3; physical slots 3.
+- Startup bug: padding lanes leased a pool page, so XPU_FN_EVICT refused (PagePoolNotIdle); fixed by 0929b00c.
+- p0 C4 == solo bitwise, and == bef2f1a8 ref after f70795f7 (q12). 90K chat needle PASS, TTFT 87.2 s; repeat
+  cached_tokens 89881, TTFT 0.113 s, ids equal (q13). 5 x 20K concurrent with 1200-token replies: every stream ==
+  its solo bitwise, 113 parks / 112 restores, 0 errors (q18/q19). Parks cost 10-900 ms each.
+- Prefill tok/s 8K/20K/32K/70K/90K: bef2f1a8 870/828/811/779/764 -> f70795f7 1170/1143/1119/1059/1031. Controls:
+  int8 without eviction 8K 870 (eviction/mirror/cache cost ~0); bf16page 70K 1176. Cause: per-element software
+  widen_half of the int8 group scales in paged attention. Strata cold 20K 1120, 70K 919.
+- Raw /v1/completions ledger prompts (no chat template) sometimes end at once with <|im_end|> (seed 2 20K, needle
+  early 70K/90K, also bf16page). Through chat, TF and Strata both answer correctly; Strata has no /v1/completions.
+VERDICT: KV handoff gates PASS (90K, 4+ long streams at 200000 with park/restore bitwise, RAM prompt cache). The
+early-EOS is raw-prompt model behaviour, not a KV bug. Head f70795f7 to INT. Open, perf: park thrash at 4 live
+streams on 3 slots (113 parks in 88 s); prefill is still below the legacy bf16 desc path (1373 at 8K).

@@ -2335,3 +2335,65 @@
 2026-11-21 19:42:43 UTC [VIS] released cards 0+1: vision gate desc+paged rc=0
 2026-11-21 19:43:26 UTC [VIS] claim cards 0+1 ~4 min: long-prompt TTFT text vs image, 2b552f0c desc+paged (port 18153)
 2026-11-21 19:44:37 UTC [KV] claim cards 0+1 ~5 min: KV quick 2: 200000x4 paged int8 desc + RAM cache: budget, p0 C4==solo, prefill 8K/32K, cache repeat (port 18151, bef2f1a8)
+2026-11-21 19:46:35 UTC [VIS] released cards 0+1: long-prompt TTFT rc=0
+2026-11-21 19:49:00 UTC [KV] released cards 0+1 (rc=1): KV quick 2: 200000x4 paged int8 desc + RAM cache: budget, p0 C4==solo, prefill 8K/32K, cache repeat
+2026-11-21 19:49:35 UTC [KV] claim cards 0+1 ~5 min: KV quick 3 A/B control: legacy bf16 desc ctx 16384, 2K/8K prefill + needle (port 18151, bef2f1a8)
+2026-11-21 19:51:08 UTC [SAMP] claim cards 0+1 ~4 min: SAMP profile baseline (host merge, argmax drafts) (port 18152)
+2026-11-21 19:52:09 UTC [KV] released cards 0+1 (rc=1): KV quick 3 A/B control: legacy bf16 desc ctx 16384, 2K/8K prefill + needle
+2026-11-21 19:52:42 UTC [KV] claim cards 0+1 ~5 min: KV quick 4: paged int8 desc 200000x4 + cache: prefill 2K/8K/32K, cache repeat (port 18151, bef2f1a8)
+2026-11-21 19:55:15 UTC [SAMP] released cards 0+1: SAMP profile baseline (host merge, argmax drafts) rc=0
+2026-11-21 19:58:26 UTC [KV] released cards 0+1 (rc=0): KV quick 4: paged int8 desc 200000x4 + cache: prefill 2K/8K/32K, cache repeat
+2026-11-21 19:58:35 UTC [KV] claim cards 0+1 ~5 min: KV quick 5: paged int8 desc 200000x4: 90K prompt + 256 decode, 20K solo (port 18151, bef2f1a8)
+2026-11-21 19:59:03 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod fb0e6006-a (port 18150, steps P0-identity P1-bench S1-samp VIS-T0 VIS-I VIS-T1)
+2026-11-21 20:03:19 UTC [KV] released cards 0+1 (rc=1): KV quick 5: paged int8 desc 200000x4: 90K prompt + 256 decode, 20K solo
+2026-11-21 20:04:26 UTC [KV] claim cards 0+1 ~5 min: KV quick 6: paged int8 desc: 48K and 70K needle (90K returned EOS) (port 18151, bef2f1a8)
+2026-11-21 20:06:06 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod fb0e6006-a rc=0
+2026-11-21 20:06:16 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod fb0e6006-b (port 18150, steps P0-identity API1-reasoning API2-tools API3-forced API4-budget API5-edge P9-functional)
+2026-11-21 20:11:01 UTC [KV] released cards 0+1 (rc=124): KV quick 6: paged int8 desc: 48K and 70K needle (90K returned EOS)
+2026-11-21 20:11:08 UTC [KV] claim cards 0+1 ~1 min: post-timeout xpu-health (q6 lease hit its 295 s timeout during teardown)
+2026-11-21 20:11 UTC [VIS] claim cards 0+1 ~4 min: vision gate 097ff79c desc+paged int8 ctx 65536 + JPEG-EXIF/WebP (port 18153)
+2026-11-21 20:11:50 UTC [KV] released cards 0+1: post-timeout xpu-health
+2026-11-21 20:12:40 UTC [KV] claim cards 0+1 ~5 min: KV quick 7: paged int8 desc: 70K filler with the note at the end (EOS at >=70K diagnosis) (port 18151, bef2f1a8)
+2026-11-21 20:14 UTC [VIS] released cards 0+1: vision gate formats rc=0
+2026-11-21 20:17:35 UTC [SAMP] claim cards 0+1 ~4 min: SAMP profile: device merge + coupled drafts + penalty gather, then gate (port 18152)
+2026-11-21 20:18:34 UTC [KV] released cards 0+1 (rc=0): KV quick 7: paged int8 desc: 70K filler with the note at the end (EOS at >=70K diagnosis)
+2026-11-21 20:18:41 UTC [KV] claim cards 0+1 ~5 min: KV quick 8: bf16page desc control: 70K needle near start (port 18151, bef2f1a8)
+2026-11-21 20:21:43 UTC [SAMP] released cards 0+1: SAMP profile: device merge + coupled drafts + penalty gather, then gate rc=0
+2026-11-21 20:22:00 UTC [SAMP] claim cards 0+1 ~4 min: SAMP device-merge exactness check (gate with host-merge cross-check) (port 18152)
+2026-11-21 20:24:16 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod fb0e6006-b rc=1
+2026-11-21 20:24:50 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod fb0e6006-c (port 18150, steps P0-identity P9-functional)
+2026-11-21 20:26:48 UTC [SAMP] released cards 0+1: SAMP device-merge exactness check (gate with host-merge cross-check) rc=0
+2026-11-21 20:30:04 UTC [KV] released cards 0+1 (rc=1): KV quick 8: bf16page desc control: 70K needle near start
+2026-11-21 20:30:16 UTC [KV] claim cards 0+1 ~5 min: KV quick 9: int8 paged desc WITHOUT eviction/mirror: prefill 8K/32K A/B (port 18151, bef2f1a8)
+2026-11-21 20:32:16 UTC [SAMP] claim cards 0+1 ~4 min: SAMP final build: gate + merge/gather exactness check (port 18152)
+2026-11-21 20:33:21 UTC [KV] released cards 0+1 (rc=0): KV quick 9: int8 paged desc WITHOUT eviction/mirror: prefill 8K/32K A/B
+2026-11-21 20:34:25 UTC [KV] claim cards 0+1 ~5 min: KV quick 10: 20K solo then 4 x 20K concurrent on 3 physical slots (park/restore bitwise) (port 18151, bef2f1a8)
+2026-11-21 20:36:23 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod fb0e6006-c rc=0
+2026-11-21 20:40:11 UTC [SAMP] released cards 0+1: SAMP final build: gate + merge/gather exactness check rc=0
+2026-11-21 20:40:23 UTC [SAMP] claim cards 0+1 ~4 min: SAMP final build timing (C1/C4 x greedy/topk1/t0.6/instruct) (port 18152)
+2026-11-21 20:44:10 UTC [KV] released cards 0+1 (rc=1): KV quick 10: 20K solo then 4 x 20K concurrent on 3 physical slots (park/restore bitwise)
+2026-11-21 20:44:23 UTC [KV] claim cards 0+1 ~5 min: KV quick 11: solo 20K seeds 2 and 3 (concurrent seed 2 returned EOS after 2 parks during prefill) (port 18151, bef2f1a8)
+2026-11-21 20:47:09 UTC [SAMP] released cards 0+1: SAMP final build timing (C1/C4 x greedy/topk1/t0.6/instruct) rc=0
+2026-11-21 20:50:16 UTC [KV] released cards 0+1 (rc=1): KV quick 11: solo 20K seeds 2 and 3 (concurrent seed 2 returned EOS after 2 parks during prefill)
+2026-11-21 20:55:23 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod 7d08051e (port 18150, steps P0-identity S1-samp VIS-T0 VIS-I VIS-T1 P9-functional)
+2026-11-21 20:58:16 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod 7d08051e rc=0
+2026-11-21 21:05:01 UTC [KV] claim cards 0+1 ~6 min: Strata 0.2.16 reference (container strata-ref, port 18151): needle/EOS + 32K/90K TTFT cold+repeat
+2026-11-21 21:09:21 UTC [KV] released cards 0+1: Strata reference (SESSION rc=0 health_post=0 gpu-run: [KV] done in 32s (exit 0))
+2026-11-21 21:09:36 UTC [KV] claim cards 0+1 ~5 min: KV quick 12: f70795f7 (sha 4ddf7dac): p0 C4 vs bef2f1a8 ref; chat-mode seed-2 20K and needle-early 70K (Strata-matched) (port 18151, bef2f1a8)
+2026-11-21 21:13:29 UTC [KV] released cards 0+1 (rc=0): KV quick 12: f70795f7 (sha 4ddf7dac): p0 C4 vs bef2f1a8 ref; chat-mode seed-2 20K and needle-early 70K (Strata-matched)
+2026-11-21 21:13:41 UTC [KV] claim cards 0+1 ~5 min: KV quick 13: f70795f7: 90K chat needle + RAM prompt cache repeat (port 18151, bef2f1a8)
+2026-11-21 21:17:07 UTC [KV] released cards 0+1 (rc=0): KV quick 13: f70795f7: 90K chat needle + RAM prompt cache repeat
+2026-11-21 21:17:07 UTC [KV] claim cards 0+1 ~5 min: KV quick 14: f70795f7: 20K solo + 4 x 20K concurrent on 3 physical slots (park/restore) + parks gate (port 18151, bef2f1a8)
+2026-11-21 21:20:14 UTC [KV] released cards 0+1 (rc=1): KV quick 14: f70795f7: 20K solo + 4 x 20K concurrent on 3 physical slots (park/restore) + parks gate
+2026-11-21 21:20:40 UTC [KV] claim cards 0+1 ~5 min: KV quick 15: f70795f7: long-answer 20K solo + 4 x 20K concurrent on 3 physical slots (park/restore bitwise) + parks gate (port 18151, bef2f1a8)
+2026-11-21 21:23:38 UTC [KV] released cards 0+1 (rc=1): KV quick 15: f70795f7: long-answer 20K solo + 4 x 20K concurrent on 3 physical slots (park/restore bitwise) + parks gate
+2026-11-21 21:23:54 UTC [KV] claim cards 0+1 ~5 min: KV quick 16: f70795f7: 20K solo + 4 x 20K concurrent, ~1200-token copy replies (park/restore bitwise) + parks gate (port 18151, bef2f1a8)
+2026-11-21 21:27:13 UTC [KV] released cards 0+1 (rc=1): KV quick 16: f70795f7: 20K solo + 4 x 20K concurrent, ~1200-token copy replies (park/restore bitwise) + parks gate
+2026-11-21 21:27:27 UTC [KV] claim cards 0+1 ~5 min: KV quick 17: f70795f7: 20K solo + 5 x 20K concurrent (4 cold > 3 physical slots), 1200-token replies, park/restore bitwise (port 18151, bef2f1a8)
+2026-11-21 21:31:14 UTC [KV] released cards 0+1 (rc=0): KV quick 17: f70795f7: 20K solo + 5 x 20K concurrent (4 cold > 3 physical slots), 1200-token replies, park/restore bitwise
+2026-11-21 21:31:40 UTC [KV] claim cards 0+1 ~5 min: KV quick 18: solo refs seeds 1-4 at 20K, 1200-token replies (for park bitwise) (port 18151, bef2f1a8)
+2026-11-21 21:35:06 UTC [KV] released cards 0+1 (rc=0): KV quick 18: solo refs seeds 1-4 at 20K, 1200-token replies (for park bitwise)
+2026-11-21 21:35:06 UTC [KV] claim cards 0+1 ~5 min: KV quick 19: 5 x 20K concurrent, 1200-token replies, every stream vs its solo ref (park/restore bitwise) (port 18151, bef2f1a8)
+2026-11-21 21:39:08 UTC [KV] released cards 0+1 (rc=0): KV quick 19: 5 x 20K concurrent, 1200-token replies, every stream vs its solo ref (park/restore bitwise)
+2026-11-21 21:39:18 UTC [KV] claim cards 0+1 ~5 min: KV quick 20: f70795f7 prefill rates 8K / 32K (prod KV mode) (port 18151, bef2f1a8)
+2026-11-21 21:42:01 UTC [KV] released cards 0+1 (rc=0): KV quick 20: f70795f7 prefill rates 8K / 32K (prod KV mode)

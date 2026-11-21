@@ -120,6 +120,11 @@ prod_session() {  # runs INSIDE gpu-run (both cards): health, server, steps, tea
 
 prod() {  # G2 ~20 min: one lease, quiet CPU outside it
   log "G2 prod start (cards 0+1, <= ${WIN_LEASE_S:-2400} s, port $port)"; gpumd "claim cards 0+1 <= ${WIN_LEASE_S:-2400} s: gpu_window prod $tag (port $port${WIN_ONLY:+, steps $WIN_ONLY})"
+  # Do not hold cpu-run --quiet while queued for the cards (it would block every build): wait until both are free
+  # (up to 30 min) first, as tools/flashnext_serve_bench.sh does; a race only costs a short quiet wait.
+  local w; for ((w=0;w<360;w++)); do
+    "$host/bin/gpu-run" --status 2>/dev/null | grep -Eq 'card 0: free' && "$host/bin/gpu-run" --status 2>/dev/null | grep -Eq 'card 1: free' && break
+    sleep 5; done
   WIN_DIR=$win WIN_TAG=$tag TF_DD_CONFIG=$config WIN_STEPS=$steps "$host/bin/cpu-run" --quiet "$host/bin/gpu-run" timeout --signal=TERM --kill-after=30 ${WIN_LEASE_S:-2400} bash "$here/gpu_window.sh" _prod_session
   local rc=$?
   gpumd "released cards 0+1: gpu_window prod $tag rc=$rc"

@@ -14,7 +14,7 @@ Base: b70/dd-serve from 372bf1b2 (int-rf2: C1 109.5 / C2 139.5 / C4 168 / C8 209
 | SAMP | Real sampling: temperature, top_p, top_k, min_p, presence/frequency/repetition penalties, seed, with MTP speculative decoding kept lossless (rejection-sampling acceptance); greedy stays bitwise | worker SAMP (Opus) | started |
 | VIS | Vision in the serving path: image inputs through a CPU vision encoder (Strata's strata-vision sidecar + mmproj, or llama.cpp mtmd) to embeddings, injected into the prompt with Qwen3.8 vision tokens and positions | worker VIS (Opus) | started |
 | API | OpenAI/Anthropic parity: model id hotschmoe-dd + aliases, reasoning on by default with effort medium + 16384 thinking budget, reasoning_content, qwen3-coder tool calls incl. streaming tool-call deltas, tool_choice auto/none/required + structured output (libtfgrammar missing), /v1/messages if Strata clients use it, usage incl. cached tokens, /health, context-length errors like Strata | worker API (Sonnet) | started |
-| INT | Integration branch b70/dd-serve, merges, the frozen build, the unit/launcher (reuse tensorfold/flashnext/dd/), GPU-TESTS.md ordering and gates, cutover + rollback runbook | worker INT (Opus) | b70/dd-serve created (372bf1b2 + 1a5a57d0 bench port/model knobs); host suite 20/20 green at base + xpu-native builds (356 s); GPU-TESTS.md ordered (runner dd/gpu_window.sh, CPU self-test PASS); launcher/unit/prod env + runbook dd/README.md ready; frozen build pending item merges |
+| INT | Integration branch b70/dd-serve, merges, the frozen build, the unit/launcher (reuse tensorfold/flashnext/dd/), GPU-TESTS.md ordering and gates, cutover + rollback runbook | worker INT (Opus) | b70/dd-serve 7d08051e = 372bf1b2 + bench knobs + SAMP a00ab802 + API 32b27d57 + VIS a2e63f48; host suite 25/25; quick checks PASS incl. dd_functional with image (16K); waiting for KV handoff, then dd-vis 097ff79c, freeze, window, cutover |
 
 ## Parity checklist vs strata/flash-next/dd/hotschmoe-dd-0216.json + dd_functional.py (live; INT and orchestrator update)
 
@@ -23,8 +23,8 @@ Rollback = systemctl --user start hotschmoe-dd (Strata 0.2.16; dd/README.md).
 
 | Feature | Strata value | Owner | Status | GPU gate |
 |---|---|---|---|---|
-| Model id hotschmoe-dd + alias qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata-0216 | yes | API | in progress | P0 identity |
-| 4+ slots (queue, not reject) | parallel 4 | API/KV | in progress | P0 + 4 concurrent == solo |
+| Model id hotschmoe-dd + alias qwen3.8-flash-next-ISTA-GSQ-RCO-IQ3_XXS-strata-0216 | yes | API | PASS on dd-serve fb0e6006 (INT quick 20:05: hotschmoe-dd first + tensorfold + strata-0216 aliases) | P0 identity |
+| 4+ slots (queue, not reject) | parallel 4 | API/KV | PASS at 16K on fb0e6006 (8 requests on 4 lanes all 200; dd_functional 4 concurrent exact); 200K x 4 waits for KV | P0 + 4 concurrent == solo |
 | Long context 200K, paged KV in fast (desc) path; 58-90K prompts | 200000, int8 KV | KV | in progress (b70/dd-kv bef2f1a8 desc over paged arena) | 90K prompt + 4 x long admission |
 | Parking / KV eviction to RAM, restore w/o recompute | kv-resident 65536 + RAM | KV | not started (fn-rt-evict 2c5d885 to merge) | park/restore bitwise |
 | Real sampling (temp, top_p, top_k, min_p, penalties, seed) | yes | SAMP | MERGED into b70/dd-serve 19:22 (fn-samp 28030ff0, ff); SAMP gate 12/12 PASS on :18152; prod env: TF_TEMPERATURE empty (generation_config) + --instruct-sampling card; clamp proxy retired | S1-samp |
@@ -33,9 +33,9 @@ Rollback = systemctl --user start hotschmoe-dd (Strata 0.2.16; dd/README.md).
 | Tool calls (qwen3-coder), streaming deltas, tool_choice | yes | API | MERGED (TF_STRUCTURED_FALLBACK=1, TF_FIT_MAX_TOKENS=1 in prod env); /slots + /props added | API2/API3/API5 + P9 |
 | Streaming SSE + usage/cached tokens | yes | API | MERGED; cached_tokens stays 0 until a prompt cache is configured (KV) | API1/API5 |
 | Vision (image_url via CPU strata-vision + mmproj) | images on | VIS | MERGED 19:42 (dd-vis a2e63f48 -> dd-serve fb0e6006; 2 conflicts with SAMP resolved); gated by VIS in classic + int8 non-desc; must re-gate in desc+paged after KV | VIS-T0/I/T1 + P9 |
-| Speed at production config | C1 133.5 (Strata) | INT | int-rf2 C1 109.5 = 82% of Strata; C4/C8/PF ahead | P1 bench >= 0.90 x int-rf2 |
+| Speed at production config | C1 133.5 (Strata) | INT | int-rf2 C1 109.5. fb0e6006 in legacy-window int8 paged mode (pre-KV): C1 87.7 / C2 115.8 / C4 136.2 / C8 140.7 (4 lanes) / PF2k 1119; dd_functional long stream 123.8 tok/s. Production number needs KV desc+paged | P1 bench >= 0.90 x int-rf2 |
 | Candidate fold-in: fn-a3 e87b5074 (one-card gated) | - | INT | gated 19:06: oracle/solo/health PASS; C1 110.8 C2 135.9 C4 172.9 C8 212.3 PF 1551 (C2, PF below int-rf2, noise) -> not merged, base stays 372bf1b2 | done |
-| Unit hotschmoe-dd-tensorfold + frontdoor :18080 + dd_functional with image | - | INT | unit written, not installed | C1-C3 cutover |
+| Unit hotschmoe-dd-tensorfold + frontdoor :18080 + dd_functional with image | - | INT | dd_functional.py with image PASS direct to :18150 on fb0e6006 (20:36, 16K); unit written, not installed; cutover after KV + freeze + window | C1-C3 cutover |
 
 ## Order after parity (owner 2026-11-21 19:45 UTC)
 

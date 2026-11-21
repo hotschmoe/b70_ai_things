@@ -17,6 +17,16 @@ Plan and status: ../SERVE-READINESS.md. The GPU window and its gates: ../GPU-TES
 | soak_monitor.py + hotschmoe-dd-soak.service | passive per-request record + alerts only (--backend strata / tf / auto); never logs prompt or response text |
 | gpu_window.sh, gpu_window_steps.tsv, gpu_window_checks.py | the one GPU window: preflight, regress, prod steps, cutover, rollback |
 
+## Memory headroom for --vision (worker VIS, 2026-11-21)
+
+The unit sets no MemoryMax today. --vision starts Strata's strata-vision CPU encoder as a child of the server (same
+cgroup): measured peak RSS 1.0 GiB (/usr/bin/time -v, mmproj BF16, 8 threads, --max-tokens 300, two 289-token encodes).
+The server keeps up to two encoders (one per image-token budget, e.g. low detail 256), so allow 2 GiB over the server's
+own RSS, plus ~0.1 GiB for decoded pictures, if a MemoryMax or MemoryHigh is ever added. An OOM kill of the encoder alone
+is survivable (the server restarts it once per failed request and serves text meanwhile); a cgroup kill of the unit is not.
+JPEG (EXIF turn) and WebP need TENSORFOLD_LIBTURBOJPEG / TENSORFOLD_LIBWEBP (pinned libjpeg-turbo 3.1.4.1 and libwebp 1.6.0
+in /mnt/vm_8tb/b70/build/tensorfold/vision-lib, built by /mnt/vm_8tb/b70/build/tensorfold/vision-codecs/build.sh), see GPU-TESTS.md ## VIS.
+
 ## Freeze (CPU, before the window)
 
     tensorfold/flashnext/dd/build_dd.sh <b70/dd-serve head>        # ~builds under cpu-run; prints sha256
