@@ -104,15 +104,102 @@ pre-append K/V, codes, attention at the 4,800-row boundary; B/kv8 NOTES).
 
 ## SAMP
 
-(worker SAMP: step lines -- temperature/top_p/top_k/min_p/penalties distribution sanity, seed repeatability, greedy
-still bitwise under the sampling build, MTP acceptance rate at temperature 0.6 with a floor.)
+Branch b70/fn-samp (worker SAMP), head 28030ff0 on b70/dd-serve 1a5a57d0. Sampling is on by request: temperature
+> 0 (or nonzero penalties) takes Strata 0.2.16's chain on the host over each rank's head-shard top 64 (whole shard
+rows when penalties apply); temperature 0 without penalties keeps the device argmax, bitwise unchanged. MTP stays
+lossless: draws are keyed per position and drafts are accepted by exact match (Strata's own rule with
+STRATA_SPEC_PROB off, its production default). The engine publishes greedy_only=false, penalties=true and
+repetition_penalty=true. Requests map temperature/top_p/top_k/min_p/seed/presence/frequency plus
+repetition_penalty (alias repeat_penalty) and penalty_last_n (alias repeat_last_n, default 64) like Strata.
+
+Production env (INT, tf-dd-prod.env): keep TF_TEMPERATURE empty (the server then applies generation_config.json:
+temperature 1.0, top_p 0.95, top_k 20, Strata's thinking set) and add the instruct card set for thinking-off chats
+(temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5, Strata's MODEL_CARD_SAMPLING):
+
+    TF_EXTRA_ARGS="--instruct-sampling card"     # append to whatever KV/VIS/API put there
+
+The clamp proxy (tf_clamp_proxy.py, TF_LISTEN=unix) is no longer needed for sampled clients.
+
+Step lines for gpu_window_steps.tsv (INT; TAB-separated, same server as the other prod steps):
+
+    S1-samp	SAMP	hard	150	SAMP_P0_EXPECTED=${TF_SAMP_P0:-} python3 $TF_HERE/samp_gate.py $TF_URL $TF_MODEL > samp.log 2>&1; rc=$?; grep '^GATE' samp.log; exit $rc
+
+Gates printed by dd/samp_gate.py (no prompt/response text; hashes and counts only):
+
+| Gate | Hard | Pass |
+|---|---|---|
+| samp-caps | yes | /v1/models capabilities: greedy_only false, penalties true, repetition_penalty true |
+| samp-s0-greedy-p0-bitwise | yes (only with SAMP_P0_EXPECTED, int-rf2 config) | p0 greedy 128 tokens == workers/S/expected-current.json |
+| samp-s0b-topk1-p0-equals-greedy | yes (same) | p0 at T 0.6 top_k 1 == p0 greedy (shard top-64 merge exact over 128 rows) |
+| samp-s1-greedy-repeat | yes | two greedy chats identical |
+| samp-s2-topk1-equals-greedy | yes | T 0.6 top_k 1 chat == greedy chat |
+| samp-s3-seed-repeat | yes | T 0.6 top_p 0.95 top_k 20 seed 1234 twice identical |
+| samp-s4-t0.6-coherent-mtp | yes | that reply coherent (>= 20 words, ASCII, on topic, no 4-gram > 3x) and MTP drafted > 0; accept rate logged |
+| samp-s4b-mtp-accept-floor | soft | MTP accept rate at T 0.6 >= 0.25 |
+| samp-s5-penalties-served | yes | presence 1.5 and repetition 1.1 + frequency 0.2 replies coherent |
+| samp-s6-seeds-differ | soft | seed 4321 reply differs from seed 1234 |
+| samp-s7-drafts-lossless | soft | seed 1234 with "draft": false == with drafts |
+
+Quick gate run by SAMP (one lease <= 5 min, port 18152): /mnt/vm_8tb/b70/results/tf-flashnext/workers/SAMP/samp_session.sh
+(the int-rf2 serve of tools/flashnext_serve_bench.sh plus --instruct-sampling card, SAMP_P0_EXPECTED set). Result:
+2026-11-21 19:18 UTC, 124 s lease, binary sha ddefd8fc (ReleaseFast): all 12 gates PASS (s0 p0 greedy 128 tokens
+bitwise == expected-current; s0b top_k 1 == greedy; T 0.6 seed repeat; drafts on == off; MTP accept 0.419 at T 0.6,
+63 tokens at 60.3 tok/s incl. TTFT vs greedy 71 tokens in 0.75 s), server log clean, xpu-health HEALTHY pre/post.
+Evidence: /mnt/vm_8tb/b70/results/tf-flashnext/workers/SAMP/g1-28030ff0/.
 
 ## VIS
 
-(worker VIS: step lines -- image request through the serving path with the fixture $TF_FIXTURE; encoder time; the
-WIN_EXPECT_CAPS entry vision=true.)
+Branch b70/dd-vis head 2b552f0c (worker VIS; includes b70/dd-kv bef2f1a8). Quick gate PASSED 19:42 UTC in desc+paged int8 ctx 65536 (also classic, int8). Behaviour is off unless the server gets `--vision` and the TF_VISION_* env below
+(sidecar = Strata's own strata-vision CPU binary + mmproj, the same one hotschmoe-dd-0216.json runs, 8 threads, 300
+tokens an image). Production env lines for tf-dd-prod.env (INT):
+
+    TF_EXTRA_ARGS="--vision"     # append to whatever API/KV put there
+    export TF_VISION_EXE=/mnt/vm_8tb/b70/build/strata-ab/build-vision-cpu/bin/strata-vision
+    export TF_VISION_MMPROJ=/mnt/vm_8tb/github/b70_ai_things/models/files/qwen3.8-flash-next/ista-gsq-rco-iq3-xxs/mmproj-Qwen3.8-Flash-Next-BF16.gguf
+    export TF_VISION_MODEL=$FN_GGUF
+    export TF_VISION_LIB=/mnt/vm_8tb/b70/build/tensorfold/vision-lib   # libgomp.so.1 (from strata-sycl-dev:020; the host has none)
+    export TF_VISION_THREADS=8 TF_VISION_MAX_TOKENS=300
+    WIN_EXPECT_CAPS: add vision=true
+
+Startup log line to expect: `flashnext: --vision on: strata-vision ready in N s`. A `--vision off` line means text only
+(P0 then fails on vision=true). Per image: `flashnext vision: image N tokens (WxH) encoded in M ms`.
+
+Steps (gate script tensorfold/flashnext/dd/vis_gate.py; INT transcribes into gpu_window_steps.tsv after P1, before P9):
+
+    VIS-T0	VIS	hard	60	python3 $TF_HERE/vis_gate.py text $TF_URL vis_t0.json
+    VIS-I	VIS	hard	120	python3 $TF_HERE/vis_gate.py image $TF_URL $TF_FIXTURE $TF_SERVER_LOG vis_img.json
+    VIS-T1	VIS	hard	60	python3 $TF_HERE/vis_gate.py text $TF_URL vis_t1.json && python3 $TF_HERE/vis_gate.py same vis_t0.json vis_t1.json
+
+| Step | Kind | GPU time | PASS gate |
+|---|---|---|---|
+| VIS-T0 | hard | 0.2 min | fixed text prompt, greedy, thinking off, 128 tokens: completes; hash recorded |
+| VIS-I | hard | 0.5 min | the fixture answers "blue" twice (second = encoder cache hit), same word; two encoder log lines with tokens == WxH; prompt_tokens > image tokens; TTFT and encoder ms recorded (soft: TTFT < 3 s on the 224x224 fixture) |
+| VIS-T1 | hard | 0.2 min | the same text prompt after the image requests: hash and token count == VIS-T0 (image handling leaves text bit-identical) |
+
+Rollback: as G2.0 (a VIS failure ends the session; cutover can go text-only by dropping --vision).
 
 ## API
 
-(worker API: step lines -- tool call + streamed tool-call deltas, tool_choice auto/none/required, reasoning_content
-default on at effort medium, usage incl. cached tokens, /health, over-context error shape like Strata.)
+### API worker result (branch b70/dd-api, head 32b27d57 on b70/dd-serve 372bf1b2)
+
+Quick GPU gate PASSED 5/5 on port 18154 (136 s lease incl. 74 s load; xpu-health HEALTHY): tools/api results in workers/API/gpu2.
+Needs two env exports in tf-dd-prod.env (INT): `export TF_FIT_MAX_TOKENS=1 TF_STRUCTURED_FALLBACK=1` (both default off in the binary).
+Also drop `--temperature 0` once SAMP lands (Strata applies the model-card defaults T=1.0 top_p=0.95 top_k=20 when a client sends none).
+libtfgrammar: not needed (the XPU lane backend has no masked first-token path, so Info.structures stays false; the fallback above
+replaces it). To build it anyway: git clone --branch v0.2.8 --recurse-submodules https://github.com/mlc-ai/xgrammar DIR; zig build grammar -Dxgrammar=DIR.
+
+Steps (TAB-separated lines for gpu_window_steps.tsv; each prints one GATE line; GPU time about 100 s total):
+
+| id | kind | timeout | command | PASS gate |
+|---|---|---|---|---|
+| API1-reasoning | hard | 100 | python3 $TF_HERE/api_gate.py reasoning $TF_URL | thinking on by default: reasoning_content non-stream and stream (before content), answer 205, usage chunk, [DONE], finish stop, cached_tokens key |
+| API2-tools | hard | 120 | python3 $TF_HERE/api_gate.py tools $TF_URL | streamed write_file call: name first, >= 3 argument deltas, 30/30 lines, finish tool_calls, max SSE gap < 20 s; non-stream get_weather call id call_*; tool_choice none -> text, no call |
+| API3-forced | hard | 100 | python3 $TF_HERE/api_gate.py forced $TF_URL | tool_choice required and named produce tool_calls (also streamed); response_format json_schema valid JSON object in >= 2 of 3 |
+| API4-budget | soft | 100 | python3 $TF_HERE/api_gate.py budget $TF_URL | reasoning_budget_tokens / thinking_budget_tokens / thinking_budget = 48 each give < 1200 reasoning chars and an answer; reasoning_effort none has no reasoning_content |
+| API5-edge | hard | 120 | python3 $TF_HERE/api_gate.py edge $TF_URL | models first id hotschmoe-dd + strata-0216 alias + context_length >= 100000, /health 200, over-window prompt 400 naming the context window, max_tokens = window clamps (200, stop), finish length/stop, usage keys + cached_tokens, 8 concurrent requests on 4 lanes all 200 and exact |
+
+Observed on the real engine: reasoning 342 chars at 205; write_file 36 argument deltas, max gap 0.05 s; budget 48 -> 86 reasoning chars;
+forced and named calls ok; response_format 3/3; queue8 max 1.5 s. Not covered here: cached_tokens > 0 needs a prompt cache (KV item;
+TF_PROMPT_CACHE_GIB=0 in the DD env today); Strata prompt-cache parity for 58-90K prompts is KV's.
+CPU parity (no GPU): tensorfold/flashnext/api_parity/run_parity.sh -- 77 cases against Strata's real server.py (mock engine), 0 gaps
+with the two flags (9 without them), 2 SAMP cases pending (temperature, penalties); accepted differences listed in parity.py KNOWN.

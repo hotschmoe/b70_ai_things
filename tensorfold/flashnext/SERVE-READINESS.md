@@ -27,12 +27,20 @@ Rollback = systemctl --user start hotschmoe-dd (Strata 0.2.16; dd/README.md).
 | 4+ slots (queue, not reject) | parallel 4 | API/KV | in progress | P0 + 4 concurrent == solo |
 | Long context 200K, paged KV in fast (desc) path; 58-90K prompts | 200000, int8 KV | KV | in progress (b70/dd-kv bef2f1a8 desc over paged arena) | 90K prompt + 4 x long admission |
 | Parking / KV eviction to RAM, restore w/o recompute | kv-resident 65536 + RAM | KV | not started (fn-rt-evict 2c5d885 to merge) | park/restore bitwise |
-| Real sampling (temp, top_p, top_k, min_p, penalties, seed) | yes | SAMP | in progress (b70/fn-samp) | distribution sanity + seed repeat |
-| MTP under sampling (lossless) + greedy bitwise | spec 4 MTP | SAMP | in progress | greedy hash f8caa42cc5b4; accept @0.6 |
-| Reasoning on, effort medium, budget 16384, reasoning_content | yes | API | in progress (b70/dd-api) | dd_functional thinking |
-| Tool calls (qwen3-coder), streaming deltas, tool_choice | yes | API | in progress | dd_functional tool_call + roundtrip |
-| Streaming SSE + usage/cached tokens | yes | API | in progress | stream check |
-| Vision (image_url via CPU strata-vision + mmproj) | images on | VIS | in progress (b70/dd-vis) | dd_functional vision "blue" |
+| Real sampling (temp, top_p, top_k, min_p, penalties, seed) | yes | SAMP | MERGED into b70/dd-serve 19:22 (fn-samp 28030ff0, ff); SAMP gate 12/12 PASS on :18152; prod env: TF_TEMPERATURE empty (generation_config) + --instruct-sampling card; clamp proxy retired | S1-samp |
+| MTP under sampling (lossless) + greedy bitwise | spec 4 MTP | SAMP | MERGED: greedy p0 bitwise == expected-current, drafts on == off (keyed draws, exact-match accept), MTP accept 0.419 @ T 0.6 | S1-samp + G1 regress |
+| Reasoning on, effort medium, budget 16384, reasoning_content | yes | API | MERGED 19:41 (dd-api 32b27d57 -> dd-serve dc8370e5; openai.zig conflict = union with SAMP fields); API gate 5/5 on :18154; INT re-gate running | API1 + P9 |
+| Tool calls (qwen3-coder), streaming deltas, tool_choice | yes | API | MERGED (TF_STRUCTURED_FALLBACK=1, TF_FIT_MAX_TOKENS=1 in prod env); /slots + /props added | API2/API3/API5 + P9 |
+| Streaming SSE + usage/cached tokens | yes | API | MERGED; cached_tokens stays 0 until a prompt cache is configured (KV) | API1/API5 |
+| Vision (image_url via CPU strata-vision + mmproj) | images on | VIS | MERGED 19:42 (dd-vis a2e63f48 -> dd-serve fb0e6006; 2 conflicts with SAMP resolved); gated by VIS in classic + int8 non-desc; must re-gate in desc+paged after KV | VIS-T0/I/T1 + P9 |
 | Speed at production config | C1 133.5 (Strata) | INT | int-rf2 C1 109.5 = 82% of Strata; C4/C8/PF ahead | P1 bench >= 0.90 x int-rf2 |
-| Candidate fold-in: fn-a3 e87b5074 (one-card gated) | - | INT | two-card gate queued | quick bench gate |
+| Candidate fold-in: fn-a3 e87b5074 (one-card gated) | - | INT | gated 19:06: oracle/solo/health PASS; C1 110.8 C2 135.9 C4 172.9 C8 212.3 PF 1551 (C2, PF below int-rf2, noise) -> not merged, base stays 372bf1b2 | done |
 | Unit hotschmoe-dd-tensorfold + frontdoor :18080 + dd_functional with image | - | INT | unit written, not installed | C1-C3 cutover |
+
+## Order after parity (owner 2026-11-21 19:45 UTC)
+
+Engine strategy on hold (owner designs our own engine separately): no fork restructuring, no GitHub fork, no repo
+reorganisation. (1) Parity until TF serves hotschmoe-dd and passes dd_functional.py through :18080 with an image.
+(2) Then performance, single stream and concurrency, measured with ALL features on: the bench gains long-context rows
+(32K/90K prompt prefill + decode at depth) and sampling rows (temperature 0.6, card defaults), not only greedy 16K.
+Lessons for a future engine go in ENGINE-LESSONS.md.

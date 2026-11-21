@@ -8,6 +8,10 @@
                                    into $KV_OUT (default $TF_OUT)
   conc URL TOKENS N DECODE SOLO    N concurrent distinct needle prompts (prompt 0 == SOLO's prompt): all admitted
                                    and complete, every needle recalled, stream 0 ids == SOLO ids bitwise
+  short URL N DECODE               oracle p0 ids solo, then N concurrent copies == solo bitwise; saves
+                                   expected-p0-kv.json (the TF_PROD_EXPECTED candidate)
+  again URL TOKENS DECODE REF      repeat REF's prompt: ids == REF, cached_tokens >= 90% of the prompt, TTFT
+                                   <= 0.25 x REF's (RAM prompt cache, --prompt-cache-gib > 0)
   parks LOG MIN                    eviction park/restore lines since launch >= MIN each, no 'eviction' errors
 Prompts are deterministic from a seed: numbered ledger lines with one code word placed early, then a question.
 Each mode prints one GATE line and exits 0 on PASS, 1 on FAIL.
@@ -77,12 +81,13 @@ def complete(url, text, decode):
     end = time.monotonic()
     ptok = (usage or {}).get('prompt_tokens', 0)
     ttft = (first or end) - start
-    return {'status': 200, 'text': ''.join(out), 'ids': ids, 'finish': finish, 'prompt_tokens': ptok,
+    cached = ((usage or {}).get('prompt_tokens_details') or {}).get('cached_tokens')
+    return {'status': 200, 'text': ''.join(out), 'ids': ids, 'finish': finish, 'prompt_tokens': ptok, 'cached_tokens': cached,
             'ttft_s': round(ttft, 3), 'prefill_tok_s': round(ptok / ttft, 1) if ttft > 0 else None,
             'decode_tok_s': round((len(ids) - 1) / (last - first), 1) if first and last and last > first and len(ids) > 1 else None}
 
 def summary(r, code):
-    keep = {k: r.get(k) for k in ('status', 'prompt_tokens', 'ttft_s', 'prefill_tok_s', 'decode_tok_s', 'finish')}
+    keep = {k: r.get(k) for k in ('status', 'prompt_tokens', 'cached_tokens', 'ttft_s', 'prefill_tok_s', 'decode_tok_s', 'finish')}
     keep['tokens'] = len(r.get('ids') or [])
     keep['needle'] = code.lower() in (r.get('text') or '').lower()
     keep['text_ok'] = bool(re.search(r'[A-Za-z]{3}', r.get('text') or ''))
@@ -96,11 +101,26 @@ def long(url, tokens, decode, tag):
     s = summary(r, code)
     out = os.environ.get('KV_OUT') or os.environ.get('TF_OUT', '.')
     if r.get('ids'):
-        json.dump({'seed': 0, 'tokens': int(tokens), 'prompt_tokens': s['prompt_tokens'], 'token_ids': r['ids']},
+        json.dump({'seed': 0, 'tokens': int(tokens), 'prompt_tokens': s['prompt_tokens'], 'ttft_s': s['ttft_s'], 'token_ids': r['ids']},
                   open(os.path.join(out, f'{tag}.json'), 'w'))
     ok = (s['status'] == 200 and s['prompt_tokens'] >= 0.9 * int(tokens) and s['needle'] and s['text_ok']
           and (s['tokens'] == int(decode) or s['finish'] == 'stop'))
     gate(f'kv-long-{tag}', ok, s)
+
+def again(url, tokens, decode, ref):
+    """Repeat REF's prompt: same ids bitwise, served from the RAM prompt cache (cached_tokens, fast TTFT)."""
+    base = json.load(open(ref))
+    text, code = prompt(0, int(tokens))
+    r = complete(url, text, int(decode))
+    s = summary(r, code)
+    m = min(len(r.get('ids') or []), len(base['token_ids']))
+    s['equal'] = m > 0 and r['ids'][:m] == base['token_ids'][:m]
+    s['first_ttft_s'] = base.get('ttft_s')
+    s['ttft_ratio'] = round(s['ttft_s'] / base['ttft_s'], 3) if base.get('ttft_s') else None
+    # cached_tokens is checked when the server reports it (API item); TTFT is checked always.
+    ok = (s['status'] == 200 and s['equal'] and (s['cached_tokens'] is None or s['cached_tokens'] >= 0.9 * base['prompt_tokens'])
+          and s['ttft_ratio'] is not None and s['ttft_ratio'] <= 0.25)
+    gate('kv-cache-repeat', ok, s)
 
 def conc(url, tokens, n, decode, solo):
     ref = json.load(open(solo))
@@ -113,6 +133,20 @@ def conc(url, tokens, n, decode, solo):
     ok = (all(s['status'] == 200 and s['needle'] and s['text_ok'] for s in sums) and equal
           and ref['tokens'] == int(tokens))
     gate(f'kv-conc{n}', ok, {'streams': sums, 'stream0_equals_solo': equal, 'compared_tokens': m})
+
+def short(url, n, decode):
+    """Oracle p0 ids solo, then N concurrent copies: every stream == solo bitwise (parks on fewer physical slots)."""
+    ids = json.load(open('/mnt/vm_8tb/b70/results/tf-flashnext/workers/I/oracle-eight.json'))['prompts'][0]['ids']
+    solo = complete(url, ids, int(decode))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=int(n)) as pool:
+        runs = list(pool.map(lambda _: complete(url, ids, int(decode)), range(int(n))))
+    same = [r.get('ids') == solo.get('ids') for r in runs]
+    out = os.environ.get('KV_OUT') or os.environ.get('TF_OUT', '.')
+    if solo.get('ids'):
+        json.dump(solo['ids'], open(os.path.join(out, 'expected-p0-kv.json'), 'w'))
+    ok = solo.get('status') == 200 and len(solo.get('ids') or []) > 0 and all(same)
+    gate(f'kv-short-c{n}', ok, {'solo_tokens': len(solo.get('ids') or []), 'equal': same,
+         'solo_decode_tok_s': solo.get('decode_tok_s'), 'ttft_s': [r.get('ttft_s') for r in runs]})
 
 def launch_tail(log):
     text = open(log, errors='replace').read()
@@ -139,4 +173,4 @@ def parks(log, least):
 
 if __name__ == '__main__':
     mode, args = sys.argv[1], sys.argv[2:]
-    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks}[mode](*args)
+    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again}[mode](*args)

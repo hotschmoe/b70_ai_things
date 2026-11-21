@@ -1003,3 +1003,93 @@ KV/SAMP/VIS/API handoffs.
 CONFIG: owner decision (no users today). COMMAND: systemctl --user stop hotschmoe-dd hotschmoe-dd-soak; bin/gpu-run bin/xpu-health.
 RESULT: Strata inactive, frontdoor active, no container, leases free; xpu-health HEALTHY (cards 0 1). Workers KV/SAMP/VIS/API/INT given quick GPU tests (<=5 min leases, ports 18150-18154).
 VERDICT: cutover only when dd_functional.py passes through :18080 with an image; rollback = Strata unit.
+
+## [INT] 2026-11-21 19:06 UTC -- two-card quick gate on fn-a3 e87b5074 (candidate base): correctness PASS, speed mixed -> base stays 372bf1b2
+CONFIG: fn-a3 e87b5074 = 372bf1b2 (int-rf2) + a8b678ec (MTP rmsnorm_rows + draft argmax head without serial loops, same bits).
+Strata down (owner, 18:55); cards 0+1 given to TensorFold.
+COMMAND: cd fn-a3; B70_AGENT=INT FN_BENCH_ROOT=workers/INT/a3gate FN_BENCH_EXPECTED=workers/S/expected-current.json FN_BENCH_QUICK=1
+tools/flashnext_serve_bench.sh fn-a3 a3-e87b5074 (incremental build under cpu-run; cpu-run --quiet outside one gpu-run lease of 155 s).
+RESULT: oracle_equal true (p0 f8caa42cc5b4), every level stream == solo, health pre/post HEALTHY (cards 0 1).
+C1 110.8 / C2 135.9 / C4 172.9 / C8 212.3 / PF2k 1551 vs int-rf2 109.5 / 139.5 / 168.0 / 209.0 / 1560 (ratios 1.012 / 0.974 / 1.029 /
+1.016 / 0.994). Single run each, so +-3% is within run-to-run spread.
+VERDICT: gate "speed >= int-rf2 per level" FAILS at C2 and PF2k (within noise; the change is one same-bits MTP commit worth about +1% C1).
+Not merged: b70/dd-serve keeps base 372bf1b2; workers need not rebase. a8b678ec can be folded later with the next speed pass.
+
+## 2026-11-21 [SAMP] real sampling on the Flash-Next TP2 XPU path (b70/fn-samp 28030ff0)
+
+CONFIG: b70/fn-samp on b70/dd-serve 1a5a57d0; 4 commits (da4716cc chain, 874eac43 server fields, 0fc39fb4 shard
+readback, 28030ff0 lane routing). Host finish: each rank's fn_topk64_part runs (256 x 64 per row, about 128 KB D2H
+per rank per row) merged on the host, whole shard rows only when penalties apply; Strata 0.2.16 chain order and
+precisions; TensorFold keyed Gumbel-max per (seed, position, id); exact-match MTP acceptance (= Strata with
+STRATA_SPEC_PROB off, its production default). Greedy without penalties keeps the device argmax.
+COMMAND: CPU: cpu-run + MemoryMax 24G + nice 19 + -j4: zig build test-fn-sampling-host test-penalty-request-host
+test-flashnext-xpu-host test-model-capabilities-host test-logprob-offers-host test-model-discovery-host
+test-capability-env-host test-limit-pins-host test-effort-capabilities-host xpu-native -Doptimize=ReleaseFast.
+GPU: bin/gpu-run (cards 0+1) timeout 290 workers/SAMP/samp_session.sh (int-rf2 serve flags + --instruct-sampling card,
+port 18152) running tensorfold/flashnext/dd/samp_gate.py with SAMP_P0_EXPECTED=workers/S/expected-current.json.
+RESULT: CPU: all steps pass (sampling chain vs numpy fixture: 6 cases, ids/probs to 1e-12, 24 draws each exact;
+chi-square at p 1e-4 for 3 settings; masks exact; merge == global sort on 2 x 124160 bf16 shards and tie-heavy
+shards; rejection sampling preserves p for dense q and point-mass q; penalty request 28/28). GPU (124 s lease, sha
+ddefd8fc): 12/12 gates PASS: p0 greedy 128 tokens bitwise == int-rf2 baseline, p0 at T 0.6 top_k 1 == greedy, chat
+greedy repeat, top_k 1 == greedy, seed repeat, coherent at T 0.6 with MTP accept 0.419 (26/62), presence 1.5 and
+repetition 1.1 replies coherent, seeds differ, drafts on == drafts off. Server log clean; xpu-health HEALTHY pre/post.
+Sampled reply 63 tokens at 60.3 tok/s incl. TTFT vs greedy 71 tokens in 0.75 s (about 95 tok/s): lower MTP
+acceptance plus the per-row host readback; not yet profiled.
+VERDICT: PASS. Hand to INT for b70/dd-serve. Launcher: keep TF_TEMPERATURE empty, add --instruct-sampling card; the
+clamp proxy is no longer needed. Follow-up (perf): measure the host-chain cost per verify window and, if it matters,
+merge the runs on the device.
+
+## [API] 2026-11-21 19:30 UTC - hotschmoe-dd API parity: audit, fixes, CPU parity harness, quick GPU gate 5/5
+CONFIG: b70/dd-api (base b70/dd-serve 372bf1b2) head 32b27d57; Strata reference = the real serve/server.py of strata-0216 over a scripted MockEngine
+(hotschmoe-dd-0216.json tokenizer, names, effort medium, budget 16384); TensorFold = fake_serve (real server, real Qwen3.8 tokenizer and chat template,
+TF_FAKE_PROFILE=dd = the production XPU engine Info: greedy_only, no structures/penalties/logprobs, 4 lanes with a queue). Frontdoor log (paths only):
+chat/completions, models, health, metrics, slots; no /v1/messages, no /v1/completions.
+COMMAND: tensorfold/flashnext/api_parity/run_parity.sh (77 cases, streams and non-streams); zig build test-dd-api test-golden; GPU: bin/gpu-run
+api_gpu_window.sh (port 18154, dd/api_gate.py all).
+RESULT:
+- Already at parity with no change: reasoning default on (effort medium, think_budget 16384 seen by the engine), reasoning_content stream and non-stream,
+  qwen3-coder tool calls (typed params, parallel calls, streamed incrementally with argument deltas), tool_choice auto/none, stop, max_tokens and
+  max_completion_tokens, include_usage, usage.prompt_tokens_details.cached_tokens, finish reasons, context-overflow 400 naming the context window,
+  /v1/messages, queueing beyond --parallel (no reject).
+- Gaps found and fixed (all default-off or additive, see PATCHES.md): per-request thinking budget names reasoning_budget_tokens / thinking_budget_tokens;
+  max_tokens above the room 400 (Strata clamps) -> TF_FIT_MAX_TOKENS=1; tool_choice required/named and response_format 400 (no token grammar on XPU) ->
+  TF_STRUCTURED_FALLBACK=1 (forced call opening in the prompt, JSON instruction); /slots and /props.
+- Accepted differences (parity.py KNOWN): n>1 400 (Strata ignores), unknown named tool 400, a context overflow on a stream is an in-stream error event
+  (upstream design), no logprobs on the XPU engine, response_format reply not validated (Strata 502s non-JSON), forced-call turns have no reasoning, /v1/models and
+  /health bodies differ in shape. SAMP-owned: temperature>0 and penalties still 400 (greedy-only engine); they flip to equal with TF_FAKE_SAMPLED=1.
+- Parity run with both flags: 77 cases, 0 gaps; without: 9 gaps (all the fixed ones). test-golden 55/55 equal. test-dd-api pass.
+- libtfgrammar absent warning: harmless; the XPU lane backend has no masked first-token path so Info.structures stays false whatever the library. Build recipe:
+  xgrammar v0.2.8 checkout + zig build grammar -Dxgrammar=DIR (no checkout on disk).
+- GPU quick gate (first run 4/5: the clamp hit the engine's prompt + max_tokens + 1 check, HTTP 500; fixed by keeping one token back): second run 5/5 PASS,
+  136 s lease, xpu-health HEALTHY. Real engine: write_file 36 argument deltas max gap 0.05 s, budget 48 -> 86 reasoning chars, forced/named calls and
+  response_format 3/3 ok, 8 concurrent requests on 4 lanes all 200 (max 1.5 s).
+VERDICT: API item passes its quick GPU gate. Cutover needs TF_FIT_MAX_TOKENS=1 TF_STRUCTURED_FALLBACK=1 in tf-dd-prod.env and SAMP merged for sampled clients.
+Open: cached_tokens > 0 needs the prompt cache (KV); Strata /metrics (JSON monitor feed, polled by an external monitor) is not replicated (TF serves Prometheus text).
+
+## 2026-11-21 [VIS] Vision in the TensorFold hotschmoe-dd serving path (strata-vision sidecar + M-RoPE splice)
+
+CONFIG: branch b70/dd-vis (a2e63f48 vision; 2b552f0c = merge of b70/dd-kv bef2f1a8). Sidecar = Strata's own
+strata-vision (strata-ab/build-vision-cpu, mmproj-Qwen3.8-Flash-Next-BF16.gguf, --threads 8 --max-tokens 300, libgomp from
+strata-sycl-dev:020 at /mnt/vm_8tb/b70/build/tensorfold/vision-lib). Strata facts used: image pad 248056 between
+vision_start 248053 / vision_end 248054; text cell (p,p,p), image cell j (p, p+j/nx, p+j%nx), p += max(nx,ny) after; pair i
+of the 64 rotated dims takes stream i%3 (sections 11/11/10); pooled indexer keys rotate at cell 4b; rows replace the token
+embedding raw; PLE n-gram hashes the pad id; MTP keeps token embeddings, same positions by cell. TF rotates the shifted
+frame (Strata + shift, shift = sum(n - max(nx,ny))): relative positions identical, text after the last image at its own
+cell, decode/drafts untouched; the frame is in the cache key (LaneHost.frame_key).
+COMMAND: CPU: strata-vision probe on fixtures (blue 256 -> 64 tokens 8x8 x 2560, deterministic sha; 640x320 -> 200 (20x10);
+1024 -> 289 (17x17); READY 2.4 s, 1.2 s/64-token image on 8 threads); zig build test-fn-mrope-host test-fn-vision-host
+test-flashnext-xpu-host xpu-native (cpu-run, MemoryMax 32G, -j4). GPU (gpu-run cards 0+1, <= 5 min, port 18153):
+dd-vis-run/vis_quick.sh {classic ctx16384 | XPU_FN_KV=int8 ctx65536 | XPU_FN_KV=int8 XPU_FN_DESC=1 XPU_FN_KV_PAGES=auto ctx65536}
++ vis_gate.py (text hash, image x2, text hash) + vis_extra.py (289-token image, red square left/right, two images in order,
+image after a ~9K-token text prompt).
+RESULT: host tests mrope 5/5, vision 9/9 (incl. a fake sh sidecar: cache hit, restart after death), flashnext host 28/28;
+xpu-native builds (4 fn_*_mrope kernels in the zebin). GPU, all three modes: caps vision=true, 224x224 fixture -> "blue" x2,
+49 tokens (7x7), encode 925-931 ms, image TTFT 1.06 s (0.12 s on the encoder cache hit), text greedy hash identical before and
+after images (classic 0c46979a4e80, int8 bc270033aa5d). desc+paged extras all ok: green (289 tokens, TTFT 6.1 s incl. 5.8 s
+encode), left/right correct, "blue, green" in order, blue after 8991-token prompt (TTFT 10.4 s). xpu-health HEALTHY pre/post
+every lease. First lease at ctx 32768 classic failed at engine init with ZE out of device memory (not vision; classic bf16 KV);
+re-run at 16384 passed.
+VERDICT: VIS works in the serving path in the production KV mode; handed to INT (2b552f0c). Open: long-prompt-then-image TTFT
+(10.4 s / 9K tokens) not yet compared with a text-only 9K prompt in desc+paged mode; JPEG EXIF turn and WebP need
+libturbojpeg / libwebp on the host (else JPEG passes through unturned, WebP is refused); encodes are serial on 8 CPU threads
+like Strata's.

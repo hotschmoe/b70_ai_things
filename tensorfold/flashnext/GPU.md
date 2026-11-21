@@ -2315,3 +2315,23 @@
 2026-11-21 17:57:11 UTC [A-S] released card 0: slice gate rc=0
 2026-11-21 17:57:11 UTC [A-S] queued: H/r11 card1-queue (flag A/Bs + KL teacher + HS prefetch-AR + MTP arms + R dump) on fn-a3 e87b5074, cards 0+1, ~45-60 min, leases <=280s, PRIORITY.hold
 2026-11-21 17:57:30 UTC [A] claim cards 0+1 ~10 min: cutover probe c200-desc (fn-a3 e87b5074 binary, ctx 200000 par 4, port 18151)
+2026-11-21 19:03:34 UTC [INT] claim cards 0+1 ~15 min: a3-e87b5074 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 19:06:09 UTC [INT] released cards 0+1: a3-e87b5074 rc=0
+2026-11-21 19:12:59 UTC [API] claim cards 0+1 <=5 min: API quick gate on port 18154 (dd-api 9b4c7691 xpu-native, TF_FIT_MAX_TOKENS/TF_STRUCTURED_FALLBACK), api_gate.py all
+2026-11-21 19:13:03 UTC [VIS] claim cards 0+1 ~5 min: vision quick gate a2e63f48 (port 18153, classic KV)
+2026-11-21 19:15:46 UTC [VIS] released cards 0+1: vision quick gate classic rc=0
+2026-11-21 19:16:08 UTC [VIS] claim cards 0+1 ~5 min: vision quick gate a2e63f48 retry ctx 16384 (port 18153)
+2026-11-21 19:17:58 UTC [SAMP] claim cards 0+1 ~5 min: fn-samp 28030ff0 sampling quick gate (port 18152, samp_session.sh)
+2026-11-21 19:18:07 UTC [API] released cards 0+1: API quick gate 4/5 PASS (reasoning, tools, forced, budget); edge FAIL on max_tokens clamp (500); xpu-health HEALTHY
+2026-11-21 19:18:07 UTC [KV] claim cards 0+1 ~5 min: KV quick 1: load 200000x4 paged int8 desc, budget, p0 C4==solo, 40K (port 18151, bef2f1a8)
+2026-11-21 19:20:08 UTC [SAMP] released cards 0+1: fn-samp 28030ff0 sampling quick gate rc=0
+2026-11-21 19:22:22 UTC [VIS] released cards 0+1: vision quick gate ctx16384 rc=0
+2026-11-21 19:22:30 UTC [VIS] claim cards 0+1 ~5 min: vision quick gate a2e63f48 XPU_FN_KV=int8 ctx 65536 (port 18153)
+2026-11-21 19:23:27 UTC [API] claim cards 0+1 <=5 min: API quick gate rerun on port 18154 (dd-api 32b27d57, clamp fix)
+2026-11-21 19:24:38 UTC [KV] released cards 0+1 (rc=1): KV quick 1: load 200000x4 paged int8 desc, budget, p0 C4==solo, 40K
+2026-11-21 19:27:15 UTC [VIS] released cards 0+1: vision quick gate int8 rc=0
+2026-11-21 19:29:19 UTC [API] released cards 0+1: API quick gate PASS 5/5 on dd-api 32b27d57 (port 18154); xpu-health HEALTHY
+2026-11-21 19:39:47 UTC [VIS] claim cards 0+1 ~5 min: vision gate 2b552f0c desc+paged int8 ctx 65536 + extras (port 18153)
+2026-11-21 19:42:43 UTC [VIS] released cards 0+1: vision gate desc+paged rc=0
+2026-11-21 19:43:26 UTC [VIS] claim cards 0+1 ~4 min: long-prompt TTFT text vs image, 2b552f0c desc+paged (port 18153)
+2026-11-21 19:44:37 UTC [KV] claim cards 0+1 ~5 min: KV quick 2: 200000x4 paged int8 desc + RAM cache: budget, p0 C4==solo, prefill 8K/32K, cache repeat (port 18151, bef2f1a8)

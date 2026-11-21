@@ -439,7 +439,7 @@ def tf_expect(name, v):
         except ValueError:
             return None
     want = {
-        "echo_defaults": {"think_budget": 16384, "max_tokens": 4081},
+        "echo_defaults": {"think_budget": 16384, "max_tokens": 4080},   # window 4096 - prompt 15 - 1 (TF_FIT_MAX_TOKENS keeps one back)
         "echo_override": {"think_budget": 77, "max_tokens": 99},
         "echo_thinking_budget": {"think_budget": 55},
         "echo_thinking_budget_tokens": {"think_budget": 33},

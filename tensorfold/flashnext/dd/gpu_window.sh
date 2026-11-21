@@ -119,8 +119,8 @@ prod_session() {  # runs INSIDE gpu-run (both cards): health, server, steps, tea
 }
 
 prod() {  # G2 ~20 min: one lease, quiet CPU outside it
-  log "G2 prod start (cards 0+1, <= 40 min, port $port)"; gpumd "claim cards 0+1 <= 40 min: gpu_window prod $tag (port $port)"
-  WIN_DIR=$win WIN_TAG=$tag TF_DD_CONFIG=$config WIN_STEPS=$steps "$host/bin/cpu-run" --quiet "$host/bin/gpu-run" timeout --signal=TERM --kill-after=30 2400 bash "$here/gpu_window.sh" _prod_session
+  log "G2 prod start (cards 0+1, <= ${WIN_LEASE_S:-2400} s, port $port)"; gpumd "claim cards 0+1 <= ${WIN_LEASE_S:-2400} s: gpu_window prod $tag (port $port${WIN_ONLY:+, steps $WIN_ONLY})"
+  WIN_DIR=$win WIN_TAG=$tag TF_DD_CONFIG=$config WIN_STEPS=$steps "$host/bin/cpu-run" --quiet "$host/bin/gpu-run" timeout --signal=TERM --kill-after=30 ${WIN_LEASE_S:-2400} bash "$here/gpu_window.sh" _prod_session
   local rc=$?
   gpumd "released cards 0+1: gpu_window prod $tag rc=$rc"
   if ((rc == 124 || rc == 137)); then
