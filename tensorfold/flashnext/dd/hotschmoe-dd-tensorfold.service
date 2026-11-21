@@ -1,5 +1,5 @@
 [Unit]
-Description=hotschmoe-dd: TensorFold Flash-Next 372bf1b2 IQ3_XXS TP2 (backend 127.0.0.1:18124)
+Description=hotschmoe-dd: TensorFold Flash-Next IQ3_XXS TP2, frozen b70/dd-serve build in tf-dd-prod.env (backend 127.0.0.1:18124)
 After=network-online.target
 Wants=hotschmoe-dd-frontdoor.service
 Conflicts=hotschmoe-dd.service
@@ -10,8 +10,9 @@ WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
 Environment=PATH=/home/hotschmoe/.local/bin:/usr/local/bin:/usr/bin:/bin
 Environment=B70_GPU_LOCK_TIMEOUT=0
 Environment=B70_AGENT=hotschmoe-dd-tf
-# Variant: tf-dd-b2.env (int8 paged KV, 131072) or tf-dd-b1.env (desc windows, 20480).
-Environment=TF_DD_CONFIG=/mnt/vm_8tb/github/b70_ai_things/tensorfold/flashnext/dd/tf-dd-b2.env
+# Production: tf-dd-prod.env (frozen b70/dd-serve build, 200000 x 4). Older variants: tf-dd-b2.env (int8 paged KV,
+# 131072, greedy-only, 372bf1b2) and tf-dd-b1.env (desc windows, 20480).
+Environment=TF_DD_CONFIG=/mnt/vm_8tb/github/b70_ai_things/tensorfold/flashnext/dd/tf-dd-prod.env
 # tcp: TF owns 127.0.0.1:18124. unix: TF on a Unix socket behind hotschmoe-dd-tf-clamp.service.
 Environment=TF_LISTEN=tcp
 ExecStartPre=/mnt/vm_8tb/github/b70_ai_things/bin/gpu-run /mnt/vm_8tb/github/b70_ai_things/bin/xpu-health

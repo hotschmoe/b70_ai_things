@@ -1,0 +1,13 @@
+# gpu_window_steps.tsv -- prod-session steps, run in order against ONE production-config server on 127.0.0.1:18150.
+# Columns (TAB-separated): id  owner  hard|soft  timeout_s(<=180)  command (bash -c, cwd = per-step output dir $TF_OUT)
+# Env given to every step: TF_URL TF_PORT TF_MODEL TF_WT TF_SERVER_LOG TF_FIXTURE TF_REF TF_HERE TF_HOST TF_WIN TF_OUT
+# plus every TF_* variable of the env file. A step prints "GATE <name> PASS|FAIL <json>" lines and exits 0 on PASS.
+# A failed HARD step ends the session (server stopped, post-health run) and blocks cutover; soft results go to the owner.
+# Never print prompt or response text beyond what the gate needs. Owners add their steps only via INT (GPU-TESTS.md).
+P0-identity	INT	hard	30	python3 $TF_HERE/gpu_window_checks.py identity $TF_URL
+P1-bench	INT	soft	180	FN_BENCH_PORT=$TF_PORT FN_BENCH_MODEL=$TF_MODEL FN_BENCH_ROOT=$TF_OUT FN_BENCH_EXPECTED=${TF_PROD_EXPECTED:-record} FN_BENCH_QUICK=1 python3 $TF_WT/tools/flashnext_serve_bench.py prod > bench.log 2>&1; rc=$?; ((rc)) && { tail -5 bench.log; exit $rc; }; python3 $TF_HERE/gpu_window_checks.py compare prod-results.json $TF_REF 0.90
+# KV steps (worker KV): 90K prompt + decode (TTFT recorded, coherent), 200K x 4 admission, park/restore bitwise.
+# SAMP steps (worker SAMP): sampled distribution sanity, seed repeatability, MTP acceptance at temperature 0.6.
+# VIS steps (worker VIS): image request through the serving path.
+# API steps (worker API): tool call + streaming tool-call deltas, reasoning_content, tool_choice, usage, errors.
+P9-functional	INT	hard	180	python3 $TF_HOST/strata/flash-next/dd/dd_functional.py --base-url $TF_URL/v1 --no-api-key --image-fixture $TF_FIXTURE > functional.json 2>&1; rc=$?; python3 -c "import json,sys; r=json.load(open('functional.json')); print('GATE functional', 'PASS' if not $rc else 'FAIL', json.dumps({k: {kk: vv for kk, vv in v.items() if kk in ('ok','n','name','tokens','tok_s','has_code','reasoning_chars')} for k, v in r.items()}))" 2>/dev/null || tail -3 functional.json; exit $rc

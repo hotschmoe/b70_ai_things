@@ -979,3 +979,22 @@ fn-pf fee99fa3, fn-hc dd5aeb7c, fn-rec 9cd60dc6, fn-prep e52617fe, fn-ly 56ec4ac
 b1/b2 env, clamp proxy, soak monitor; none installed or started). NEXT-QUEUE.md exists (CPU agent, partial).
 VERDICT: no data lost. Rule from now: at most TWO builds at a time host-wide, each under bin/cpu-run (MAX_JOBS<=4); no heavy builds while a server
 holds the GPUs. Owner has not chosen A (Strata) or B (TensorFold); Strata stays up untouched until they do.
+
+## [INT] 2026-11-21 18:32 UTC -- b70/dd-serve integration branch, host suite baseline, GPU window runner
+CONFIG: TensorFold b70/dd-serve = 372bf1b2 (int-rf2) + 1a5a57d0 (tools/flashnext_serve_bench.py: FN_BENCH_PORT / FN_BENCH_MODEL,
+defaults unchanged). Worktree /mnt/vm_8tb/b70/build/tensorfold/dd-serve. CPU only (Strata serves on both cards).
+COMMAND: workers/INT/host_suite.sh <wt> base-372bf1b2 build (each step: cpu-run systemd-run MemoryMax=90G zig build <step> -j4,
+umask 022): test-kv-pool test-kv-safety-host test-flashnext-xpu-host test-fn-gguf-host test-fn-gguf-mtp-host test-serve-flags-host
+test-tool-parse-host test-tool-required-host test-tool-visibility-http-host test-runtime-api test-api-boundaries test-lane-api-host
+test-server-security test-server-recovery-host test-template-limits-host test-flashnext-vision-contracts-host test-vision-cli-host
+test-xpu-tp-host test-xpu-record-contract-host test-flashnext-pages-contract-host; then xpu-native ReleaseFast.
+RESULT: 20/20 host steps PASS at 372bf1b2 (test-flashnext-host and test-qwen-vision-contract-host are not Linux steps; dropped).
+test-serve-flags-host fails under umask 002 (config file group-writable -> refused by design); the suite sets umask 022.
+xpu-native ReleaseFast rc 0 in 356 s, sha 9423485c... (int-rf2 gated binary was 7bce9c8e... built in fn-a3: the binary depends on
+the worktree path, so the frozen build is gated again by G1 in the window). gpu_window.sh CPU self-test (mock /v1/models, no GPU):
+SELFTEST PASS (hard failure stops the step loop, soft failure recorded, teardown + post-health always run).
+VERDICT: base green. GPU-TESTS.md ordered (G1 regress at the int-rf2 config, G2 one production-config server on :18150 running
+gpu_window_steps.tsv, then cutover C1-C3), estimated 31 min GPU. dd/: launcher gains TF_PORT / TF_EXTRA_ARGS and clears inherited
+engine env BEFORE sourcing the env file (it used to unset XPU_FN_DESC after); tf-dd-prod.env (200000 x 4, @FREEZE placeholders);
+unit points at tf-dd-prod.env; README.md runbook (freeze, window, cutover, rollback). Nothing installed or started. Waiting for
+KV/SAMP/VIS/API handoffs.
