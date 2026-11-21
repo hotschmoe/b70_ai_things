@@ -213,7 +213,7 @@ class Monitor:
             if m:
                 s = m.group("status")
                 self.w["http"][s] = self.w["http"].get(s, 0) + 1
-                if s[0] in "45" and m.group("path").split("?")[0] not in ("/favicon.ico", "/_clamp/stats"):
+                if s[0] in "45" and m.group("path").split("?")[0] not in ("/favicon.ico", "/_clamp/stats", "/metrics/prometheus"):  # Prometheus job hotschmoe_dd_strata (Strata-only path)
                     self.alert(f"backend HTTP {s} {m.group('method')} {m.group('path').split('?')[0]}")
                 continue
             if BAD.search(ln) and not IGNORE_BAD.search(ln):
