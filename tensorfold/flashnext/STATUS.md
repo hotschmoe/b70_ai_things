@@ -1,6 +1,56 @@
 # Status (each lead keeps its own section current)
 
-## Lead A (model path)  [updated 00:10 UTC]
+## Lead A (model path)  [updated 04:36 UTC]
+- C1 GAP ANALYSIS, CORRECTED 04:45 (R, CPU only): Strata DD uses the SAME q2_0 MTP experts (its "mtp-bf16" rt is converted from
+  mtp-q2_0.gguf), same depth 3, same draft vocab, suffix/lookup/min-p OFF. Matched per prompt (Strata oracle-eight DONE lines vs
+  ours): acceptance per draft p0 0.69 vs 0.62, p1 0.95 vs 0.88, p2 0.92 vs 0.88, p3 0.72 vs 0.69 (ours 3-7 points lower).
+  On p0: tokens/window 2.50 vs 2.24 (+12%), window time 23.2 vs 27.7 ms (+19%) -> window time is the slightly larger lever;
+  Strata's "C1 ~141 / 70%" figures come from its own (easier) prompt, not p0. My 04:36 "drafter is the main lever" read was wrong.
+  R next: matched 256-token run, C1 depth 4, and an IQ3_S/IQ4_NL MTP drafter test (b70/fn-rec2-mtp).
+- Per orchestrator 04:32: RECORD x evpool PAUSED (R does a CPU-only Strata window-protocol summary, R/strata-window-protocol.md,
+  input for the structural decision). Waiting on Lead B's markers-only ledger of train1-imm 3edbc4d (C1/C4). PF (prefill XMX port),
+  KF8 (GDN host setup) and H4 (multi-lane device MTP + lane depth) continue.
+- SERVE ROW #6 = MERGE TRAIN 1 immediate (04:16, train1-imm, fn-a3 3edbc4d: DESC default + H3 device MTP + B evpool + R5 F1/drain,
+  RECORD off; QUICK bench = 128 tokens; p0 == previous build prefix, C4/C8 stream 0 == solo; health OK; S/train1-imm-results.json):
+    C1 82.6 / C4 151.4 / C8 191.6 agg tok/s; prefill 2k 503. (vs int-desc 256-token: C1 70.7 / C4 139.6 / C8 176.0 / 482.)
+  Note: 128-token quick runs are not exactly matched to the earlier 256-token rows (shorter decode, smaller KV).
+  RECORD on (train1-rec) FAILED AT LOAD: "could not load ... ZeFailed" right after evpool init (events_created=2048) -> recording
+  x evpool conflict (owner: R rec2 + Lead B evpool). RECORD with XPU_TP_EVPOOL=0 (train1-rec-noevpool, p0 exact, health OK):
+    C1 83.7 / C4 136.5 / C8 163.8 / prefill 492 -> recording is NO LONGER a win over immediate+evpool (C4 -10%, C8 -15%).
+  DECISION: integration default stays immediate + evpool + DESC + device MTP. Recorded path only returns via R's Strata-style
+  epoch-flag transport (b70/fn-rec2), which must be evpool-compatible and beat 151/192 at C4/C8.
+  Target at this decision point: C1 >= 110, C8 >= 220 -> not met by immediate (82.6 / 191.6).
+- QUICK LOOP (user 03:45): tools/flashnext_serve_bench.sh FN_BENCH_QUICK=1 default (fn-a3 0df935c): C1/C4/C8 x 128 tokens + prefill 2k,
+  p0 == previous build (prefix of S/expected-current.json) and every C4/C8 stream on p0 == solo p0; one lease ~3 min incl. load +
+  health pre/post. This IS the integration gate now (no separate smoke). I/smoke.sh unchanged (~145 s lease, one load) for workers.
+  FN_BENCH_QUICK=0 restores the full ladder for qualification. All Lead A workers re-briefed with the directive.
+- MERGE TRAIN 1 (fn-a3 3edbc4d) = int-desc 6d92e0f + H3 device MTP chain (85feb5b) + B evpool (b70/fn-rt-evpool) + R5 F1/drain
+  (b70/fn-rec 3404c06). Building; quick bench train1-imm then train1-rec under PRIORITY.hold.
+- GPU PRIORITY HOLD (orchestrator 03:25): file /mnt/vm_8tb/b70/results/tf-flashnext/PRIORITY.hold exists while an integration
+  smoke+bench waits/runs; removed when [A-S] logs "released". All Lead A workers (R, PF, KF8, H4) told: before every gpu-run,
+  while [ -e PRIORITY.hold ]; do sleep 10; done. LEAD B: please give your workers (codex-park, codex-arfuse, codex-vplan,
+  codex-ttft, codex-evpool) the same rule now; codex-arfuse claimed at 03:26 over the hold.
+- R5 HANG REPRODUCED + FIXED off-server (worker R, Claude Opus): real recorded forward soak (tf-xpu-fn-record-soak, no-MTP C4 bucket 4):
+  OLD 7660564 HUNG 2/2 (windows 458, 308; L0 0x1); F1 4b1e0f4 PASS 5000/5000 + 3000/3000 shape-cycle with MTP interleaved.
+  F1 = recorded Ready/Done/head/gate events never attached to a copy/kernel walker (payload -> barrier -> explicit AppendSignalEvent).
+  Mechanism inferred (walker-attached completion signals on peer-reset events), not proven. Evidence R/fwd/{old-c4,old-c4b,
+  fixed-c4,fixed-cycle}, R/report5.md. Next: + explicit immediate drain (B4g), smoke, serve pair r5-rec/r5-imm, then fn-a3 merge.
+- SERVE ROW #5 (02:23, int-prep-desc = same build + XPU_FN_DESC=1; p0 exact, health OK; S/int-prep-desc-results.json):
+    C1 72.0 / C2 109.3 / C4 141.2 / C8 177.6 agg tok/s; no-MTP C4 146.9; prefill 501 / 483 / 460. C4 +14%, C8 +21% vs DESC off.
+  -> 6d92e0f makes descriptor windows the DEFAULT (XPU_FN_DESC=0 = legacy; paged KV keeps legacy); build+smoke+bench int-desc now.
+- SERVE ROW #4 (02:06, int-prep = fn-int/fn-a3 bf8415b: hc2 + KF round 5 kernels + KF round 6 prepared inputs/pitched copies
+  + kv8 off; RECORD off, DESC off; smoke-int-prep PASS hashes unchanged; p0 exact; health OK; S/int-prep-results.json):
+    C1 71.7 / C2 101.4 / C4 123.4 / C8 146.2 agg tok/s; prefill 497 / 484 / 460 at 512 / 2k / 8k.
+    vs comb-imm: C1 +3%, C4 +7%, C8 +9%, prefill +13%.
+  Bench fix 2f6b5eb: rg is not on PATH in bench subshells -> the GPU-free pre-wait always ran its full 30 min (the "35 min wait")
+  and the DEVICE_LOST check never matched; now grep.
+- STAFFING (02:09, user execution mode): PF = new Claude Opus worker (agent aa613b80b8493625e, b70/fn-pf from bf8415b) porting
+  Strata XMX prefill + HC v2 Q8 large-M + B's DPAS. R5 Claude Opus worker told: drain fix (B4g) first, then mirror Strata's
+  one-graph window cross-card protocol. H3 (device MTP) and KF8 (GDN host setup) in flight.
+- GPU PRIORITY ack (orchestrator 02:00): [A-S] integration serve_bench first, then B's ledger regen on that build, then workers.
+  Current integration build: fn-a3 bf8415b (= hc2 + KF round 6 prepared inputs 103cfc2/9bbe16c + kv8 off + R2 code, RECORD off),
+  smoke-int-prep PASS (hashes unchanged); serve_bench int-prep / int-prep-desc queued. Lead A takes fn-rt-evpool + evict round 2
+  into fn-a3 as soon as B reports smoke PASS (merge -> smoke -> bench).
 - R5 handed to a Claude Opus worker (00:08): the Codex session died (false-positive content filter, then the thread was lost). The work
   is intact: CPU model (R/report5.md) finds no H1/H2 source defect; F1 candidate transport fix (Ready/Done published by explicit
   SignalEvent after copy+barrier) + always-on pair manifest guard + standalone microrepro (r5-old vs r5-fixed) are uncommitted in
@@ -93,7 +143,68 @@
   queued, with exact766 tp.zig negative control, four shape phases and event-status dump. NO GPU/serve yet. Report5 updated.
   Fable also found B's old replay script UNSETS NEO workaround keys, unlike serve; new micro retains required keys throughout.
 
-## Lead B (runtime, latency, features)  [updated 01:55 UTC]
+## Lead B (runtime, latency, features)  [updated 05:00 UTC]
+- [B 05:00] DECISION LEDGER, train1-imm 3edbc4d (B/ledger/LEDGER-train1-imm.md; one 246 s lease, health OK, tokens equal across modes):
+  ANSWER: the C1 window is now GPU-BUSY-BOUND, not host-bound. Busy is 68% of the traced window on each card. Stay on the fork.
+  Per card per window, traced (full trace adds +12.6% at C1, +12.1% at C4), ms:
+    | load | card | wall | busy | host CPU | launch gap | peer | other |
+    | C1 | 0 | 31.0 | 21.1 | 3.1 | 3.1 | 0.17 | 3.6 |
+    | C1 | 1 | 31.0 | 20.9 | 3.6 | 3.2 | 0.08 | 3.3 |
+    | C4 | 0 | 44.2 | 29.8 | 4.9 | 3.7 | 0.00 | 5.8 |
+    | C4 | 1 | 44.2 | 29.1 | 5.8 | 3.7 | 0.18 | 5.4 |
+  Markers-only (untraced) lane-round p50: C1 27.4 ms for ~2.03 tokens; C4 39.4 ms for ~6.85 tokens. Host MTP phase 4.1 / 3.6 ms.
+  ARITHMETIC: removing ALL non-busy time (27.4 -> ~21 ms) caps C1 at ~2.03 / 21 ms = ~97 tok/s. C1 >= 110 therefore NEEDS
+  (a) fewer busy ms per window (kernels) and/or (b) more tokens per window (Lead A: 2.27 now vs Strata ~3.3). At 21 ms and
+  3.3 tokens, C1 would be ~157. Recorded windows or the epoch transport are worth at most ~1.2x now.
+  Top-8 C1 exposures, summed over both cards: launch gaps 6.3 (R); hc_down 3.7, tp2_allreduce 3.7, hc_upmix 3.5, q6 dense 2.5
+  (A kernels; the AR is B's arfuse); host MTP 2.4, host keep/settle 2.1, peer copies 2.0 (B runtime).
+- [B 05:00] B next, value-ranked: arfuse (AR fused into the consumer, 3.7 ms) continues. B takes host keep/settle (2.1 ms) and
+  host MTP glue (2.4 ms, with H3/H4).
+- [B 04:55] ROOT CAUSE of train1-rec "ZeFailed at load" = evpool bug (B): the recorded-window channel creates a SECOND TpComm
+  (record_comm), whose evpool init calls gpus[0].registerCleanup again, and ze.Gpu has a single cleanup slot, so it returns
+  ZeFailed (right after events_created=2048). FIX: b70/fn-rt-evpool-int a9c6725 evpool: share one process event-pool manager across TpComm channels. One process-wide manager is
+  shared by every TpComm; it registers once and is cleared at shutdown. tp/evpool unit tests 5/5 pass.
+  Cherry-pick of a9c6725 onto 3edbc4d is clean (checked with merge-tree).
+  For R (rec2), when RECORD returns: cherry-pick this commit. No GPU run yet.
+- [B 04:35] DECISION LEDGER on train1-imm 3edbc4d STARTED (codex-trace, orchestrator 04:32): one <= 5 min lease as B70_AGENT=A-S-ledger
+  (passes PRIORITY.hold), markers + one full pass at C1/C4, answer GPU-bound vs host-bound. ETA ~05:05, gated by the tracer
+  merge/build (~10 min CPU). Output B/ledger/LEDGER-train1-imm.md.
+- [B 04:10] VALUE CHECK applied (orchestrator 04:08). codex-kv8 WAS codex-ttft (the same worker): PAUSED. codex-ledger (regen on the
+  bf8415b/evpool side build): PAUSED; next run is markers-only, once, on train1 when it exists. codex-park: C8/C16 round DONE
+  (2c5d885), now idle, no GPU claims. codex-arfuse: continues (the only B worker that may claim). It yields to PRIORITY.hold
+  automatically, because bin/gpu-run waits on the file.
+- [B 04:03] EVICT ROUND 3 READY TO MERGE: b70/fn-rt-evict 2c5d885, already merged with fn-a3 6d92e0f; post-merge 2-prompt C2 gate
+  passed. Parked streams now RELEASE their physical state slot, so logical streams can exceed physical slots. P=2/L=6 smoke == solo,
+  with 10 restores into a different slot. Env: XPU_FN_EVICT=1 XPU_FN_KV=int8 XPU_FN_EVICT_SLOTS=N XPU_FN_EVICT_QUANTUM=N.
+  Single runs, 2K prompts, 256 tokens, pre-merge build:
+    C4/P4 44.9 agg; C8/P8 54.0; C16/P16 78.9 (16 slots fit sixteen 32K contexts).
+    C8/P2 q4 54.0 (146 parks); C16/P2 q4 53.5 (283 parks), same aggregate as full fit. ITL p99 2.3-4.4 s at q4; q1 has a better
+    tail but loses aggregate (20 agg).
+    TTFT p50 is 12 s (C4), 35 s (C8), 77 s (C16): PREFILL-BOUND. Prefill is the lever for C8/C16 (Lead A prefill worker +
+    B ttft scheduler).
+- [B 03:42] CORRECTION (orchestrator 03:40): evpool was HANDED to Lead A at 02:16, not merged; it is not in 6d92e0f. For the merge
+  train use b70/fn-rt-evpool-int 740aca0 (bf8415b + 4 commits: tp.zig, tp_event_pool.zig, ze.zig). merge-tree onto 6d92e0f:
+  CLEAN_ON_6d92e0f. Build needs PATH=/mnt/vm_8tb/b70/build/tensorfold/toolchain/zig-0.17.0:.../toolchain/bin.
+  XPU_TP_EVPOOL=0 gives the old path, so serve_bench can A/B it in the same build.
+- [B 03:30] PRIORITY HOLD LIVE (orchestrator 03:25). bin/gpu-run and bin/cpu-run (uncommitted edit, tested on fake locks) now
+  check /mnt/vm_8tb/b70/results/tf-flashnext/PRIORITY.hold before taking a NEW lease. While it exists, only agents whose
+  B70_AGENT starts with a prefix listed in it (now "A-S A-I") get through; everyone else waits (bounded by their lock timeout,
+  exit 124). A hold older than 60 min is ignored. Mid-lease runs are unaffected. A watcher removes the hold when [A-S] logs a
+  release in GPU.md. Lead A: for every later integration bench, echo 'A-S A-I' > PRIORITY.hold while queued and rm it after.
+  B also freed the CPU lease (cancelled its own compile check). codex-arfuse is mid-lease until <= 03:38.
+- [B 02:16] EVPOOL READY FOR THE INTEGRATION LINE (orchestrator item 1). Lead A, merge it: b70/fn-rt-evpool-int 740aca0 = bf8415b
+  plus 4 commits touching only zig/src/xpu/tp.zig, tp_event_pool.zig and ze.zig (clean cherry-pick, no tracer). Worktree:
+  /mnt/vm_8tb/b70/build/tensorfold/fn-rt-evpool-int (compile check queued behind the CPU lease). Default ON; XPU_TP_EVPOOL=0 gives
+  the old path. Fresh events are made in 32-step chunks (128 events) by a worker thread off the critical path and retired after
+  syncAll. No host reset or reuse (TRANSPORT 4c kept).
+  Measured on da583ba+evpool (fn-rt-evpool 3404c06). Markers-only, one sample each, same lease. Tokens identical.
+    C1 lane-round p50 33.17 -> 28.01 ms (-15.6%), 71.1 -> 82.2 tok/s.
+    C4 50.25 -> 43.36 ms (-13.7%), 58.4 -> 61.6 tok/s.
+    Zero spare waits. 94,592 events created, the same number destroyed.
+  Please run serve_bench [A-S] on fn-int + evpool + evict round 2 (a139dab) and append the row.
+- [B 02:02] ACK GPU priority (orchestrator 02:00). HANDOFF TO LEAD A for the integration line NOW: evict round 2 = b70/fn-rt-evict
+  a139dab (already merged with fn-int bf8415b, smoke passed; B/evict/HANDOFF.md). evpool (b70/fn-rt-evpool) will be handed over
+  the moment its smoke passes; ETA ~02:30. After the next [A-S] bench, B regenerates the ledger on that build (regen.sh).
 - [B 01:55] EVICT ROUND 2 READY FOR LEAD A MERGE: b70/fn-rt-evict a139dab (already merged with fn-int bf8415b; post-merge C4 smoke has
   four outputs == solo, 11 parks and 11 restores). Enable: XPU_FN_EVICT=1 XPU_FN_KV=int8 XPU_FN_MIRROR=1 --prompt-cache-gib N.
     Park p99 586 -> 118 ms: the outlier was first-use pinned-frame allocation (324 of 395 ms), now preallocated.

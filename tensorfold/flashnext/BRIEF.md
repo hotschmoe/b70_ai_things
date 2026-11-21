@@ -107,3 +107,14 @@ correctness gates (parity, concurrent==solo, drafted==serial) are mandatory befo
 Each lead: keep STATUS.md current; append JOURNAL entries; report back to the orchestrator at each milestone (your final
 message when you stop) with: what works, numbers, open problems, next milestone and its GPU needs. If you run long, stop at a
 milestone boundary with state written down; the orchestrator will resume you.
+
+## USER TARGETS (2026-11-21 04:35 UTC, user's personal decode/prefill targets, two cards, Flash-Next IQ3_XXS)
+- Decode aggregate tok/s: C1 >= 100, C2 >= 150, C4 >= 300, C8 >= 500.
+- Prefill: >= 1500 tok/s single stream, more in aggregate.
+- User: "we have the hardware and zig gives us the tooling, we just need to close the software gap. IT IS DOABLE".
+Roofline check (orchestrator, from BYTES-hc2 [I]):
+- C1: 5.26 GB/card/window = 8.65 ms ideal at 2.27 tok/window -> 262 tok/s ceiling; 100 needs ~38% of roofline.
+- C4: 7.37 GB = 12.1 ms ideal at ~1.76 tok/stream -> ~580 ceiling; 300 needs ~52%.
+- C8: ~9-10 GB (expert union ~37/rank/layer) = ~16 ms ideal -> ~880 ceiling; 500 needs ~57%.
+Today: C1 82.6 (~32%), C4 151 (~26%), C8 192 (~22%), prefill 503.
+=> The concurrency targets need multi-row efficiency about 2x better. Levers: grouped expert kernels at R=8-16 near bandwidth; HC weights read once per window, not per row group, and maybe split across cards instead of replicated (1.33 GB/card); host/launch overhead ~0 at C4/C8 (one submit per window); deeper MTP at C2/C4 when acceptance allows.

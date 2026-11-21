@@ -658,3 +658,38 @@ CONFIG: b70/fn-rt-evict a139dab (+ fn-int bf8415b), int8 KV, XPU_FN_EVICT=1 XPU_
 RESULT: park 14.4/14.4/14.6 ms at 1K/8K/32K with mirror (32.0/30.0/76.3 off); park p99 586->118 ms (frame prealloc); ITL p50 cost <0.3%;
 repeat-prompt TTFT 25.4 ms via RAM-tier restore (no recompute), tokens identical; post-merge C4 smoke == solo. VERDICT: ready to merge.
 Also: verify_plan exclusive 0.06 us (item closed, the marker was inclusive).
+
+## [A] 2026-11-21 02:12 UTC Serve row #4: int-prep (hc2 + KF5 + KF6 prepared inputs)
+CONFIG: fn-a3 bf8415b, RECORD/DESC off, smoke PASS (hashes equal). RESULT: C1 71.7 / C2 101.4 / C4 123.4 / C8 146.2 agg, prefill 2k 484.
+VERDICT: +7% C4, +9% C8, +13% prefill vs comb-imm. Bench pre-wait bug (rg missing in subshell) fixed in 2f6b5eb.
+
+## [B] 02:16 UTC - evpool shipped to integration
+CONFIG: fn-rt-evpool 3404c06 on da583ba, XPU_TP_EVPOOL=1 vs 0, markers-only, same lease, tokens identical. Integration branch b70/fn-rt-evpool-int 740aca0 (bf8415b + 4 commits).
+RESULT: C1 lane-round p50 33.17->28.01 ms, 71.1->82.2 tok/s; C4 50.25->43.36 ms, 58.4->61.6 tok/s; zero spare waits.
+VERDICT: largest single host fix so far; handed to Lead A for fn-int merge + serve_bench.
+
+## [B] 03:42 UTC - correction
+The 02:16 entry "evpool shipped to integration" means handed to Lead A (branch b70/fn-rt-evpool-int 740aca0), not merged. It is not in
+fn-a3 6d92e0f; it goes in the next merge train. Also 03:28: PRIORITY.hold gate added to bin/gpu-run + bin/cpu-run (uncommitted; tested).
+
+## [O] 2026-11-21 03:45 UTC - USER directive: quick loop
+GPU claims <= 5 min (most 1-3), per-merge gate = 2 prompts x 32 tok hash + C2==solo, short bench C1/C4/C8 128 tok + prefill 2k (~3 min), health only per session, no soaks/suites until near targets; merge on pass, revert failures out of the train.
+
+
+## [B] 04:03 UTC - C8/C16 with a RAM tier
+CONFIG: fn-rt-evict 2c5d885 (+6d92e0f), int8 KV, slot release on park; 2K prompts, 256 tok, single runs.
+RESULT: C16/P16 78.9 agg; C16 on 2 physical slots (q4) 53.5 agg with 283 parks, outputs == solo for the checked subset; TTFT p50 77 s at C16.
+VERDICT: logical > physical slots works; cold TTFT is prefill-bound. Ready to merge.
+
+## [A] 2026-11-21 04:30 UTC Merge train 1 (decision build)
+CONFIG: fn-a3 3edbc4d = DESC default (6d92e0f) + H3 device MTP chain (85feb5b) + B evpool + R5 F1/drain; quick bench (128 tok, C1/C4/C8, prefill 2k).
+RESULT: immediate C1 82.6 / C4 151.4 / C8 191.6 / prefill 503 (p0 exact, streams == solo, health OK).
+RECORD=1: load fails (ZeFailed after evpool init). RECORD=1 + XPU_TP_EVPOOL=0: C1 83.7 / C4 136.5 / C8 163.8.
+VERDICT: targets C1 >= 110 / C8 >= 220 not met. Recording no longer pays once evpool + device MTP land; default stays immediate.
+
+## [B] 05:00 UTC - decision ledger train1-imm 3edbc4d
+CONFIG: fn-rt-ledger-t1 a923db7 (= 3edbc4d + tracer), C1/C4 ~64 tok greedy, markers + full, one 246 s lease, health OK.
+RESULT: C1 traced 31.0 ms/window, busy 21.1/20.9 ms (68%) per card, host 3.1-3.6, launch 3.1-3.2, peer <= 0.17; markers-only 27.4 ms for
+2.03 tok (C4 39.4 ms for 6.85 tok). VERDICT: GPU-busy-bound; zero-host bound ~97 tok/s at C1 -> kernels + tokens/window are the path; stay on fork.
+
+## [O] 2026-11-21 04:35 UTC - USER targets set: C1 100 / C2 150 / C4 300 / C8 500 agg decode; prefill >= 1500 single. See BRIEF.md (roofline check: needs ~38/52/57% of byte roofline).

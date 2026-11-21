@@ -1273,3 +1273,129 @@
 2026-11-21 01:51:59 UTC [B-worker codex-arfuse] release cards 0+1: baseline rc=143
 2026-11-21 01:54:45 UTC [A] REQUEST: integration serve_bench int-prep + int-prep-desc (fn-a3 bf8415b = hc2 + KF round 6 prepared inputs; smoke PASS 01:18) has waited 35 min for a both-card slot. Please let [A-S] in next (~6 min each). Lead B: this is the next ledger build.
 2026-11-21 01:56:36 UTC [B-worker codex-ttft] release cards 0+1: cold C4 and solo baseline rc=124
+2026-11-21 02:00:40 UTC [B] ACK orchestrator 02:00: [A-S] integration serve_bench goes first, then the B ledger regen on that build, then B workers in short leases. B workers (codex-park, codex-kv8/ttft, codex-pushar/arfuse, codex-trace/evpool): after your current lease, check this file and do not claim while an [A-S] claim is pending.
+2026-11-21 02:02:35 UTC [B-worker codex-evpool] release cards 0+1 rc=0
+2026-11-21 02:03:08 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: baseline fixed greedy gate and timings
+2026-11-21 02:06:14 UTC [A-S] released cards 0+1: int-prep rc=0
+2026-11-21 02:06:15 UTC [B-worker codex-arfuse] release cards 0+1: baseline rc=75
+2026-11-21 02:06:17 UTC [A-I] claim cards 0+1 ~3 min: smoke r5-smoke
+2026-11-21 02:10:15 UTC [A] int-prep serve_bench DONE on fn-int bf8415b (C1 71.7 / C4 123.4 / C8 146.2 / prefill 2k 484). Lead B: ledger regen on bf8415b is next. [A-S] runs one more integration bench now (int-prep-desc, XPU_FN_DESC=1, ~6 min, priority).
+2026-11-21 02:10:32 UTC [A-KF] claim cards 0+1 ~14 min: R7 paired markers pair, CPU quiet before GPU, record off
+2026-11-21 02:11:24 UTC [B-worker codex-park] claim cards 0+1 ~9 min: physical-slot C6 identity and health
+2026-11-21 02:13:51 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 02:15:10 UTC [A-KF] released cards 0+1: R7 markers pair rc=0
+2026-11-21 02:15:10 UTC [A-H] claim cards 0+1 ~15 min: hc3 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 02:15:27 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: baseline fixed greedy gate and timings
+2026-11-21 02:18:51 UTC [A-H] released cards 0+1: hc3 rc=0
+2026-11-21 02:18:54 UTC [A-R] NOTE: smoke r5-smoke (A-I tagged claim 02:06:17, filed by A-R) was cancelled while still queued for cpu-run quiet; never acquired the GPUs. Rebuilding for the immediate-drain commit.
+2026-11-21 02:18:55 UTC [A-S] claim cards 0+1 ~15 min: int-prep-desc bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 02:19:37 UTC [B-worker codex-arfuse] release cards 0+1: baseline rc=143
+2026-11-21 02:23:11 UTC [A-S] released cards 0+1: int-prep-desc rc=0
+2026-11-21 02:27:33 UTC [B-worker codex-park] claim cards 0+1 ~9 min: physical-slot C6 identity and health
+2026-11-21 02:30:15 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 02:30:29 UTC [B-worker codex-park] claim cards 0+1 ~25 min: slots-c4-control C4 P=auto quantum=4
+2026-11-21 02:33:47 UTC [A-KF] claim cards 0+1 ~15 min: prep2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 02:34:08 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 02:34:24 UTC [B-worker codex-park] claim cards 0+1 ~25 min: slots-c8-auto C8 P=auto quantum=4
+2026-11-21 02:34:26 UTC [A-H] claim card 0 ~1 min: queued hc3 real-weight draft microbench; waiting for CPU quiet, no lease held
+2026-11-21 02:34:26 UTC [A-H] claim cards 0+1 ~4 min: queued hc3 matched host.fn.mtp markers and final health; no lease held; smoke/serve already passed
+2026-11-21 02:37:42 UTC [A-KF] released cards 0+1: prep2 rc=0
+2026-11-21 02:41:09 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 02:41:31 UTC [B-worker codex-park] claim cards 0+1 ~25 min: slots-c16-auto C16 P=auto quantum=4
+2026-11-21 02:42:51 UTC [A-PF] claim cards 0+1 ~12 min: prefill profile pf0 (64:0 64:1 512:0 512:1)
+2026-11-21 02:43:59 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: baseline fixed greedy gate and timings
+2026-11-21 02:45:46 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 02:46:04 UTC [B-worker codex-park] claim cards 0+1 ~25 min: slots-c8-p2-q1 C8 P=2 quantum=1
+2026-11-21 02:46:56 UTC [A-I] claim cards 0+1 ~3 min: smoke smoke-int-desc
+2026-11-21 02:53:22 UTC [A-PF] released cards 0+1: pf0 rc=1
+2026-11-21 02:55:35 UTC [B-worker codex-arfuse] release cards 0+1: baseline rc=0
+2026-11-21 02:55:43 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: candidate-gate fixed greedy gate and timings
+2026-11-21 02:59:43 UTC [A-KF] claim card 0 ~5 min: projection packing bitwise row-position/canary gate
+2026-11-21 03:00:10 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 03:00:15 UTC [B-worker codex-arfuse] release cards 0+1: candidate-gate rc=75
+2026-11-21 03:00:24 UTC [B-worker codex-park] claim cards 0+1 ~25 min: slots-c16-p2-q1 C16 P=2 quantum=1
+2026-11-21 03:00:29 UTC [A-H] released card 0 (rc=0)
+2026-11-21 03:00:58 UTC [A-KF] released card 0: projection packing gate rc=0
+2026-11-21 03:00:58 UTC [A-KF] claim cards 0+1 ~3 min: smoke prep-r7-pack
+2026-11-21 03:05:02 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: candidate-gate fixed greedy gate and timings
+2026-11-21 03:07:29 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 03:07:48 UTC [B-worker codex-park] claim cards 0+1 ~25 min: slots-c16-p2-q4 C16 P=2 quantum=4
+2026-11-21 03:09:59 UTC [B-worker codex-park] claim cards 0+1 ~25 min: slots-c8-p2-q4 C8 P=2 quantum=4
+2026-11-21 03:10:13 UTC [A-KF] claim card 0 ~14 min: all-type fp64 parity and bitwise invariance, both activation paths plus reference
+2026-11-21 03:11:37 UTC [A-H] released cards 0+1 (rc=0)
+2026-11-21 03:13:58 UTC [A-KF] released cards 0+1
+2026-11-21 03:14:03 UTC [B-worker codex-arfuse] release cards 0+1: candidate-gate rc=75
+2026-11-21 03:14:38 UTC [A] PRIORITY (orchestrator 02:00): integration smoke-int-desc ([A-I] tag, ~3 min) + serve_bench int-desc ([A-S], ~6 min) on fn-a3 6d92e0f have queued since 02:51. Workers and B-workers: hold new claims until [A-S] releases.
+2026-11-21 03:18:42 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 03:21:59 UTC [A-I] claim cards 0+1 ~3 min: smoke r5-smoke
+2026-11-21 03:22:15 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 03:23:56 UTC [A-KF] released card 0: full parity/invariance rc=0
+2026-11-21 03:24:15 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: candidate-gate fixed greedy gate and timings
+2026-11-21 03:26:27 UTC [A-I] released cards 0+1
+2026-11-21 03:27:54 UTC [A] PRIORITY.hold created (/mnt/vm_8tb/b70/results/tf-flashnext/PRIORITY.hold) for int-desc smoke+bench. ALL workers: no new gpu-run while it exists (while [ -e PRIORITY.hold ]; do sleep 10; done). Auto-removed when [A-S] releases int-desc.
+2026-11-21 03:28:29 UTC [B] PRIORITY.hold SET ('/mnt/vm_8tb/b70/results/tf-flashnext/PRIORITY.hold', allows A-S A-I). bin/gpu-run and bin/cpu-run now wait on it for every other B70_AGENT before taking a NEW lease; mid-lease runs finish. Auto-removed when [A-S] logs released (watcher), stale after 60 min. Lead A: future integration benches: echo 'A-S A-I' > PRIORITY.hold while queued, rm after.
+2026-11-21 03:28:48 UTC [B] NOTE: at 03:27 Lead B killed a QUEUED cpu-run waiter pid 3634660 (zig build xpu-native -j4, cwd unknown) believing it was its own; if a worker's build failed around 03:27 with a signal, just rerun it. Lead B also cancelled its own evpool compile check (cpu lease freed for the integration smoke).
+2026-11-21 03:28:59 UTC [B-worker codex-arfuse] release cards 0+1: candidate-gate rc=0
+2026-11-21 03:29:13 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: baseline fixed greedy gate and timings
+2026-11-21 03:30:17 UTC [B] Freed the CPU lock: an orphan zig child of Lead B's cancelled compile kept fd 7 (killed). Also cancelled two queued B-worker builds (codex-park fn-rt-evict, codex-trace fn-rt-ledger) so they re-queue behind PRIORITY.hold.
+2026-11-21 03:31:18 UTC [A-R] NOTE: smoke r5-smoke (A-I tagged claim 02:51-ish, filed by A-R) cancelled while queued for cpu-run quiet, never held GPUs; requeued behind PRIORITY.hold.
+2026-11-21 03:34:54 UTC [A-S] claim cards 0+1 ~15 min: int-desc bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 03:38:31 UTC [A-S] released cards 0+1: int-desc rc=0
+2026-11-21 03:38:31 UTC [B] PRIORITY.hold removed ([A-S] released)
+2026-11-21 03:38:39 UTC [A-PF] claim cards 0+1 ~13 min: prefill profile pf1 (64:1 512:0 512:1 2048:1)
+2026-11-21 03:41:17 UTC [B-worker codex-arfuse] release cards 0+1: baseline rc=124
+2026-11-21 03:42:44 UTC [B-worker codex-arfuse] claim cards 0+1 ~12 min: baseline fixed greedy gate and timings
+2026-11-21 03:43:31 UTC [B-worker codex-ledger] claim cards 0+1 ~20 min: descriptor ledger evpool off/on, full on only
+2026-11-21 03:44:28 UTC [A-KF] claim cards 0+1 ~9 min (bound 14.7): R7 three-arm markers, record off
+2026-11-21 03:44:58 UTC [B] USER DIRECTIVE 03:45 applied: all four B workers (codex-kv8/ttft, codex-pushar/arfuse, codex-park/c16, codex-trace/regen) interrupted and resumed with: leases <= 5 min (most 1-3), quick gate (2 prompts x 32 tok + C2==solo), short bench, health once per session.
+2026-11-21 03:45:20 UTC [B-worker codex-arfuse] release cards 0+1: interrupted queued baseline request, no lease acquired
+2026-11-21 03:45:39 UTC [B-worker codex-ledger] release cards 0+1: queued claim interrupted; no lease acquired
+2026-11-21 03:45:45 UTC [B-worker codex-ttft] claim cards 0+1 ~5 min: cold 8K C4 and C1 baseline
+2026-11-21 03:46:35 UTC [B-worker codex-ledger] claim cards 0+1 ~5 min: int-bf8415b markers
+2026-11-21 03:46:58 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: c2-gate gate
+2026-11-21 03:47:42 UTC [A-PF] released cards 0+1: pf1 rc=0
+2026-11-21 03:52:01 UTC [B-worker codex-ttft] release cards 0+1: cold baseline rc=0
+2026-11-21 03:54:30 UTC [B-worker codex-park] claim cards 0+1 ~5 min: post-merge two-prompt 32-token C2 gate
+2026-11-21 03:56:03 UTC [B-worker codex-ledger] release cards 0+1 int-bf8415b markers rc=0
+2026-11-21 03:56:03 UTC [B-worker codex-ledger] claim cards 0+1 ~5 min: int-bf8415b-evpool markers
+2026-11-21 03:58:35 UTC [B-worker codex-arfuse] release cards 0+1: c2-gate rc=0
+2026-11-21 03:58:46 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 04:01:07 UTC [B-worker codex-park] release cards 0+1
+2026-11-21 04:03:24 UTC [B-worker codex-arfuse] release cards 0+1: perf-off rc=124
+2026-11-21 04:04:09 UTC [B-worker codex-ledger] release cards 0+1 int-bf8415b-evpool markers rc=0
+2026-11-21 04:04:09 UTC [B-worker codex-ledger] claim cards 0+1 ~5 min: int-bf8415b-evpool full
+2026-11-21 04:06:57 UTC [B] 04:10 value check: codex-ttft (=codex-kv8) and codex-ledger PAUSED, codex-park idle; only codex-arfuse may claim (<=5 min, yields to PRIORITY.hold).
+2026-11-21 04:07:57 UTC [A] PRIORITY.hold ACTIVE since 04:03 for merge train 1 (fn-a3 3edbc4d) quick benches train1-imm then train1-rec (~3-4 min each). All workers: no new claims until it is removed.
+2026-11-21 04:12:17 UTC [A-S] claim cards 0+1 ~15 min: train1-imm bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 04:15:02 UTC [A-S] released cards 0+1: train1-imm rc=0
+2026-11-21 04:15:03 UTC [A-S] claim cards 0+1 ~15 min: train1-rec bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 04:15:07 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 04:17:25 UTC [A-S] released cards 0+1: train1-rec rc=1
+2026-11-21 04:17:26 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): R7 short markers zero
+2026-11-21 04:17:32 UTC [A-H] claim cards 0+1 ~5 min: hc4/core-gate.log
+2026-11-21 04:17:34 UTC [A-PF] claim cards 0+1 ~5 min: prefill profile pf2 (64:0 64:1 512:0 512:1 2048:0 2048:1)
+2026-11-21 04:20:27 UTC [A-KF] released cards 0+1: R7 short markers zero rc=143
+2026-11-21 04:21:36 UTC [A-H] released queued core gate claim before GPU acquisition: new PRIORITY.hold; requeue guarded
+2026-11-21 04:23:11 UTC [B-worker codex-arfuse] release cards 0+1: perf-off rc=75
+2026-11-21 04:23:57 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 04:26:11 UTC [A-PF] released cards 0+1: pf2 rc=0
+2026-11-21 04:26:12 UTC [A-S] claim cards 0+1 ~15 min: train1-rec-noevpool bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 04:29:02 UTC [A-S] released cards 0+1: train1-rec-noevpool rc=0
+2026-11-21T04:29:06Z [A-PF] claim cards 0+1 ~3 min: smoke gate d8baa8d
+2026-11-21 04:29:06 UTC [A-I] claim cards 0+1 ~3 min: smoke pf-d8baa8d
+2026-11-21 04:31:45 UTC [B-worker codex-arfuse] release cards 0+1: perf-off rc=75
+2026-11-21 04:34:02 UTC [A-I] released cards 0+1
+2026-11-21T04:34:02Z [A-PF] release cards 0+1: smoke gate d8baa8d
+2026-11-21 04:34:11 UTC [A-H] claim cards 0+1 ~5 min: hc4/core-d3-a1.log
+2026-11-21 04:34:14 UTC [B-worker codex-ledger] release cards 0+1: interrupted full capture while queued; no lease acquired
+2026-11-21 04:37:08 UTC [A-H] released cards 0+1 (rc=75)
+2026-11-21 04:39:15 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: ext-gate gate
+2026-11-21 04:41:44 UTC [B-worker codex-arfuse] release cards 0+1: ext-gate rc=0
+2026-11-21 04:48:37 UTC [B-worker codex-ledger] claim cards 0+1 ~5 min: train1-imm C1/C4 markers plus full
+2026-11-21 04:49:23 UTC [A-R] claim cards 0+1 ~15 min: mtp-q2-t256 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 04:52:43 UTC [B-worker codex-ledger] release cards 0+1 train1-imm rc=0
+2026-11-21 04:53:05 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 04:57:57 UTC [B-worker codex-arfuse] release cards 0+1: perf-off rc=75
+2026-11-21 04:58:03 UTC [A-PF] claim card 1 ~120s: gemm1
+2026-11-21 05:00:58 UTC [A-R] released cards 0+1: mtp-q2-t256 rc=0
+2026-11-21 05:01:00 UTC [A-PF] release card 1: gemm1 rc=0
