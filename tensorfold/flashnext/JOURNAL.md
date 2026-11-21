@@ -714,3 +714,227 @@ C4/C8 +0.25/+1.3 ms (noise level). VERDICT: AR cost is push-arrival latency, not
 ## [B] 06:50 UTC - lane policy sweep
 RESULT (3edbc4d, 128 tok, single): C2 d1/d2/d3 116.3/116.3/118.2; C4 151.4/140.5/136.5; C8 191.9/165.7/157.4. VERDICT: depth 1 stays at C4/C8;
 C2 depth 3 within noise; MTP depth not a C4/C8 lever.
+
+## [A] 2026-11-21 07:18 UTC -- serve rows int-pf2, int-mtp2
+CONFIG: fn-a3 2133d91 (+PF 7973882: dense prefill GEMM retile, pair-major expert gather) and e9a37df (+H4 156e010 multi-lane device
+MTP, +HS cbb488c writeback_norm2 / down-once R5-16). Quick bench (FN_BENCH_QUICK=1, 128 tok, C1/C4/C8, prefill 2k, chunk solo 512).
+COMMAND: B70_AGENT=A-S S_SKIP_BUILD=1 bash tools/flashnext_serve_bench.sh fn-a3 <tag> (PRIORITY.hold held).
+RESULT: int-pf2   C1 83.4 / C4 151.0 / C8 187.8 / PF 1351 (target C1 83% C4 50% C8 38% PF 90%)
+        int-mtp2  C1 92.2 / C4 149.5 / C8 187.7 / PF 1362 (target C1 92% C4 50% C8 38% PF 91%); ITL p50 C1 8.1 ms.
+        p0 equal to solo at C4/C8, oracle_equal true, health true. Results workers/S/int-pf2-results.json, int-mtp2-results.json.
+VERDICT: merged; fn-int ff to e9a37df. Prefill +170% since bf8415b (483 -> 1362). C1 +9 from multi-lane device MTP + HS norm.
+C4/C8 flat: the multi-row decode path (grouped experts / DPAS at R>=8) is the gap; AU audit (expert up grids in __constant,
+raw 110 B blocks) -> LY worker R1/R2.
+
+## [B] 07:42 UTC - OOO dispatch (card 0) + milestone boundary
+RESULT: sibling kernels per layer, OOO replay vs immediate: C1 -4.7% (35.4->33.7 us), C4 -11.9% (41.5->35.5 us); ~0.1/0.3 ms per window.
+VERDICT: below threshold; do not wire. Lead B stops at the M-B3 boundary: eviction/RAM tier/prompt cache/kv8/evpool delivered; arfuse peer-store paused for card 1.
+
+## [A] 2026-11-21 07:53 UTC -- card-0-only window; merges queued; MTP parity status
+CONFIG: [INK] holds card 1 (orchestrator 07:25). Lead A workers on card 0 only; one-card merge gate = bitwise unit/op test +
+per-kernel us R=1/4/8/16 on real GGUF tensors.
+COMMAND: merged PF 4974075 (conflict in xpu_store.zig: additive fields hc_once + pf_exp, kept both) and KF 23fb20b into fn-a3;
+restored tools/flashnext_serve_bench.sh from before the KF merge; zig build xpu-fn-a4 xpu-flashnext xpu-native (cpu-run, -j4).
+RESULT: fn-a3 113ee5c builds. Two-card quick gates were passed on the worker branches before 07:25 (PF smoke-runs/pf-4974075,
+KF round8/fusion_gate/kf8-fusion-gate-quick.json). R: fp32 draft logits leave depth-1 accept counts identical (p0 94/152,
+p1 122/137, p2 120/138, p3 100/141); TF misses Strata-accepted drafts with main-model target p median 0.95 (confident);
+code read shows no structural drafter mismatch. AU audit: all quantized weights raw GGUF blocks; expert-up grids in __constant.
+VERDICT: serve rows for 113ee5c and the XPU_CHUNK_SOLO=1024 arm queued for card 1. Drafter gap = numeric suspects, to be bisected
+with the dump + FP64 reference in one two-card lease. LY (layout repack) and H5 (single-card window harness) started.
+
+## [A] 2026-11-21 08:20 UTC -- R: drafter FP64 reference validated (CPU only)
+CONFIG: R/mtp/validate_ref.py; TF's tools/zig/qwen4_reference.py (binary64) with real Flash-Next MTP BF16 tensors, random source
+streams, 3 cells at pos 0-2; compares every intermediate with R/mtp/mtp_ref.py.
+RESULT: rel err 1.5e-3 .. 9.4e-3 at all HC/attention/writeback stages (oracle bf16-node floor); negative controls fail loudly
+(no Gemma +1: 0.76; rope pos off by one: 1.45). MoE/head code-matched to fn_moe_head.cl / fn_dpas.cl.
+VERDICT: reference trusted. R parked; run_dump.sh (bf16 vs XPU_FN_DRAFT_RES_F32 arms, 2 x ~3 min two-card) waits for card 1.
+
+## [A] 2026-11-21 09:00 UTC -- one-card slice gate on integration fn-a3 988effc
+CONFIG: fn-a3 988effc = e9a37df + PF 4974075 + KF 23fb20b + H 7aa50080 (slice harness) + HS ddc31a9 (HC_Q8 off) + PF 17d2d7bf
+(PF_ATTN/PF_GDN off). Slice = layers 2 (GDN) + 3 (QSA), real rank-0 TP2 weights, local peer buffer, prefix 256, lanes 1, card 0.
+COMMAND: gpu-run --card 0 env ZE_AFFINITY_MASK=0 timeout 170 bash workers/S/slice-988effc/session.sh (tf-xpu-fn-slice MAIN PLE 3 256 1).
+RESULT: hashes == H reference (b59c8b.., bf6ff7.., a2f6ea.., debff3..) in all 4 mode/order combos at R=1/4/8/16; health pre/post OK.
+Kernels/slice 56 (R16 60), was 68/84 before KF fusion. Window median us R1/4/8/16: immediate in-order 603/796/979/1549;
+immediate OOO 605/662/906/1488; recorded in-order 519/682/908/1522; recorded OOO 463/623/854/1434.
+VERDICT: integration default path bitwise; recorded+OOO is -23% (R1) / -7% (R16) on the slice vs serving's immediate in-order ->
+H round 6 makes it serving-viable. Serve rows queued for card 1.
+
+## [A] 2026-11-21 09:58 UTC -- integration fn-a3 1c15dcdf, one-card gate
+CONFIG: fn-a3 1c15dcdf = 988effc + PF 4035abb2 (ATTNS, off) + LY 8930f006 (expert split layout + SLM grids, on, bitwise) + H e0fa1982
+(XPU_FN_OOO, off; RECORD+evpool cleanup-slot fix). Card 0, slice MAIN PLE 3 256 1.
+COMMAND: gpu-run --card 0 ... workers/S/slice-1c15dcd/session.sh (also slice-233608f after the LY merge).
+RESULT: hashes == reference in all 4 modes at R1/4/8/16; health OK. Window medians us R1/4/8/16: immediate in-order 641/693/933/1552,
+immediate OOO 555/653/878/1459, recorded OOO 502/671/864/1386. LY fixture (iq3 types, real weights): iq3_xxs up R8 252 -> 184 us,
+iq3_s R8 253 -> 198 us; slice layers use iq2_* (smallest gainers). H: immediate OOO gain is gap reduction, not overlap (overlap 0 with fusion).
+VERDICT: merged; serve qualification queued for card 1. Host not quiet: slice numbers are diagnostic.
+
+## [A] 2026-11-21 10:33 UTC -- integration fn-a3 d97096cb (DENSE_DPAS default on, LY down/MTP split, H fused recording)
+CONFIG: fn-a3 d97096cb = 1c15dcd + PF a91c2670 (XPU_FN_DENSE_DPAS, default ON via 3299501d: bitwise == KREG) + LY 922bedd7 (routed
+down + MTP q2_0 split layout, load fix) + H 4376fe4d (recording captures fused/packed paths). Card 0 slice MAIN PLE 3 256 1.
+COMMAND: gpu-run --card 0 ... workers/S/slice-3299501d/session.sh, then slice-d97096cb/session.sh.
+RESULT: hashes == reference (b59c8b/bf6ff7/a2f6ea/debff3) in all modes at both commits; health OK; launches 56 (R1-8) / 73 (R16).
+Slice window medians us R1/4/8/16: recorded OOO 465/615/822/1308 (988effc: 463/623/854/1434); immediate in-order 676/697/928/1432.
+VERDICT: merged; default path still bitwise. Serve rows pending card 1 (H/r7/card1-validate.sh first).
+
+## [A] 2026-11-21 11:22 UTC -- fn-a3 fc200f43 (PF DPAS v2), one-card gate
+CONFIG: fn-a3 78e52926 (H slice TAIL harness, ff) + PF 15c82f77 (dense DPAS v2, bitwise; LM/draft head q5_k from R=2). Card 0 slice.
+COMMAND: gpu-run --card 0 ... workers/S/slice-fc200f43/session.sh.
+RESULT: hashes == reference all modes R1/4/8/16; health OK (card 0 only probed). recorded OOO 462/623/824/1298 us; immediate in-order
+662/697/1079/1440 (R8 noisy). PF op bench: LM head R16 208.9 (KREG) -> 96.1 us DPAS, ideal 58.7.
+VERDICT: merged; default bitwise. Serve rows still pending card 1.
+
+## [A] 2026-11-21 12:13 UTC -- fn-a3 e8d534c0 (bf16 weight-stationary, batched keep default on)
+CONFIG: fn-a3 = fc200f43 + LY 42662d33 (timing rotate) + PF 5601aefb (fn_bf16t, on) + H 9d9eef8e (keep batch) + e8d534c0 (KEEP_BATCH default 1).
+COMMAND: gpu-run --card 0 ... workers/S/slice-e8d534c0/session.sh (layer slice MAIN PLE 3 256 1; tail slice XPU_SLICE_TAIL=1 MAIN PLE 2 256 16).
+RESULT: layer hashes == reference; tail SLICE_BITWISE PASS (32 samples), SLICE_LAUNCHES PASS (109/109/112/128), TAIL_KEEP_BATCH PASS
+(rows 1/4/8/16 x lanes 1/4/8/16 + odd lanes, mixed windows, reversed lanes); health OK. H probe: keep C4 1.13 -> 0.52 ms, C8 2.26 -> 0.90 ms.
+VERDICT: merged, default on (bitwise). Two-card serve check pending card 1.
+
+## [A] 2026-11-21 13:26 UTC -- fn-a3 c2ae97b8: card-0 merges while [INK] holds card 1
+CONFIG: fn-a3 c2ae97b8 = b4dce2a1 + H dd5aeb7c (XPU_MTP_HC_Q8 off) + LY 4f0878e4 (dense IQ3_S row-split ON, bitwise; XPU_MTP_Q8ACT off)
++ HS af8c82b9 (XPU_ATTN_MERGE_WIDE off) + LY 9ed8a9a4 (staged parallel split repack). KF cafb9ec6 not merged (13-file conflict).
+COMMAND: gpu-run --card 0 ... workers/S/slice-c2ae97b8/session.sh (layer slice + TAIL slice).
+RESULT: layer hashes == reference; SLICE_BITWISE, SLICE_LAUNCHES (109/109/110/122), TAIL_KEEP_BATCH PASS; health OK. Layer slice
+recorded OOO us R1/4/8/16 470/624/836/1290. LY load: rank-0 load 11.6 -> 5.1 s (raw 7.8).
+VERDICT: merged; default path bitwise vs reference since e9a37df. H prepared H/r11/card1-queue.sh (whole two-card backlog, ordered,
+bounded leases, per-step PASS criteria in PASS-GATES.txt) -- run first when card 1 returns.
+
+### [A] 2026-11-21 14:44 UTC -- merges 38e2d99c + 6823d59d; C1 window ranking becomes the plan
+CONFIG: fn-a3 merges of LY 38e2d99c (IQ3_S rs-only) and PF 6823d59d (LM-head DPAS with 1024 persistent WGs). Card 0 only ([INK] holds card 1).
+COMMAND: the mergeGate one-card gate, i.e. workers/S/slice-<head>/session.sh (layer slice R1/4/8/16 + TAIL, xpu-health --card 0).
+RESULT:
+- 06dfcb1d: recOOO [449.3, 602.6, 822.5, 1227.3]. Hashes b59c8b/bf6ff7/a2f6ea/debff3. BITWISE / LAUNCHES (109,109,110,122) / KEEP_BATCH PASS. HEALTHY.
+- 3fe36cf3: recOOO [455.4, 607.7, 822.6, 1236.7]. Same hashes; all PASS; HEALTHY.
+- LY claims -65 MB/card and attn_q R1 18.3 -> 13.6 us.
+- PF C1 ranking (workers/PF/c1-0.log; window = 36 GDN + 12 QSA at R4 + tail + 3 R1 draft steps):
+  - kernel sum 15.6 ms, plus 0.34 ms partial keep;
+  - about 5.9 ms over the per-rank byte ideal at 608 GB/s;
+  - top excess: fused_project_c4 +954, hc_down +879, hc_upmix +782, ups_iq2_xs +530, moe_compact +479, router_shared +401, q4_k ssm_out +308, route_topk +279, hc_writeback_norm2 +244, iq4_nl shared down +188 us.
+VERDICT:
+- Both merges are accepted (bitwise, default-on). fn-int stays at e9a37df until card 1 returns.
+- PF's non-bitwise q5_k finish (40-60 us at R16) is declined as too small for a KL gate.
+- The C1 window excess is spread over HC, dense projections and routing glue. Assigned PF (dense 1/7/10), HS (HC), KF r11 (routing glue) and LY (ups_iq2_xs).
+
+### [A] 2026-11-21 15:07 UTC -- merge LY 32ca6f77 (IQ4_XS R=2 RP8)
+CONFIG: fn-a3 merge of b70/fn-ly 32ca6f77. Card 0.
+COMMAND: mergeGate one-card session (slice + TAIL, xpu-health --card 0).
+RESULT:
+- recOOO [451.2, 599.9, 819.4, 1229.7] {1: {'b59c8b'}, 4: {'bf6ff7'}, 8: {'a2f6ea'}, 16: {'debff3'}}
+  SLICE_BITWISE PASS samples=32 rows=1,4,8,16 event_pool_capacity=1024 event_pool_reused=true lanes=16 transport_pool=true
+  SLICE_LAUNCHES PASS rows=1,4,8,16 counts=109,109,110,122
+  TAIL_KEEP_BATCH PASS rows=1,4,8,16 lanes=1,4,8,16 odd_lanes=3,7,9,15 mixed_windows=true reversed_lanes=true banks=both scratch_canaries=true
+  xpu-health: HEALTHY (cards 0)
+- LY's measure-first, all bitwise:
+  - IQ4_XS row split gains only 3-7% at R1-4, +15% at small N, and spills at c8: rejected.
+  - Arithmetic codebook regresses project_fused at R1/R4 by 7%/13.5%: rejected.
+  - RP8 at R=2 for N>512 wins 8-18%: merged.
+VERDICT: accepted, bitwise default-on. It helps the C2 (R=2 verify) shapes.
+
+### [A] 2026-11-21 15:17 UTC -- merges LY 32ca6f77 (fast-forward) + HS 84ffb7f0 (HC block reads)
+CONFIG: fn-a3 at 32ca6f77, then merge of HS 84ffb7f0 (XPU_HC_BLOCK=1 default). Card 0.
+COMMAND: mergeGate one-card session for each.
+RESULT:
+- 32ca6f77: recOOO [451.2, 599.9, 819.4, 1229.7]; all PASS; HEALTHY.
+- 72d50dd0: recOOO [447.3, 595.2, 794.8, 1195.8] {1: {'b59c8b'}, 4: {'bf6ff7'}, 8: {'a2f6ea'}, 16: {'debff3'}}
+  SLICE_BITWISE PASS samples=32 rows=1,4,8,16 event_pool_capacity=1024 event_pool_reused=true lanes=16 transport_pool=true
+  SLICE_LAUNCHES PASS rows=1,4,8,16 counts=109,109,110,122
+  TAIL_KEEP_BATCH PASS rows=1,4,8,16 lanes=1,4,8,16 odd_lanes=3,7,9,15 mixed_windows=true reversed_lanes=true banks=both scratch_canaries=true
+  xpu-health: HEALTHY (cards 0)
+- HS: HC_COLD_BITWISE at R=1..16 on 2 real weight sets; 154 TAIL hash lines identical.
+- HS diagnosis: at R1, HC sits at the HARDWARE rule-7 small-matrix floor (14.2 us for 6.6 MB). PF's 608 GB/s ideal omitted the ~3 us ramp, so the real HC excess was only at R>=4 (narrow loads).
+VERDICT: both accepted, bitwise default-on. The C1 HC excess in PF's ranking is mostly the launch floor; further HC gains need overlap or fusion.
+
+### [A] 2026-11-21 15:34 UTC -- merge PF dc26dccd (fused_project h2)
+CONFIG: fn-a3 merge of b70/fn-pf dc26dccd (default on). Card 0.
+COMMAND: mergeGate one-card session.
+RESULT:
+- recOOO [447.8, 586.2, 797.9, 1193.2] {1: {'b59c8b'}, 4: {'bf6ff7'}, 8: {'a2f6ea'}, 16: {'debff3'}}
+  SLICE_BITWISE PASS samples=32 rows=1,4,8,16 event_pool_capacity=1024 event_pool_reused=true lanes=16 transport_pool=true
+  SLICE_LAUNCHES PASS rows=1,4,8,16 counts=109,109,110,122
+  TAIL_KEEP_BATCH PASS rows=1,4,8,16 lanes=1,4,8,16 odd_lanes=3,7,9,15 mixed_windows=true reversed_lanes=true banks=both scratch_canaries=true
+  xpu-health: HEALTHY (cards 0)
+- PF: R4 layers 2+3 70.9 -> 65.8 us (interleaved A/B, 2 reps).
+- With fusion off, iq4_xs (15.7 MB) takes 53.6 us vs 26 ideal, so the excess is iq4_xs weight streaming.
+- DPAS t8 is worse at N=5120 (160 tiles).
+VERDICT:
+- Accepted, bitwise default-on.
+- The IQ4_XS row split was already measured by LY and rejected: decode-limited, not load-limited.
+- PF moves to the q4_k ssm_out two-quad form.
+
+### [A] 2026-11-21 15:51 UTC -- HS norm2+down fusion: bitwise but slower (recorded, not merged); L2 ceiling
+CONFIG: HS 743e11d7 (b70/fn-hs-hcn, XPU_HC_FUSE=1 default off): norm2 + grid barrier + b2/b4 down in one kernel. Card 0.
+COMMAND: hc-cold bitwise + HC_HOT, slice p256 recorded OOO.
+RESULT:
+- Bitwise PASS; launches 56 -> 52.
+- In-slice us at R1/R4/R8/R16: separate 22.6/20.8/21.7/32.0 vs fused 30.65/32.45/35.83/48.80. The grid barrier (~2.2 us) and device fences (~5 us) cost more than the launch saves.
+- L2-hot HC: down R1 3.65 vs 14.48 cold, upmix 5.73 vs 13.02.
+VERDICT:
+- The fusion is rejected: grid barriers are not a win on this hardware at these sizes. This adds to the HARDWARE rules.
+- Approved next: an XPU_HC_PREFETCH prototype, a read-only L2 warm of the next HC weights in the combine/AR/writeback span. It is judged on the slice window.
+
+### [A] 2026-11-21 16:03 UTC -- HS HC L2 prefetch: lands in L2, window flat (not merged)
+CONFIG: HS 6373c2c7 (b70/fn-hs-pf), XPU_HC_PREFETCH=C, either folded into norm2 or as an OOO sibling. Card 0 slice p256.
+COMMAND: slice recorded OOO, reps 1-2, flag off vs C2/C3/C5.
+RESULT:
+- Hashes unchanged.
+- Window off 447.9/590.3/801.2/1211.0 vs fold C2 440.9/594.6/807.4/1204.1 us, against about +-5 noise.
+- Down at R1 falls 15.8 -> 5.6 us, but norm2 and the prefetch absorb the same DRAM time.
+VERDICT:
+- Rejected for the one-card slice: DRAM time is conserved, and only the ~5 us of idle DRAM under norm2 is reclaimable.
+- The real lever is the two-card AR peer wait. An XPU_HC_PREFETCH_AR variant will be prepared and queued for card 1.
+
+### [A] 2026-11-21 16:14 UTC -- merge LY 517d7c47 (IQ2 hw half->float)
+CONFIG: fn-a3 merge of b70/fn-ly 517d7c47. Card 0.
+COMMAND: mergeGate one-card session. The first attempt aborted before the GPU claim (a lead-side REPL variable clobbered the GPU.md path); it was rerun.
+RESULT:
+- recOOO [444.5, 588.0, 794.9, 1187.5] {1: {'b59c8b'}, 4: {'bf6ff7'}, 8: {'a2f6ea'}, 16: {'debff3'}}
+  SLICE_BITWISE PASS samples=32 rows=1,4,8,16 event_pool_capacity=1024 event_pool_reused=true lanes=16 transport_pool=true
+  SLICE_LAUNCHES PASS rows=1,4,8,16 counts=109,109,110,122
+  TAIL_KEEP_BATCH PASS rows=1,4,8,16 lanes=1,4,8,16 odd_lanes=3,7,9,15 mixed_windows=true reversed_lanes=true banks=both scratch_canaries=true
+  xpu-health: HEALTHY (cards 0)
+- LY ups_iq2_xs R4 probes: no-decode 64.7 vs base 78 us. Every bitwise restructure is slower.
+VERDICT:
+- Accepted (bitwise, default on).
+- The next ups gain needs a reduction-order change. Approved as a flagged default-off variant, gated on max-ulp plus slice argmax now and KL on card 1 later.
+
+### [A] 2026-11-21 16:22 UTC -- merge PF 2b0de0ed (Q4_K persistent groups at R3-4)
+CONFIG: fn-a3 merge of b70/fn-pf 2b0de0ed. Card 0.
+COMMAND: mergeGate one-card session.
+RESULT:
+- recOOO [455.2, 594.7, 803.4, 1220.1] {1: {'b59c8b'}, 4: {'bf6ff7'}, 8: {'a2f6ea'}, 16: {'debff3'}}
+  SLICE_BITWISE PASS samples=32 rows=1,4,8,16 event_pool_capacity=1024 event_pool_reused=true lanes=16 transport_pool=true
+  SLICE_LAUNCHES PASS rows=1,4,8,16 counts=109,109,110,122
+  TAIL_KEEP_BATCH PASS rows=1,4,8,16 lanes=1,4,8,16 odd_lanes=3,7,9,15 mixed_windows=true reversed_lanes=true banks=both scratch_canaries=true
+  xpu-health: HEALTHY (cards 0)
+- PF: ssm_out R4 15.6 -> 14.4 us. Group counts 128/384 are worse; the h2 form is 25 us.
+- IQ4_XS LUT alternatives in fused R4, all bitwise: SLM 65.3, early loads 75.8, __constant 98.5, shuffle 176 us.
+VERDICT: accepted. The SLM codebook stays the best IQ4_XS decode on Xe2; this adds to the HARDWARE rules.
+
+### [A] 2026-11-21 16:51 UTC -- merges HS 092c82f0 (GDN rows J2, made default) + 07c01aab (HC_PREFETCH_AR, off)
+CONFIG: fn-a3 merges of b70/fn-hs-gdn 092c82f0 and b70/fn-hs-ar 07c01aab, plus lead commit e8e21a4f (XPU_GDN_ROWS_J default 2). Card 0.
+COMMAND: buildGate one-card session on e8e21a4f.
+RESULT:
+- recOOO [444.7, 583.1, 789.8, 1178.2] {1: {'b59c8b'}, 4: {'bf6ff7'}, 8: {'a2f6ea'}, 16: {'debff3'}}
+  SLICE_BITWISE PASS samples=32 rows=1,4,8,16 event_pool_capacity=1024 event_pool_reused=true lanes=16 transport_pool=true
+  SLICE_LAUNCHES PASS rows=1,4,8,16 counts=109,109,110,122
+  TAIL_KEEP_BATCH PASS rows=1,4,8,16 lanes=1,4,8,16 odd_lanes=3,7,9,15 mixed_windows=true reversed_lanes=true banks=both scratch_canaries=true
+  xpu-health: HEALTHY (cards 0)
+- HS: J2 is bitwise (4 lanes-1 hashes and 162 lanes-16 TAIL lines identical). gdn_rows at R>=4 is latency-bound at 0.79 us/row on the serial recurrence; J2 overlaps two rows' chains.
+- HS: gdn_rows R1 sits at the state-byte floor (3.15 MB of f32 state per layer). PF's +173 us excess assumed zero state bytes.
+VERDICT:
+- Accepted. J2 is default-on per the bitwise-default policy.
+- PREFETCH_AR stays default off until the card-1 A/B arms (HS block in H/r11/card1-queue.sh).
+
+### [A] 2026-11-21 17:14 UTC -- merge PF d1a19df6 (KREG persistent-group table)
+CONFIG: fn-a3 merge of b70/fn-pf d1a19df6. Card 0.
+COMMAND: mergeGate one-card session.
+RESULT:
+- recOOO [450.7, 594.3, 799.4, 1189.2] {1: {'b59c8b'}, 4: {'bf6ff7'}, 8: {'a2f6ea'}, 16: {'debff3'}}
+  SLICE_BITWISE PASS samples=32 rows=1,4,8,16 event_pool_capacity=1024 event_pool_reused=true lanes=16 transport_pool=true
+  SLICE_LAUNCHES PASS rows=1,4,8,16 counts=109,109,110,122
+  TAIL_KEEP_BATCH PASS rows=1,4,8,16 lanes=1,4,8,16 odd_lanes=3,7,9,15 mixed_windows=true reversed_lanes=true banks=both scratch_canaries=true
+  xpu-health: HEALTHY (cards 0)
+- PF sweep: G in {tiles, 128, 256, 384, 512} with interleaved A/B. Wins: q4_k c1 12.7 -> 12.0, q6_ks c1/c4/c8 14.8/16.7/21.3 -> 14.0/15.6/18.0, draft head c1 77.8 -> 67.1 us.
+- Kernels already at their best: the lm head and DPAS heads.
+- PF saw two health-probe timeouts at 20 s, not real wedges: no xe/GuC dmesg, and a 60 s rerun passed.
+VERDICT: accepted (bitwise, default on). Estimated -45 us per C1 window.

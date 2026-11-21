@@ -1606,3 +1606,672 @@
 2026-11-21 06:58:15 UTC [O-HW] release card 1: hwprobe hostusm-atomic rc=0
 2026-11-21 06:59:17 UTC [B-worker codex-arfuse] release cards 0+1: peer-store hop microbench rc=0
 2026-11-21 06:59:28 UTC [A-H] planned H5 controls cards 0+1 ~3m each: depth2/depth3, 128 tokens, AFTER A-S int-mtp2 release. Baseline has not reached GPU yet: int-mtp2-build.log still queued since06:45, current CPU owner A-KF since06:58. H owns no resources; exact integration binary will be captured after release.
+2026-11-21 07:04:19 UTC [A-H] H5 precondition note: int-mtp2 build still waiting since06:45; PRIORITY.hold currently ABSENT. Shared wrapper is_priority only applies with an active hold, so new CPU build pollers can win before A-S. H controls remain idle until int-mtp2 release; hold untouched.
+2026-11-21 07:06:07 UTC [A-H] H5 baseline-wait detail: integration native build PID3812160 is alive, but B70_AGENT is UNSET in its environment (verified only that non-secret field). Therefore it is not an A-S priority waiter; creating an A-S/A-I-only hold would not prioritize this existing build. No H GPU work started; hold/processes untouched.
+2026-11-21 07:06:32 UTC [A-I] released cards 0+1
+2026-11-21T07:06:33Z [A-PF] release cards 0+1: smoke gate
+2026-11-21 07:06:51 UTC [A-PF] claim cards 0+1 ~5 min: prefill profile pf6 (64:0 512:1 2048:1)
+2026-11-21 07:10:15 UTC [A-PF] released cards 0+1: pf6 rc=0
+2026-11-21 07:11:25 UTC [A-R] claim cards 0+1 ~15 min: d1-f32 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 07:14:49 UTC [A-R] released cards 0+1: d1-f32 rc=0
+2026-11-21 07:14:52 UTC [A-S] claim cards 0+1 ~15 min: int-mtp2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 07:17:35 UTC [A-S] released cards 0+1: int-mtp2 rc=0
+2026-11-21 07:17:36 UTC [A-PF] claim cards 0+1 ~4 min: prefill profile pf7 (1024:1)
+2026-11-21 07:17:37 UTC [A-KF] claim card 0 ~15 sec: R8 project health-pre
+2026-11-21 07:18:58 UTC [A-KF] claim cards 0+1 ~3 min (max 4m50s): kf8-fusion-gate
+2026-11-21 07:19:10 UTC [A-R] claim cards 0+1 ~15 min: d1-f32 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 07:19:58 UTC [A-PF] released cards 0+1: pf7 rc=0
+2026-11-21 07:19:58 UTC [A-PF] claim cards 0+1 ~4 min: prefill profile pf8 (1024:1)
+2026-11-21 07:21:04 UTC [A-KF] R8 requests are QUEUED ONLY: pre-health and GPU-only quick gate wait in gpu-run; current owner A-PF, no KF CPU/GPU resources. Prior claim lines record request time, not acquired time. Owned-command bounds: health 90s, kernel timing 180s, quick gate 285+5s.
+2026-11-21 07:22:24 UTC [A-PF] released cards 0+1: pf8 rc=0
+2026-11-21 07:25:23 UTC [A-KF] released cards 0+1: kf8-fusion-gate rc=0
+2026-11-21 07:25:42 UTC [A-KF] released card 0: R8 project health-pre rc=0
+2026-11-21 07:28:38 UTC [A-R] released cards 0+1: d1-f32 rc=0
+2026-11-21 07:29:47 UTC [A-R] note: d1-f32 two-card bench (acquired 07:25:43, released 07:28:38) was already queued before the 07:25 card-0-only directive reached me; no further two-card claims from A-R until [INK] releases card 1
+2026-11-21 07:37:23 UTC [A-LY] claim card 0 ~3 min: health+base expert timing
+2026-11-21 07:37:45 UTC [A-LY] release card 0: health+base expert timing rc=0
+2026-11-21 07:37:52 UTC [A-LY] claim card 0 ~3 min: s1 expert timing
+2026-11-21 07:37:59 UTC [A-LY] release card 0: s1 expert timing rc=0
+2026-11-21 07:38:03 UTC [B-worker codex-ooo] claim cards 0 ~3 min: real-GGUF sibling dispatch
+2026-11-21 07:38:11 UTC [A-LY] claim card 0 ~3 min: s1 Q8_EXPERT tests
+2026-11-21 07:38:32 UTC [B-worker codex-ooo] release cards 0 rc=0
+2026-11-21 07:38:39 UTC [A-LY] release card 0: s1 Q8_EXPERT tests rc=0
+2026-11-21 07:47:31 UTC [A-HS] claim card 0 ~3 min: cold3.log
+2026-11-21 07:47:33 UTC [A-HS] released card 0 (rc=0): cold3.log
+2026-11-21 08:01:08 UTC [INK] claim card 1 (Inkling eval, hours): llama.cpp SYCL inkling-2-mini-iq4nl serve :18160 + abfast sysadmin/langs/base, user-approved; card 0 untouched
+2026-11-21 08:01:59 UTC [A-PF] claim card 0 ~120s: gdn1
+2026-11-21 08:02:01 UTC [A-PF] release card 0: gdn1 rc=0
+2026-11-21T08:03:07Z [A-H] claim card 0 ~3 min: single-card descriptor slice bitwise + real GGUF R1/4/8/16 timestamps; card1 untouched
+2026-11-21T08:03:41Z [A-H] released card 0: single-card slice exit=0
+2026-11-21 08:05:00 UTC [A-KF] queued card0 only ~2min (owned max285+5s): fused ROW_BITS, no CPU quiet
+2026-11-21 08:05:47 UTC [A-KF] released card0: fused ROW_BITS rc=0
+2026-11-21 08:08:13 UTC [A-R] claim card 0 ~1 min: res-f32 op check (tf-xpu-fn-gguf-test res-f32)
+2026-11-21 08:08:13 UTC [A-R] release card 0: res-f32 op check rc=0
+2026-11-21 08:08:48 UTC [A-HS] claim card 0 ~3 min: cold4.log
+2026-11-21 08:08:49 UTC [A-HS] released card 0 (rc=0): cold4.log
+2026-11-21 08:10:02 UTC [A-PF] claim card 0 ~150s: attn1
+2026-11-21 08:10:03 UTC [A-PF] release card 0: attn1 rc=0
+2026-11-21 08:10:03 UTC [A-PF] claim card 0 ~120s: gdn2
+2026-11-21 08:10:04 UTC [A-PF] release card 0: gdn2 rc=0
+2026-11-21 08:11:11 UTC [A-LY] claim card 0 ~3 min: s2 split expert timing+Q8_EXPERT
+2026-11-21 08:11:39 UTC [A-LY] release card 0: s2 split expert timing+Q8_EXPERT rc=0
+2026-11-21 08:11:47 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-pre
+2026-11-21 08:12:03 UTC [A-KF] released card0: cold health-pre rc=0
+2026-11-21T08:12:15Z [A-H] claim card 0 ~2 min: four-lane page-boundary slice unit check, R1/4/8/16, card1 untouched
+2026-11-21T08:12:46Z [A-H] released card 0: four-lane page-boundary slice exit=0
+2026-11-21 08:21:14 UTC [A-PF] claim card 0 ~120s: gdn3
+2026-11-21 08:21:15 UTC [A-PF] release card 0: gdn3 rc=0
+2026-11-21 08:42:10 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-post
+2026-11-21 08:42:24 UTC [A-KF] released card0: cold health-post rc=0
+2026-11-21 08:43:21 UTC [A-PF] claim card 0 ~150s: attn2
+2026-11-21 08:43:22 UTC [A-PF] release card 0: attn2 rc=0
+2026-11-21 08:43:22 UTC [A-PF] claim card 0 ~120s: gdn4
+2026-11-21 08:43:23 UTC [A-PF] release card 0: gdn4 rc=0
+2026-11-21 08:46:24 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-pre
+2026-11-21 08:46:39 UTC [A-KF] released card0: cold health-pre rc=0
+2026-11-21 08:50:08 UTC [A-HS] claim card 0 ~3 min: slice hc1
+2026-11-21 08:50:41 UTC [A-HS] released card 0 (rc=0): slice hc1
+2026-11-21 08:51:09 UTC [A-PF] claim card 0 ~170s: attns1
+2026-11-21 08:51:09 UTC [A-PF] release card 0: attns1 rc=0
+2026-11-21 08:51:44 UTC [A-HS] claim card 0 ~3 min: slice ln1
+2026-11-21 08:52:21 UTC [A-HS] released card 0 (rc=0): slice ln1
+2026-11-21 08:53:04 UTC [A-PF] claim card 0 ~170s: attns2
+2026-11-21 08:53:06 UTC [A-PF] release card 0: attns2 rc=0
+2026-11-21 08:57:04 UTC [A-KF] queued card0 only ~2min (owned max285+5s): DPAS integer/down ROW_BITS, no CPU quiet
+2026-11-21 08:57:33 UTC [A-KF] released card0: DPAS integer/down ROW_BITS rc=1
+2026-11-21 08:58:23 UTC [A-S] claim card 0 ~1 min: slice gate fn-a3 988effc (default hashes vs H reference)
+2026-11-21 08:58:55 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 08:58:59 UTC [A-PF] claim card 0 ~170s: attns3
+2026-11-21 08:59:01 UTC [A-PF] release card 0: attns3 rc=0
+2026-11-21 08:59:35 UTC [A-LY] claim card 0 ~3 min: rank0 load test split layout
+2026-11-21 08:59:36 UTC [A-LY] release card 0: rank0 load test split layout rc=0
+2026-11-21 08:59:48 UTC [A-PF] claim card 0 ~175s: attns4
+2026-11-21 08:59:51 UTC [A-PF] release card 0: attns4 rc=0
+2026-11-21T09:02:09Z [A-H] claim card 0 ~2 min: H6 serving OOO schedule slice hash/timestamps and private replay event batches; card1 untouched
+2026-11-21T09:02:42Z [A-H] released card 0: H6 OOO/private-event slice exit=134
+2026-11-21 09:03:55 UTC [A-HS] claim card 0 ~3 min: slice hg1
+2026-11-21 09:04:15 UTC [A-LY] claim card 0 ~3 min: rank0 load test split layout
+2026-11-21 09:04:34 UTC [A-HS] released card 0 (rc=0): slice hg1
+2026-11-21 09:04:53 UTC [A-LY] release card 0: rank0 load test split layout rc=0
+2026-11-21 09:05:07 UTC [A-PF] claim card 0 ~150s: attns5
+2026-11-21 09:05:07 UTC [A-PF] release card 0: attns5 rc=0
+2026-11-21 09:05:09 UTC [A-LY] claim card 0 ~3 min: rank0 load test raw layout
+2026-11-21 09:05:17 UTC [A-LY] release card 0: rank0 load test raw layout rc=0
+2026-11-21 09:06:55 UTC [A-KF] claim card0 only ~3min (max250+5s): fused real-weight cold timestamp bundle
+2026-11-21 09:09:56 UTC [A-KF] released card0: cold timestamp bundle rc=0
+2026-11-21 09:09:56 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-post
+2026-11-21 09:10:15 UTC [A-KF] released card0: cold health-post rc=0
+2026-11-21 09:14:52 UTC [A-PF] claim card 0 ~150s: attns6
+2026-11-21 09:14:52 UTC [A-PF] release card 0: attns6 rc=0
+2026-11-21T09:19:29Z [A-H] claim card 0 ~2 min: final H6 OOO/private replay event slice gate; own build paused, card1 untouched
+2026-11-21T09:19:49Z [A-H] released card 0: final H6 slice exit=1
+2026-11-21T09:21:38Z [A-H] claim card 0 ~3 min: H6 slice + health with default60s cap (prior Docker delayed exit0); build paused, card1 untouched
+2026-11-21T09:22:10Z [A-H] released card 0: H6 final slice/health60 exit=0
+2026-11-21 09:23:54 UTC [A-LY] claim card 0 ~3 min: merged 988effc: expert fixture + Q8_EXPERT
+2026-11-21 09:24:21 UTC [A-LY] release card 0: merged 988effc: expert fixture + Q8_EXPERT rc=0
+2026-11-21 09:24:40 UTC [A-LY] claim card 0 ~3 min: slice gate split (fn-slice 3 256 1)
+2026-11-21 09:24:58 UTC [A-LY] release card 0: slice gate split (fn-slice 3 256 1) rc=0
+2026-11-21 09:25:18 UTC [A-LY] claim card 0 ~3 min: slice gate raw A/B
+2026-11-21 09:25:20 UTC [A-LY] release card 0: slice gate raw A/B rc=0
+2026-11-21 09:30:49 UTC [A-HS] claim card 0 ~3 min: slice hg3
+2026-11-21 09:31:09 UTC [A-HS] released card 0 (rc=1): slice hg3
+2026-11-21 09:31:14 UTC [A-LY] claim card 0 ~3 min: slice base 988effc
+2026-11-21 09:31:15 UTC [A-LY] release card 0: slice base 988effc rc=0
+2026-11-21 09:31:43 UTC [A-HS] claim card 0 ~3 min: slice hg4
+2026-11-21 09:32:19 UTC [A-HS] released card 0 (rc=0): slice hg4
+2026-11-21 09:37:46 UTC [A-KF] queued card0 only ~2min (owned max285+5s): corrected DPAS down and primary expert up row bits
+2026-11-21 09:38:24 UTC [A-KF] released card0: corrected DPAS row bits rc=0
+2026-11-21 09:41:01 UTC [A-KF] queued card0 only ~2min (owned max285+5s): remaining expert XMX and tiled-router row bits
+2026-11-21 09:41:10 UTC [A-LY] claim card 0 ~3 min: slice gate split + raw A/B
+2026-11-21 09:41:48 UTC [A-KF] released card0: corrected DPAS row bits rc=0
+2026-11-21 09:42:06 UTC [A-LY] release card 0: slice gate split + raw A/B rc=0
+2026-11-21 09:42:29 UTC [A-HS] claim card 0 ~3 min: slice pp1
+2026-11-21 09:45:00 UTC [A-HS] released card 0 (rc=1): slice pp1
+2026-11-21 09:46:11 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-pre
+2026-11-21 09:46:23 UTC [A-KF] released card0: cold health-pre rc=0
+2026-11-21 09:48:28 UTC [A-S] claim card 0 ~1 min: slice gate fn-a3 233608f
+2026-11-21 09:49:00 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 09:51:59 UTC [A-LY] claim card 0 ~3 min: step3 MTP q2_0 expert timing + invariance
+2026-11-21 09:52:14 UTC [A-LY] release card 0: step3 MTP q2_0 expert timing + invariance rc=0
+2026-11-21 09:52:57 UTC [A-PF] claim card 0 ~170s: dpas1
+2026-11-21 09:52:57 UTC [A-PF] release card 0: dpas1 rc=0
+2026-11-21 09:57:15 UTC [A-S] claim card 0 ~1 min: slice gate fn-a3 1c15dcd
+2026-11-21 09:57:48 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 09:58:34 UTC [A-PF] claim card 0 ~170s: dpas2
+2026-11-21 09:58:34 UTC [A-PF] release card 0: dpas2 rc=0
+2026-11-21 10:04:23 UTC [A-HS] claim card 0 ~3 min: slice pp2
+2026-11-21 10:05:03 UTC [A-HS] released card 0 (rc=0): slice pp2
+2026-11-21 10:05:04 UTC [A-KF] claim card0 only ~3min (max250+5s): fused real-weight cold timestamp bundle
+2026-11-21 10:05:16 UTC [A-PF] claim card 0 ~170s: fused1
+2026-11-21 10:07:30 UTC [A-KF] released card0: cold timestamp bundle rc=0
+2026-11-21 10:07:30 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-post
+2026-11-21 10:07:45 UTC [A-KF] released card0: cold health-post rc=0
+2026-11-21 10:07:53 UTC [A-PF] release card 0: fused1 rc=0
+2026-11-21 10:08:22 UTC [A-LY] claim card 0 ~3 min: R2 down split + MTP split: fixtures
+2026-11-21 10:08:48 UTC [A-LY] release card 0: R2 down split + MTP split: fixtures rc=0
+2026-11-21 10:10:12 UTC [A-PF] claim card 0 ~175s: slice1
+2026-11-21 10:10:15 UTC [A-PF] release card 0: slice1 rc=0
+2026-11-21T10:10:27Z [A-H] claim card 0 ~3 min: H7 fused/packed recording hash+equal launches+binding reuse; card1 untouched
+2026-11-21T10:11:00Z [A-H] released card 0: H7 fused/packed slice gate exit=0
+2026-11-21 10:11:12 UTC [A-LY] claim card 0 ~3 min: R2: MTP invariance, Q8_EXPERT, slice gate
+2026-11-21 10:11:45 UTC [A-LY] release card 0: R2: MTP invariance, Q8_EXPERT, slice gate rc=0
+2026-11-21 10:16:28 UTC [A-PF] claim card 0 ~175s: slice2
+2026-11-21 10:16:34 UTC [A-PF] release card 0: slice2 rc=0
+2026-11-21 10:17:08 UTC [A-LY] claim card 0 ~3 min: load time split/downraw/raw (rank 0 load test)
+2026-11-21 10:17:39 UTC [A-LY] release card 0: load time split/downraw/raw (rank 0 load test) rc=0
+2026-11-21 10:18:44 UTC [A-HS] claim card 0 ~3 min: slice pp3
+2026-11-21 10:19:28 UTC [A-HS] released card 0 (rc=0): slice pp3
+2026-11-21 10:23:45 UTC [A-S] claim card 0 ~1 min: slice gate fn-a3 3299501d
+2026-11-21 10:24:20 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 10:25:44 UTC [A-HS] claim card 0 ~3 min: slice pp4
+2026-11-21 10:26:27 UTC [A-HS] released card 0 (rc=0): slice pp4
+2026-11-21 10:26:55 UTC [A-KF] queued card0 only ~2min (owned max285+5s): hybrid expert full row bits and prepared/unprepared API bits
+2026-11-21 10:27:35 UTC [A-KF] released card0: corrected DPAS row bits rc=0
+2026-11-21 10:31:05 UTC [A-S] claim card 0 ~1 min: slice gate fn-a3 d97096cb
+2026-11-21 10:31:38 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 10:32:51 UTC [A-PF] claim card 0 ~170s: dpas3
+2026-11-21 10:32:52 UTC [A-PF] release card 0: dpas3 rc=0
+2026-11-21 10:34:35 UTC [A-LY] claim card 0 ~3 min: C1: two-parts-per-lane expert up A/B
+2026-11-21 10:34:59 UTC [A-LY] release card 0: C1: two-parts-per-lane expert up A/B rc=0
+2026-11-21 10:35:48 UTC [A-HS] claim card 0 ~3 min: slice dg1
+2026-11-21 10:36:34 UTC [A-HS] released card 0 (rc=0): slice dg1
+2026-11-21 10:37:18 UTC [A-PF] claim card 0 ~170s: dpas4
+2026-11-21 10:37:20 UTC [A-PF] release card 0: dpas4 rc=0
+2026-11-21 10:37:33 UTC [A-PF] claim card 0 ~170s: dpas5
+2026-11-21 10:37:36 UTC [A-PF] release card 0: dpas5 rc=0
+2026-11-21 10:39:11 UTC [A-LY] claim card 0 ~3 min: C1: upw bit compare
+2026-11-21 10:39:14 UTC [A-LY] release card 0: C1: upw bit compare rc=0
+2026-11-21 10:39:47 UTC [A-LY] claim card 0 ~3 min: C1: upw bit compare repeat
+2026-11-21 10:39:52 UTC [A-LY] release card 0: C1: upw bit compare repeat rc=0
+2026-11-21 10:40:02 UTC [A-PF] claim card 0 ~170s: dpas6
+2026-11-21 10:40:03 UTC [A-PF] release card 0: dpas6 rc=0
+2026-11-21 10:41:48 UTC [A-HS] claim card 0 ~3 min: slice gd1
+2026-11-21 10:42:28 UTC [A-LY] claim card 0 ~3 min: C1: upw debug compare
+2026-11-21 10:42:30 UTC [A-HS] released card 0 (rc=0): slice gd1
+2026-11-21 10:42:35 UTC [A-LY] release card 0: C1: upw debug compare rc=0
+2026-11-21 10:44:55 UTC [A-PF] claim card 0 ~175s: dpas7
+2026-11-21 10:44:59 UTC [A-PF] release card 0: dpas7 rc=0
+2026-11-21 10:46:48 UTC [A-LY] claim card 0 ~3 min: C1: two-rows-per-lane expert up A/B
+2026-11-21 10:47:05 UTC [A-LY] release card 0: C1: two-rows-per-lane expert up A/B rc=0
+2026-11-21 10:48:36 UTC [A-PF] claim card 0 ~178s: dpas8
+2026-11-21 10:48:41 UTC [A-PF] release card 0: dpas8 rc=0
+2026-11-21 10:49:21 UTC [A-LY] claim card 0 ~3 min: C1: two-rows up R1-3 sweep
+2026-11-21 10:49:51 UTC [A-LY] release card 0: C1: two-rows up R1-3 sweep rc=0
+2026-11-21 10:50:48 UTC [A-H] claim card 0 ~3 min: H8 real-GGUF slice tail/cache A-B and serial keep budget; card1 untouched
+2026-11-21 10:51:14 UTC [A-PF] claim card 0 ~178s: dpas9
+2026-11-21 10:51:40 UTC [A-H] released card 0: H8 tail/cache/keep rc=0
+2026-11-21 10:51:45 UTC [A-PF] release card 0: dpas9 rc=0
+2026-11-21 10:53:22 UTC [A-LY] claim card 0 ~3 min: C1: MTP q2_0 rows-per-subgroup 4 vs 8
+2026-11-21 10:53:32 UTC [A-LY] release card 0: C1: MTP q2_0 rows-per-subgroup 4 vs 8 rc=0
+2026-11-21 10:54:11 UTC [A-PF] claim card 0 ~120s: dpas10
+2026-11-21 10:54:12 UTC [A-PF] release card 0: dpas10 rc=0
+2026-11-21 10:55:26 UTC [A-HS] claim card 0 ~3 min: slice gd2
+2026-11-21 10:56:14 UTC [A-HS] released card 0 (rc=0): slice gd2
+2026-11-21 10:57:07 UTC [A-PF] claim card 0 ~175s: slice3
+2026-11-21 10:57:13 UTC [A-PF] release card 0: slice3 rc=0
+2026-11-21 10:59:09 UTC [A-LY] claim card 0 ~3 min: C1: MTP q2_0 WG size sweep
+2026-11-21 10:59:14 UTC [A-LY] release card 0: C1: MTP q2_0 WG size sweep rc=0
+2026-11-21 11:01:14 UTC [A-KF] queued card0 only ~2min (owned max285+5s): hybrid expert full row bits and prepared/unprepared API bits
+2026-11-21 11:01:23 UTC [A-H] claim card 0 ~3 min: H8 final canonical sampler tail hashes/cache A-B; card1 untouched
+2026-11-21 11:01:33 UTC [A-PF] claim card 0 ~175s: slice4
+2026-11-21 11:01:54 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-pre
+2026-11-21 11:01:55 UTC [A-KF] released card0: corrected DPAS row bits rc=0
+2026-11-21 11:02:10 UTC [A-KF] released card0: cold health-pre rc=0
+2026-11-21 11:03:01 UTC [A-H] released card 0: H8 final tail/cache rc=0
+2026-11-21 11:03:07 UTC [A-PF] release card 0: slice4 rc=0
+2026-11-21 11:03:50 UTC [A-LY] claim card 0 ~3 min: C1: four-row down sweep
+2026-11-21 11:04:10 UTC [A-LY] release card 0: C1: four-row down sweep rc=0
+2026-11-21 11:04:40 UTC [A-PF] claim card 0 ~120s: dpas11
+2026-11-21 11:04:41 UTC [A-PF] release card 0: dpas11 rc=0
+2026-11-21 11:10:10 UTC [A-LY] claim card 0 ~3 min: C1 gate: upw default R=1 (fixture, Q8_EXPERT, slice)
+2026-11-21 11:11:07 UTC [A-LY] release card 0: C1 gate: upw default R=1 (fixture, Q8_EXPERT, slice) rc=0
+2026-11-21 11:11:25 UTC [A-HS] claim card 0 ~3 min: slice dp1
+2026-11-21 11:12:06 UTC [A-HS] released card 0 (rc=0): slice dp1
+2026-11-21 11:13:41 UTC [A-PF] claim card 0 ~175s: slice5
+2026-11-21 11:13:50 UTC [A-PF] release card 0: slice5 rc=0
+2026-11-21 11:14:03 UTC [A-HS] claim card 0 ~3 min: slice io1
+2026-11-21 11:14:47 UTC [A-LY] claim card 0 ~3 min: C1: DRAM-realistic (rotated experts) fixture raw/ups/upw
+2026-11-21 11:15:05 UTC [A-HS] released card 0 (rc=0): slice io1
+2026-11-21 11:15:34 UTC [A-LY] release card 0: C1: DRAM-realistic (rotated experts) fixture raw/ups/upw rc=0
+2026-11-21 11:20:51 UTC [A-S] claim card 0 ~1 min: slice gate fn-a3 fc200f43
+2026-11-21 11:21:24 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 11:23:15 UTC [A-LY] claim card 0 ~3 min: C1: unrolled-chunk up (rotated)
+2026-11-21 11:23:35 UTC [A-LY] release card 0: C1: unrolled-chunk up (rotated) rc=0
+2026-11-21 11:24:29 UTC [A-HS] claim card 0 ~3 min: slice db1
+2026-11-21 11:25:07 UTC [A-HS] released card 0 (rc=0): slice db1
+2026-11-21 11:25:14 UTC [A-PF] claim card 0 ~175s: tail1
+2026-11-21 11:25:55 UTC [A-PF] release card 0: tail1 rc=0
+2026-11-21 11:31:45 UTC [A-H] claim card 0 ~3 min: H9 batched keep bitwise/canaries, slice hashes, MTP timestamps; card1 untouched
+2026-11-21 11:32:16 UTC [A-H] released card 0: H9 keep gate rc=134
+2026-11-21 11:32:22 UTC [A-LY] claim card 0 ~3 min: C1: preloaded-chunk up (rotated)
+2026-11-21 11:32:43 UTC [A-LY] release card 0: C1: preloaded-chunk up (rotated) rc=0
+2026-11-21 11:33:43 UTC [A-HS] claim card 0 ~3 min: attn-op o1
+2026-11-21 11:33:47 UTC [A-HS] released card 0 (rc=1): attn-op o1
+2026-11-21 11:33:51 UTC [A-KF] claim card0 only ~3min (max250+5s): expert union real-weight cold timestamp bundle
+2026-11-21 11:34:02 UTC [A-KF] released card0: cold timestamp bundle rc=0
+2026-11-21 11:34:02 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-post
+2026-11-21 11:34:18 UTC [A-KF] released card0: cold health-post rc=0
+2026-11-21 11:36:46 UTC [A-HS] claim card 0 ~3 min: attn-op o2
+2026-11-21 11:37:01 UTC [A-HS] released card 0 (rc=0): attn-op o2
+2026-11-21 11:37:44 UTC [A-PF] claim card 0 ~170s: bf1
+2026-11-21 11:37:45 UTC [A-PF] release card 0: bf1 rc=0
+2026-11-21 11:39:23 UTC [A-HS] claim card 0 ~3 min: attn-op o3
+2026-11-21 11:39:32 UTC [A-HS] released card 0 (rc=0): attn-op o3
+2026-11-21 11:40:16 UTC [A-HS] claim card 0 ~3 min: attn-op o4
+2026-11-21 11:40:30 UTC [A-HS] released card 0 (rc=0): attn-op o4
+2026-11-21 11:40:42 UTC [A-KF] queued card0 only ~2min (owned max285+5s): hybrid expert full row bits and prepared/unprepared API bits
+2026-11-21 11:40:44 UTC [A-HS] claim card 0 ~3 min: attn-op o5
+2026-11-21 11:41:24 UTC [A-KF] released card0: corrected DPAS row bits rc=0
+2026-11-21 11:41:24 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-pre
+2026-11-21 11:41:38 UTC [A-KF] released card0: cold health-pre rc=0
+2026-11-21 11:41:47 UTC [A-HS] released card 0 (rc=0): attn-op o5
+2026-11-21 11:41:53 UTC [A-H] claim card 0 ~3 min: H9 keep gate after strict flag registration, bitwise/canaries and MTP timestamps; card1 untouched
+2026-11-21 11:42:45 UTC [A-PF] claim card 0 ~170s: bf2
+2026-11-21 11:44:14 UTC [A-LY] claim card 0 ~3 min: MTP q8_1-act experts: timing + agreement
+2026-11-21 11:44:24 UTC [A-H] released card 0: H9 registered keep gate rc=0
+2026-11-21 11:44:29 UTC [A-LY] release card 0: MTP q8_1-act experts: timing + agreement rc=0
+2026-11-21 11:44:31 UTC [A-PF] release card 0: bf2 rc=0
+2026-11-21 11:44:49 UTC [A-KF] claim card0 only ~3min (max250+5s): expert union real-weight cold timestamp bundle
+2026-11-21 11:44:49 UTC [A-HS] claim card 0 ~3 min: attn-op o6
+2026-11-21 11:45:01 UTC [A-KF] released card0: cold timestamp bundle rc=0
+2026-11-21 11:45:01 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-post
+2026-11-21 11:45:18 UTC [A-KF] released card0: cold health-post rc=0
+2026-11-21 11:45:29 UTC [A-HS] released card 0 (rc=0): attn-op o6
+2026-11-21 11:51:14 UTC [A-PF] claim card 0 ~120s: bf3
+2026-11-21 11:51:16 UTC [A-PF] release card 0: bf3 rc=0
+2026-11-21 11:51:16 UTC [A-PF] claim card 0 ~175s: tail2
+2026-11-21 11:51:52 UTC [A-PF] release card 0: tail2 rc=0
+2026-11-21 11:52:09 UTC [A-PF] claim card 0 ~120s: tail3
+2026-11-21 11:52:26 UTC [A-PF] release card 0: tail3 rc=0
+2026-11-21 11:55:00 UTC [A-LY] claim card 0 ~3 min: MTP q8 act modes 1/2 agreement
+2026-11-21 11:55:04 UTC [A-LY] release card 0: MTP q8 act modes 1/2 agreement rc=0
+2026-11-21 12:00:51 UTC [A-S] claim card 0 ~1 min: slice gate fn-a3 d96bd26c
+2026-11-21 12:01:23 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 12:02:14 UTC [A-KF] queued card0 only ~2min (owned max285+5s): hybrid expert full row bits and prepared/unprepared API bits
+2026-11-21 12:02:54 UTC [A-KF] released card0: corrected DPAS row bits rc=0
+2026-11-21 12:02:54 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-pre
+2026-11-21 12:03:08 UTC [A-KF] released card0: cold health-pre rc=0
+2026-11-21 12:03:52 UTC [A-KF] claim card0 only ~3min (max250+5s): expert union real-weight cold timestamp bundle
+2026-11-21 12:03:57 UTC [A-PF] claim card 0 ~150s: bf4
+2026-11-21 12:04:04 UTC [A-KF] released card0: cold timestamp bundle rc=0
+2026-11-21 12:04:04 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-post
+2026-11-21 12:04:21 UTC [A-KF] released card0: cold health-post rc=0
+2026-11-21 12:04:25 UTC [A-PF] release card 0: bf4 rc=0
+2026-11-21 12:09:35 UTC [A-S] claim card 0 ~2 min: slice + tail/keep gate fn-a3 e8d534c0
+2026-11-21 12:12:11 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 12:12:43 UTC [A-HS] claim card 0 ~3 min: slice fin1
+2026-11-21 12:13:21 UTC [A-HS] released card 0 (rc=0): slice fin1
+2026-11-21 12:13:22 UTC [A-HS] claim card 0 ~3 min: attn-op fin2
+2026-11-21 12:13:25 UTC [A-HS] released card 0 (rc=0): attn-op fin2
+2026-11-21 12:14:43 UTC [A-PF] claim card 0 ~100s: bf5
+2026-11-21 12:14:43 UTC [A-PF] release card 0: bf5 rc=0
+2026-11-21 12:14:43 UTC [A-PF] claim card 0 ~100s: bf6
+2026-11-21 12:14:44 UTC [A-PF] release card 0: bf6 rc=0
+2026-11-21 12:15:58 UTC [A-LY] claim card 0 ~3 min: MTP q8 act modes 1/2 agreement
+2026-11-21 12:16:02 UTC [A-LY] release card 0: MTP q8 act modes 1/2 agreement rc=0
+2026-11-21 12:16:02 UTC [A-LY] claim card 0 ~3 min: dense iq3_s row-split fused project
+2026-11-21 12:17:23 UTC [A-LY] release card 0: dense iq3_s row-split fused project rc=0
+2026-11-21 12:17:53 UTC [A-LY] claim card 0 ~3 min: dense iq3_s row-split fused shared
+2026-11-21 12:20:33 UTC [A-LY] release card 0: dense iq3_s row-split fused shared rc=0
+2026-11-21 12:21:36 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 78d34e79
+2026-11-21 12:23:41 UTC [A-PF] claim card 0 ~175s: tail4
+2026-11-21 12:23:48 UTC [A-KF] queued card0 only ~2min (owned max285+5s): hybrid expert full row bits and prepared/unprepared API bits
+2026-11-21 12:24:09 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 12:24:47 UTC [A-PF] release card 0: tail4 rc=0
+2026-11-21 12:25:29 UTC [A-KF] released card0: corrected DPAS row bits rc=0
+2026-11-21 12:25:29 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-pre
+2026-11-21 12:25:43 UTC [A-KF] released card0: cold health-pre rc=0
+2026-11-21 12:26:15 UTC [A-LY] claim card 0 ~3 min: dense iq3_s row-split KREG check
+2026-11-21 12:26:15 UTC [A-LY] release card 0: dense iq3_s row-split KREG check rc=0
+2026-11-21T12:27:57Z [A-H] claim card 0 ~3 min: H10 drafter Q8 HC and private-buffer MTP overlap; timeout170, card1 untouched.
+2026-11-21T12:28:39Z [A-H] released card 0: H10 session rc=0; no card1 claim.
+2026-11-21 12:33:01 UTC [A-KF] claim card0 only ~3min (max250+5s): expert union real-weight cold timestamp bundle
+2026-11-21 12:33:01 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 b4dce2a1
+2026-11-21 12:33:13 UTC [A-KF] released card0: cold timestamp bundle rc=0
+2026-11-21 12:33:13 UTC [A-KF] queued card0 only ~20sec owned: cold fixture health-post
+2026-11-21 12:33:29 UTC [A-KF] released card0: cold health-post rc=0
+2026-11-21 12:35:04 UTC [A-PF] claim card 0 ~120s: tail5
+2026-11-21 12:36:03 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 12:36:38 UTC [A-PF] release card 0: tail5 (lease script interrupted after slice rc=0; health rerun next)
+2026-11-21 12:41:30 UTC [A-HS] claim card 0 ~3 min: attn-op mw1
+2026-11-21 12:41:35 UTC [A-HS] released card 0 (rc=0): attn-op mw1
+2026-11-21 12:42:12 UTC [A-HS] claim card 0 ~3 min: attn-op g1
+2026-11-21 12:42:17 UTC [A-HS] released card 0 (rc=0): attn-op g1
+2026-11-21 12:46:24 UTC [A-KF] queued card0 only ~2min (owned max285+5s): selected expert API bindings; identical C12 kernel bytes
+2026-11-21 12:46:58 UTC [A-KF] released card0: corrected DPAS row bits rc=0
+2026-11-21 12:50:54 UTC [A-LY] claim card 0 ~3 min: gate: dense iq3_s row-split + MTP q8 flag (fixture, Q8_EXPERT, slice)
+2026-11-21 12:51:50 UTC [A-LY] release card 0: gate: dense iq3_s row-split + MTP q8 flag (fixture, Q8_EXPERT, slice) rc=0
+2026-11-21 12:52:40 UTC [A-PF] claim card 0 ~150s: tail6
+2026-11-21 12:53:05 UTC [A-PF] release card 0: tail6 rc=0
+2026-11-21 12:54:47 UTC [A-HS] claim card 0 ~3 min: slice mw2
+2026-11-21 12:55:36 UTC [A-HS] released card 0 (rc=0): slice mw2
+2026-11-21 12:59:29 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 7eb760e9
+2026-11-21 13:01:55 UTC [A-PF] claim card 0 ~170s: inv1
+2026-11-21 13:02:04 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 13:02:17 UTC [A-PF] release card 0: inv1 rc=0
+2026-11-21 13:02:22 UTC [A-PF] claim card 0 ~150s: tail7
+2026-11-21 13:02:47 UTC [A-PF] release card 0: tail7 rc=0
+2026-11-21 13:04:12 UTC [A-HS] claim card 0 ~3 min: attn-op v2a
+2026-11-21 13:04:16 UTC [A-HS] released card 0 (rc=0): attn-op v2a
+2026-11-21 13:06:09 UTC [A-HS] claim card 0 ~3 min: slice v2s
+2026-11-21 13:07:08 UTC [A-HS] released card 0 (rc=0): slice v2s
+2026-11-21 13:07:23 UTC [A-LY] claim card 0 ~3 min: load-time: staged split repack vs heap vs raw
+2026-11-21 13:08:16 UTC [A-LY] release card 0: load-time: staged split repack vs heap vs raw rc=0
+2026-11-21 13:08:25 UTC [A-LY] claim card 0 ~3 min: gate: staged split load (slice hashes)
+2026-11-21 13:08:55 UTC [A-LY] release card 0: gate: staged split load (slice hashes) rc=0
+2026-11-21 13:09:16 UTC [A-PF] claim card 0 ~170s: combo1
+2026-11-21 13:10:21 UTC [A-PF] release card 0: combo1 rc=0
+2026-11-21 13:14:57 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 cb11ab12
+2026-11-21 13:16:11 UTC [A-LY] claim card 0 ~3 min: dense KREG types R=1..8 rotated timing
+2026-11-21 13:16:17 UTC [INK] note card 1: inkling server crashed (SYCL GET_ROWS int range at ~65k ctx); card 1 lease still held by INK for rebuild + rerun
+2026-11-21 13:17:31 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 13:17:33 UTC [A-LY] release card 0: dense KREG types R=1..8 rotated timing rc=0
+2026-11-21 13:18:05 UTC [A-PF] claim card 0 ~170s: combo2
+2026-11-21 13:19:11 UTC [A-PF] release card 0: combo2 rc=0
+2026-11-21 13:22:43 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 c2ae97b8
+2026-11-21 13:25:16 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 13:25:20 UTC [A-HS] claim card 0 ~3 min: attn-op v2b
+2026-11-21 13:25:24 UTC [A-HS] released card 0 (rc=0): attn-op v2b
+2026-11-21 13:27:02 UTC [A-PF] claim card 0 ~170s: combo3
+2026-11-21 13:27:58 UTC [A-PF] release card 0: combo3 rc=0
+2026-11-21 13:28:06 UTC [A-HS] claim card 0 ~3 min: slice v2c
+2026-11-21 13:28:53 UTC [A-HS] released card 0 (rc=0): slice v2c
+2026-11-21 13:30:03 UTC [A-PF] claim card 0 ~178s: sweep1
+2026-11-21 13:30:28 UTC [A-KF] claim card 0 ~3 min: round9 slice; maximum 285s
+2026-11-21 13:32:01 UTC [A-PF] release card 0: sweep1 rc=0
+2026-11-21 13:32:02 UTC [A-KF] acquired card 0 ~3 min: round9 slice gate
+2026-11-21 13:34:36 UTC [A-KF] released card 0: round9 slice rc=0
+2026-11-21 13:34:36 UTC [A-KF] claim card 0 ~3 min: round9 dense-q8; maximum 285s
+2026-11-21 13:34:36 UTC [A-KF] acquired card 0 ~3 min: round9 dense-q8 gate
+2026-11-21 13:35:08 UTC [A-KF] released card 0: round9 dense-q8 rc=0
+2026-11-21 13:35:08 UTC [A-KF] claim card 0 ~3 min: round9 dense-bf16; maximum 285s
+2026-11-21 13:35:08 UTC [A-KF] acquired card 0 ~3 min: round9 dense-bf16 gate
+2026-11-21 13:35:47 UTC [A-KF] released card 0: round9 dense-bf16 rc=0
+2026-11-21 13:35:47 UTC [A-KF] claim card 0 ~3 min: round9 experts-default; maximum 285s
+2026-11-21 13:35:47 UTC [A-KF] acquired card 0 ~3 min: round9 experts-default gate
+2026-11-21 13:36:10 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 ddc07c72
+2026-11-21 13:36:22 UTC [A-KF] released card 0: round9 experts-default rc=0
+2026-11-21 13:36:22 UTC [A-KF] claim card 0 ~3 min: round9 experts-opt; maximum 285s
+2026-11-21 13:36:22 UTC [A-KF] acquired card 0 ~3 min: round9 experts-opt gate
+2026-11-21 13:36:57 UTC [A-KF] released card 0: round9 experts-opt rc=0
+2026-11-21 13:36:57 UTC [A-KF] claim card 0 ~3 min: round9 union; maximum 285s
+2026-11-21 13:36:57 UTC [A-KF] acquired card 0 ~3 min: round9 union gate
+2026-11-21 13:37:34 UTC [A-KF] released card 0: round9 union rc=0
+2026-11-21 13:38:10 UTC [A-PF] claim card 0 ~120s: head1
+2026-11-21 13:38:25 UTC [A-KF] claim card 0 ~20s: round9 timing health-pre
+2026-11-21 13:39:57 UTC [A-LY] claim card 0 ~3 min: q6_k row-split dense + fused project
+2026-11-21 13:40:06 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 13:41:30 UTC [A-LY] release card 0: q6_k row-split dense + fused project rc=0
+2026-11-21 13:41:34 UTC [A-PF] release card 0: head1 rc=0
+2026-11-21 13:41:50 UTC [A-KF] released card 0: round9 timing health-pre rc=0
+2026-11-21 13:46:42 UTC [A-KF] claim card 0 ~1 min: round9 rotating real expert bank device timestamps; max250s
+2026-11-21 13:46:49 UTC [A-KF] released card 0: round9 rotating expert timestamps rc=0
+2026-11-21 13:46:49 UTC [A-KF] claim card 0 ~20s: round9 timing health-post
+2026-11-21 13:47:09 UTC [A-KF] released card 0: round9 timing health-post rc=1
+2026-11-21 13:48:03 UTC [A-KF] claim card 0 ~1 min: failed 20s post-health recheck at normal60s; no reset (tool resets both cards, INK reserved card1)
+2026-11-21 13:48:19 UTC [A-KF] released card 0: normal60s post-health recheck rc=0 reset=0
+2026-11-21 13:52:50 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 a4da5a1f
+2026-11-21 13:54:56 UTC [A-PF] claim card 0 ~120s: head2
+2026-11-21 13:55:23 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 13:55:31 UTC [A-PF] release card 0: head2 rc=0
+2026-11-21 13:58:48 UTC [A-LY] claim card 0 ~3 min: q6_k rs DPAS + dense-rs (R1..16, prefill)
+2026-11-21 13:59:07 UTC [A-LY] release card 0: q6_k rs DPAS + dense-rs (R1..16, prefill) rc=0
+2026-11-21 13:59:44 UTC [A-LY] claim card 0 ~3 min: q6_k rs-only gate: fixtures, Q8_EXPERT, slice
+2026-11-21 14:00:37 UTC [A-LY] release card 0: q6_k rs-only gate: fixtures, Q8_EXPERT, slice rc=0
+2026-11-21 14:01:08 UTC [A-LY] claim card 0 ~3 min: q6_k rs-only VRAM delta + fused project hashes
+2026-11-21 14:03:01 UTC [A-LY] release card 0: q6_k rs-only VRAM delta + fused project hashes rc=0
+2026-11-21 14:03:24 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 1144114c
+2026-11-21 14:05:50 UTC [A-KF] claim card 0 ~3 min: round10 iq2s; maximum 285s
+2026-11-21 14:05:55 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 14:05:56 UTC [A-KF] acquired card 0 ~3 min: round10 iq2s gate
+2026-11-21 14:06:31 UTC [A-KF] released card 0: round10 iq2s rc=0
+2026-11-21 14:07:00 UTC [A-PF] claim card 0 ~120s: head3
+2026-11-21 14:07:01 UTC [A-PF] release card 0: head3 rc=0
+2026-11-21 14:09:26 UTC [A-LY] claim card 0 ~3 min: q6_k rs stride-32 DPAS + dense-rs + load
+2026-11-21 14:09:34 UTC [A-LY] release card 0: q6_k rs stride-32 DPAS + dense-rs + load rc=0
+2026-11-21 14:09:51 UTC [A-LY] claim card 0 ~3 min: q6_k rs-only gate w32
+2026-11-21 14:11:09 UTC [A-KF] claim card 0 ~3 min: round10 iq2s; maximum 285s
+2026-11-21 14:12:07 UTC [A-PF] claim card 0 ~120s: head4
+2026-11-21 14:12:07 UTC [A-LY] release card 0: q6_k rs-only gate w32 rc=0
+2026-11-21 14:12:08 UTC [A-KF] acquired card 0 ~3 min: round10 iq2s gate
+2026-11-21 14:12:41 UTC [A-KF] released card 0: round10 iq2s rc=0
+2026-11-21 14:12:42 UTC [A-KF] claim card 0 ~60s: round10 timing health-pre
+2026-11-21 14:12:54 UTC [A-KF] released card 0: round10 timing health-pre rc=0
+2026-11-21 14:12:59 UTC [A-PF] release card 0: head4 rc=0
+2026-11-21 14:18:43 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 8f2258aa
+2026-11-21 14:21:16 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 14:21:32 UTC [A-KF] claim card 0 ~1 min: round10 rotating real expert bank device timestamps; max250s
+2026-11-21 14:21:34 UTC [A-PF] claim card 0 ~150s: head5
+2026-11-21 14:21:35 UTC [A-KF] released card 0: round10 rotating expert timestamps rc=0
+2026-11-21 14:21:35 UTC [A-KF] claim card 0 ~60s: round10 timing health-post
+2026-11-21 14:21:50 UTC [A-KF] released card 0: round10 timing health-post rc=0
+2026-11-21 14:22:00 UTC [A-LY] claim card 0 ~3 min: iq3_s rs-only DPAS/PF + dense-rs + load
+2026-11-21 14:22:03 UTC [A-PF] release card 0: head5 rc=0
+2026-11-21 14:22:18 UTC [A-LY] release card 0: iq3_s rs-only DPAS/PF + dense-rs + load rc=0
+2026-11-21 14:22:39 UTC [A-LY] claim card 0 ~3 min: iq3_s rs-only gate w33
+2026-11-21 14:23:17 UTC [A-PF] claim card 0 ~120s: sweep2
+2026-11-21 14:23:35 UTC [A-LY] release card 0: iq3_s rs-only gate w33 rc=0
+2026-11-21 14:23:35 UTC [A-LY] claim card 0 ~3 min: iq3_s rs-only fused project hashes
+2026-11-21 14:24:56 UTC [A-LY] release card 0: iq3_s rs-only fused project hashes rc=0
+2026-11-21 14:25:53 UTC [A-PF] release card 0: sweep2 rc=0
+2026-11-21 14:31:09 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 06dfcb1d
+2026-11-21 14:33:43 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 14:33:47 UTC [A-LY] claim card 0 ~3 min: iq4_xs arithmetic decode A/B
+2026-11-21 14:34:31 UTC [A-LY] release card 0: iq4_xs arithmetic decode A/B rc=0
+2026-11-21 14:34:49 UTC [A-LY] claim card 0 ~3 min: iq4_xs arith decode fused A/B
+2026-11-21 14:36:06 UTC [A-PF] claim card 0 ~120s: c1rank
+2026-11-21 14:37:30 UTC [A-LY] release card 0: iq4_xs arith decode fused A/B rc=0
+2026-11-21 14:39:31 UTC [A-PF] release card 0: c1rank rc=124
+2026-11-21 14:40:39 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 3fe36cf3
+2026-11-21 14:43:09 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 14:43:23 UTC [A-LY] claim card 0 ~3 min: iq4_xs row-split KREG probe
+2026-11-21 14:43:25 UTC [A-LY] release card 0: iq4_xs row-split KREG probe rc=0
+2026-11-21 14:44:28 UTC [A-PF] claim card 0 ~150s: c1rankb
+2026-11-21 14:46:10 UTC [A-LY] claim card 0 ~3 min: KREG rows-per-WG at R=2 probe
+2026-11-21 14:46:42 UTC [A-PF] release card 0: c1rankb rc=0
+2026-11-21 14:48:08 UTC [A-LY] release card 0: KREG rows-per-WG at R=2 probe rc=0
+2026-11-21 14:50:30 UTC [A-HS] claim card 0 ~3 min: cold-b1.log
+2026-11-21 14:50:32 UTC [A-HS] released card 0 (rc=0): cold-b1.log
+2026-11-21 14:53:31 UTC [A-LY] claim card 0 ~3 min: iq4_xs R2 wide KREG gate
+2026-11-21 14:54:23 UTC [A-HS] claim card 0 ~3 min: slice gate hb1
+2026-11-21 14:54:29 UTC [A-LY] release card 0: iq4_xs R2 wide KREG gate rc=0
+2026-11-21 14:57:06 UTC [A-PF] claim card 0 ~150s: lay1
+2026-11-21 14:57:25 UTC [A-HS] released card 0 (rc=124): slice gate hb1
+2026-11-21 14:57:48 UTC [A-PF] release card 0: lay1 rc=0
+2026-11-21 14:57:57 UTC [A-HS] claim card 0 ~3 min: slice gate hb2
+2026-11-21 14:59:12 UTC [A-LY] claim card 0 ~3 min: ups_iq2_xs decode-ALU probe
+2026-11-21 14:59:38 UTC [A-PF] claim card 0 ~150s: lay2
+2026-11-21 15:00:26 UTC [A-HS] released card 0 (rc=0): slice gate hb2
+2026-11-21 15:00:26 UTC [A-HS] claim card 0 ~3 min: slice gate hb3
+2026-11-21 15:01:00 UTC [A-HS] released card 0 (rc=0): slice gate hb3
+2026-11-21 15:01:09 UTC [A-LY] release card 0: ups_iq2_xs decode-ALU probe rc=0
+2026-11-21 15:01:34 UTC [A-PF] release card 0: lay2 rc=0
+2026-11-21 15:05:09 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 32ca6f77
+2026-11-21 15:07:44 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 15:08:58 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 15:09:13 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 15:09:13 UTC [A-KF] claim card 0 ~2 min: round11 new, cap285s
+2026-11-21 15:09:13 UTC [A-KF] acquired card 0 ~2 min: round11 new
+2026-11-21 15:09:14 UTC [A-KF] released card 0: round11 new rc=0
+2026-11-21 15:09:14 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 15:09:29 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 15:11:25 UTC [A-LY] claim card 0 ~3 min: ups_iq2_xs staging probe
+2026-11-21 15:11:29 UTC [A-LY] release card 0: ups_iq2_xs staging probe rc=0
+2026-11-21 15:13:53 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 15:14:06 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 15:14:06 UTC [A-KF] claim card 0 ~2 min: round11 matrix, cap285s
+2026-11-21 15:14:06 UTC [A-KF] acquired card 0 ~2 min: round11 matrix
+2026-11-21 15:14:26 UTC [A-KF] released card 0: round11 matrix rc=0
+2026-11-21 15:14:26 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 15:14:41 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 15:14:43 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 72d50dd0
+2026-11-21 15:17:16 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 15:17:40 UTC [A-LY] claim card 0 ~3 min: ups_iq2_xs staging probe (real)
+2026-11-21 15:17:44 UTC [A-LY] release card 0: ups_iq2_xs staging probe (real) rc=0
+2026-11-21 15:18:48 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 15:19:03 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 15:19:03 UTC [A-KF] claim card 0 ~2 min: round11 hc, cap285s
+2026-11-21 15:19:03 UTC [A-KF] acquired card 0 ~2 min: round11 hc
+2026-11-21 15:19:04 UTC [A-KF] released card 0: round11 hc rc=0
+2026-11-21 15:19:04 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 15:19:18 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 15:19:37 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 15:19:41 UTC [A-PF] claim card 0 ~175s: lay3
+2026-11-21 15:19:56 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 15:21:19 UTC [A-LY] claim card 0 ~3 min: ups_iq2_xs sign-mask table A/B
+2026-11-21 15:22:03 UTC [A-PF] release card 0: lay3 rc=0
+2026-11-21 15:22:13 UTC [A-LY] release card 0: ups_iq2_xs sign-mask table A/B rc=0
+2026-11-21 15:24:01 UTC [A-KF] claim card 0 ~1 min: round11 slice all, max250s
+2026-11-21 15:24:18 UTC [A-HS] claim card 0 ~3 min: cold-f1.log
+2026-11-21 15:24:18 UTC [A-KF] released card 0: round11 slice all rc=0
+2026-11-21 15:24:18 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 15:24:22 UTC [A-HS] released card 0 (rc=0): cold-f1.log
+2026-11-21 15:24:33 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 15:26:10 UTC [A-LY] claim card 0 ~3 min: ups_iq2_xs split SLM/global grid A/B
+2026-11-21 15:26:15 UTC [A-LY] release card 0: ups_iq2_xs split SLM/global grid A/B rc=0
+2026-11-21 15:31:50 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 82d548e8
+2026-11-21 15:33:50 UTC [A-LY] claim card 0 ~3 min: ups_iq2_xs packed 2-bit grid A/B
+2026-11-21 15:34:24 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 15:34:33 UTC [A-LY] release card 0: ups_iq2_xs packed 2-bit grid A/B rc=0
+2026-11-21 15:36:09 UTC [A-HS] claim card 0 ~3 min: hc-cold d1
+2026-11-21 15:36:14 UTC [A-HS] released card 0 (rc=0): hc-cold d1
+2026-11-21 15:39:49 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 15:40:06 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 15:40:06 UTC [A-KF] claim card 0 ~2 min: round11 final, cap285s
+2026-11-21 15:40:06 UTC [A-KF] acquired card 0 ~2 min: round11 final
+2026-11-21 15:40:27 UTC [A-KF] released card 0: round11 final rc=0
+2026-11-21 15:40:27 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 15:40:41 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 15:40:58 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 15:41:07 UTC [A-LY] claim card 0 ~3 min: q_apply mul-free A/B
+2026-11-21 15:41:13 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 15:41:28 UTC [A-LY] release card 0: q_apply mul-free A/B rc=0
+2026-11-21 15:43:16 UTC [A-PF] claim card 0 ~150s: lay4
+2026-11-21 15:43:41 UTC [A-PF] release card 0: lay4 rc=0
+2026-11-21 15:45:21 UTC [A-HS] claim card 0 ~3 min: hc-cold d2
+2026-11-21 15:45:25 UTC [A-HS] released card 0 (rc=0): hc-cold d2
+2026-11-21 15:45:54 UTC [A-HS] claim card 0 ~3 min: slice gate fz1
+2026-11-21 15:46:29 UTC [A-HS] released card 0 (rc=0): slice gate fz1
+2026-11-21 15:47:39 UTC [A-LY] claim card 0 ~3 min: hardware half conversion A/B
+2026-11-21 15:48:00 UTC [A-LY] release card 0: hardware half conversion A/B rc=0
+2026-11-21 15:49:45 UTC [A-KF] claim card 0 ~1 min: round11 slice all, max250s
+2026-11-21 15:49:53 UTC [A-HS] claim card 0 ~3 min: hc-cold hot
+2026-11-21 15:50:02 UTC [A-KF] released card 0: round11 slice all rc=0
+2026-11-21 15:50:02 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 15:50:06 UTC [A-HS] released card 0 (rc=0): hc-cold hot
+2026-11-21 15:50:18 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 15:52:10 UTC [A-PF] claim card 0 ~170s: lay5
+2026-11-21 15:52:37 UTC [A-PF] release card 0: lay5 rc=0
+2026-11-21 15:53:55 UTC [A-LY] claim card 0 ~3 min: iq2-only hardware half A/B
+2026-11-21 15:54:15 UTC [A-LY] release card 0: iq2-only hardware half A/B rc=0
+2026-11-21 15:54:44 UTC [A-LY] claim card 0 ~3 min: iq2 hardware-half gate
+2026-11-21 15:55:45 UTC [A-LY] release card 0: iq2 hardware-half gate rc=0
+2026-11-21 15:56:51 UTC [A-HS] claim card 0 ~3 min: slice gate pf1
+2026-11-21 15:57:24 UTC [A-HS] released card 0 (rc=0): slice gate pf1
+2026-11-21 15:57:54 UTC [A-PF] claim card 0 ~170s: lay6
+2026-11-21 15:59:40 UTC [A-LY] claim card 0 ~3 min: ups 2 tiles per WG A/B
+2026-11-21 16:00:11 UTC [A-PF] release card 0: lay6 rc=0
+2026-11-21 16:00:32 UTC [A-LY] release card 0: ups 2 tiles per WG A/B rc=0
+2026-11-21 16:02:13 UTC [A-HS] claim card 0 ~3 min: slice gate pf2
+2026-11-21 16:02:46 UTC [A-HS] released card 0 (rc=0): slice gate pf2
+2026-11-21 16:03:43 UTC [A-PF] claim card 0 ~170s: lay7
+2026-11-21 16:04:10 UTC [A-PF] release card 0: lay7 rc=0
+2026-11-21 16:11:56 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 c78c82b7
+2026-11-21 16:12:01 UTC [A-HS] claim card 0 ~3 min: slice gate ar1
+2026-11-21 16:14:32 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 16:15:06 UTC [A-HS] released card 0 (rc=0): slice gate ar1
+2026-11-21 16:16:33 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 16:16:49 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 16:16:49 UTC [A-KF] claim card 0 ~2 min: round11 final, cap285s
+2026-11-21 16:16:49 UTC [A-KF] acquired card 0 ~2 min: round11 final
+2026-11-21 16:17:10 UTC [A-KF] released card 0: round11 final rc=0
+2026-11-21 16:17:10 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 16:17:24 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 16:18:47 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 16:19:02 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 16:19:35 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 5e92440d
+2026-11-21 16:21:51 UTC [A-HS] claim card 0 ~3 min: slice gate gs1
+2026-11-21 16:22:09 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 16:22:42 UTC [A-HS] released card 0 (rc=0): slice gate gs1
+2026-11-21 16:24:27 UTC [A-KF] claim card 0 ~1 min: round11 slice all, max250s
+2026-11-21 16:24:38 UTC [A-LY] claim card 0 ~3 min: ups 16-lane non-bitwise A/B
+2026-11-21 16:24:45 UTC [A-KF] released card 0: round11 slice all rc=0
+2026-11-21 16:24:45 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 16:25:02 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 16:25:10 UTC [A-LY] release card 0: ups 16-lane non-bitwise A/B rc=0
+2026-11-21 16:27:09 UTC [A-HS] claim card 0 ~3 min: slice gate gs2
+2026-11-21 16:27:41 UTC [A-HS] released card 0 (rc=0): slice gate gs2
+2026-11-21 16:29:26 UTC [A-LY] claim card 0 ~3 min: ups 4-lane non-bitwise A/B
+2026-11-21 16:29:47 UTC [A-LY] release card 0: ups 4-lane non-bitwise A/B rc=0
+2026-11-21 16:31:43 UTC [A-HS] claim card 0 ~3 min: slice gate gj1
+2026-11-21 16:32:27 UTC [A-HS] released card 0 (rc=0): slice gate gj1
+2026-11-21 16:32:54 UTC [A-HS] claim card 0 ~3 min: slice gate gjt1
+2026-11-21 16:33:34 UTC [A-PF] claim card 0 ~180s: sw1
+2026-11-21 16:35:23 UTC [A-HS] released card 0 (rc=0): slice gate gjt1
+2026-11-21 16:35:23 UTC [A-HS] claim card 0 ~3 min: slice gate gjt2
+2026-11-21 16:36:43 UTC [A-LY] claim card 0 ~3 min: MTP tail slice R1 profile
+2026-11-21 16:37:52 UTC [A-HS] released card 0 (rc=0): slice gate gjt2
+2026-11-21 16:38:23 UTC [A-PF] release card 0: sw1 rc=0
+2026-11-21 16:38:38 UTC [A-LY] release card 0: MTP tail slice R1 profile rc=0
+2026-11-21 16:38:50 UTC [A-LY] claim card 0 ~3 min: MTP tail slice R1 profile
+2026-11-21 16:38:53 UTC [A-PF] claim card 0 ~180s: sw2
+2026-11-21 16:39:03 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 16:39:18 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 16:39:18 UTC [A-KF] claim card 0 ~2 min: round11 final, cap285s
+2026-11-21 16:41:07 UTC [A-LY] release card 0: MTP tail slice R1 profile rc=0
+2026-11-21 16:44:08 UTC [A-PF] release card 0: sw2 rc=124
+2026-11-21 16:44:09 UTC [A-KF] acquired card 0 ~2 min: round11 final
+2026-11-21 16:44:32 UTC [A-KF] released card 0: round11 final rc=0
+2026-11-21 16:44:32 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 16:44:55 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 16:45:44 UTC [A-PF] claim card 0 ~180s: sw3
+2026-11-21 16:46:15 UTC [A-PF] release card 0: sw3 rc=0
+2026-11-21 16:46:24 UTC [A-PF] claim card 0 ~180s: sw4
+2026-11-21 16:47:03 UTC [A-PF] release card 0: sw4 rc=0
+2026-11-21 16:48:28 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 e8e21a4f
+2026-11-21 16:50:53 UTC [A-LY] claim card 0 ~3 min: MTP tail rmsnorm+chainhead
+2026-11-21 16:51:02 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 16:52:31 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 16:52:46 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 16:52:46 UTC [A-KF] claim card 0 ~2 min: round11 final, cap285s
+2026-11-21 16:53:05 UTC [A-LY] release card 0: MTP tail rmsnorm+chainhead rc=0
+2026-11-21 16:53:06 UTC [A-KF] acquired card 0 ~2 min: round11 final
+2026-11-21 16:53:18 UTC [A-PF] claim card 0 ~180s: ab1
+2026-11-21 16:53:28 UTC [A-KF] released card 0: round11 final rc=0
+2026-11-21 16:53:28 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 16:53:44 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 16:54:13 UTC [A-PF] release card 0: ab1 rc=0
+2026-11-21 16:55:36 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 16:55:50 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 16:57:20 UTC [A-HS] claim card 0 ~3 min: slice gate ff1
+2026-11-21 16:57:51 UTC [A-HS] released card 0 (rc=0): slice gate ff1
+2026-11-21 16:58:25 UTC [A-KF] claim card 0 ~1 min: round11 slice default, max250s
+2026-11-21 16:58:34 UTC [A-KF] released card 0: round11 slice default rc=0
+2026-11-21 16:58:34 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 16:58:50 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 16:59:27 UTC [A-PF] claim card 0 ~120s: ab2
+2026-11-21 16:59:39 UTC [A-KF] claim card 0 ~20s: round11 health-pre, cap60s
+2026-11-21 16:59:50 UTC [A-LY] claim card 0 ~3 min: invariance-mtp + decode-check
+2026-11-21 16:59:52 UTC [A-PF] release card 0: ab2 rc=0
+2026-11-21 16:59:58 UTC [A-KF] released card 0: round11 health-pre rc=0
+2026-11-21 16:59:58 UTC [A-KF] claim card 0 ~2 min: round11 final, cap285s
+2026-11-21 17:00:02 UTC [A-LY] release card 0: invariance-mtp + decode-check rc=0
+2026-11-21 17:00:04 UTC [A-KF] acquired card 0 ~2 min: round11 final
+2026-11-21 17:00:26 UTC [A-KF] released card 0: round11 final rc=0
+2026-11-21 17:00:26 UTC [A-KF] claim card 0 ~20s: round11 health-post, cap60s
+2026-11-21 17:00:50 UTC [A-KF] released card 0: round11 health-post rc=0
+2026-11-21 17:02:47 UTC [A-LY] claim card 0 ~3 min: draft head RP/groups sweep
+2026-11-21 17:02:55 UTC [A-LY] release card 0: draft head RP/groups sweep rc=0
+2026-11-21 17:05:37 UTC [A-HS] claim card 0 ~3 min: slice gate ff2
+2026-11-21 17:06:10 UTC [A-HS] released card 0 (rc=0): slice gate ff2
+2026-11-21 17:06:23 UTC [A-PF] claim card 0 ~120s: ab3
+2026-11-21 17:06:43 UTC [A-PF] release card 0: ab3 rc=0
+2026-11-21 17:07:28 UTC [A-LY] claim card 0 ~3 min: draft head groups sweep all R
+2026-11-21 17:07:34 UTC [A-LY] release card 0: draft head groups sweep all R rc=0
+2026-11-21 17:12:12 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 5cfa39f7
+2026-11-21 17:13:51 UTC [A-LY] claim card 0 ~3 min: MTP norm/argmax gate
+2026-11-21 17:14:43 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 17:15:40 UTC [A-LY] release card 0: MTP norm/argmax gate rc=0
+2026-11-21 17:21:39 UTC [A] note: ORCHESTRATOR owner decision relayed: INK stopped, card 1 returns to TensorFold after the [INK] release + health line. First two-card user = A-S quick serve bench of the fn-a3 tip under PRIORITY.hold (C1/C2/C4/C8 + prefill). Lead B Codex workers (arfuse/park/lane/kv8/ttft): no two-card claims until that bench releases.
+2026-11-21 17:22:13 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 2f022b5f
+2026-11-21 17:23:27 UTC [INK] release card 1: Inkling eval stopped by owner; server down; xpu-health --card 1 HEALTHY

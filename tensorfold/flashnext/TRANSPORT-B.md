@@ -214,3 +214,7 @@ Code read: fn-rec 7660564 xpu_window_record.zig + tp.zig TpRecording + ze.zig ev
   consumer polling. (b) is the cheap form of the same protection.
 - Why it fails only in no-MTP C4: back-to-back replays with no immediate MTP work between them, plus staggered admission
   prefill on the immediate lists. Both point at test 4 first, then 1+2.
+
+## 5b. [B 07:10] MEASURED: EU peer stores vs copy-engine push (B/arfuse/peerstore/result.json)
+40 KiB hop, producer start -> peer consumer end, p50/p99: copy push 16.0/19.3 us; producer peer-only stores 11.2/20.2; producer local+peer 13.0/13.8.
+Fresh HOST-scope events, receiver barrier, no spins, no peer reads; every element verified. Saving 3-5 us/hop (~0.3-0.5 ms per C1 window).

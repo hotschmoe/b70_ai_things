@@ -39,7 +39,7 @@ def git_show(repo, sha, path):
 
 
 # ---- Pi configuration: keep identical to evals/terminalbench/harbor_pi.py ----
-def pi_models_json(base_url, key, model, ctx, max_tokens):
+def pi_models_json(base_url, key, model, ctx, max_tokens, family="qwen"):
     mdl = {  # == harbor_pi.qwen_model_definition
         "id": model, "name": model, "reasoning": True,
         "thinkingLevelMap": {"off": "none", "minimal": None, "low": None, "medium": None,
@@ -47,13 +47,22 @@ def pi_models_json(base_url, key, model, ctx, max_tokens):
         "input": ["text"], "contextWindow": ctx, "maxTokens": max_tokens,
         "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
     }
-    return {"providers": {"harbor-endpoint": {
+    pj = {"providers": {"harbor-endpoint": {
         "baseUrl": base_url, "apiKey": key, "api": "openai-completions",
         "compat": {"supportsStore": False, "supportsDeveloperRole": False,
                    "supportsReasoningEffort": False, "supportsUsageInStreaming": True,
                    "supportsFinishReason": True, "maxTokensField": "max_tokens",
                    "thinkingFormat": "qwen-chat-template", "supportsStrictMode": False},
         "models": [mdl]}}}
+    if family == "inkling":
+        # Inkling 2 chat template reads reasoning_effort (none|minimal|low|medium|high|xhigh|max or 0..0.99), not
+        # enable_thinking. Pi's default "openai" thinkingFormat with supportsReasoningEffort sends top-level
+        # reasoning_effort = thinkingLevelMap[level] (xhigh -> "xhigh" = 0.99, off -> "none"); llama-server maps it
+        # into the template. Pi is unchanged; only the models.json compat differs.
+        comp = pj["providers"]["harbor-endpoint"]["compat"]
+        comp["supportsReasoningEffort"] = True
+        comp["thinkingFormat"] = "openai"
+    return pj
 
 
 def render_prompt(instruction, thinking):
@@ -240,7 +249,8 @@ def run_task(task, a, key, run_dir):
             sysrun.prepare(box, task, d)
         else:
             init_repo(box, git_tar(task["repo"], task["parent"]), task)
-        mj = pi_models_json(a.base_url, key or "EMPTY", a.model, a.context_window, a.max_output_tokens)
+        mj = pi_models_json(a.base_url, key or "EMPTY", a.model, a.context_window, a.max_output_tokens,
+                           getattr(a, "model_family", "qwen"))
         rc, o = box.exec("mkdir -p $PI_CODING_AGENT_DIR /logs/pi && cat > $PI_CODING_AGENT_DIR/models.json",
                          stdin=json.dumps(mj).encode())
         prompt = render_prompt(task["instruction"], a.thinking)
@@ -323,6 +333,8 @@ def main():
     ap.add_argument("--timeout-s", type=int, default=None, help="default 900 (3600 with --tier hard)")
     ap.add_argument("--thinking", default="xhigh", choices=["off", "xhigh"])
     ap.add_argument("--max-output-tokens", type=int, default=None)
+    ap.add_argument("--model-family", default="qwen", choices=["qwen", "inkling"],
+                    help="inkling: send reasoning_effort (template kwarg) instead of qwen enable_thinking")
     ap.add_argument("--context-window", type=int, default=131072)
     ap.add_argument("--tasks", default="", help="comma-separated task ids (default: all validated)")
     ap.add_argument("--tasks-file", default=None)
@@ -374,7 +386,8 @@ def main():
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run_dir = f"{DATA}/runs/{a.arm_label}-{stamp}"
     os.makedirs(run_dir)
-    meta = {"arm": a.arm_label, "base_url": a.base_url, "model": a.model, "served_ids": ids, "thinking": a.thinking,
+    meta = {"arm": a.arm_label, "base_url": a.base_url, "model": a.model, "served_ids": ids, "thinking": a.thinking, "model_family": a.model_family,
+            "pi_dir": os.environ.get("ABFAST_PI_DIR", "image (/opt/pi, 1.2.0)"),
             "max_output_tokens": a.max_output_tokens, "context_window": a.context_window, "parallel": a.parallel,
             "timeout_s": a.timeout_s, "image": a.image or "per-task", "tier": a.tier or "base", "tasks": [t["id"] for t in tasks], "started": stamp}
     json.dump(meta, open(f"{run_dir}/meta.json", "w"), indent=1)
