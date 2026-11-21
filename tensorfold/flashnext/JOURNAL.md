@@ -954,3 +954,28 @@ RESULT:
   - TAIL launches 109 -> 104.
 - HC/shared producer tails (mode 1) were latency-rejected and stay opt-in.
 VERDICT: accepted, bitwise default-on. fn-a3 2f022b5f is the quick-bench candidate once card 1 is released.
+
+### [A] 2026-11-21 17:46 UTC -- two-card quick serve bench after card 1 returns: C1 and prefill targets met
+CONFIG: fn-a3 2f022b5f, which carries every card-0-gated merge since e9a37df: LY row-split/rs-only/IQ2 hw half, PF DENSE_DPAS/bf16w/logits/kregGroups/fused h2, H batched keep, HS HC block + GDN J2, KF route fusion. Defaults only, nothing flagged. Then 372bf1b2 = the same plus a bench-script knob adding C2 to quick mode.
+COMMAND: integ('int-rf'|'int-rf2', FN_BENCH_QUICK=1): build, I/smoke.sh, tools/flashnext_serve_bench.sh under PRIORITY.hold, 128 tokens, cpu-run --quiet.
+RESULT:
+- int-rf: C1 109.5, C4 166.5, C8 210.1, PF2k 1567.
+- int-rf2: C1 109.5, C2 139.5, C4 168.0, C8 209.0, PF2k 1560.
+- Smoke hash_match true; oracle_equal true; health true.
+- C2 policy ITL p50 11.1 ms. C4 min stream 42.0 tok/s, ITL p99 81 ms.
+VERDICT:
+- C1 (109%) and prefill (104%) meet the targets. C2 is at 93%, C4 56%, C8 42%.
+- fn-int ff'd to 372bf1b2.
+- Next: the card-1 flag A/Bs, then the C4/C8 dispersed-routing work.
+
+## [O] 2026-11-21 18:15 UTC - OOM at 17:59:55 ended the campaign session; state recorded
+CONFIG: host 121 GB RAM + 8 GB swap. At 17:59:55 five concurrent zig builds (~2.5 GB each) + agent processes exhausted RAM+swap (swap 7/7 full).
+RESULT: global OOM killed tmux, the orchestrator session, all lead/worker agents and the user systemd manager. On manager restart (18:04:59)
+the enabled units hotschmoe-dd-frontdoor and hotschmoe-dd (Strata 0.2.16) auto-started; Strata is ready at 18:0x: /v1/models via :18080 lists
+hotschmoe-dd + alias, n_ctx 200000, images on. Lead A wrap-up item 4 and the 17:57 "cutover probe c200-desc" (ctx 200000 par 4, port 18151)
+did not complete (no result). PRIORITY.hold is gone. All TensorFold worktrees are clean (no uncommitted tracked changes):
+fn-a3 e87b5074 (newest one-card-gated integration head), fn-int 372bf1b2 (= int-rf2, best two-card-gated build), worker branches
+fn-pf fee99fa3, fn-hc dd5aeb7c, fn-rec 9cd60dc6, fn-prep e52617fe, fn-ly 56ec4ac9. Cutover prep files: tensorfold/flashnext/dd/ (launcher, unit,
+b1/b2 env, clamp proxy, soak monitor; none installed or started). NEXT-QUEUE.md exists (CPU agent, partial).
+VERDICT: no data lost. Rule from now: at most TWO builds at a time host-wide, each under bin/cpu-run (MAX_JOBS<=4); no heavy builds while a server
+holds the GPUs. Owner has not chosen A (Strata) or B (TensorFold); Strata stays up untouched until they do.

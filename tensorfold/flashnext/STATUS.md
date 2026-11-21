@@ -1,6 +1,11 @@
 # Status (each lead keeps its own section current)
 
-## Lead A (model path)  [updated 17:14 UTC]
+## Lead A (model path)  [updated 17:46 UTC]
+- SERVE ROW int-rf2 (fn-a3 372bf1b2 = 2f022b5f + bench C2 knob; fn-int ff'd), two-card quick bench, 128 tok, oracle_equal true, health true:
+  C1 109.5 (109% of 100) | C2 139.5 (93% of 150; 69.7/stream) | C4 168.0 (56% of 300) | C8 209.0 (42% of 500) | prefill 2k 1560 (104% of 1500)
+  vs int-mtp2 e9a37df: C1 92.2 -> 109.5 (+19%), C4 149.5 -> 168.0 (+12%), C8 187.7 -> 209.0 (+11%), PF 1362 -> 1560 (+15%).
+  Evidence: workers/S/int-rf2-results.json (+ int-rf-results.json, same build without C2: 109.5/-/166.5/210.1/1567).
+  C1 and prefill targets MET. Open: C2 (-7%), C4 (-44%), C8 (-58%). C4/C8 min stream 42/26 tok/s; ITL p99 81/152 ms.
 - fn-a3 = 5cfa39f7 ONE-CARD GATE PASS (+ PF d1a19df6 kregGroups table: q4_k/q6_ks persistent G=256 at c1/c4/c8, draft head q5_k c1 cap removed 77.8 -> 67.1 us;
   about -45 us per C1 window, 0 at C4 where DPAS is already at best).
 - fn-a3 = e8e21a4f ONE-CARD GATE PASS: + PF 2b0de0ed (Q4_K persistent groups at R3-4, ssm_out R4 15.6 -> 14.4 us), + HS 092c82f0 GDN rows J=2

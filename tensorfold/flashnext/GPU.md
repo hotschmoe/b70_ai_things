@@ -2294,3 +2294,24 @@
 2026-11-21 17:43:24 UTC [A-S] claim cards 0+1 ~15 min: int-rf2 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
 2026-11-21 17:45:57 UTC [A-S] released cards 0+1: int-rf2 rc=0
 2026-11-21 17:46:02 UTC [A-PF] claim card 0 ~120s: pf2
+2026-11-21 17:46:04 UTC [A-HS] claim card 0 ~3 min: slice gate ff6
+2026-11-21 17:46:23 UTC [A-HS] released card 0 (script stopped during wait; gate ff6 aborted, no slice run)
+2026-11-21 17:46:30 UTC [A-PF] release card 0: pf2 rc=0
+2026-11-21 17:46:33 UTC [A-HS] claim card 0 ~3 min: slice gate ff6b
+2026-11-21 17:47:05 UTC [A-HS] released card 0 (rc=0): slice gate ff6b
+2026-11-21 17:47:23 UTC [A-HS] claim card 0 ~3 min: slice gate fft0
+2026-11-21 17:48:37 UTC [A-LY] claim card 0 ~3 min: MTP router+shared_down
+2026-11-21 17:49:53 UTC [A-HS] released card 0 (rc=0): slice gate fft0
+2026-11-21 17:49:53 UTC [A-HS] claim card 0 ~3 min: slice gate fft1
+2026-11-21 17:51:21 UTC [A-LY] release card 0: MTP router+shared_down rc=cancelled (killed while waiting for the lock; never acquired)
+2026-11-21 17:51:21 UTC [A-LY] claim card 0 ~3 min: MTP router+shared_down
+2026-11-21 17:51:24 UTC [A] note: ORCHESTRATOR 17:55 owner decision relayed to all workers (incl. Lead B Codex workers via this line): switch to SERVING; land/park work with HANDOFF; ALL GPU work stops by 18:55 UTC; after that no claims on either card (production serve + soak); no CPU-heavy work while the serve is live. The A-S card1-queue is cancelled (PRIORITY.hold held by A-S for the wrap-up).
+2026-11-21 17:52:13 UTC [A-HS] released card 0 (rc=1): slice gate fft1
+2026-11-21 17:54:12 UTC [A-LY] release card 0: MTP router+shared_down rc=0
+2026-11-21 17:54:38 UTC [A-S] claim card 0 ~2 min: slice + tail gate fn-a3 e87b5074
+2026-11-21 17:55:19 UTC [A] removed PRIORITY.hold (orchestrator 18:00 wrap-up); will not recreate. card1-queue cancelled and parked as H/r11/card1-queue.sh.parked-wrapup. In flight: A-S card-0 slice gate (a8b678ec), then A cutover capability probes on cards 0+1 (<=3 x 10 min, port 18151), all done before 18:55.
+2026-11-21 17:55:38 UTC [A-PF] claim card 0 ~170s: pf3
+2026-11-21 17:57:07 UTC [A-PF] release card 0: pf3 never acquired (waited on A-S), cancelled at serve switch
+2026-11-21 17:57:11 UTC [A-S] released card 0: slice gate rc=0
+2026-11-21 17:57:11 UTC [A-S] queued: H/r11 card1-queue (flag A/Bs + KL teacher + HS prefetch-AR + MTP arms + R dump) on fn-a3 e87b5074, cards 0+1, ~45-60 min, leases <=280s, PRIORITY.hold
+2026-11-21 17:57:30 UTC [A] claim cards 0+1 ~10 min: cutover probe c200-desc (fn-a3 e87b5074 binary, ctx 200000 par 4, port 18151)

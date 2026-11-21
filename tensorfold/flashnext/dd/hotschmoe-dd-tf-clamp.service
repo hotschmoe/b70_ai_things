@@ -1,0 +1,18 @@
+[Unit]
+Description=hotschmoe-dd sampling clamp 127.0.0.1:18124 -> TensorFold Unix socket (greedy-only engine)
+PartOf=hotschmoe-dd-tensorfold.service
+After=hotschmoe-dd-tensorfold.service
+Conflicts=hotschmoe-dd.service
+
+[Service]
+Type=simple
+WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
+ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/tensorfold/flashnext/dd/tf_clamp_proxy.py
+Restart=always
+RestartSec=5
+Nice=5
+StandardOutput=append:/mnt/vm_8tb/b70/logs/hotschmoe-dd/tf-clamp.log
+StandardError=append:/mnt/vm_8tb/b70/logs/hotschmoe-dd/tf-clamp.log
+
+[Install]
+WantedBy=hotschmoe-dd-tensorfold.service
