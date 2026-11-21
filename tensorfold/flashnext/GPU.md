@@ -1399,3 +1399,16 @@
 2026-11-21 04:58:03 UTC [A-PF] claim card 1 ~120s: gemm1
 2026-11-21 05:00:58 UTC [A-R] released cards 0+1: mtp-q2-t256 rc=0
 2026-11-21 05:01:00 UTC [A-PF] release card 1: gemm1 rc=0
+2026-11-21 05:03:55 UTC [A-H] claim cards 0+1 ~5 min: hc4/depth3-a1.log
+2026-11-21 05:05:13 UTC [A-S] claim cards 0+1 ~15 min: int-pf-512 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 05:06:25 UTC [A-H] released cards 0+1 (rc=75)
+2026-11-21 05:09:04 UTC [A-S] released cards 0+1: int-pf-512 rc=0
+2026-11-21 05:09:04 UTC [A-R] claim cards 0+1 ~15 min: mtp-q2-d4 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 05:10:57 UTC [B-worker codex-arfuse] claim cards 0+1 ~5 min: perf-off bench
+2026-11-21 05:15:42 UTC [A-H] released-session note: core156e010 quick gate PASS (tipca25bbe); H owns no leases. HC4 timing blocked: GPU owner files empty, CPU quiet A-R mtp-q2-d4 pending gpu-run behind PRIORITY.hold A-S/A-I.
+2026-11-21 05:16:46 UTC [A-R] released queued mtp-q2-d4 claim before GPU acquisition (it held cpu-run --quiet behind PRIORITY.hold); no lease acquired
+2026-11-21 05:21:39 UTC [B-worker codex-keep] claim cards 0+1 ~5 min: prepared keep gate and C1/C4 off/on
+2026-11-21 05:26:10 UTC [A-S] claim cards 0+1 ~15 min: int-pf-2048 bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-21 05:29:11 UTC [A-S] released cards 0+1: int-pf-2048 rc=0
+2026-11-21 05:29:14 UTC [O-HW] claim card 1 ~3 min: hwprobe smoke
+2026-11-21 05:29:16 UTC [A-PF] claim card 1 ~120s: gemm2

@@ -1,6 +1,17 @@
 # Status (each lead keeps its own section current)
 
-## Lead A (model path)  [updated 04:36 UTC]
+## Lead A (model path)  [updated 05:30 UTC]
+- SERVE ROW #7 (05:16, int-pf-512 = fn-int aa66709: train1 + PF prefill DPAS d8baa8d, XPU_CHUNK_SOLO=512; quick bench; p0 exact,
+  streams == solo, health OK; S/int-pf-512-results.json): C1 83.1 / C4 151.1 / C8 191.3, PREFILL 2k 1024 tok/s (was 503).
+  % of target: C1 83%, C4 50%, C8 38%, prefill 68%. Chunk 2048 (int-pf-2048): prefill 1147 but C8 147.9 -> default stays 512.
+  KF7 820cb20 conflicts with evpool/PF in xpu_store.zig/trace.zig; KF round 8 merges fn-a3 first, I take its next commit.
+- TARGETS (user, BRIEF): C1 >= 100 / C2 >= 150 / C4 >= 300 / C8 >= 500, prefill >= 1500. Lead A staffing to them (multi-row first):
+  KF round 8 (Codex) = expert up/down grouped by distinct expert at R = 8..16 (weights read once per window) + GDN/QSA at R = 8/16;
+  HS (new Claude Opus, agent a4258554ec0395b67, b70/fn-hs) = HC split across the two cards riding an existing AR (-0.66 GB/card/window)
+  + one HC weight read per window; PF = XMX HC/experts/attention for prefill; H4 = multi-lane device MTP + lane-depth re-tune
+  (Lead B: H4 already covers the lane policy item; we will share results); R = MTP drafter acceptance (matched t256, depth 4, IQ3_S/IQ4_NL drafter).
+- Merged into fn-a3: PF d8baa8d (prefill DPAS, decode untouched, hashes equal) -> aa66709; bench default XPU_CHUNK_SOLO=512.
+  KF7 820cb20 (cached kernel args) merge-ready, merging after the running PF benches.
 - C1 GAP ANALYSIS, CORRECTED 04:45 (R, CPU only): Strata DD uses the SAME q2_0 MTP experts (its "mtp-bf16" rt is converted from
   mtp-q2_0.gguf), same depth 3, same draft vocab, suffix/lookup/min-p OFF. Matched per prompt (Strata oracle-eight DONE lines vs
   ours): acceptance per draft p0 0.69 vs 0.62, p1 0.95 vs 0.88, p2 0.92 vs 0.88, p3 0.72 vs 0.69 (ours 3-7 points lower).
@@ -143,7 +154,17 @@
   queued, with exact766 tp.zig negative control, four shape phases and event-status dump. NO GPU/serve yet. Report5 updated.
   Fable also found B's old replay script UNSETS NEO workaround keys, unlike serve; new micro retains required keys throughout.
 
-## Lead B (runtime, latency, features)  [updated 05:00 UTC]
+## Lead B (runtime, latency, features)  [updated 05:33 UTC]
+- [B 05:33] ACK orchestrator 05:32 (stay on the fork; kernel efficiency + fusion). B owns item 1. AR -> consumer prologue: codex-arfuse
+  prototype (b70/fn-rt-arfuse, XPU_FN_AR_FUSE=1) passed the C1/C4/C2 token gates; its timing is queued behind PRIORITY.hold. Next step
+  after the timing: issue the push right after the producer (before the local tail work), so the consumer prologue never waits.
+  The ledger kernel-table delta (tp2_allreduce_f32 102 calls -> 0) comes with that report.
+- [B 05:05] USER TARGETS (C1 100 / C2 150 / C4 300 / C8 500, prefill 1500). B plan, value-ranked:
+  (1) MTP lane-policy re-tune, depth 1..3 at C2/C4/C8 on 3edbc4d (codex-park, b70/fn-rt-lane).
+  (2) AR fused into the consumer (codex-arfuse; 3.7 ms per C1 window summed over the cards).
+  (3) host keep/settle + peer copies (codex-trace, b70/fn-rt-keep; 2.1 + 2.0 ms).
+  (4) RECORD vs evpool: NOT either/or any more. a9c6725 lets them coexist. R's rec2 epoch transport is the one-submit-per-window
+      path; B hands R the fix and reviews rec2. ttft paused, per the orchestrator.
 - [B 05:00] DECISION LEDGER, train1-imm 3edbc4d (B/ledger/LEDGER-train1-imm.md; one 246 s lease, health OK, tokens equal across modes):
   ANSWER: the C1 window is now GPU-BUSY-BOUND, not host-bound. Busy is 68% of the traced window on each card. Stay on the fork.
   Per card per window, traced (full trace adds +12.6% at C1, +12.1% at C4), ms:

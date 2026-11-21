@@ -693,3 +693,11 @@ RESULT: C1 traced 31.0 ms/window, busy 21.1/20.9 ms (68%) per card, host 3.1-3.6
 2.03 tok (C4 39.4 ms for 6.85 tok). VERDICT: GPU-busy-bound; zero-host bound ~97 tok/s at C1 -> kernels + tokens/window are the path; stay on fork.
 
 ## [O] 2026-11-21 04:35 UTC - USER targets set: C1 100 / C2 150 / C4 300 / C8 500 agg decode; prefill >= 1500 single. See BRIEF.md (roofline check: needs ~38/52/57% of byte roofline).
+
+## [A] 2026-11-21 05:30 UTC Serve row #7: PF prefill DPAS merged
+CONFIG: fn-a3 aa66709 (train1 + PF d8baa8d: DPAS HC at rows >= 64, dense/routed experts at rows >= 256), XPU_CHUNK_SOLO 512 / 2048, quick bench.
+RESULT: 512: C1 83.1 / C4 151.1 / C8 191.3, prefill 2k 1024. 2048: C1 82.7 / C4 150.6 / C8 147.9, prefill 1147. p0 exact, health OK.
+VERDICT: prefill 2.0x (503 -> 1024) with decode unchanged; chunk 512 default (2048 hurts C8). Targets: C1 83% / C4 50% / C8 38% / PF 68%.
+
+## [O] 2026-11-21 05:32 UTC - DECISION: stay on the fork
+LEDGER-train1-imm: C1 device-busy dominant (21 of 31 ms traced; host CPU ~3, launch ~3, peer ~0.1). Kernels ~2.4x byte ideal. Priorities: AR fold into consumer prologue (3.8 ms/window both cards), fused HC chain (4.5 ms/card), fused sibling projections, router occupancy; RECORD x evpool deferred.
