@@ -23,6 +23,8 @@ cd "$repo"
 exec bin/gpu-run docker run --rm -i --name "$container" --network host \
   "${ipc_opts[@]}" "${extra_env[@]}" \
   --memory 90g --device /dev/dri --ulimit memlock=-1 \
+  --health-cmd "curl -fsS -o /dev/null http://127.0.0.1:$port/health" --health-interval 30s \
+  --health-start-period 600s --health-retries 3 \
   -v "$build:$build" -v "$results:$results" -v "$config:$config:ro" \
   -v /mnt/vm_8tb/b70/build/strata-0216:/mnt/vm_8tb/b70/build/strata-0216 \
   -v "$weights/ista-gsq-rco-iq3-s:$weights/ista-gsq-rco-iq3-s:ro" \

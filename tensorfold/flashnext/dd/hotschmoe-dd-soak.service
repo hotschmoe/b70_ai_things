@@ -1,11 +1,11 @@
 [Unit]
-Description=hotschmoe-dd soak monitor (metrics only; no prompt/response text)
+Description=hotschmoe-dd passive metrics record (per-request metrics only; never prompt/response text)
 After=hotschmoe-dd-frontdoor.service
 
 [Service]
 Type=simple
 WorkingDirectory=/mnt/vm_8tb/github/b70_ai_things
-ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/tensorfold/flashnext/dd/soak_monitor.py --backend auto
+ExecStart=/usr/bin/python3 /mnt/vm_8tb/github/b70_ai_things/tensorfold/flashnext/dd/soak_monitor.py --backend strata
 Restart=on-failure
 RestartSec=60
 Nice=19
