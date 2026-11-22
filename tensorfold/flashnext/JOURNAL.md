@@ -2154,3 +2154,25 @@ CONFIG: hotschmoe-dd-tensorfold.service enabled + started 15:01 (ebdc73dd sha ae
 COMMAND: systemctl --user enable --now hotschmoe-dd-tensorfold; /v1/models via :18080; dd_functional.py with image via :18080; systemctl --user enable --now hotschmoe-dd-soak (backend tf).
 RESULT: ready after 62 s; models hotschmoe-dd + 2 aliases at 200000; dd_functional rc=0 (thinking, tool call + roundtrip, 4 concurrent, vision, long 149.8 tok/s); Prometheus up=1, 8 lanes, 0 fallbacks; soak record active; PRIORITY.hold removed (the unit holds both leases).
 VERDICT: live. Production owns both cards: no GPU windows or restarts without the owner's OK via officewin, except emergency rollback (RELEASE-NOTES-20261122.md).
+
+## 2026-11-22 15:40 [SCHED] NR-1: the moved sampled shas follow the at=23/at=36 prompt-cache entries, not the decode schedule
+
+CONFIG: no GPU. Read the existing server.log done lines and cache lines: INT stack6/prod (983cc068, NEW), stack7 ab-r1/r2
+x pr0/pr1 (21d66fe8, NEW), stack8/prod (ebdc73dd, OLD), KRN cs1-cs3, or1, or2 (ebdc73dd, OLD).
+COMMAND: grep the done lines (prompt/cached/sha/rounds/accepted/seed) and the cache saves and restores, then align them
+by request order. Code read of xpu_flashnext_cache.zig, xpu_park.zig (Snapshot/Job), xpu_state.resetSeq, and
+fn_window_pages.cl / fn_pages.cl.
+RESULT:
+- Within each run, a prompt+seed sha is identical across C1/C2/C4/C8, although rounds and drafted counts differ a lot.
+  Across runs, drafted totals differ even when the sha is the same. So the decode schedule is not the variable.
+- Only p1 (resumed from at=23) and p2 (at=36) move, and they always move together. p0 (at=21) and p3 (at=31) are
+  equal everywhere. OLD equals the shas from a solo cold save (cs1).
+- Snapshots copy whole leased pages, so stale cells at or past pos travel with the entry. Attention is bounded by
+  nkeys. flushGdn drains first.
+- Built debug knob XPU_FN_CACHE_HASH=1 (default off): save-side hashes of the host frames and restore-side readback
+  of the destination (adds bank1, saved_proj and page IDs). b70/sched-nr1-hash a5e6592d (on 21d66fe8, sha256
+  b71066ea) and b70/sched-nr1-hash-ebd 8e19c78c (on ebdc73dd, sha256 496cbdbe), ReleaseFast. Local only.
+VERDICT: the 945580ce hunks are not implicated: they act only on the decode schedule, and the schedule does not change
+the tokens. The variable is the content (or the restore) of the at=23/at=36 snapshots, which were saved beside
+another stream's restore. The next-window gate is G-H in NEXT-QUEUE NR-1: hash the snapshots on NEW and OLD runs and
+compare by region. The outcome stays open until that gate runs.

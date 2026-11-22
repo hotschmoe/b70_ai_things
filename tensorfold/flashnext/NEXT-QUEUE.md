@@ -227,6 +227,8 @@ NR-1 SAMP CPU audit, 2026-11-22 12:05 UTC (a0376fc4c87a3b004):
   workers/SAMP/rs/.
 - Proposed next-window GPU gates, one lease each (stack7 ab_body unless noted):
   G0 ReleaseSafe 21d66fe8 and ReleaseSafe 983cc068 (bins in workers/SAMP/rs/<c>-out). Pass: the shas equal each other.
+     ORDER (15:45): run SCHED's G-H (XPU_FN_CACHE_HASH save hashes) FIRST. The divergence looks like device data, which
+     ReleaseSafe cannot see, so G0 is only a secondary host-side check.
   G1 21d66fe8 ReleaseFast, short body (prof_client2 only, no bench). OLD means the state at 23/36 saved during the bench
      is the variable, not the decode.
   G2 21d66fe8 ab_body with XPU_FN_EVICT_DRAIN=0, then with XPU_FN_GDN_DEFER=0. A move back to OLD points at the
@@ -246,6 +248,57 @@ Still open, not reproduced: workers/INT/stack6 (983cc068, RECORD off, full 30-st
 workers/INT/stack8 (same list, RECORD=1) gave the old ones. Every fresh-server cut on 983cc068/ebdc73dd gives the old
 shas: INT stack9/stack10 a1-a4, and KRN cs1-cs3, which include stack6's exact prefill/restore/save interleave, plus or1
 and or2. Run the stack6 step list on ebdc73dd with RECORD off; if it moves, bisect the steps.
+
+NR-1 SCHED trace analysis, 2026-11-22 15:40 UTC (CPU only; server.log done lines of stack6/7/8, KRN cs1-3/or1/or2):
+- Inside every server run, a (prompt, seed, cfg) sha is the same at C1, C2, C4 and C8, and the draft schedule
+  differs a lot: stack7 r2 gen p1 has rounds 93 / 144 / 151 and drafted 290 / 174 / 152; the depth cap is 3 at C1 and
+  1 at C8. The run-to-run draft totals also differ (seed 1000: 345 vs 356 drafted, same sha). So the decode schedule
+  does not choose the tokens: not the plain-round hunks, not the submit hunk, not the cost rule or the startup
+  "window ms by rows" calibration. The variable is fixed per server run.
+- Only prompts served from the at=23 (p1) and at=36 (p2) prompt-cache entries move. The p0 (at=21) and p3 (at=31)
+  sampled shas are equal in every run on every binary: gen 84b91b40 / e60ea6a6, t0.6 02d32e20 / b2da1ca7. p1 and p2
+  always move together: NEW t0.6 ec0d602c / e5844ff5 (stack6 983cc068, and stack7 21d66fe8 4/4); OLD 36668c9c /
+  b3c31103 (stack8, cs1-3, or1, or2). OLD is what a solo cold save gives (cs1: p1 saved at=23 with nothing else
+  running, 15 ms). So the per-run variable is the content of the at=23 and at=36 snapshots, or how they are restored.
+  Both entries are saved from a fresh prefill (resumed at 0) into a reused slot. In the bench those saves run beside
+  another stream's restore at=21 plus a 1-row prefill (restore 109-130 ms, save 28-49 ms instead of 15). cs3 and
+  or2 had the same interleave and stayed OLD, so the interleave alone does not decide the outcome.
+- Facts from the code: a cache snapshot copies the whole leased page (bytes_per_card 62237200 for every at), so the
+  page cells at and past pos (stale data from the page's earlier owner) travel with the entry and are restored. The
+  attention loops are bounded by nkeys. Pooled keys are read only past 2048 tokens. flushGdn drains before the copy.
+  resetSeq zeroes conv, state, ple_tail and n-gram, but not the page cells, IndexTail, last_streams, mtp_out or
+  verify_streams.
+- Prepared (CPU only, built ReleaseFast, local branches, not pushed): XPU_FN_CACHE_HASH=1 (default off). "save" lines
+  hash the snapshot's host frames, with no device work. "restore" lines (added 15:50 for SAMP and KV) read the
+  destination's device buffers back right after the restore copy completes, using debug-only copies plus a sync. They
+  add bank1 (tmp_state) and saved_proj, which snapshots do not carry, plus the slot, desc_slot, desc_sel and page IDs. For each rank it logs one line with conv, state, ple,
+  ngram, last, mtp_out, verify, itail and mhist; KV split into cells below pos (kv_live) and at or past pos (kv_stale);
+  and pooled keys of complete blocks (pooled_live) and the rest. A second line gives the state of each linear layer
+  and the live KV of each attention layer.
+  b70/sched-nr1-hash a5e6592d on 21d66fe8: /mnt/vm_8tb/b70/build/tensorfold/sched-nr1/zig-out/xpu/bin/tensorfold-native
+  (sha256 b71066ea).
+  b70/sched-nr1-hash-ebd 8e19c78c on ebdc73dd: /mnt/vm_8tb/b70/build/tensorfold/sched-nr1-ebd/zig-out/xpu/bin/tensorfold-native
+  (sha256 496cbdbe).
+- Proposed next-window GPU gate G-H, 2 leases of about 5 min (replaces SAMP G0 as the first cut): stack7 ab_body with
+  XPU_FN_CACHE_HASH=1 on each hash binary. Compare the "cache hash save at=23/36" lines between the NEW run and the
+  OLD run. Use RECORD-off arms: per KRN, RECORD=1 pads verify rows into the page, so kv_stale differs there anyway.
+  Then compare each run's "restore" lines with its own "save" lines; a mismatch means the restore is inexact.
+  (a) Only kv_stale differs: the saved state is equal, and something reads cells at or past pos after a restore.
+      Audit the readers of those cells.
+  (b) state, conv or kv_live differs: the save is not exact. The by-layer line names the first layer, and the field
+      shows whether it is the prefill or the save.
+  (c) Everything is equal: the restore path is the variable (destination slot or pages); add restore-side hashes.
+  If the NEW run does not reproduce on 21d66fe8 with the knob on, repeat with --prompt-cache-gib 0. Prediction: p1/p2
+  equal OLD in every run, because that cuts the snapshot out entirely.
+
+G-H runner (KRN, prepared 15:52; run only in the owner's window, 2 leases of about 3 min each, port 18155, RECORD off,
+XPU_FN_CACHE_HASH=1, stack7 body = bench QUICK + prof_client2 gen,t0.6 at C1+C8):
+  cd /mnt/vm_8tb/b70/results/tf-flashnext/workers/KRN
+  KRN_LEASE_GAP=5 bash krn_lease.sh gh-sched "KRN NR-1 G-H 21d66fe8-hash" bash krn_arm_gh.sh /mnt/vm_8tb/b70/results/tf-flashnext/workers/KRN/gh-sched /mnt/vm_8tb/b70/build/tensorfold/sched-nr1/zig-out/xpu/bin/tensorfold-native a5e6592d
+  KRN_LEASE_GAP=5 bash krn_lease.sh gh-ebd "KRN NR-1 G-H ebdc73dd-hash" bash krn_arm_gh.sh /mnt/vm_8tb/b70/results/tf-flashnext/workers/KRN/gh-ebd /mnt/vm_8tb/b70/build/tensorfold/sched-nr1-ebd/zig-out/xpu/bin/tensorfold-native 8e19c78c
+  bash krn_gh_diff.sh /mnt/vm_8tb/b70/results/tf-flashnext/workers/KRN/gh-sched /mnt/vm_8tb/b70/results/tf-flashnext/workers/KRN/gh-ebd
+Expected: gh-sched gives the NEW p1/p2 shas and gh-ebd the OLD ones. Read the at=23/36 save/restore hash diff by region
+(kv_live/state = inexact save, kv_stale only = a reader past pos, restore-only = restore side).
 
 ### NR-2 (next C1 lever): record the MTP drafter / device chain under RECORD (XPU_FN_OOO)
 
