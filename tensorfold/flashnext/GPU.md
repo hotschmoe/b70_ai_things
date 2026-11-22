@@ -2734,3 +2734,54 @@
 2026-11-22 08:53:13 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate OFF bench config b1 quick bench 945580ce (port 18153)
 2026-11-22 08:55:29 UTC [SCHED] released cards 0+1: b1-off rc=0
 2026-11-22 08:55:30 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-22 08:57:43 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
+2026-11-22 08:57:43 UTC [KRN] claim cards 0+1 ~5 min: B1' record gate paged defer=1 krn-rec 59f90534 (on ed106eaf, no port)
+2026-11-22 08:58:28 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1100 s: gpu_window prod stack6-prod (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional SR-samp MEM0 CACHE-MT MEM1)
+2026-11-22 08:59:42 UTC [KRN] released cards 0+1: B1' record gate paged defer=1 krn-rec 59f90534 (on ed106eaf, no port) rc=0
+2026-11-22 09:05:29 UTC [KRN] claim cards 0+1 ~5 min: B1' RECORD prod steps P0/KV0-3 90K+cache/S1/VIS/2-image/metrics krn-rec 59f90534 (port 18155)
+2026-11-22 09:07:57 UTC [O] PRIORITY.hold 'INT hotschmoe-dd-tf b70s4dayz' (release chain: INT + KRN RECORD only) until 12:30 UTC
+2026-11-22 09:09:24 UTC [KRN] released cards 0+1: B1' RECORD prod steps P0/KV0-3 90K+cache/S1/VIS/2-image/metrics krn-rec 59f90534 (port 18155) rc=0
+2026-11-22 09:09:24 UTC [KRN] claim cards 0+1 ~5 min: B1' RECORD prod steps KV4-6 conc5 parks/API1-5/P9/metrics krn-rec 59f90534 (port 18155)
+2026-11-22 09:13:05 UTC [KRN] released cards 0+1: B1' RECORD prod steps KV4-6 conc5 parks/API1-5/P9/metrics krn-rec 59f90534 (port 18155) rc=1
+2026-11-22 09:13:05 UTC [KRN] claim cards 0+1 ~5 min: B1' RECORD forced park 8 lanes/4 slots conc8 krn-rec 59f90534 (port 18155)
+2026-11-22 09:15:44 UTC [KRN] released cards 0+1: B1' RECORD forced park 8 lanes/4 slots conc8 krn-rec 59f90534 (port 18155) rc=0
+2026-11-22 09:15:44 UTC [KRN] claim cards 0+1 ~5 min: B1' RECORD bounce start/stop x2 in-flight krn-rec 59f90534 (port 18155)
+2026-11-22 09:15:45 UTC [KRN] released cards 0+1: B1' RECORD bounce start/stop x2 in-flight krn-rec 59f90534 (port 18155) rc=1
+2026-11-22 09:15:46 UTC [KRN] claim cards 0+1 ~5 min: B1' prod config RECORD on perf krn-rec 59f90534 (port 18155)
+2026-11-22 09:18:14 UTC [KRN] released cards 0+1: B1' prod config RECORD on perf krn-rec 59f90534 (port 18155) rc=0
+2026-11-22 09:18:14 UTC [KRN] claim cards 0+1 ~5 min: B1' prod config RECORD off perf krn-rec 59f90534 (port 18155)
+2026-11-22 09:20:42 UTC [KRN] released cards 0+1: B1' prod config RECORD off perf krn-rec 59f90534 (port 18155) rc=0
+2026-11-22 09:20:42 UTC [KRN] claim cards 0+1 ~5 min: B1' bench config RECORD off krn-rec 59f90534 (port 18155)
+2026-11-22 09:23:10 UTC [KRN] released cards 0+1: B1' bench config RECORD off krn-rec 59f90534 (port 18155) rc=0
+2026-11-22 09:23:10 UTC [KRN] claim cards 0+1 ~5 min: B1' bench config RECORD on krn-rec 59f90534 (port 18155)
+2026-11-22 09:25:45 UTC [KRN] released cards 0+1: B1' bench config RECORD on krn-rec 59f90534 (port 18155) rc=0
+2026-11-22 09:32:31 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack6-prod rc=0
+2026-11-22 09:32:32 UTC [KRN] claim cards 0+1 ~5 min: B1' RECORD forced park 8 lanes KV_PAGES=72 8x5.8Kx600 krn-rec 59f90534 (port 18155)
+2026-11-22 09:33:16 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack6-park8 (port 18150)
+2026-11-22 09:35:30 UTC [KRN] released cards 0+1: B1' RECORD forced park 8 lanes KV_PAGES=72 8x5.8Kx600 krn-rec 59f90534 (port 18155) rc=0
+2026-11-22 09:35:30 UTC [KRN] claim cards 0+1 ~5 min: B1' RECORD prod steps API1-5/P9/metrics krn-rec 59f90534 (port 18155)
+2026-11-22 09:38:12 UTC [KRN] released cards 0+1: B1' RECORD prod steps API1-5/P9/metrics krn-rec 59f90534 (port 18155) rc=0
+2026-11-22 09:41:17 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack6-park8 rc=0
+2026-11-22 09:42:12 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1100 s: gpu_window prod stack6-parkc (port 18150)
+2026-11-22 09:56:31 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack6-parkc rc=1
+2026-11-22 09:56:32 UTC [KRN] claim cards 0+1 ~5 min: B1' RECORD fallback drill (every 3rd window immediate) krn-rec 1d83687b+drill (port 18155)
+2026-11-22 09:58:39 UTC [KRN] released cards 0+1: B1' RECORD fallback drill (every 3rd window immediate) krn-rec 1d83687b+drill (port 18155) rc=1
+2026-11-22 09:58:39 UTC [INT] claim cards 0+1 ~14 min: PLAIN_ROUNDS off/on x2 A/B, 21d66fe8 prod env (port 18150)
+2026-11-22 10:10:54 UTC [INT] released cards 0+1: PLAIN_ROUNDS A/B (health post rc=0)
+2026-11-22 10:11:29 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1100 s: gpu_window prod stack6-parkc2 (port 18150)
+2026-11-22 10:22:06 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack6-parkc2 rc=1
+2026-11-22 10:22:07 UTC [KRN] claim cards 0+1 ~5 min: B1' FINAL record gate paged defer=1 krn-rec 03719727 (no port)
+2026-11-22 10:23:25 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1100 s: gpu_window prod stack6-parkc3 (port 18150)
+2026-11-22 10:24:16 UTC [KRN] released cards 0+1: B1' FINAL record gate paged defer=1 krn-rec 03719727 (no port) rc=0
+2026-11-22 10:24:16 UTC [KRN] claim cards 0+1 ~5 min: B1' FINAL RECORD forced park 72 pages 8x5.8Kx300 all streams == solo krn-rec 03719727 (port 18155)
+2026-11-22 10:26:44 UTC [KRN] released cards 0+1: B1' FINAL RECORD forced park 72 pages 8x5.8Kx300 all streams == solo krn-rec 03719727 (port 18155) rc=1
+2026-11-22 10:31:37 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack6-parkc3 rc=0
+2026-11-22 10:31:38 UTC [KRN] claim cards 0+1 ~5 min: B1' FINAL RECORD fallback drill every 3rd window krn-rec 03719727 (port 18155)
+2026-11-22 10:34:12 UTC [KRN] released cards 0+1: B1' FINAL RECORD fallback drill every 3rd window krn-rec 03719727 (port 18155) rc=0
+2026-11-22 10:34:12 UTC [KRN] claim cards 0+1 ~5 min: B1' FINAL RECORD bounce start/stop x2 in-flight krn-rec 03719727 (port 18155)
+2026-11-22 10:37:53 UTC [KRN] released cards 0+1: B1' FINAL RECORD bounce start/stop x2 in-flight krn-rec 03719727 (port 18155) rc=0
+2026-11-22 10:37:53 UTC [KRN] claim cards 0+1 ~5 min: B1' FINAL RECORD 90K + cache hit + 2-image + short-c4 + metrics krn-rec 03719727 (port 18155)
+2026-11-22 10:41:31 UTC [KRN] released cards 0+1: B1' FINAL RECORD 90K + cache hit + 2-image + short-c4 + metrics krn-rec 03719727 (port 18155) rc=0
+2026-11-22 10:41:35 UTC [INT] claim cards 0+1 ~6 min: production unit up on 18124 with frozen 983cc068 (pc 6) for dd_functional via :18080 (then stopped)
+2026-11-22 10:42:05 UTC [KRN] claim cards 0+1 ~5 min: B1' FINAL RECORD forced park 72 pages 8x5.8Kx300 all streams == solo krn-rec 03719727 (port 18155)
+2026-11-22 10:45:10 UTC [KRN] released cards 0+1: B1' FINAL RECORD forced park 72 pages 8x5.8Kx300 all streams == solo krn-rec 03719727 (port 18155) rc=0

@@ -1950,3 +1950,63 @@ bench b1 C4/C8 -2/-4% (TTFT-bound queueing at 2 lanes). Most of the gain is the 
 itself asks no drafts. The gap to the drafts-off ceiling is the plain round's cost inside the drafting path (40 ms vs ~32 ms
 for a draft:false round): the MTP absorb (one layer with a TP reduce) plus drafting-lane verify bookkeeping. Next: a plain
 round that skips the MTP absorb needs the MTP cache to tolerate gaps (stale pages, NaN risk); out of scope for this release.
+
+## 2026-11-22 10:15 [KRN] B1' recorded windows over paged KV (XPU_FN_RECORD=1 XPU_FN_GATE=1), prod config
+CONFIG: branch b70/krn-rec on ed106eaf (prod frozen 08:30): 3c941f5f (drop RecordedAndPagedKvUnsupported; the page arena and the
+records' key/value/desc are added to the record signature; GDN_DEFER and RECORD are now allowed together; the record gate compares
+paged p0 with the immediate serial run), de60c6e7 + 1d83687b (scratch regrowth while recordings are live), 59f90534 (refusal ->
+immediate fallback + metric), 1d83687b/03719727 (XPU_FN_RECORD_DRILL test knob), 8769fc0a (profile tool). All default off: without
+XPU_FN_RECORD the code paths are unchanged, except that the record signature no longer hashes q8_scratch. Prod env = tf-dd-prod.env
+(8 lanes, int8 paged, COUPLED, GDN_DEFER, EVICT_DRAIN, chunk 512) + XPU_FN_RECORD=1 XPU_FN_GATE=1, port 18155. GATE=1 is required
+because prod samples, so recorded windows must return full logits.
+COMMAND: workers/KRN/krn_arm_recgate.sh (tf-xpu-fn-record-gate); krn_arm_prod.sh (quick bench + kv gates + dd_functional);
+krn_arm_win.sh (INT gpu_window _prod_session with a step subset from workers/KRN/krn_steps.tsv); krn_arm_bounce.sh; krn_arm_bench.sh.
+Each arm ran in its own cpu-run --quiet + gpu-run lease of 300 s or less.
+RESULT:
+- Record gate, paged int8, defer 0 and 1: argmax fixtures 6/6, interleaved keep bitwise, teacher full-logit SHA recorded == immediate
+  (2 x 64 rows), p0 recorded serial == T2 spec == immediate serial (64 tokens). HEALTHY.
+- First serve arm FAILED: any paged prefill chunk larger than warmup (512 rows) grew pf/q8 scratch and the code refused with
+  CapturedScratchResize (HTTP 500 on PF2048, 4K, and dd_functional). Fix: Dev.regrowScratch. With recordings live, a scratch buffer that
+  any recorded argument points into stays allocated for the replays; later, uncaptured buffers are drained and freed. Extra VRAM: 25 MiB
+  (q8) + 3 MiB (pf, once a 90K prompt grew it) per card, once.
+- Fallback: Cache.check holds every pre-submit refusal (CapturedBufferChanged/GenerationChanged, bucket, contract, pair). A refusal
+  runs the window on the immediate path, logs once, and counts in tensorfold:recorded_window_fallbacks_total. A failure after submit
+  is still the HUNG abort.
+- Prod perf, krn-rec on ed106eaf, RECORD off -> on (f5): C1 106.6 -> 105.7, C2 152.7 -> 166.7 (+9.2%), C4 189.8 -> 220.8 (+16.3%),
+  C8 232.1 -> 276.9 (+19.3%), PF2048 1542 -> 1546; oracle True. On c6346c82: C2 +6.2%, C4 +15.4%, C8 +13.3%, C1 +0.8%.
+- Bench config (int-rf2 flags, slot KV, chunk 64), off -> on (f6): C1 109.6 -> 112.4 (+2.6%), C2 139.5 -> 155.1 (+11.2%),
+  C4 171.8 -> 188.1 (+9.5%), C8 210.4 -> 227.4 (+8.1%), PF 1560 -> 1563.
+- Host API per window: immediate ~3300 L0 calls (2315 launches, ~230 copies, 578 barriers, 186 waits, 11 syncs; 10.5 ms of appends).
+  Recorded: 2 drains + 2 ExecuteCommandLists + 2 queue syncs + head copies, host_submit 0.13-0.20 ms per window (FN_RECORD complete,
+  e.g. 994 bucket-4 submits at 199.7 ms total).
+- Prod matrix with RECORD on (pre-final binaries 4444ed3c/59f90534), all PASS: P0, KV0-3 (90K 89886 tokens prefill 1024 tok/s,
+  cache hit 89881), KV1 short-c4 (conc == solo == p0 ref), S1 coupled sampling, VIS-T0/I/F/T1, VIS-2img, KV4 20K, KV5 conc5, API1-5,
+  P9 dd_functional with image. Forced park at 8 lanes / 4 slots conc8 98 parks / 96 restores, and at KV_PAGES=72 8 x 5.6K x 600
+  85/83, 0 errors, finish length on every stream, metrics fallbacks 0. KV6-parks fails at 8 lanes with state-fit slots in both
+  modes (0 parks: nothing has to park); it is not in INT's prod step list.
+- C1 does not gain: MTP drafting stays immediate, and once its host overlap is gone the C1 verify window is GPU-bound. The gain is in
+  multi-stream windows (bucket 4-16), where host issue was serial with the device.
+VERDICT: see the FINAL entry below for the arms on the exact handoff binary.
+
+## 2026-11-22 10:45 [KRN] B1' FINAL: handoff binary krn-rec 03719727 (sha256 ae71e1eb) -- every RECORD arm re-run on it
+CONFIG: b70/krn-rec 03719727 on ed106eaf. tensorfold-native sha256 ae71e1ebd0af674fa1ead66b58b0ad691b7869a78f8080bdd2a5eb707925a449
+(tf-xpu-fn-record-gate 87cf9957). Prod env plus XPU_FN_RECORD=1 XPU_FN_GATE=1. INT can turn it off without a rebuild by leaving the two
+flags out.
+COMMAND: workers/KRN/krn_chain_rec10.sh + krn_chain_rec11.sh (h0-h5), one lease per arm.
+RESULT (all on this exact binary):
+- h0 record gate paged defer=1: fixtures 6/6, interleaved keep bitwise, teachers recorded == immediate SHA, p0 serial == T2 ==
+  immediate serial. HEALTHY.
+- h5 forced park at 8 lanes, XPU_FN_KV_PAGES=72, 8 x 5.6K x 300: per-seed solo refs, then conc8. All 8 streams == their solo
+  (stream0 + s1..s7 True), finish length x8, 90 parks / 88 restores, 0 errors, fallbacks 0.
+- h4 KV1 short-c4 (conc == solo == p0 ref), KV2 90K (89886 tokens, 1198 tok/s, needle), KV3 cache hit (89881 cached, ids equal),
+  VIS-2img (two images, 200, stop), fallbacks 0. Scratch regrowth logged "freed 25600 -> 51200 KiB" and "freed 3072 -> 10240 KiB":
+  no recorded argument points into the pf scratch slots, and the q8 scratch is pre-sized at desc init and never grows. So the
+  B1' scratch path adds 0 bytes of VRAM. Engine device memory at start: RECORD on +7.4 MB vs off (gather/record buffers).
+- h2 fallback drill (XPU_FN_RECORD_DRILL=3): 87 windows ran immediate. kv short-c4 conc == solo == p0 ref, 4K long + cache repeat
+  equal, VIS-I, 6K solo all PASS, no 5xx in requests_total.
+- h3 bounce through dd_launch_tf (as the unit runs it) x2: start, image request, a streaming request in flight, SIGTERM. Exit 0 in
+  3.0 / 3.1 s each time, HEALTHY after each stop.
+- Perf (f5 prod and f6 bench in the 10:15 entry) is from 59f90534. Since then only the regrowth free and the drill knob (default 0)
+  changed, both outside the decode window.
+VERDICT: PASS. Bitwise on every gate, no hang on any prod path, 0 fallbacks in normal serving. Prod C2 +9%, C4 +16%, C8 +19%;
+C1 and PF flat. Hand to INT as its own flag pair (XPU_FN_RECORD=1 XPU_FN_GATE=1, default off).

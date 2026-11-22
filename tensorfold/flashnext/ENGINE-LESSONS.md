@@ -178,3 +178,15 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
 - [KV] Software helpers in hot loops: widen_half (an integer-only fp16 -> fp32 conversion that exists only to stop IGC folding fpext(fptrunc(x))) was about half of fn_page_attn_sparse: 8 calls per key per lane. Loaded halves cannot be folded, so vload_half4 is exact and uses hardware. Kernel 1462 -> 682 ms per 7.2K prompt, bitwise (1856b3b7). Use widen_half only where a value was just rounded in-register.
 - [SAMP] Desc verify windows round rows up to a power of two (1, 2, 4, 8, 16): 5 rows cost the 8-row bucket (prod C1 verify ~15.5 / ~17 / ~20.4 ms at buckets 2 / 4 / 8). Depth 4+ drafting only pays once verify has 5-6 row buckets or exact-row windows; the adaptive depth rule already avoids depth 4 for this reason.
 - [SAMP] The MTP acceptance gap to Strata is the drafter model, not our numerics: replaying the same drafter inputs in FP64 gives 0.781 vs our 0.771 (97.4% same pick, prod int8 KV; bench 0.770 vs 0.767). A host-chain confidence stop raises tokens/round mostly because measured probabilities make the rule ask for the deepest chain every round.
+
+## Recorded windows: buffers captured at warmup, growth after it (KRN, 2026-11-22)
+- A recorded list bakes in every device pointer it uses at warmup. Every free goes through Dev.freeBuf, which panics on an exact
+  captured pointer. So the failure class to look for is growth: pf/q8 scratch that a larger prefill chunk (512 rows at prod
+  chunk 512) regrows. The old code refused any regrowth while recordings existed (CapturedScratchResize, HTTP 500 on a 2K prompt).
+  The bench config (chunk 64) never grew, which hid this. Test recorded paths on the prod chunk size.
+- Decide a scratch's fate by range against the captured set, not by "recordings exist". In prod no recorded argument points into
+  the pf slots, and q8 scratch is pre-sized at desc init, so regrowth frees as before: 0 extra VRAM.
+- Keep every recording refusal before either rank submits (Cache.check), and fall back to the immediate window on a refusal. A
+  test knob that forces refusals (XPU_FN_RECORD_DRILL) is the only way that fallback ever runs before production needs it.
+- Recorded verify windows gain where several streams share a window (C2 +9%, C4 +16%, C8 +19% prod). C1 is flat because MTP drafting
+  stays immediate and the solo verify window is GPU-bound once its host overlap is gone. Recording the drafter is the next C1 lever.
