@@ -1447,3 +1447,101 @@ VERDICT: PASS. Handed to INT: b70/krn-gdn e081c554 (B3 = 5e29a6d8 + 72ff1478; e0
 merging separately). Proposed for the prod env as XPU_FN_GDN_DEFER=1 after INT's stacked arm.
 B4 (data-parallel drafter per card): ranked down, about zero net by arithmetic (ENGINE-LESSONS); not built.
 Evidence: /mnt/vm_8tb/b70/results/tf-flashnext/workers/KRN/{a1..a9}*.
+
+## 2026-11-22 03:00 [SAMP] Performance phase: shared top-K draw, drafter numerics vs FP64, depth sweep, coupled drafts (b70/samp-mtp d6df2818)
+
+CONFIG: production tf-dd-prod.env on :18152 (int8 paged KV + DESC, EVICT=1 SLOTS=4 MIRROR=1, CHUNK 512, 200000 ctx,
+--parallel 4, instruct-sampling card). Bench = int-rf2 flags (ctx 16384, bf16 KV, CHUNK 64). Frozen 2cb54319 (6ce1f656)
+and b70/samp-mtp d6df2818 (a389e973) = 2cb54319 + 57f3abf7 (FN_DRAFT_TRACE/XPU_FN_DRAFT_F32, off) + 70929c32
+(FN_MTP_DUMP, off) + d6df2818 (shared top-K). Client workers/SAMP/prof_client2.py (token-event SSE, exact
+tokens/window, FN_SAMPLE_PROFILE prof lines), oracle p0-p3 x 256 tokens, Strata coding-0.json x 512.
+COMMAND: cpu-run --quiet gpu-run arms.sh BIN perf/q-TAG perf/arm-TAG.tsv, one arm per lease (~180 s); dumps scored by
+cpu-run score_dump.py (FP64 R/mtp/mtp_ref.py) + miss_breakdown.py.
+RESULT (row c, sampling cost, prod): per-window draw us OFF (XPU_FN_SAMPLE_BATCH=0) -> ON: C1 340-430 both;
+C4 t0.6 551 -> 449, C8 t0.6 704 -> 487, C4 gen 936 -> 455, C8 gen 892 -> 501 (window 22-25 ms, so 2.2-3.7% -> 1.8-2.0%).
+Launches: one fn_topk_part_k + fn_topk_merge_runs pair and one sync per window for all plain sampled streams, instead
+of one per stream (batched_draws 159 of C4, 334 of C8 windows). Penalized streams keep chainGathered. Concurrent shas
+== solo at C4/C8 (t0.6 4f6221d5151a 5c0f19865b74 d04ea442d088 ba2388a0a5ff; gen e7e429cd1366 96e618171c21
+f21fcfcd1ec5 3f0999d4d766) and == OFF arm. Tokens/window per stream at C4/C8: t0.6 2.23/2.09, gen 1.57/2.19.
+New exposed cost: materializeDrafts (host wait for device drafts) 0.6-0.75 ms/window at C1.
+RESULT (row 8, prod dump, depth 1 host chain, 571 picks): TF drafter accept 0.771 vs FP64 reference 0.781, same pick
+97.4%, tf_only 1 / ref_only 7, median max |dlogit| 0.73. Bench (bf16 KV): 0.767 vs 0.770, same 98.1%. Of 131 prod
+misses: 23 truth outside the drafter's vocab rows, 45 truth = TF second choice, 52 TF top prob < 0.5. So bf16 + int8
+KV numerics cost ~1 point of acceptance; the gap to Strata is the model/drafter itself, not our arithmetic.
+RESULT (row 6, prod C1, explicit depth; d3c0 = control): p0-p3 greedy tok/s 132.4 -> 132.5 (tok/window 2.853 -> 2.923),
+t0.6 123.0 -> 122.3 (2.631 -> 2.689), code greedy 143.2 -> 142.7, code t0.6 126.8 -> 123.8; window +0.5-0.6 ms.
+Same shas (code t0.6 0547742720e9 at both depths). Depth 5 dropped (depth 4 already flat). d4 conf -0.4 queued.
+RESULT (row a, XPU_FN_COUPLED=1 vs 0, same binary, C1): shas identical (lossless). p0-p3 gen 112.2 -> 118.4 tok/s
+(tok/window 2.399 -> 2.564, +6.9%); t0.6 121.5 -> 124.0 (2.628 -> 2.682); code gen 103.5 -> 109.2 (2.251 -> 2.366);
+code t0.6 126.8 -> 129.5. Window unchanged (21.6 ms).
+VERDICT: d6df2818 PASS (bitwise, default on, revert XPU_FN_SAMPLE_BATCH=0) -> INT. XPU_FN_COUPLED=1 PASS at C1
+(lossless, +5.5% at the thinking default T1.0) -> INT as a prod env change; C4/C8 coupled bitwise arm queued.
+Depth 4 FAIL (+2.5% tok/window eaten by the longer chain). Res-f32 (e82d5610) not worth porting. Production C4/C8
+TTFT 3.7-12.6 s is admission serialization (SCHED).
+Evidence: workers/SAMP/perf/{q-batch0,q-batch1,q-dumpP,q-dumpB,q-d4c0,q-cpl1,armsA/d3c0,dump/*-ref.json}.
+
+## 2026-11-22 03:05 UTC [KV] Park held-draft root cause, int8 tokens/round sizing, cache copy submit, 38ccad07 profile
+
+CONFIG: TP2, prod env (tf-dd-prod.env) through workers/KV/kv-quick.sh on :18151.
+Binaries:
+- prod 2cb54319 (6ce1f656);
+- SCHED d30457b8 (b908b338) and baa16cbc (6319b6a5);
+- KV k2 = b70/dd-kv 534a77fa + cache submit (1d7751d0).
+
+COMMAND (gates in dd/kv_gate.py; conc now requires finish stop/length on every stream; new mode accept):
+- s8p / s8fix / s8prod: --parallel 8, XPU_FN_EVICT_SLOTS unset, ctx 32768, XPU_FN_KV_PAGES=72, 8 x 5.8K prompts x 600
+  greedy tokens vs solo refs (s8ref, seeds 0-7).
+- s4fix: --parallel 4, 40 pages.
+- acc-int8 / acc-bf16 (XPU_FN_KV=bf16page, evict off) / acc-legacy: ctx 16384, oracle p0-p3 x 256 tokens, C1, T0 and T0.6.
+- k2a: p0 C4 vs prod ref, 8K needle with XPU_FN_PREFILL_PROFILE=1, cache timing.
+
+RESULT:
+- d30457b8 + DRAIN: after 13 parks, two rounds failed with NoHeldDrafts and all 8 streams ended in error (325-427 / 600).
+  - Root cause (SCHED and KV, independently): the park Snapshot carried pos/history but not Seq.device_drafts/count. xpu_lane.zig:240
+    rebinds l.seq after a restore into another physical slot, so materialize read that slot's count.
+  - Fix baa16cbc (SCHED; KV 4c69045c; INT a52ef3f2): flush a pending chain at reserve, carry drafts/count across.
+  - s8fix: 71 parks / 69 restores, 8 streams == solo bitwise, all finish length.
+  - s4fix: 5/5, == solo. KRN e081c554 (GDN defer, EVICT_SLOTS=2): 14/14, == solo.
+  - s8prod (2cb54319, no DRAIN): PASS, 11/9 parks. Latent in prod.
+- Sizing (tokens/round): paged bf16 == legacy bitwise (ids and event counts).
+  - int8: 2.682 vs 2.719 greedy (-1.3%), 2.552 vs 2.618 at T0.6 (-2.5%).
+  - Per-prompt greedy range: -5.9% (p0, diverges at index 20) to +2.7%.
+  - Strata 0216 --kv int8 uses the same scheme (per-64 fp16 absmax/127, rint, +-127, drafter KV int8).
+- Cache copies (0d6a331b, submit at creation):
+  - restore of a 120 MiB state: 4.9 ms device, 20-49 ms wall;
+  - save: 13.5-28 ms device.
+- 38ccad07, 8K prefill (7253 rows): fn_page_attn_sparse 1462.3 ms vs 1601.7 (2cb54319), -9%; legacy fn_attn_sparse 699.1.
+  The kernel is bound by per-key load messages and occupancy; a 4-slices-per-64-lane-workgroup change is built (4ee1724a)
+  and gating.
+
+VERDICT: the NoHeldDrafts root cause is fixed and in the freeze; every park gate checks finish. Ledger #5 is closed: the
+systematic int8 cost is 1-3%, so bf16 MTP-layer KV ranks below the paged decode attention kernel (R5b, fn_dpage_sparse 2.3x
+legacy). The cache copy submit-now is gated bitwise (k2a p0 C4 == prod ref).
+
+## 2026-11-22 03:20 UTC [INT] Batch 1 frozen: b70/dd-serve a52ef3f2 (API2 + goldens + SCHED drain code OFF + park held-draft fix)
+
+CONFIG: a52ef3f2 = 2cb54319 + a70a873a (API2 input_modalities) + e0c9409b (goldens) + d30457b8 (XPU_FN_EVICT_DRAIN, not set)
++ baa16cbc (park carries Seq.device_drafts across park/restore). Frozen worktree /mnt/vm_8tb/b70/build/tensorfold-dd/a52ef3f2,
+sha 8086678add06d716aec31a0f0b6c4b268b783750fd04d57c2b8ec8addb88a54e. Env = tf-dd-prod.env (EVICT_SLOTS=4).
+COMMAND: workers/INT/stack1/run2.sh: cpu-run host tests (park, evict, evict-own, resident-slots, evict-admit, golden);
+build_dd.sh; gpu_window.sh regress (bench config, int-rf2 oracle); gpu_window.sh prod subset + ABL (finish-reason gate);
+forced-park arm (XPU_FN_EVICT_SLOTS=2, 4 x 5.6K prompts x 600 tokens vs solo); then the production unit on 18124 and
+dd_functional.py --image-fixture through :18080.
+RESULT:
+| config | C1 | C2 | C4 | C8 | PF2k | 90K TTFT |
+|---|---:|---:|---:|---:|---:|---:|
+| bench (G1, oracle p0 bitwise == int-rf2, conc == solo) | 109.4 | 141.3 | 167.2 | 208.6 | 1566 | - |
+| prod (P1 + KV2) | 99.8 | 142.6 | 167.9 | 151.8 | 1408 | 85.6 s (1050 tok/s), cached repeat 0.11 s |
+| prod, 2cb54319 final window (EVICT_SLOTS=auto) | 100.0 | 144.1 | 123.0 | 123.2 | 1390 | 88.7 s |
+All hard gates PASS: identity, KV0 1173 pages, KV1 p0 == KV ref + C4 == solo, KV2/KV3 needle + cache, S1 sampling, VIS-I,
+API2 tools, API5 edge, ABL (p0 equal C1/C4/C8, every finish stop/length; C1/C4/C8 93.6/155.7/85.4 with the 4.8K p7),
+P9 functional, server-log, health pre/post. Forced park: 22 parks / 22 restores / 0 errors, 4 streams finish length,
+stream 0 == solo over 600 tokens. (A first park arm with XPU_FN_KV_PAGES=40 and drain off produced 0 parks: without drain
+the four streams never overlap; kept in stack1/park-pages40-noparks.) dd_functional via :18080 PASS (thinking, tool call +
+roundtrip, concurrent, vision blue, long 2048 tok at 142.2 tok/s). Unit started 03:14, stopped 03:18; Prometheus job
+hotschmoe_dd_tensorfold had /metrics answering during that window.
+VERDICT: PASS. tf-dd-prod.env now points at a52ef3f2; 2cb54319 kept as rollback in the env header. NOTE: 2cb54319 carries the
+latent park/restore bug (NoHeldDrafts after a restore into another physical slot; KV root cause, fixed by baa16cbc), so
+rolling back to it reintroduces that risk under park pressure. XPU_FN_EVICT_DRAIN stays OFF. Next batch on b70/dd-serve
+7926c0f6 (+ KRN e081c554 merged: XPU_FN_GDN_DEFER): GDN defer + EVICT_DRAIN + (SAMP d6df2818, XPU_FN_COUPLED) +
+TENSORFOLD_PHASE_METRICS cost check.

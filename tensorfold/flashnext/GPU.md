@@ -2560,3 +2560,15 @@
 2026-11-22 02:43:48 UTC [SCHED] claim cards 0+1 ~5 min: B8 gate XPU_FN_PLAIN_STREAMS=4, T0.6 + card, C1-C8, par8+drain 8ae40250 (port 18153)
 2026-11-22 02:43:51 UTC [KRN] released cards 0+1 (arm rc=0): B3 a8 forced park defer=1 on e081c554
 2026-11-22 02:44:15 UTC [O] PRIORITY.hold 'INT hotschmoe-dd-tf' for the a52ef3f2 freeze chain (host tests, build, G1, prod subset, forced-park, unit + dd_functional); INT removes it when done; cap 50 min
+2026-11-22 02:46:17 UTC [SCHED] released cards 0+1: b8-plain4 not run (lock busy), retry
+2026-11-22 02:58:04 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-22 03:00:32 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
+2026-11-22 03:01:32 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 720 s: gpu_window prod stack1 (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional)
+2026-11-22 03:06:24 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack1 rc=0
+2026-11-22 03:07:24 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack1-park (port 18150, steps P0-identity PK-solo6k PK-conc4 PK-parks)
+2026-11-22 03:10:06 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack1-park rc=1
+2026-11-22 03:10:47 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack1-park2 (port 18150, steps P0-identity PK-solo6k PK-conc4 PK-parks)
+2026-11-22 03:13:34 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack1-park2 rc=0
+2026-11-22 03:14:23 UTC [INT] claim cards 0+1 ~10 min: production unit hotschmoe-dd-tensorfold up on 18124 with frozen a52ef3f2 for dd_functional via :18080 (then stopped)
+2026-11-22 03:18:57 UTC [INT] released cards 0+1: production unit stopped after dd_functional via :18080 PASS (frozen a52ef3f2); PRIORITY.hold 'INT hotschmoe-dd-tf' removed (freeze chain done)
+2026-11-22 03:19:00 UTC [SAMP] claim cards 0+1 ~5 min: row 6 d4c-0.4 prod 2cb54319 (port 18152)
