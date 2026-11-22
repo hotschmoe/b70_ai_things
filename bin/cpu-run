@@ -65,46 +65,46 @@ hold_wait() {  # $1 = tool name
     sleep 5; waited=$((waited + 5))
   done
 }
-hold_wait cpu-run
-
 CMDLINE="$*"
 exec 7>"$LOCK" || { echo "cpu-run: cannot open lock $LOCK" >&2; exit 1; }
-queue_nonempty() {  # any live non-priority waiter ticket (FIFO): a newcomer must not jump the queue
-  local t p
-  for t in $(ls "$LOCK.q" 2>/dev/null); do p="${t##*.}"; kill -0 "$p" 2>/dev/null && return 0; rm -f "$LOCK.q/$t"; done
+# FIFO for every waiter (orchestrator 2026-11-22 09:25): each waiter writes a ticket ($LOCK.q/<ns>.<pid>, content =
+# its B70_AGENT) and polls; it tries the lock only when it is the oldest live ELIGIBLE ticket. While a PRIORITY.hold is
+# active, only tickets of listed agents are eligible (re-evaluated every poll, so a waiter that started before the hold
+# becomes priority as soon as its agent is listed). Nobody blocks in flock, so no waiter can jump the queue.
+QDIR="$LOCK.q"; mkdir -p "$QDIR" 2>/dev/null || true
+agent_listed() {  # $1 = agent name; true if listed in an active (non-stale) PRIORITY.hold
+  local allowed p age
+  [ -e "$HOLD" ] || return 1
+  age=$(( $(date +%s) - $(stat -c %Y "$HOLD" 2>/dev/null || date +%s) ))
+  [ "$age" -gt "${B70_HOLD_MAX_AGE:-3600}" ] && return 1
+  allowed="$(tr -s ' \n' ' ' < "$HOLD" 2>/dev/null)"; [ -n "${allowed// /}" ] || allowed="A-S A-I"
+  for p in $allowed; do case "$1" in "$p"*) return 0 ;; esac; done
   return 1
 }
-if { ! is_priority && queue_nonempty; } || ! flock -n 7; then
-  echo "cpu-run: busy (held by: $(cat "$OWNER" 2>/dev/null || echo unknown)); waiting up to ${TIMEOUT}s ..." >&2
-  if is_priority; then
-    if [ "$TIMEOUT" = 0 ]; then flock 7; else flock -w "$TIMEOUT" 7 || { echo "cpu-run: timed out after ${TIMEOUT}s" >&2; exit 124; }; fi
-  else
-    # Non-priority waiters poll, so a priority holder (PRIORITY.hold) blocked in flock wins the next release.
-    # FIFO (orchestrator 2026-11-22): each non-priority waiter takes a ticket in $LOCK.q and only tries the lock
-    # when its ticket is the oldest live one, so builds and quiet windows are served in arrival order.
-    QDIR="$LOCK.q"; mkdir -p "$QDIR" 2>/dev/null || true
-    TICKET="$QDIR/$(date +%s%N).$$"; : > "$TICKET" 2>/dev/null || TICKET=""
-    trap '[ -n "$TICKET" ] && rm -f "$TICKET"' EXIT INT TERM
-    at_head() {
-      local t p
-      [ -n "$TICKET" ] || return 0
-      for t in $(ls "$QDIR" 2>/dev/null | sort); do
-        p="${t##*.}"
-        if ! kill -0 "$p" 2>/dev/null; then rm -f "$QDIR/$t"; continue; fi
-        [ "$QDIR/$t" = "$TICKET" ] && return 0
-        return 1
-      done
-      return 0
-    }
-    waited=0
-    until at_head && flock -n 7; do
-      hold_wait cpu-run
-      if [ "$TIMEOUT" != 0 ] && [ "$waited" -ge "$TIMEOUT" ]; then echo "cpu-run: timed out after ${TIMEOUT}s" >&2; exit 124; fi
-      sleep 2; waited=$((waited + 2))
-    done
-    [ -n "$TICKET" ] && rm -f "$TICKET"; TICKET=""
-  fi
-fi
+hold_live() { [ -e "$HOLD" ] && [ $(( $(date +%s) - $(stat -c %Y "$HOLD" 2>/dev/null || date +%s) )) -le "${B70_HOLD_MAX_AGE:-3600}" ]; }
+TICKET="$QDIR/$(date +%s%N).$$"; printf '%s\n' "$AGENT" > "$TICKET" 2>/dev/null || TICKET=""
+trap '[ -n "$TICKET" ] && rm -f "$TICKET"' EXIT INT TERM
+at_head() {
+  local t p a held=0
+  [ -n "$TICKET" ] || return 0
+  hold_live && held=1
+  for t in $(ls "$QDIR" 2>/dev/null | sort); do
+    p="${t##*.}"
+    if ! kill -0 "$p" 2>/dev/null; then rm -f "$QDIR/$t"; continue; fi
+    if [ "$held" = 1 ]; then a="$(head -c 200 "$QDIR/$t" 2>/dev/null)"; agent_listed "$a" || continue; fi
+    [ "$QDIR/$t" = "$TICKET" ] && return 0
+    return 1
+  done
+  [ "$held" = 1 ] && return 1   # hold active and we are not eligible
+  return 0
+}
+waited=0; said=0
+until at_head && flock -n 7; do
+  if [ "$said" = 0 ]; then echo "cpu-run: busy (held by: $(cat "$OWNER" 2>/dev/null || echo unknown)); queued, waiting up to ${TIMEOUT}s ..." >&2; said=1; fi
+  if [ "$TIMEOUT" != 0 ] && [ "$waited" -ge "$TIMEOUT" ]; then echo "cpu-run: timed out after ${TIMEOUT}s" >&2; exit 124; fi
+  sleep 2; waited=$((waited + 2))
+done
+[ -n "$TICKET" ] && rm -f "$TICKET"; TICKET=""
 printf '%s pid=%s mode=%s since=%s cmd: %s\n' "$AGENT" "$$" "$MODE" "$(date '+%F %T')" "$CMDLINE" > "$OWNER" 2>/dev/null || true
 trap ': > "$OWNER" 2>/dev/null || true' EXIT INT TERM
 
