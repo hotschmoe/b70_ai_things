@@ -33,7 +33,7 @@ time because a 512-row prefill chunk holds the engine thread 340-450 ms with no 
 | R8 | C1 92 (this ablation) / 100 (window) vs bench 110: same 21.3 ms window, so tokens/window differs (int8 KV numerics vs drafter acceptance) | C1 -9..-16% | rows 6/8 (depth/conf, drafter numerics) | SAMP / R | KV sizing (2cb54319, ctx 16384, 4 oracle prompts x 256): paged bf16 == legacy bitwise (ids and events); int8 tokens/round -1.3% greedy (2.682 vs 2.719), -2.5% T0.6; p0 alone -5.9%. Systematic int8 cost 1-3%; bf16 MTP-layer KV (capped at that) ranked below R5b |
 | R10 | NoHeldDrafts after RESTORE under forced parking (latent in 2cb54319; exposed by DRAIN / GDN defer / EVICT_SLOTS=2): Snapshot lacked Seq.device_drafts/count, lane rebinds l.seq (xpu_lane.zig:240) | all streams of the round fail | correctness | KV owner; fix = SCHED baa16cbc (KV 4c69045c, INT a52ef3f2) | s8fix 8 lanes 71 parks bitwise, s4fix PASS; every park gate now checks finish |
 | R11 | Start-dependent output on the BENCH config (legacy bf16 KV, not paged), from SAMP via the orchestrator 2026-11-22: gen p2 gives one of two shas depending on the server start (df592884ff84 vs 12ba8def88a6), with shared top-K on or off. The prod config (paged int8) is stable across 8+ starts on 3 binaries | bench numbers and the legacy A/B control are not reproducible start to start; not a prod blocker | correctness (determinism) | KV, next release | CPU first: (1) get both p2 outputs from SAMP and find the first diverging token; (2) audit the legacy KV path (bf16 descriptor planes, KV_KV=off arm) for device buffers read before written (allocs with no zero-fill: planes, scratch, split-K partials, MTP layer KV) and for sizing that depends on mem_free at start (chunk, split counts, buckets, cache budget left_after_streams); (3) prepare a default-off debug flag that zero-fills every legacy KV/scratch alloc. GPU (queued): 4 starts of the bench config, gen p2 sha each, flag off vs on, plus the startup budget lines diffed between starts |
-| R12 | Seeded output depends on prompt-cache provenance (batch 5 / PLAIN arms, cache 6, after other traffic: T0.6 p1/p2 082752de/506dfd54 vs 5c0f1986/d04ea442; greedy p1/p2 also moved in stack7). It is NOT RECORD (stack9: RECORD on and off both give the old shas) and NOT vload_half4 (stack5 ed106eaf is old). Mechanism from code: a prompt's first prefill stops a pass at every s.reuse.marks / s.chunks (xpu_lane_prompt.zig:89-96) and at the round cap. The marks come from prompt_cache.zig lookupUserAt (shared/rewind/endpoint/intermediate marks, fitted to s.budget and occupancy), so the cache budget, the cache contents and co-scheduled lanes change the partition. Prefill is not partition-invariant, and every later hit replays that state (a hit at len-1 is the same 1-row step as cold) | seed reproducibility depends on cache state; correctness is unaffected unless KRN's co-scheduled repro shows a difference with identical marks (then a restore/GDN-defer race) | partition-invariant prefill, or marks independent of budget/occupancy | KV + KRN, next release | KRN 2-arm repro (solo vs co-scheduled first prefill) and INT stack10 (983cc068 cache 2 vs 6, after bench) decide benign vs race; then log first-prefill pass cuts per request |
+| R12 | Seeded-output drift, resolved by KRN at 12:00 (JOURNAL). Not RECORD and not cache provenance. KRN's co-save arms cs1-cs3 reproduce stack6's exact "prefill 23 / restore at=21 / prefill 1 / saved at=23" interleave and give OLD. INT stack9/10 (cache 2 and 6, bench-first) are all OLD and equal run to run. SAMP: the draw key is (seed, absolute position, id). KV's code review found no cache-save race. Two sources of the NEW shas 082752de/506dfd54: (1) 21d66fe8 (b70/dd-sched 945580ce, not on the release line) gives NEW in 4/4 starts even with PLAIN_ROUNDS=0, which violates default-off; suspect xpu_mtp_chain.submit's limits==0 early return moved after the loop (SCHED owns it). (2) A single stack6 observation (983cc068, RECORD off, after the full 30-step list), not reproduced. KV's marks/partition mechanism (xpu_lane_prompt.zig:89-96, prompt_cache marks fitted to the budget) is real in code but no arm showed it changing output | none for the release line | closes the seed-reproducibility question | SCHED (1); KV/INT (2), next window | (2): run the stack6 step list on ebdc73dd RECORD off, then bisect the steps; check marks per request if it moves |
 | R9 | Rows 4 (HC_Q8), 7 (CHUNK_SOLO 1024), 13, 14-18 | per-op, after R1-R3 | as in section 1 | queue | unchanged order, below R1-R5 |
 
 Reordered section-1 rows for the production config: R1, R2, R3, R4, R5 first (scheduling and tier copies), then
@@ -177,3 +177,51 @@ bitwise) at depth 4 gave +5.5% tok/round over d3c0 (greedy 3.010 vs 2.853, code 
 ate it (window 21.5 -> 23.8 ms, tok/s -5.5%). ITEM: verify buckets 5/6 (or exact-row windows) -> unlocks depth 4+
 drafting; re-run dconf (depth 4, conf -0.4) on top. Depth 3 + conf stop alone loses (tok/round -3.7%, window -0.35 ms,
 tok/s -2.4%). [M workers/SAMP/perf/q-dconf, q-dconf3, armsA/d3c0]
+
+
+## Next release items from KRN (2026-11-22 12:05)
+
+### NR-1: b70/dd-sched 21d66fe8 changes sampled tokens with XPU_FN_PLAIN_ROUNDS=0 (default-off violation)
+
+Repro: workers/INT/stack7 (ab_body.sh: fresh server, prod env, cache 6, FN_BENCH_QUICK prod bench, then prof_client2
+--sets p --conc 1,2,4,8 --cfgs gen,t0.6 --c1-prompts 4 --tokens 256).
+- On 21d66fe8 the new shas appear in 4 of 4 starts: t0.6 p1/p2 082752de/506dfd54, gen p1/p2 600e1ca0/d21c02a0. This holds
+  with PLAIN_ROUNDS 0 and with 1.
+- On ebdc73dd (= 983cc068 + B1') the same body gives the old shas at C1 and C8 (workers/KRN/or2, krn_arm_order.sh
+  KRN_BENCH=1 ... gen,t0.6): t0.6 5c0f1986/d04ea442, gen 96e61817/f21fcfcd, which equal c6346c82.
+- The env differs only in XPU_FN_PLAIN_ROUNDS=0 and the binary (diffed).
+- Greedy p0 stays bitwise, which is why the KV/SCHED greedy gates passed.
+
+Candidate, a weak one: xpu_mtp_chain.submit moved the per-stream `limits[i] == 0 -> return false` check from inside
+the validation loop to after it. With no validation error this is equivalent; it differs only when a later request in
+the batch would error (WindowTooWide, InvalidDraftPosition, checkIds) where the old code returned false (host chain).
+The other dd-sched hunks (windows.plainCopies, shared_round.runPriced, lane cfg.plain_rounds) are all guarded by
+cfg.plain_rounds, which is false at PLAIN_ROUNDS=0. So the next step is not a code read but a bisect:
+1. Revert the submit hunk alone, then rerun the stack7 body for 1 lease.
+2. If the shas still move, diff the build inputs of the 21d66fe8 and ebdc73dd trees (kernels and SPIR-V, toolchain,
+   build flags). Also check that the startup "window by rows" calibration (it feeds the cost rule's depths) is the only
+   run-to-run input.
+Gate for dd-sched re-merge: the stack7 body sampled shas must equal ebdc73dd's at PLAIN_ROUNDS=0.
+SAMP's alternative, which can come before step 2: an uninitialized read exposed by the new lanes.Stream / Engine / Config
+fields (layout shift). Build 983cc068 and 21d66fe8 in ReleaseSafe and run p1 at T0.6 with seed 1001 on each. If they
+agree with each other but one differs from its ReleaseFast build, the read is latent on the release line too. See also
+row R12 (KV).
+
+Still open, not reproduced: workers/INT/stack6 (983cc068, RECORD off, full 30-step list) gave the new t0.6 p1/p2 shas.
+workers/INT/stack8 (same list, RECORD=1) gave the old ones. Every fresh-server cut on 983cc068/ebdc73dd gives the old
+shas: INT stack9/stack10 a1-a4, and KRN cs1-cs3, which include stack6's exact prefill/restore/save interleave, plus or1
+and or2. Run the stack6 step list on ebdc73dd with RECORD off; if it moves, bisect the steps.
+
+### NR-2 (next C1 lever): record the MTP drafter / device chain under RECORD (XPU_FN_OOO)
+
+Under XPU_FN_RECORD=1 the device MTP chain is off: xpu_mtp_chain.available needs recordings.ooo (XPU_FN_OOO, default
+false). Drafts therefore run the host chain (greedyImmediate on draft logits, uncoupled), and draftProbabilitiesMeasured
+returns cache.gate, which changes the depth rule.
+- This is bitwise (SAMP cpl0c/cpl1c: coupled == uncoupled == host chain) but costs C1. Prod C1 is 106.6 off and
+  105.7 on, while C2-C8 gain 9-19%.
+- Next: either record the draft steps (MTP forward + draft head) as their own bucketed lists beside the verify
+  recordings, or qualify XPU_FN_OOO=1 so the immediate device chain runs between replays.
+- Gates: the record gate (p0 bitwise), the sampled shas of prof_client2 t0.6/gen equal to RECORD off, conc == solo,
+  and a forced park at 8 lanes.
+- Size: compare C1 recorded window plus draft time against immediate with the decode-window profile
+  (KRN_PROF_ALL, 8769fc0a).
