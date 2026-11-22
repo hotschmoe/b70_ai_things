@@ -53,9 +53,11 @@ Owner targets: C1 100 met; C2 150 met; prefill 1500 met at 2K (about 1200 tok/s 
   55 conversations (agent 139, chat 57, long-document 23, image 17), 1-8 concurrent, prompts up to 86K; finishes
   stop 88 / tool_calls 134 / length 14; 229 tool calls, 0 malformed; images 17/17 correct; 168/181 follow-ups served
   from the prompt cache; 0 fatal log lines; swap flat; 0 fallbacks.
-  - Device memory rose 0.94 GiB per card in 8 steps of about 118 MiB during the first 34 minutes, then stayed flat for
-    26 minutes: one per-stream state slab per resident stream (slab_est 124.7 MB, 8 streams), inside the 4.38 GB reserve
-    the KV sizing keeps. Free VRAM at the end: about 1.1 GiB per card.
+  - Device memory rose 0.94 GiB per card in the first 34 minutes, then stayed flat for 26 minutes. Explained (NR-3,
+    code and logs): one first-use step (~79 MiB per card) plus 7 lazily created per-stream state slabs (118.9 MiB each,
+    xpu_evict.zig Adapter.acquire -> initSeq; the 8th stream uses the preallocated one), never freed while serving and
+    bounded by the 8 physical slots, so at most about 0.81 GiB per card; it does not grow with context (KV is in the
+    shared page arena) and sits inside the 4.38 GB reserve the KV sizing keeps. Free VRAM at the end: about 1.1 GiB per card.
   - Host memory rose 2.7 GiB as the pinned host tier filled (prompt cache 11.9 of 12 GiB), then stayed flat.
   - Latency: TTFT p50 6.9 s overall; cached follow-ups 1.0 s (chat) and 7.6 s (agent) p50; agent follow-up p99 139 s
     and long-document follow-up p99 198 s when 8 agents with 45-90K contexts were active at once (prefill queueing).

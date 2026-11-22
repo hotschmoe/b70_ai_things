@@ -274,18 +274,31 @@ Evidence: JOURNAL [SCHED] 01:42, 04:12, 08:00, 08:55; workers/SCHED/. Port 18153
    without the solo prefill loss. It needs its own conc == solo proof (the 256/512 chunk divergence is unexplained) and the
    teacher gate at 256 (90K first-token KL .026 > .02 failed on 2026-11-22). Low priority until a 256-row prefill is faster.
 
-### NR-3 (INT): device memory growth under mixed long traffic on the RC
+### NR-3 (INT): device memory growth under mixed long traffic on the RC -- EXPLAINED (no GPU work needed)
 
-Release traffic rel-rc-20261122T1311Z (ebdc73dd + RECORD=1) fitted +1.21 GiB device memory over 60 min (cap 1.00, WARN):
-VRAM per card 30.07 -> 30.79 GiB. The 4 "FN_RECORD scratch regrow" lines account for about 120 MiB.
-- First, CPU only: read the traffic server log (workers/INT/rel/traffic-server.log) and the /metrics samples in
-  workers/REL/rel-rc-20261122T1311Z. Find whether the growth is steps (allocation events) or a ramp, and which allocator
-  logs line up.
-- Then, GPU, next window: the same release_traffic run for 20 min with RECORD off and with RECORD=1 on one lease, to
-  tell recording/scratch from KV/cache growth.
-- Gates: growth below 1 GiB in 60 min, or a plateau that is bounded and explained.
-
-
+Release traffic rel-rc-20261122T1311Z (ebdc73dd + RECORD=1) fitted +1.21 GiB device memory (cap 1.00, WARN).
+Telemetry change points (workers/REL/rel-rc-20261122T1311Z/telemetry.jsonl; device_memory_bytes counts both ranks):
+- One first-request step of +157 MiB at t=30-60 s (first-use buffers, incl. the FN_RECORD scratch regrowth lines).
+- Then exactly 7 steps of +241 MiB, at t=180, 511, 631, 720, 1021, 1741 and 2041 s, as requests_running climbed to 8.
+  Flat for the last 26 min.
+- Each 241 MiB step = 2 ranks x 118.9 MiB = 2 x slab_est (124727040 B, from the "paged KV budget" log line).
+Code (b70/dd-rel ebdc73dd):
+- The slab is the per-sequence descriptor slab: xpu_window_runtime.zig allocSlab, called from initSeq. It holds the GDN
+  conv, state, tmp_state and saved_proj per linear layer, plus the PLE tail.
+- Its size does not depend on context, because KV lives in the shared page arena. So a 200K stream needs exactly one
+  slab per rank.
+- The serving path creates sequences only in xpu_evict.zig Adapter.acquire. Slot 0 reuses engine.own, which is allocated
+  at load. Slots 1.. call engine.newSeq lazily the first time the resident policy uses them.
+- Each sequence is cached in a.physical[slot]. releasePhysical keeps it, so it is never freed while serving.
+- physical_slots = streams_n = TF_PARALLEL (8) when XPU_FN_EVICT_SLOTS is unset (native/xpu_flashnext.zig).
+  Log: "eviction physical_slots=8".
+- So at most 7 lazy slabs per rank: 7 x 118.9 MiB = 0.81 GiB per card, 1.63 GiB total. All 7 were reached at 8 running.
+- The KV budget already reserves them: reserveBytes = 1.25 GiB + (16 + 8) x (slab + tail + page table) per rank, which
+  is reserve=4376914592. The KV page count is planned net of this reserve.
+Verdict: bounded and expected, no leak. A 200K stream adds nothing beyond its one slab. Its pages come from the
+fixed arena.
+Optional, next release: preallocate the physical slots at load so device memory is flat from the start. Alternatively,
+have release_traffic.py fit growth only after requests_running first reaches --max-concurrency.
 ### NR-4 (lever 2, KRN design, CPU only 2026-11-22 15:10): AR peer copy on the RECORDED path (prod is RECORD=1 now)
 
 Prod now runs recorded windows (ebdc73dd + XPU_FN_RECORD=1), so the AR that matters is TpRecording.recordAllReduceF32
