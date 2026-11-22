@@ -109,6 +109,12 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
   (attention + MoE expert slices, ~75 MB per step), against the half it reads now, at ~550 GB/s. That is +60-130 us
   per step, and the same drafter runs on both cards. C1 gains nothing because the chain is serial either way. Ranked
   down behind B3 (deferred GDN commit). Revisit only if a ledger shows MTP AR waits above ~0.3 ms per window.
+- 2026-11-22 [KRN] Do not call Runner.syncAll from work run on the eviction path. Park and restore run between engine
+  rounds, so another stream's MTP draft chain can still be in flight, and syncAll retires the shared cross-device events.
+  For host-USM reuse there, use drainPages (host-sync of the compute lists only); the B3 GDN flush now does this
+  (72ff1478). The NoHeldDrafts failure after a forced restore was traced by SCHED to a different, shared cause: a stream's
+  held device drafts are not part of the park Snapshot (fix under KV, from SCHED baa16cbc). Prod at 4 slots never parks,
+  so only forced-rotation arms (EVICT_SLOTS below lanes, long answers) exercise park x MTP. Gate finish on every stream.
 
 ## Scheduler and serving lessons
 
@@ -125,6 +131,12 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
   idea). They gave no acceptance gain here: 0.35-0.38 at T 0.6 against 0.38 greedy at C1. The MTP head's quality is
   the limit, not sampling, so acceptance work belongs in the drafter. Kept as XPU_FN_COUPLED=1, default off.
   Evidence: workers/SAMP/prof-base vs prof-new.
+- 2026-11-22 A "producer lists idle" predicate (non-blocking host sync) as the gate for background copies looks safe but
+  starves under load: with any stream decoding the lists are never idle when the scheduler looks, so prompt-cache saves,
+  restores, retirement and parking all waited for every decoder to stop, serializing admissions (prod C8 134 tok/s, strictly
+  one stream at a time). Draining the one in-flight window on demand fixed it (C8 188, 224 at 8 lanes). Lesson: background
+  work needs a per-resource readiness fence (an event after the last write of that sequence) or an on-demand drain, never
+  a global idleness poll. Evidence: JOURNAL.md [SCHED] 2026-11-22 00:37.
 
 ## Backend portability
 
@@ -142,3 +154,8 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
   Evidence: workers/INT/host_suite2.sh vs host_suite.sh timings in workers/INT/suite.log.
 - 2026-11-21 [Strata features] Image formats: Strata gets TIFF/AVIF/WebP/EXIF-JPEG for free from Pillow in a Python venv; the Zig engine needs pinned C decoders loaded at runtime (libjpeg-turbo, libwebp built for the box) and still refuses TIFF/AVIF. A native engine should decide its supported formats up front and keep decoders out of the serving process (a converter sidecar). Evidence: JOURNAL.md [API] 2026-11-21 23:05, zig/src/server/images.zig.
 - 2026-11-21 [Architecture hurts] Capability names are overloaded: "pictures" (System One decisions) vs "vision" (chat images) vs input_types; a client or operator reading /v1/models sees pictures=false on a vision server. Name capabilities by what a client can do. Evidence: zig/src/server/input_types.zig, core/engine_api.zig Info.pictures.
+- [KV] int8 KV scheme equals Strata 0216 `--kv int8` (STRATA_KV_ROT=0): one fp16 scale per 64 values per token per KV head (fp16_rte(absmax/127)), rint codes clamped to +-127, K and V alike, MTP drafter KV int8 too (kv_q8.hpp, layer.cpp, mtp.cpp). Only differences: Strata quantizes fp32 K/V (we quantize bf16-rounded K/V) and dequantizes to fp16 scratch (we use fp32). A different scale scheme is not on offer from Strata; the int8 tokens/round gap (2.13 vs 2.29 bench) must be sized against paged bf16 first.
+- [KV] Lock order: cpu-run --quiet outside, gpu-run inside, and wait for both leases free with a shell loop (script-time sleeps hit the REPL limit). A nested cpu-run inside gpu-run deadlocked SAMP and KV once.
+- [KV] Paged-attention int8 kernels are bound by per-key load messages, not bytes: block reads plus 4-key batching (38ccad07) cut fn_page_attn_sparse only 9% (1601.7 -> 1462.3 ms per 7.2K-token prompt). A 16-lane workgroup per slice also caps occupancy (next: 4 slices per 64-lane group).
+- [KV] Park/restore must carry every host-side per-Seq field that the lane still trusts: restores land in another physical slot and xpu_lane re-binds l.seq, so device_drafts/count missing from the snapshot gave NoHeldDrafts at 8 lanes under DRAIN (SCHED fix baa16cbc).
+- [KV] int8 KV cost measured (2cb54319, ctx 16384, 4 oracle prompts x 256, C1): paged bf16 (XPU_FN_KV=bf16page) is bitwise equal to legacy in ids AND event counts, so the paged path is numerics-neutral. int8 tokens/round is -1.3% greedy and -2.5% at T0.6; a single prompt (p0, diverging at index 20) shows -5.9%. Size quantization effects on several prompts, never on p0 alone.

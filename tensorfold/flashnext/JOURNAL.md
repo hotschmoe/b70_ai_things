@@ -1293,3 +1293,157 @@ CONFIG: owner (via officewin) delegates reviewable engineering items (builds, me
 COMMAND: (1) monitoring APPROVED: backup bin/monitoring/prometheus.yaml -> /mnt/vm_8tb/b70/backups/monitoring/prometheus.yaml.20261122T003510Z; appended job hotschmoe_dd_tensorfold (127.0.0.1:18124/metrics, label backend=tensorfold) in place (inode unchanged 1071874; b70_daily and hotschmoe_dd_strata untouched); docker exec b70_prometheus promtool check config -> SUCCESS; docker kill -s HUP b70_prometheus; copied tensorfold-dd-dashboard.json into bin/monitoring/grafana/dashboards/json/. (2) TIFF/AVIF DECLINED -> backlog line in SERVE-READINESS.md. (3) golden fixtures APPROVED -> INT updates the 11 files, diffs limited to sampling/MTP metric fields, stop on any token/text diff.
 RESULT: Prometheus active targets include hotschmoe_dd_tensorfold (down: TF unit not up now); Grafana provisioned 'hotschmoe-dd (TensorFold production)' (uid hotschmoe-dd-tensorfold, folder LLM Serving).
 VERDICT: installed; up=1 + panel render to confirm at the next production bring-up.
+
+## 2026-11-22 00:37 [SCHED] Admission serialization behind decoders: prompt-cache tier work waited for idle compute lists
+
+CONFIG: prod env tf-dd-prod.env (200000 ctx, int8 paged + desc, evict+mirror, EVICT_SLOTS=4, prompt cache 2 GiB, chunk 512/512),
+port 18153. a1 = frozen 2cb54319; a3/a4 = b70/dd-sched d30457b8 (2cb54319 + XPU_FN_EVICT_DRAIN, default off) with the flag on;
+a4 also TF_PARALLEL=8 and XPU_FN_EVICT_SLOTS unset (physical slots = state fit). Quick bench tools/flashnext_serve_bench.py
+(128 tokens greedy, oracle p0-p3, C1/C2/C4/C8 + PF2k), TF_LANE_TRACE on a3/a4.
+COMMAND: cpu-run --quiet gpu-run timeout 295 workers/SCHED/sched_arm.sh <arm> <variant> steps_bench.sh; lanes.py / summ.py.
+RESULT:
+- Cause (source): Eviction.pump returns early and cacheRestore refuses while Runner.pleIdle() (a 0-timeout host sync of
+  both compute lists) is false; prompt-cache saves start only under the same predicate, and the saved stream is locked out
+  of rounds until its save copies. With any stream decoding the lists are busy at every pump, so each cache-hit admission
+  (every bench request; every multi-turn chat) waited until all decoders stopped: a1 C8 was strictly serial (each restore
+  after "active lanes 0"), C4/C8 event gap 22.7/21.3 ms == C1. INT's pc0 ablation (no prompt cache) removed the deferrals.
+- Fix: with XPU_FN_EVICT_DRAIN=1, tier work that waits on idle producers (unstarted save, restore request, retiring slot,
+  admission wait, park/restore in flight) drains the compute lists (Runner.drainPages: the in-flight window). 12-14 drains a run.
+- a1 -> a3 (4 lanes): C1 99.6/99.5, C2 143.9/143.8, C4 150.0/169.1, C8 134.3/188.1, PF2k 1394/1414 tok/s. Event gap C4
+  22.7 -> 32.8 ms, C8 21.3 -> 32.4. TTFT p50/p99 C4 0.249/1.784 -> 0.226/0.412 s, C8 2.64/6.45 -> 0.149/3.20 (C8 queued on 4
+  lanes). Lane trace live mean/max: C4 3.56/4, C8 3.75/4; round busy 90-97%.
+- a4 (drain + --parallel 8, slots 8 = state_fit 8, pages 1174 unchanged): C1 99.3, C2 143.1, C4 169.1, C8 224.5 (bench config
+  210.7), PF2k 1403; C8 gap 49.6 ms, TTFT p50/p99 0.382/0.449 s, live 7.06/8, parks 0.
+- p0 ids identical across a1/a3/a4; bench asserts concurrency == solo at every level; HEALTHY pre/post all arms.
+VERDICT: PASS, handed to INT (d30457b8). Prod C4 reaches 0.97x and C8 1.07x the bench config. C1 (99.5 vs 110 bench) and C2 are
+not scheduling. Next: long prompts still hold the engine thread for 340-450 ms a 512-row chunk with no decode between (INT
+ledger), which is B6 / row 11.
+
+## 2026-11-22 01:42 [SCHED] Row 11 / B6: one long prompt arriving beside a decoding stream (prod config)
+
+CONFIG: b70/dd-sched baa16cbc (2cb54319 + XPU_FN_EVICT_DRAIN + park held-draft fix), prod env + XPU_FN_EVICT_DRAIN=1, port
+18153, --parallel 4. Stream A: greedy story, thinking off, streaming; B arrives 1.5 s later with a 29.6K-token fresh prompt
+(random words, no prompt-cache hit). Arms: chunk 512/512 (prod), chunk 256/256, chunk 512 + TENSORFOLD_PREFILL_SHARE=0.5.
+COMMAND: workers/SCHED/sched_arm.sh m1-c512 | m3-c256 | m2-c512s, steps_mixed.sh (mixed.py: B solo first, then A + B).
+RESULT (B prompt 29.6K; A event gap before B 21 ms p50):
+| arm | B TTFT solo s | B TTFT beside A s (x solo) | A event gap during B p50 / p99 ms |
+|---|---:|---:|---:|
+| chunk 512 (prod) | 25.7 | 27.5 (1.07) | 468 / 880 |
+| chunk 256 | 27.4 | 30.8 (1.12 x its solo, 1.20 x 512 solo) | 260 / 269 |
+| chunk 512, share 0.5 | 25.7 | 52.3 (2.04) | 21 / 478 (bursts) |
+HEALTHY pre/post all arms.
+VERDICT: A decoding stream sees one round per prefill chunk: its gap during a long prompt is the chunk time (468 ms at 512,
+260 ms at 256). A true mixed window (decode rows inside the chunk pass) only removes the round between chunks: at most the
+7% B-TTFT overhead (27.5 vs 25.7 s) and ~5% of A's gap at C2 (more at C4/C8, rounds 33-50 ms vs 440 ms chunks, so <= 10%).
+The ITL lever is chunk size: 256 halves A's stall (468 -> 260 ms) for -6% solo prefill; it changes prefill numerics, so it
+needs the teacher/KL gate (chunks stay equal, concurrency == solo holds). share 0.5 keeps A at full speed at 2x B TTFT
+(a policy choice, no numerics change). B6 as an engine change is low value against those knobs; not started.
+
+## 2026-11-22 02:15 UTC [INT] Row 2 / row 9 on the production config: factor ablation + traced ledger; goldens; dd-serve 94ca545e
+
+CONFIG: frozen 2cb54319 binary (sha 6ce1f656), two cards, :18150, one server per arm (dd_launch_tf.sh + gpu_window.sh prod,
+cpu-run --quiet outside gpu-run, <= 300 s leases, xpu-health pre/post, server-log scan). prod = tf-dd-prod.env
+(EVICT_SLOTS=4); bench = tf-dd-common.env (int-rf2 env, parallel 8); other arms = prod + one change. 128 tokens greedy,
+oracle-eight prompts (p7 = 4805 tokens), TF_LANE_TRACE.
+COMMAND: workers/INT/abl/arm.sh|arm2.sh <arm>, abl_analyze.py; arm_tr.sh {prod,bench} {markers,full} + fn-rt-ledger-t1
+ledger.py + ledger_diff.py.
+RESULT: C1/C4/C8 agg tok/s: prod 92.2/136.6/85.7; bench 103.5/170.5/68.8; pc0 93.2/160.3/81.4; ctx16k 91.5/160.8/82.0;
+desc0 82.2/149.7/86.6; evict0 94.7/114.8/72.1 (1 lane); par8 93.1/144.6/74.9; chunk64 92.3/157.6/56.9; slotsauto (3
+physical) FAILED the 170 s step (park thrash, park up to 2093 ms). p0 equal across C1/C4/C8 in every arm; health PASS.
+Round ms by width equal prod vs bench within 3%; prod C4 live lanes 2.31 vs 3.72 (bench) / 3.55 (pc0); C8 round busy
+31-59% in every arm (long prefill holds the engine thread). Traced: untraced lane round C1 21.39 vs 20.73 ms (+3.2%), C4
+33.48 vs 32.24 (+3.8%); fn_dpage_sparse 2.3x fn_desc_attn_sparse; host CPU +1.4 ms and host syncs 17 vs 13 / 45 vs 31.
+C1: p0 tokens diverge from bench at index 20 under int8 KV; 2.13 vs 2.29 tokens/round.
+VERDICT: production C4/C8 loss is scheduling (tier work waits for idle lists; SCHED d30457b8), long-prefill blocking (row
+11 / B6) and the 4-lane cap; per-op cost is within 4% (paged decode attention 2.3x -> KV). Row 9 closed: DESC is on with
+paged KV (+12% C1). RECORD refused / ATTN_DPAS skipped on paged = B1' (KV). Ledger:
+/mnt/vm_8tb/b70/results/tf-flashnext/B/ledger/LEDGER-prod-2cb54319.md; re-rank: NEXT-QUEUE.md section R.
+
+CONFIG: dd-serve worktree, owner-approved golden update (only new sampling/MTP fields may change).
+COMMAND: cpu-run zig build test-golden (2cb54319+API2): 17 unexpected (2 + 15) MISMATCH; workers/INT/golden_fix.py inserts
+"repetition_penalty": false before prompt_logprobs; golden_verify.py checks each body minus that key == HEAD; rerun.
+RESULT: per file (each: 2 capability blocks gain the key, Content-Length 1668 -> 1726, status/other replies unchanged):
+framing/chunked-bytes, framing/connection-close, framing/extensions-trailers, framing/keepalive-three, framing/pipelined,
+keys/full-then-none, keys/models-bare, keys/models-cli, keys/models-env, keys/models-file, keys/pooled-identity,
+keys/rotated-new, scopes/read-models, status/get-models, status/get-v1-models%3Fx=1, status/get-v1-models,
+status/get-x-models. No generated token or text changed. test-golden: 322/335 + 55/55, 0 unexpected (the 13 known
+differences, incl. the metrics/MTP-counter cases, are unchanged and untouched).
+VERDICT: PASS; committed e0c9409b on b70/dd-serve.
+
+CONFIG: b70/dd-serve a70a873a (API2 ff) -> e0c9409b (goldens) -> 94ca545e (merge SCHED d30457b8, clean).
+COMMAND: host_suite2.sh dd-serve sched1 build.
+RESULT: 31/31 host steps PASS, ReleaseFast build PASS (282 s), sha b34442db44b838af.
+VERDICT: ready for the stacked arm; XPU_FN_EVICT_DRAIN stays OFF (KV 8-lane page-pressure gate FAILED with NoHeldDrafts;
+4-lane case pending). Waiting for the KRN GDN-defer handoff.
+
+## 2026-11-22 02:25 [SCHED] NoHeldDrafts after a park restore: held drafts missing from the snapshot (b70/dd-sched baa16cbc)
+
+CONFIG: d30457b8 (drain) at --parallel 8, ctx 32768, pool forced to 72 pages (KV s8p): 8 x 5.8K x 600 tokens.
+RESULT before: 13 parks, then "round failed (NoHeldDrafts)"; all 8 streams reason=error at 325-427 tokens.
+CAUSE: park Snapshot keeps pos + history but not Seq.device_drafts/device_draft_count. A restore into another physical
+slot rebinds the lane's Seq (xpu_lane.zig:240) while the lane keeps held_device, so materialize reads the other Seq's count.
+Latent in 2cb54319; drain, GDN defer, and EVICT_SLOTS=2 only make parks land while lanes hold drafts.
+FIX: reserveMirrored flushes a pending deferred draft chain and copies drafts/count; the to_device completion restores them.
+COMMAND/RESULT (KV, workers/KV/s8fix, s4fix, binary 6319b6a5): par8 72 pages: 71 parks / 69 restores, all 8 == solo bitwise,
+finish stop/length; par4 40 pages: 5/5, == solo. HEALTHY.
+VERDICT: PASS. Sent to INT; KV adopts it in b70/dd-kv (eviction owner); KRN cherry-picked it (e081c554).
+
+## 2026-11-22 02:45 [KRN] B3 deferred GDN commit (XPU_FN_GDN_DEFER=1): no GDN replay in keep, kept rows fold into the next verify
+
+CONFIG: b70/krn-gdn from b70/dd-serve 2cb54319. 5e29a6d8 = B3 (bin f4ed779e). 72ff1478 = the GDN flush uses drainPages,
+not syncAll, plus the profile tool. e081c554 = cherry-pick of SCHED baa16cbc (park carries held MTP drafts; bin 69c227c2).
+Flag XPU_FN_GDN_DEFER, default off. Desc windows only. Refused with XPU_FN_RECORD and for a legacy non-inplace verify.
+Design (ReplaySSM idea):
+- The verify front writes each row's q/k/v/g/beta into a 16-row record bank inside the stream's unused second state bank,
+  so there is no new memory.
+- fn_desc_gdn_rows_rec[_j2/_j4] first folds the previous window's kept rows (pend, read from the other record bank) into
+  S. It then runs the new rows in registers, writes ys, and never stores S. Inplace windows (prefill chunks) store S.
+- keep/keepBatch launch only fn_desc_commit (+ tail_keep). The 36 front + 36 rows replay launches per card and the bank
+  flip are gone.
+- flushGdn folds pending rows before park-to-host, snapSave and the legacy forward: one rows launch per layer per card.
+Arithmetic order equals the bank-flip + replay path, so tokens are expected bitwise.
+COMMAND:
+- Host: zig build test-fn-gdn-defer-host (CPU reference vs bank flip + replay, random acceptance/inplace/flush/park,
+  bitwise), test-fn-park-host, test-flashnext-xpu-host.
+- Arms: cpu-run --quiet gpu-run timeout 300 on :18155. Scripts: workers/KRN/krn_arm_bench.sh (int-rf2 serve flags),
+  krn_arm_prod.sh (tf-dd-prod.env + XPU_FN_GDN_DEFER, gates kv_gate short/long/again/conc/parks, dd_functional with
+  the image), krn_arm_prof.sh (tf-xpu-fn-gdn-defer-profile, XPU_FN_DESC=1).
+RESULT:
+- Host tests: all pass.
+- Bench config, defer 0 -> 1 (a1/a2). Each cell is agg tok/s, event gap p50 in ms:
+  - C1: 110.0 / 20.56 -> 114.2 / 19.85
+  - C2: 135.6 / 21.89 -> 143.0 / 20.62
+  - C4: 169.9 / 31.85 -> 172.0 / 29.30
+  - C8: 209.7 / 47.34 -> 228.9 / 42.47
+  - PF2k: 1547 -> 1548
+  - Oracle p0 bitwise in both arms; the bench asserts every stream == solo.
+- Prod config, defer 0 -> 1 (a3/a4):
+  - C1 100.0 -> 103.3, C2 143.8 -> 152.6, C4 149.9 -> 178.5, C8 126.8 -> 165.3, PF2k 1404 -> 1407.
+  - C4/C8 event gap 22.6/21.4 -> 30.1/28.6 ms. defer=0 shows SCHED's serialized prompt-cache admission, and defer=1
+    serializes less, so the prod C4/C8 gain is partly an interaction with that idle check, not GDN time alone.
+  - Gates at defer=1: p0 + C4 == KV prod ref (expected-p0-kv.json) bitwise; 4K prompt-cache repeat ids equal (cached
+    3850/3855); dd_functional with the image passed (thinking, tool round trip, 4 concurrent, vision blue, 2048 long).
+- Forced park, prod + EVICT_SLOTS=2, 4 x 2K-prompt x 300-token streams vs per-seed solo refs:
+  - a6 (5e29a6d8): 3 parks, then NoHeldDrafts on the round after a restore. Tokens matched solo up to the failure.
+  - a7 control (defer=0): did not park.
+  - Root cause (SCHED/KV): the park snapshot did not carry Seq.device_drafts/count. This is latent in 2cb54319.
+  - a8 (e081c554, both fixes): 14 parks / 14 restores, 0 errors, all 4 streams == solo bitwise over 300 tokens, every
+    finish = length.
+- Per-op profile, bench env, card 0, per verify+keep window; kernel us summed over 36 layers. In each cell, d0 = defer=0
+  front + rows (72 rows calls) and d1 = defer=1 front_rec + rows_rec (36 calls). Byte ideal = state passes x 1.573 MB x 36
+  at 608 GB/s:
+  - L1 R1, all kept: d0 124 + 218 = 342; d1 139 + 230 = 369; ideal 186 both
+  - L1 R4, kept 1: d0 115 + 498 = 612; d1 130 + 298 = 428; ideal 373 -> 186
+  - L1 R8, kept 1: d0 136 + 592 = 728; d1 153 + 388 = 541; ideal 373 -> 186
+  - L4 R2, kept 1: d0 149 + 1502 = 1651; d1 167 + 678 = 845; ideal 1492 -> 746
+  - L8 R2, kept 1: d0 234 + 3000 = 3234; d1 292 + 1206 = 1498; ideal 2984 -> 1492
+  - L8 R2, all kept: d0 236 + 1336 = 1571; d1 291 + 1297 = 1588
+  - d1 sits at the byte ideal or better at L4/L8 (cache hits). The record-writing front costs +15..58 us.
+  - Launches per window per card: 1231 -> 1159 (-72) at L1/L4; 1471 -> 1399 at L8.
+  - Host wall per window, unprofiled median: L1R1 15.21 -> 14.68 ms, L1R4/k1 18.63 -> 17.89, L1R8/k1 24.51 -> 23.56,
+    L4R2/k1 23.96 -> 22.96, L8R2/k1 34.13 -> 32.80, L8R2/all 33.67 -> 32.90.
+- xpu-health: HEALTHY pre and post on every arm.
+VERDICT: PASS. Handed to INT: b70/krn-gdn e081c554 (B3 = 5e29a6d8 + 72ff1478; e081c554 is SCHED's baa16cbc, which INT is
+merging separately). Proposed for the prod env as XPU_FN_GDN_DEFER=1 after INT's stacked arm.
+B4 (data-parallel drafter per card): ranked down, about zero net by arithmetic (ENGINE-LESSONS); not built.
+Evidence: /mnt/vm_8tb/b70/results/tf-flashnext/workers/KRN/{a1..a9}*.

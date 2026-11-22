@@ -233,7 +233,7 @@ def conc(url, tokens, n, decode, solo):
         p = solo[:-5] + f'-s{i}.json'
         if os.path.exists(p):
             others[i] = same(runs[i], json.load(open(p)))[0]
-    ok = (all(s['status'] == 200 and s['needle'] and s['text_ok'] for s in sums) and equal
+    ok = (all(s['status'] == 200 and s['needle'] and s['text_ok'] and s.get('finish') in ('stop', 'length') for s in sums) and equal
           and ref['tokens'] == int(tokens) and all(others.values()))
     gate(f'kv-conc{n}', ok, {'streams': sums, 'stream0_equals_solo': equal, 'compared_tokens': m,
                              'streams_equal_solo': others})
@@ -277,6 +277,39 @@ def parks(log, least):
     bad = len(re.findall(r'(?i)(eviction|park|restore)[^\n]*(error|failed|poison)', tail))
     gate('kv-parks', p >= int(least) and r >= int(least) and bad == 0, {'parks': p, 'restores': r, 'errors': bad})
 
+def accept(url, n, decode, temps, tag):
+    """Tokens per decode round (stream events) on the first N oracle prompts, sequential C1, per temperature."""
+    from urllib.parse import urlparse
+    u = urlparse(url)
+    prompts = [p['ids'] for p in json.load(open('/mnt/vm_8tb/b70/results/tf-flashnext/workers/I/oracle-eight.json'))['prompts']][:int(n)]
+    res, ok = {}, True
+    for temp in [float(t) for t in temps.split(',')]:
+        rows = []
+        for i, ids in enumerate(prompts):
+            body = {'model': os.environ.get('TF_MODEL', 'hotschmoe-dd'), 'prompt': ids, 'temperature': temp, 'seed': 1000 + i,
+                    'max_tokens': int(decode), 'stream': True, 'return_token_ids': True, 'draft': True,
+                    'stream_options': {'tensorfold_token_stream_version': 1}}
+            c = http.client.HTTPConnection(u.hostname, u.port, timeout=160)
+            c.request('POST', '/v1/completions', json.dumps(body), {'Content-Type': 'application/json'})
+            r = c.getresponse(); ev, toks, fin = 0, [], None
+            for line in r:
+                if not line.startswith(b'data:'): continue
+                p = line[5:].strip()
+                if p == b'[DONE]': break
+                o = json.loads(p)
+                if o.get('object') == 'tensorfold.token.chunk': ev += 1; toks += o['token_ids']
+                for ch in o.get('choices') or []:
+                    if ch.get('finish_reason'): fin = ch['finish_reason']
+            c.close()
+            ok = ok and r.status == 200 and fin in ('stop', 'length')
+            rows.append({'tokens': len(toks), 'events': ev, 'finish': fin, 'ids': toks})
+        t, e = sum(x['tokens'] - 1 for x in rows), sum(x['events'] - 1 for x in rows)
+        res[str(temp)] = {'tok_per_round': round(t / max(e, 1), 4), 'tokens': [x['tokens'] for x in rows], 'events': [x['events'] for x in rows], 'rows': rows}
+    out = os.environ.get('KV_OUT') or os.environ.get('TF_OUT') or '.'
+    json.dump(res, open(os.path.join(out, 'accept-%s.json' % tag), 'w'))
+    gate('kv-accept-' + tag, ok, {k: {'tok_per_round': v['tok_per_round'], 'tokens': v['tokens'], 'events': v['events']} for k, v in res.items()})
+
+
 if __name__ == '__main__':
     mode, args = sys.argv[1], sys.argv[2:]
-    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail, 'multiturn': multiturn}[mode](*args)
+    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail, 'multiturn': multiturn, 'accept': accept}[mode](*args)

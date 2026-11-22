@@ -2470,3 +2470,93 @@
 2026-11-22 00:30:25 UTC [SCHED] claim cards 0+1 ~5 min: a3 prod config + XPU_FN_EVICT_DRAIN=1 (dd-sched), quick bench C1-C8 + lane trace (port 18153)
 2026-11-22 00:33:51 UTC [SCHED] released cards 0+1: a3-drain4 rc=0
 2026-11-22 00:34:06 UTC [SCHED] claim cards 0+1 ~5 min: a4 prod config + XPU_FN_EVICT_DRAIN=1, --parallel 8 slots=state fit (dd-sched) (port 18153)
+2026-11-22 00:36:42 UTC [SCHED] released cards 0+1: a4-drain8 rc=0
+2026-11-22 00:36:45 UTC [O] PRIORITY.hold removed (SCHED leases done=2 or 20 min cap)
+2026-11-22 00:39:45 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain (port 18153)
+2026-11-22 00:39:52 UTC [KRN] released cards 0+1 (arm rc=0): B3 a3 prod config defer=0
+2026-11-22 00:40:12 UTC [KRN] claim cards 0+1 <= 5 min: B3 a4 prod config defer=1 quick bench + p0 C4 vs KV ref + 4K cache repeat (port 18155, krn f4ed779e)
+2026-11-22 00:40:45 UTC [SCHED] released cards 0+1: m1-c512 not run (lock busy), retry
+2026-11-22 00:41:17 UTC [KV] claim cards 0+1 ~5 min: KV cache submit-now + timing; prefill profile of 38ccad07 kernel (8K) (port 18151, bin 1d7751d0)
+2026-11-22 00:43:45 UTC [KV] released cards 0+1 (rc=0): KV cache submit-now + timing; prefill profile of 38ccad07 kernel (8K)
+2026-11-22 00:43:52 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain (port 18153)
+2026-11-22 00:44:52 UTC [SCHED] released cards 0+1: m1-c512 not run (lock busy), retry
+2026-11-22 00:45:08 UTC [KV] claim cards 0+1 ~5 min: KV for SCHED d30457b8: --parallel 8 solo refs seeds 0-7 at 6K, 600-token replies (port 18151, bin b908b338)
+2026-11-22 00:48:15 UTC [KV] released cards 0+1 (rc=0): KV for SCHED d30457b8: --parallel 8 solo refs seeds 0-7 at 6K, 600-token replies
+2026-11-22 00:51:04 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-chunk64 rc=0
+2026-11-22 00:51:19 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain (port 18153)
+2026-11-22 00:52:17 UTC [KV] claim cards 0+1 ~5 min: KV for SCHED d30457b8: --parallel 8, pool forced 72 pages, 8 x 6K concurrent vs solo refs (page pressure) (port 18151, bin b908b338)
+2026-11-22 00:52:19 UTC [SCHED] released cards 0+1: m1-c512 not run (lock busy), retry
+2026-11-22 00:52:35 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod tr-prod-markers (port 18150)
+2026-11-22 00:55:28 UTC [KV] released cards 0+1 (rc=0): KV for SCHED d30457b8: --parallel 8, pool forced 72 pages, 8 x 6K concurrent vs solo refs (page pressure)
+2026-11-22 00:58:09 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain (port 18153)
+2026-11-22 00:58:24 UTC [KRN] released cards 0+1 (arm rc=0): B3 a4 prod config defer=1
+2026-11-22 01:00:10 UTC [SCHED] released cards 0+1: m1-c512 not run (lock busy), retry
+2026-11-22 01:00:30 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain (port 18153)
+2026-11-22 01:02:30 UTC [SCHED] released cards 0+1: m1-c512 not run (lock busy), retry
+2026-11-22 01:02:50 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain (port 18153)
+2026-11-22 01:04:32 UTC [KRN] claim cards 0+1 <= 5 min: B3 a5 prod config defer=1 EVICT_SLOTS=2 park/restore bitwise (p0 C4) + cache repeat + dd_functional image (port 18155, krn f4ed779e)
+2026-11-22 01:04:51 UTC [SCHED] released cards 0+1: m1-c512 not run (lock busy), retry
+2026-11-22 01:05:11 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain (port 18153)
+2026-11-22 01:07:12 UTC [SCHED] released cards 0+1: m1-c512 not run (lock busy), retry
+2026-11-22 01:07:32 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain (port 18153)
+2026-11-22 01:09:19 UTC [SCHED] released cards 0+1: m1-c512 not run (withdrawn: binary rebuilt for the park fix)
+2026-11-22 01:11:54 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A decoding + B 16K prompt, chunk 512, prod+drain baa16cbc (port 18153)
+2026-11-22 01:12:41 UTC [KRN] released cards 0+1 (arm rc=0): B3 a5 prod defer=1 EVICT_SLOTS=2 gates + dd_functional image
+2026-11-22 01:12:56 UTC [KRN] claim cards 0+1 <= 5 min: B3 a6 prod defer=1 EVICT_SLOTS=2, 4 x 2K/300-token streams forced to rotate (park/restore bitwise vs solo) (port 18155, krn f4ed779e)
+2026-11-22 01:15:12 UTC [SCHED] released cards 0+1: m1-c512 rc=0
+2026-11-22 01:18:11 UTC [KRN] released cards 0+1 (arm rc=1): B3 a6 forced park defer=1 (FAIL: NoHeldDrafts after restore)
+2026-11-22 01:18:26 UTC [KRN] claim cards 0+1 <= 5 min: B3 a7 control: same forced park arm with defer=0 (port 18155, krn f4ed779e)
+2026-11-22 01:20:13 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod tr-prod-markers rc=0
+2026-11-22 01:20:14 UTC [SAMP] claim cards 0+1 ~5 min: row c shared top-K pass OFF (full client), new bin d6df2818 prod (port 18152)
+2026-11-22 01:21:43 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod tr-prod-full (port 18150)
+2026-11-22 01:23:50 UTC [SAMP] released cards 0+1: row c shared top-K pass OFF (full client), new bin d6df2818 prod rc=0
+2026-11-22 01:23:50 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A + B ~30K prompt, chunk 256/256, prod+drain baa16cbc (port 18153)
+2026-11-22 01:27:11 UTC [SCHED] released cards 0+1: m3-c256 rc=0
+2026-11-22 01:27:12 UTC [SAMP] claim cards 0+1 ~5 min: row c shared top-K pass OFF (full client), new bin d6df2818 prod (port 18152)
+2026-11-22 01:30:49 UTC [SAMP] released cards 0+1: row c shared top-K pass OFF (full client), new bin d6df2818 prod rc=0
+2026-11-22 01:33:27 UTC [SAMP] claim cards 0+1 ~5 min: row 8 drafter dump d1 prod config d6df2818 (port 18152)
+2026-11-22 01:33:50 UTC [KRN] released cards 0+1 (arm rc=1): B3 a7 control forced-park defer=0 (conc4 PASS, but 0 parks happened)
+2026-11-22 01:36:02 UTC [SAMP] released cards 0+1: row 8 drafter dump d1 prod config d6df2818 rc=0
+2026-11-22 01:38:27 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod tr-prod-full rc=0
+2026-11-22 01:38:30 UTC [SCHED] claim cards 0+1 ~5 min: row 11 mixed C2: A + B ~30K prompt, chunk 512, PREFILL_SHARE 0.5, prod+drain baa16cbc (port 18153)
+2026-11-22 01:39:57 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod tr-bench-markers (port 18150)
+2026-11-22 01:42:16 UTC [SCHED] released cards 0+1: m2-c512s rc=0
+2026-11-22 01:43:02 UTC [SCHED] claim cards 0+1 ~5 min: B8 drafts on/off at T0.6 + card defaults C1-C8, prod+drain par8 baa16cbc (port 18153)
+2026-11-22 01:46:51 UTC [SCHED] released cards 0+1: b8-prod8 rc=0
+2026-11-22 01:51:02 UTC [O] PRIORITY.hold 'KV' ~25 min: s8fix, s4fix (drain-fix NoHeldDrafts gate on SCHED baa16cbc) + tokens/round sizing; auto-removed after KV's 3rd lease or 30 min
+2026-11-22 01:51:36 UTC [KV] claim cards 0+1 ~5 min: KV for SCHED baa16cbc (park held-draft fix): --parallel 8, DRAIN, pool 72 pages, 8 x 6K vs solo refs (port 18151, bin 6319b6a5)
+2026-11-22 01:51:52 UTC [KRN] claim cards 0+1 <= 5 min: B3 a8 forced park defer=1 rerun on drainPages fix (bin cb1020c5) (port 18155, krn f4ed779e)
+2026-11-22 01:54:51 UTC [KV] released cards 0+1 (rc=0): KV for SCHED baa16cbc (park held-draft fix): --parallel 8, DRAIN, pool 72 pages, 8 x 6K vs solo refs
+2026-11-22 01:55:03 UTC [KV] claim cards 0+1 ~5 min: KV for SCHED baa16cbc: --parallel 4, DRAIN, pool 40 pages, 4 x 6K vs solo refs (port 18151, bin 6319b6a5)
+2026-11-22 01:57:42 UTC [KV] released cards 0+1 (rc=0): KV for SCHED baa16cbc: --parallel 4, DRAIN, pool 40 pages, 4 x 6K vs solo refs
+2026-11-22 01:57:43 UTC [KV] claim cards 0+1 ~5 min: KV sizing: tokens/round int8 KV, prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6 (port 18151, bin 6ce1f656)
+2026-11-22 02:00:10 UTC [KV] released cards 0+1 (rc=0): KV sizing: tokens/round int8 KV, prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6
+2026-11-22 02:00:10 UTC [KV] claim cards 0+1 ~5 min: KV sizing: tokens/round bf16 KV, prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6 (port 18151, bin 6ce1f656)
+2026-11-22 02:01:07 UTC [KV] released cards 0+1 (rc=1): KV sizing: tokens/round bf16 KV, prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6
+2026-11-22 02:01:08 UTC [KV] claim cards 0+1 ~5 min: KV sizing: tokens/round off KV, prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6 (port 18151, bin 6ce1f656)
+2026-11-22 02:03:52 UTC [KV] released cards 0+1 (rc=0): KV sizing: tokens/round off KV, prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6
+2026-11-22 02:04:08 UTC [KV] claim cards 0+1 ~5 min: KV sizing: tokens/round bf16 paged KV (evict off), prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6 (port 18151, bin 6ce1f656)
+2026-11-22 02:06:25 UTC [KV] released cards 0+1 (rc=1): KV sizing: tokens/round bf16 paged KV (evict off), prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6
+2026-11-22 02:06:28 UTC [O] PRIORITY.hold removed (KV leases done=3 or 30 min cap)
+2026-11-22 02:06:28 UTC [O] PRIORITY.hold 'INT hotschmoe-dd-tf' ~10 min: two bench traced arms; auto-removed after INT's 2nd lease or 15 min
+2026-11-22 02:09:08 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod tr-bench-markers rc=0
+2026-11-22 02:10:38 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod tr-bench-full (port 18150)
+2026-11-22 02:12:59 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod tr-bench-full rc=0
+2026-11-22 02:13:00 UTC [O] PRIORITY.hold removed (INT leases=2 or cap)
+2026-11-22 02:13:02 UTC [SAMP] claim cards 0+1 ~5 min: row 8 drafter dump d1 bench config d6df2818 (port 18152)
+2026-11-22 02:15:21 UTC [KRN] released cards 0+1 (not run): B3 a8 withdrawn while queued; re-gate on top of the park draft-snapshot fix (SCHED baa16cbc)
+2026-11-22 02:15:39 UTC [SAMP] released cards 0+1: row 8 drafter dump d1 bench config d6df2818 rc=0
+2026-11-22 02:15:40 UTC [KRN] claim cards 0+1 <= 5 min: B3 a9 per-op GDN profile tool, defer 0 then 1 (2 loads, bench env) (port 18155, krn f4ed779e)
+2026-11-22 02:20:20 UTC [KV] claim cards 0+1 ~5 min: KV sizing: tokens/round bf16page paged KV (evict off), prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6 (port 18151, bin 6ce1f656)
+2026-11-22 02:22:53 UTC [KV] released cards 0+1 (rc=0): KV sizing: tokens/round bf16page paged KV (evict off), prod 2cb54319, ctx 16384, 4 oracle prompts x 256 tok, temp 0 and 0.6
+2026-11-22 02:28:28 UTC [KV] claim cards 0+1 ~5 min: KV control: prod 2cb54319, --parallel 8, NO drain, pool 72 pages, 8 x 6K vs solo refs (latent NoHeldDrafts?) (port 18151, bin 6ce1f656)
+2026-11-22 02:31:38 UTC [KV] released cards 0+1 (rc=0): KV control: prod 2cb54319, --parallel 8, NO drain, pool 72 pages, 8 x 6K vs solo refs (latent NoHeldDrafts?)
+2026-11-22 02:31:39 UTC [SAMP] claim cards 0+1 ~5 min: row 6 d4c0 prod 2cb54319 (port 18152)
+2026-11-22 02:34:34 UTC [SAMP] released cards 0+1: row 6 d4c0 prod 2cb54319 rc=0
+2026-11-22 02:37:56 UTC [SAMP] claim cards 0+1 ~5 min: row a coupled drafts on T1.0/T0.6 prod d6df2818 (port 18152)
+2026-11-22 02:38:12 UTC [KRN] released cards 0+1 (arm rc=0): B3 a9 per-op GDN profile defer 0/1
+2026-11-22 02:38:22 UTC [KRN] claim cards 0+1 <= 5 min: B3 a8 forced park defer=1 on e081c554 (GDN defer + drainPages + park drafts fix), bin 69c227c2 (port 18155, krn f4ed779e)
+2026-11-22 02:40:56 UTC [SAMP] released cards 0+1: row a coupled drafts on T1.0/T0.6 prod d6df2818 rc=0
+2026-11-22 02:43:48 UTC [SCHED] claim cards 0+1 ~5 min: B8 gate XPU_FN_PLAIN_STREAMS=4, T0.6 + card, C1-C8, par8+drain 8ae40250 (port 18153)
+2026-11-22 02:43:51 UTC [KRN] released cards 0+1 (arm rc=0): B3 a8 forced park defer=1 on e081c554
+2026-11-22 02:44:15 UTC [O] PRIORITY.hold 'INT hotschmoe-dd-tf' for the a52ef3f2 freeze chain (host tests, build, G1, prod subset, forced-park, unit + dd_functional); INT removes it when done; cap 50 min
