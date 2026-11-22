@@ -2148,3 +2148,9 @@ CONFIG: RC = ebdc73dd (sha aeb0bd2b) with tf-dd-prod.env exactly as frozen 11:20
 COMMAND: relA full window 13:00-13:09; release_traffic.py 60 min via :18080 13:11-14:11; rollback rehearsal 14:11-14:17 (INT).
 RESULT: all hard gates PASS; traffic 236/236 ok, 0 errors, 0 fallbacks; VRAM +0.94 GiB/card = 8 per-stream state slabs (118 MiB each, inside the 4.38 GB reserve), flat for the last 26 min; host +2.7 GiB = pinned tier filling (cache 11.9/12 GiB), flat; rollback both ways PASS.
 VERDICT: release. Notes in RELEASE-NOTES-20261122.md; tag tf-dd-20261122; unit enabled and started before 16:00 UTC; after that production owns both cards.
+
+## [O] 2026-11-22 15:03 UTC - LIVE: hotschmoe-dd on TensorFold release tf-dd-20261122
+CONFIG: hotschmoe-dd-tensorfold.service enabled + started 15:01 (ebdc73dd sha aeb0bd2b, tf-dd-prod.env as frozen); pre-start xpu-health HEALTHY, both leases free.
+COMMAND: systemctl --user enable --now hotschmoe-dd-tensorfold; /v1/models via :18080; dd_functional.py with image via :18080; systemctl --user enable --now hotschmoe-dd-soak (backend tf).
+RESULT: ready after 62 s; models hotschmoe-dd + 2 aliases at 200000; dd_functional rc=0 (thinking, tool call + roundtrip, 4 concurrent, vision, long 149.8 tok/s); Prometheus up=1, 8 lanes, 0 fallbacks; soak record active; PRIORITY.hold removed (the unit holds both leases).
+VERDICT: live. Production owns both cards: no GPU windows or restarts without the owner's OK via officewin, except emergency rollback (RELEASE-NOTES-20261122.md).
