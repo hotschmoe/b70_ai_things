@@ -2610,3 +2610,7 @@
 2026-11-22 04:30:54 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1900 s: gpu_window prod stack3-long8 (port 18150, steps P0-identity LK-solo60k LK-conc8 LK-parks)
 2026-11-22 04:40:36 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack3-long8 rc=1
 2026-11-22 04:41:43 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1900 s: gpu_window prod stack3-long8s4 (port 18150, steps P0-identity LK-solo60k LK-conc8 LK-parks)
+2026-11-22 04:51:32 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack3-long8s4 rc=0
+2026-11-22 04:56:40 UTC [INT] claim cards 0+1 ~6 min: production unit up on 18124 with frozen c6346c82 (4 lanes) for dd_functional via :18080 (then stopped)
+2026-11-22 05:00:26 UTC [INT] released cards 0+1: production unit stopped after dd_functional via :18080 PASS (frozen c6346c82); PRIORITY.hold 'INT hotschmoe-dd-tf' removed (batch 3 chain done)
+2026-11-22 05:00:33 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate L512: teacher-forced prompt_logprobs, prod env chunk 512 (port 18153)

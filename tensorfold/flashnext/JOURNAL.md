@@ -1611,3 +1611,32 @@ CONFIG: owner chose smaller prefill chunks (256) over the prefill share cap; con
 COMMAND: SCHED owns chunk 256: teacher/KL + top-1 vs 512 reference (usual prompts + 30K + 90K, greedy and sampled), conc == solo at the new chunk, finish gates, forced parking.
 RESULT: pending. Accept only if decode ITL p99 during a newcomer's prefill drops meaningfully, 30K newcomer TTFT <= ~+10%, solo prefill 2K/90K within a few percent, C1/C4/C8 not lower; else keep 512 and record why.
 VERDICT: pending. Note (orchestrator): the 'KV admission fix' turned out unnecessary (393 s was prefill throughput, not a page wait); the 8-slot decision now rests on KV's short 8-lane forced-park gate.
+
+## 2026-11-22 05:00 UTC [INT] Batch 3 frozen: b70/dd-serve c6346c82 (+ KV 4c69045c) at 4 lanes; 8 lanes measured, pending KV gate
+
+CONFIG: c6346c82 = 63eb6fa1 + KV 4c69045c (38ccad07 paged int8 attention block reads + 4-key batch for fn_page_attn_sparse and
+fn_dpage_sparse; 0d6a331b prompt-cache copies submit at creation; 8d1dd2d6 EVICT_SLOTS=auto = state fit; a61851bf/318e8b21
+profilers off; baa16cbc duplicate). One conflict in zig/src/native/xpu_flashnext_cache.zig (SCHED unstarted() vs KV
+deviceNs()/submitNow()): kept all three; KV reviewed it (no logic overlap). Frozen /mnt/vm_8tb/b70/build/tensorfold-dd/c6346c82,
+sha 253c67f879dca0e6. Env = prod env (4 lanes, GDN_DEFER=1, EVICT_DRAIN=1). XPU_FN_COUPLED not included (SAMP cpl1c pending).
+COMMAND: workers/INT/stack3/run4.sh (host tests 33 steps, test-fn-gdn-defer-host + test-golden; build_dd; G1 regress; prod 4
+lanes; prod 8 lanes TF_PARALLEL=8 + EVICT_SLOTS unset; 8 x 60K at 8 lanes KV_PAGES=700); rerun 8 x 60K with EVICT_SLOTS=4
+(gpu_window_long.sh = private gpu_window copy with step cap 1500 s); unit on 18124 04:57-05:00 + dd_functional via :18080.
+Cost note: dropped the W-tree xpu-native build from the host suite (build_dd builds the frozen binary anyway): -6 min.
+RESULT:
+| config | C1 | C2 | C4 | C8 | PF2k | 90K TTFT |
+|---|---:|---:|---:|---:|---:|---:|
+| bench G1 (p0 bitwise == int-rf2, conc == solo) | 109.9 | 133.4 | 175.2 | 211.9 | 1562 | - |
+| prod c6346c82, 4 lanes | 104.0 | 147.7 | 188.1 | 188.5 | 1398 | 86.2 s (cached 0.11 s) |
+| prod c6346c82, 8 lanes (slots = state fit) | 104.2 | 153.7 | 187.1 | 242.6 | 1405 | 86.8 s (cached 0.11 s) |
+| prod 63eb6fa1, 4 lanes (batch 2) | 103.3 | 140.9 | 182.4 | 195.5 | 1395 | 87.7 s |
+ABL: 4 lanes 96.2/182.0/92.1, 8 lanes 96.9/179.8/100.8 (C1/C4/C8; p0 equal; every finish stop/length). All hard gates PASS on
+both lane counts (identity, KV0-3, S1, VIS-I, API2, API5, P9, ABL, logs, health).
+8 x 60K (59.5-59.6K prompts, 300 tokens), 8 lanes, KV_PAGES=700: all 200, needle, finish length, stream 0 == solo; 0 parks
+(peak residency stayed under 700 pages; max TTFT 393 s = 7 x 59.6K serial prefill at ~1050 tok/s), so the park gate failed by
+construction. Rerun with XPU_FN_EVICT_SLOTS=4 (8 logical / 4 physical): 430 parks / 427 restores / 0 errors, all finish length,
+needle true, stream 0 == solo over 300 tokens, health post PASS.
+dd_functional via :18080 PASS (long 2048 tok at 146.1 tok/s).
+VERDICT: PASS at 4 lanes; tf-dd-prod.env -> c6346c82 (rollbacks 63eb6fa1, a52ef3f2, 2cb54319 in the header). 8 lanes: C8
++29% (242.6 vs 188.5), C1/C4 flat within noise; switch to TF_PARALLEL=8 (EVICT_SLOTS unset) after KV's short 8-lane forced-park
+gate (KV_PAGES=100, 8 x 12K) passes, with one dd_functional via :18080.
