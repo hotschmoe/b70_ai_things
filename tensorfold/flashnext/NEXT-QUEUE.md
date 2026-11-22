@@ -284,3 +284,45 @@ VRAM per card 30.07 -> 30.79 GiB. The 4 "FN_RECORD scratch regrow" lines account
 - Then, GPU, next window: the same release_traffic run for 20 min with RECORD off and with RECORD=1 on one lease, to
   tell recording/scratch from KV/cache growth.
 - Gates: growth below 1 GiB in 60 min, or a plateau that is bounded and explained.
+
+
+### NR-3 (lever 2, KRN design, CPU only 2026-11-22 15:10): AR peer copy on the RECORDED path (prod is RECORD=1 now)
+
+Prod now runs recorded windows (ebdc73dd + XPU_FN_RECORD=1), so the AR that matters is TpRecording.recordAllReduceF32
+(zig/src/xpu/tp.zig:726, called from xpu_window_forward.zig:87). Per AR and per rank, the recording is:
+1. barrier;
+2. appendRecordedPush, which is a compute-list zeCommandListAppendMemoryCopy of send_buf to the peer inbox, then a
+   barrier, then a signal;
+3. a consume barrier that waits on the peer's event;
+4. ar2_f32;
+5. barrier and signal done.
+At C1 that is 96 ARs of 40 KB. The copy is about 8.5 us (4.8 GB/s, latency-bound), and ar2_f32 has a median of about
+12 us, which is mostly wait time (JOURNAL 2026-11-22 [KRN] decode-window profile).
+
+Prior work, all on the IMMEDIATE path only and unmerged, on branch b70/fn-rt-arfuse (Lead B codex-arfuse):
+- Consumer fusion (AR into the HC writeback_norm consumer): bitwise, 204 -> 12 AR launches per round. C1 was flat in a
+  single pinned A/B.
+- a231ef87 / 4c9d372d: opt-in peer stores in the TP2 MoE combine epilogue. Untested.
+- Microbench (B/arfuse/peerstore, 40 KiB, producer start -> peer consumer end, p50/p99): copy push 16.0/19.3 us,
+  producer local+peer stores 13.0/13.8 us. That is -3 us at p50 and -5.5 us at p99 per hop.
+
+Design (default off, XPU_FN_AR_PEER=1, recorded and descriptor paths):
+- The AR producers (attention/GDN output-projection f32 store and fn_moe_combine) gain a peer pointer argument. Each
+  writes its rows both to local send_buf[slot] and to the peer's inbox[slot].
+- Then append barrier + signal(event(pos,0,rank)), replacing appendRecordedPush. The ring slots and inboxes are fixed
+  per position, so they are fixed buffers and the recording signature does not change.
+- Sum order is unchanged: rank 0 computes send + inbox and rank 1 computes inbox + send, as today, so it should be
+  bitwise by construction.
+- Saving: one copy command and one barrier per AR per rank, about 3-5 us per hop, or about 0.3-0.5 ms per C1 window
+  (1.5-2%). Most of it comes off the p99 tail, which is the prod +767 us item.
+- Step 2: fuse ar2_f32 into the consumer (port the arfuse consumer fusion to the window path). It removes 96 launches and
+  96 barriers per rank per window. That is device-side only under RECORD, because host append is already gone.
+
+GPU tests for the next owner-approved window (each one lease of 5 min or less on port 18155):
+- T0: one traced recorded C1 window with diagnostic_kernel_events. Get the per-AR split (copy, wait, ar2) under RECORD to
+  size this; it is profile only.
+- T1: XPU_FN_AR_PEER=1 through the record gate (p0 bitwise), conc == solo at C4/C8, SAMP prof_client2 t0.6/gen shas equal
+  to off, and a forced park at 8 lanes.
+- T2: prod bench A/B, off/on, C1/C2/C4/C8/PF. Keep it if C1 is at least +1.5% or the C8 p99 ITL drops, with no row loss.
+CPU work now: port a231ef87 to the window kernels (w.k[rk]) behind the flag, plus host tests for slot/peer pointer
+selection. The branch will be b70/krn-arpeer off ebdc73dd. No merge before T1/T2.
