@@ -231,6 +231,12 @@ NR-1 SAMP CPU audit, 2026-11-22 12:05 UTC (a0376fc4c87a3b004):
      is the variable, not the decode.
   G2 21d66fe8 ab_body with XPU_FN_EVICT_DRAIN=0, then with XPU_FN_GDN_DEFER=0. A move back to OLD points at the
      drain/defer path (cache save or restore overlapping compute).
+- Step 0 CPU part done 15:15 UTC. ReleaseSafe host suites (19 steps), both trees: 1513/1514 (21d66fe8) and 1514/1515
+  (983cc068) pass, with no safety panic (no unreachable, bounds or overflow). The single failure in each is environmental:
+  cli_config_test refuses a group-writable test config written under my TMPDIR (umask 002), so it is not an 0xAA
+  finding. ReleaseSafe xpu-native binaries for G0 (not yet run on GPU):
+    dae353578e1ff483842995916087f95bdc4254d9ffafcfe7da42df32ba0713a0  /mnt/vm_8tb/b70/results/tf-flashnext/workers/SAMP/rs/21d66fe8-out/xpu/bin/tensorfold-native
+    66d44bddb5742bc377a1e1497781b7121c72f504624fa9acbb4fe791f4cdcf93  /mnt/vm_8tb/b70/results/tf-flashnext/workers/SAMP/rs/983cc068-out/xpu/bin/tensorfold-native
 SAMP's alternative, which can come before step 2: an uninitialized read exposed by the new lanes.Stream / Engine / Config
 fields (layout shift). Build 983cc068 and 21d66fe8 in ReleaseSafe and run p1 at T0.6 with seed 1001 on each. If they
 agree with each other but one differs from its ReleaseFast build, the read is latent on the release line too. See also
