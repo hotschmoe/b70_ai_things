@@ -1646,3 +1646,54 @@ CONFIG: repeated starvation (flock not FIFO: builds waited 20-45 min behind back
 COMMAND: cpu-run non-priority waiters take a ticket in $LOCK.q and try the lock only at the head of the live queue; a newcomer may not take a free lock while live tickets wait; PRIORITY.hold agents still go first; dead-pid tickets are pruned. Installed by atomic mv (running instances keep the old inode). Also commits Lead B's earlier uncommitted PRIORITY.hold logic, live since 2026-11-21.
 RESULT: smoke on a private lock: A holds, B..F queue -> served B,C,D,E,F in order; late newcomer Z served after D; priority P jumps ahead of N; stale ticket pruned; queue dir empty afterwards; --status/--help OK.
 VERDICT: installed; priority holds should rarely be needed now.
+
+## 2026-11-22 05:20 [KRN] Host cost in prod: which syncs prod adds, host split, CPU placement, launch-gap share
+CONFIG: INT's traced ledgers workers/INT/abl/tr-{prod,bench}/LEDGER.json (frozen 2cb54319, C1/C4 steady windows); profile tool
+tf-xpu-fn-gdn-defer-profile on b70/krn-gdn 5c8e0283 (adds a HOST split: wall, sync wait, time inside appends, API counts; and an
+in-process sched_setaffinity sweep). Bench KV (legacy, desc) vs prod KV (XPU_FN_KV=int8 paged, desc), both XPU_FN_GDN_DEFER=1.
+The 1950X has 4 CCX on 2 dies, card 0 on die 0 (cpus 0-7,16-23), card 1 on die 1 (8-15,24-31), schedutil governor.
+COMMAND: workers/KRN/dump_{syncs,synccls,phase,host2,copies,ops}.py (ledger analysis); krn_arm_host.sh h1-host legacy:1 paged:1,
+KRN_AFFINITY="all;0-3;8-11;4-7;12-15;8;8+s9;8+s24;0;0+s1;all" (8+s9: busy-spin on another core in the CCX; 8+s24: spin on the
+SMT sibling). One lease of 206 s, HEALTHY pre and post. Table: workers/KRN/host_table.py h1-host.
+RESULT:
+- Syncs prod adds per window. C1 +4: Eviction.prepareRound runs pump() twice, and each Runner.pleIdle polls both lists with
+  zeCommandListHostSynchronize(list, 0), which returns NOT_READY while the MTP chain runs. Cost: 11.6 us in the call plus about
+  40 us of pump CPU, about 0.2% of the window. C4 +14: the same 4 polls, plus 2 streams finishing prompt fill inside the window
+  (lm_head c1 and first-token logits readback, +14), minus 4 MTP-pick syncs. That is admission lag (SCHED R1 / EVICT_DRAIN),
+  not per-window work. The paged and sampling paths add none: dpage_tail_keep replaces desc_commit 1:1.
+- Traced host CPU +1.4 ms (C1): spread evenly over all commands. Gap before each command is +10-30% and time inside the call
+  +5-15% for nearly every kernel name, so there is no extra code path. Untraced, the round is 21.39 vs 20.73 ms (+0.66), and
+  paged decode attention alone accounts for +0.51 ms per card.
+- Engine-level host split, untraced (us per window; host = wall - sync wait):
+
+| case | legacy host/wall | paged host/wall |
+|---|---|---|
+| L1R1 | 11.7k/14.7k | 12.0k/15.2k |
+| L1R4 k1 | 12.0k/18.2k | 11.9k/18.8k |
+| L1R8 k1 | 12.0k/24.4k | 12.1k/25.1k |
+| L4R2 k1 | 11.9k/23.5k | 12.1k/24.1k |
+| L8R2 k1 | 13.4k/33.5k | 13.4k/34.2k |
+
+  Per window: 2315 launches (paged +26), 200-230 copies, 578 barriers, 186 event waits, 11 syncs; 10.5 ms of the host time is
+  inside appends, about 3.6 us per API call. Paged KV adds +0.1-0.3 ms of host time; the wall delta (+0.4-0.7 ms) is device
+  time (paged attention).
+- CPU placement: host_us varies only within +-4% across all, each CCX, either die, and single cores. The 8+s9 spin gives
+  -0.3 to -0.5 ms on legacy and nothing on paged. Spinning on the SMT sibling costs +0.3 to +0.7 ms. No die effect at window
+  level, although the orchestrator's latbench saw one per call.
+- A per-card submit thread on each card's own die would gain at most about 0.4 us per card pair from the latbench numbers
+  (about 0.5 ms per window). That is less than the cost of the per-layer cross-thread handoff (about 102 ARs per window), so
+  it is not pursued.
+- Launch-gap share of the traced 24.5 ms C1 window, per card: busy 18.2/17.3 ms (74/71%); launch_gap 1.91/1.94 ms (7.8%,
+  1.39 us x about 1380 launches); host_cpu 2.35/3.06; unknown 1.6; tracer 0.4-0.5.
+- Top items, per card per C1 window:
+  - HC down/upmix: 106 calls at 16.0/15.5 us each, against an 11 us byte ideal (6.6 MB bf16 at 608 GB/s), about 70% of
+    roofline. Both cards run it in full (replicated): 3.4 ms, about 0.5 ms of headroom.
+  - AR: 96 pushes of 40960 B (4 rows x 2560 f32). Each is a compute-engine copy of 8.5 us (4.8 GB/s against about 3 us
+    ideal), followed by tp2_allreduce_f32 (median 12.2 us both configs). The prod +767 us is the p90 tail, 40 vs 25 us of
+    peer skew. Host cost per AR is about 10 us (copy 4.8 + kernel 3.8 + wait 1.5).
+VERDICT: prod adds no removable per-window sync. Its 4 polls cost about 50 us, and removing them would only hide SCHED's
+tier gate, so nothing is changed. CPU pinning is rejected (no effect > 4%), and the XPU_FN_ENGINE_CPUS draft was reverted
+before any serve. The C1 window is co-limited by host issue: about 12 ms of Level Zero API time against 10-18 ms of device
+time, so tracer or CPU noise shows up as device idle. The levers are fewer and cheaper API calls (the recorded path, R5,
++25% C1 measured; it is refused with paged KV, RecordedAndPagedKvUnsupported), AR copies folded into the kernel, and HC at
+roofline. No serve numbers: no production behaviour changed.

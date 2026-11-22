@@ -164,3 +164,12 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
 - [SAMP] Per-stream sampled draws scale linearly with streams (~0.25-0.4 ms each at C4/C8: a top-K launch pair plus a host sync); one shared rowRuns pass over the window's row span with per-stream merges keeps C8 at ~0.5 ms and stays bitwise.
 - [SAMP] Drafter acceptance vs an FP64 reference on the same inputs: 0.771 vs 0.781 (prod int8 KV), 97% same pick. Our numerics are not the acceptance gap; do not port res-f32 for acceptance.
 - [SAMP] Depth 4 raises tokens/window ~2.5% but costs ~0.5 ms/window: tok/s flat. Coupled drafts (XPU_FN_COUPLED=1) are free and lossless: +7% tokens/window at T1.0, +2% at T0.6.
+
+## Host issue is co-critical at C1; CPU placement is not a lever (KRN, 2026-11-22)
+- A decode window costs about 12 ms of host time in Level Zero API calls (~3280 calls, ~3.6 us each, 10.5 ms of it inside
+  appends). That is close to the 10-18 ms of device time, so any host perturbation (the tracer, CPU noise) shows up as device
+  idle. Read a traced "host_cpu +x ms" as inflation, not as a new code path, unless one command name dominates the delta.
+- Pinning the engine thread to a die or CCX, or spinning a neighbour core to defeat schedutil, moves host time by at most 4%
+  on the 1950X. Do not build per-card submit threads for placement: the gain is <= 0.5 ms per window, and the per-layer
+  handoff costs more.
+- Prod (eviction) adds 4 nonblocking pleIdle polls per round (about 50 us). They are SCHED's tier gate, not a cost.

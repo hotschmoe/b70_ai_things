@@ -2614,3 +2614,18 @@
 2026-11-22 04:56:40 UTC [INT] claim cards 0+1 ~6 min: production unit up on 18124 with frozen c6346c82 (4 lanes) for dd_functional via :18080 (then stopped)
 2026-11-22 05:00:26 UTC [INT] released cards 0+1: production unit stopped after dd_functional via :18080 PASS (frozen c6346c82); PRIORITY.hold 'INT hotschmoe-dd-tf' removed (batch 3 chain done)
 2026-11-22 05:00:33 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate L512: teacher-forced prompt_logprobs, prod env chunk 512 (port 18153)
+2026-11-22 05:02:34 UTC [SCHED] released cards 0+1: cg-L512 not run (lock busy), retry
+2026-11-22 05:02:54 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate L512: teacher-forced prompt_logprobs, prod env chunk 512 (port 18153)
+2026-11-22 05:04:54 UTC [SCHED] released cards 0+1: cg-L512 not run (lock busy), retry
+2026-11-22 05:05:14 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate L512: teacher-forced prompt_logprobs, prod env chunk 512 (port 18153)
+2026-11-22 05:07:15 UTC [SCHED] released cards 0+1: cg-L512 not run (lock busy), retry
+2026-11-22 05:07:35 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate L512: teacher-forced prompt_logprobs, prod env chunk 512 (port 18153)
+2026-11-22 05:09:36 UTC [SCHED] released cards 0+1: cg-L512 not run (lock busy), retry
+2026-11-22 05:09:56 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate L512: teacher-forced prompt_logprobs, prod env chunk 512 (port 18153)
+2026-11-22 05:11:57 UTC [SCHED] released cards 0+1: cg-L512 not run (lock busy), retry
+2026-11-22 05:12:17 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate L512: teacher-forced prompt_logprobs, prod env chunk 512 (port 18153)
+2026-11-22 05:13:42 UTC [KRN] claim cards 0+1 ~5 min: host-cost split profile legacy vs paged KV defer=1 on krn e081c554+tool (no port)
+2026-11-22 05:14:17 UTC [SCHED] released cards 0+1: cg-L512 not run (lock busy), retry
+2026-11-22 05:16:26 UTC [O] PRIORITY.hold 'KV' ~30 min: p8ref, p8p (8-lane park gate on c6346c82) + c256ref/c256p8/c256p4 (chunk-256 park gates); auto-removed after 5 KV leases or 35 min
+2026-11-22 05:17:08 UTC [KRN] released cards 0+1: host-cost split profile legacy vs paged KV defer=1 on krn e081c554+tool rc=0
+2026-11-22 05:17:09 UTC [KV] claim cards 0+1 ~5 min: KV for INT: c6346c82 prod env --parallel 8, solo refs 12K seeds 0-7 x 300 (port 18151, bin 253c67f8)
