@@ -1545,3 +1545,29 @@ latent park/restore bug (NoHeldDrafts after a restore into another physical slot
 rolling back to it reintroduces that risk under park pressure. XPU_FN_EVICT_DRAIN stays OFF. Next batch on b70/dd-serve
 7926c0f6 (+ KRN e081c554 merged: XPU_FN_GDN_DEFER): GDN defer + EVICT_DRAIN + (SAMP d6df2818, XPU_FN_COUPLED) +
 TENSORFOLD_PHASE_METRICS cost check.
+
+## 2026-11-22 04:05 UTC [INT] Batch 2 frozen: b70/dd-serve 63eb6fa1 (+ GDN defer + SAMP shared top-K); env GDN_DEFER=1 + EVICT_DRAIN=1
+
+CONFIG: 63eb6fa1 = a52ef3f2 + KRN e081c554 (5e29a6d8 B3 deferred GDN commit + 72ff1478 drainPages flush; baa16cbc
+duplicate) + SAMP d6df2818 (one top-K pass for a shared window's plain sampled streams, default on; 57f3abf7/70929c32
+diagnostics off). Frozen /mnt/vm_8tb/b70/build/tensorfold-dd/63eb6fa1, sha 9fb022a8c1c47c68. Env = tf-dd-prod.env +
+XPU_FN_GDN_DEFER=1 XPU_FN_EVICT_DRAIN=1. XPU_FN_COUPLED not included (SAMP C4/C8 bitwise confirm pending).
+COMMAND: host_suite2 31/31 + build; extra host tests test-fn-gdn-defer-host + test-golden; build_dd.sh; workers/INT/stack2/run3.sh
+(G1 regress; prod subset + ABL; bench env + DEFER ABL; PHASE_METRICS ABL; forced park slots=2 and pages=40, drain on);
+production unit on 18124 04:00-04:03 + dd_functional --image-fixture via :18080.
+RESULT:
+| config | C1 | C2 | C4 | C8 | PF2k | 90K TTFT |
+|---|---:|---:|---:|---:|---:|---:|
+| bench G1 (no flags; p0 bitwise == int-rf2, conc == solo) | 109.9 | 144.0 | 169.6 | 211.9 | 1561 | - |
+| prod 63eb6fa1 + DEFER + DRAIN (P1, KV2) | 103.3 | 140.9 | 182.4 | 195.5 | 1395 | 87.7 s (1025 tok/s), cached 0.11 s |
+| prod a52ef3f2 (batch 1) | 99.8 | 142.6 | 167.9 | 151.8 | 1408 | 85.6 s |
+| prod 2cb54319 final window | 100.0 | 144.1 | 123.0 | 123.2 | 1390 | 88.7 s |
+ABL (oracle-eight incl. 4.8K p7, finish gates): prod 97.0/173.4/87.6 (a52ef3f2 93.6/155.7/85.4); bench env + DEFER
+107.4/177.4/70.9. Forced park: slots=2 46 parks/46 restores, pages=40 23/23 with 35 drains; 0 errors, every stream finish
+length, stream 0 == solo over 600 tokens. All hard gates PASS (identity, KV0-3, S1, VIS-I, API2, API5, P9, ABL, logs, health).
+dd_functional via :18080 PASS (long 2048 tok at 146.6 tok/s).
+TENSORFOLD_PHASE_METRICS=1 (ABL, one run): C1 94.9 vs 97.0, C4 158.5 vs 173.4, C8 92.6 vs 87.6; event gap p50 C1 20.59 vs
+20.34 ms (+1.2%), C4 30.28 vs 30.10 ms (+0.6%). Cannot show < 0.5%: left OFF.
+VERDICT: PASS; tf-dd-prod.env -> 63eb6fa1 + GDN_DEFER + EVICT_DRAIN; rollbacks a52ef3f2 (drop the two flags) and 2cb54319
+(latent park bug) in the env header. Next batch: KV b70/dd-kv 4c69045c (38ccad07 paged sparse attention block reads for
+prefill + decode, 0d6a331b prompt-cache copies submit at creation, 8d1dd2d6 auto = state fit) + XPU_FN_COUPLED if confirmed.

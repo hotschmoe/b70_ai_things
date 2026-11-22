@@ -2572,3 +2572,28 @@
 2026-11-22 03:14:23 UTC [INT] claim cards 0+1 ~10 min: production unit hotschmoe-dd-tensorfold up on 18124 with frozen a52ef3f2 for dd_functional via :18080 (then stopped)
 2026-11-22 03:18:57 UTC [INT] released cards 0+1: production unit stopped after dd_functional via :18080 PASS (frozen a52ef3f2); PRIORITY.hold 'INT hotschmoe-dd-tf' removed (freeze chain done)
 2026-11-22 03:19:00 UTC [SAMP] claim cards 0+1 ~5 min: row 6 d4c-0.4 prod 2cb54319 (port 18152)
+2026-11-22 03:21:53 UTC [SAMP] released cards 0+1: row 6 d4c-0.4 prod 2cb54319 rc=0
+2026-11-22 03:21:58 UTC [SCHED] claim cards 0+1 ~5 min: B8 gate XPU_FN_PLAIN_STREAMS=4, T0.6 + card, C1-C8, par8+drain 8ae40250 (port 18153)
+2026-11-22 03:23:58 UTC [SCHED] released cards 0+1: b8-plain4 not run (lock busy), retry
+2026-11-22 03:24:18 UTC [SCHED] claim cards 0+1 ~5 min: B8 gate XPU_FN_PLAIN_STREAMS=4, T0.6 + card, C1-C8, par8+drain 8ae40250 (port 18153)
+2026-11-22 03:26:19 UTC [SCHED] released cards 0+1: b8-plain4 not run (lock busy), retry
+2026-11-22 03:26:39 UTC [SCHED] claim cards 0+1 ~5 min: B8 gate XPU_FN_PLAIN_STREAMS=4, T0.6 + card, C1-C8, par8+drain 8ae40250 (port 18153)
+2026-11-22 03:28:29 UTC [KV] claim cards 0+1 ~5 min: KV occupancy 4 slices/64-lane WG (fn_page_attn_sparse + fn_dpage_sparse): p0 C4 vs prod ref, 8K prefill profile (port 18151, bin 4ee1724a)
+2026-11-22 03:28:39 UTC [SCHED] released cards 0+1: b8-plain4 not run (lock busy), retry
+2026-11-22 03:29:16 UTC [O] PRIORITY.hold 'INT hotschmoe-dd-tf' for batch 2 chain (63eb6fa1: 2 CPU steps + 6 GPU arms + unit/dd_functional); INT removes it when done; cap 75 min
+2026-11-22 03:31:13 UTC [KV] released cards 0+1 (rc=0): KV occupancy 4 slices/64-lane WG (fn_page_attn_sparse + fn_dpage_sparse): p0 C4 vs prod ref, 8K prefill profile
+2026-11-22 03:38:56 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-22 03:41:10 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
+2026-11-22 03:41:55 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 720 s: gpu_window prod stack2-prod (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional)
+2026-11-22 03:46:31 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack2-prod rc=0
+2026-11-22 03:47:16 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod stack2-benchflags (port 18150, steps ABL)
+2026-11-22 03:49:48 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack2-benchflags rc=0
+2026-11-22 03:50:33 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod stack2-pm (port 18150, steps ABL)
+2026-11-22 03:52:27 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack2-pm rc=0
+2026-11-22 03:53:12 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack2-parks2 (port 18150, steps P0-identity PK-solo6k PK-conc4 PK-parks)
+2026-11-22 03:55:56 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack2-parks2 rc=0
+2026-11-22 03:56:41 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack2-pages40 (port 18150, steps P0-identity PK-solo6k PK-conc4 PK-parks)
+2026-11-22 03:58:51 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack2-pages40 rc=0
+2026-11-22 03:59:32 UTC [INT] claim cards 0+1 ~10 min: production unit up on 18124 with frozen 63eb6fa1 (+GDN_DEFER, EVICT_DRAIN) for dd_functional via :18080 (then stopped)
+2026-11-22 04:03:51 UTC [INT] released cards 0+1: production unit stopped after dd_functional via :18080 PASS (frozen 63eb6fa1); PRIORITY.hold 'INT hotschmoe-dd-tf' removed (batch 2 chain done)
+2026-11-22 04:03:51 UTC [KV] claim cards 0+1 ~5 min: KV: paged bf16 (bf16page) prefill profile at 8K, to split paging vs int8 cost in fn_page_attn_sparse (port 18151, bin 1d7751d0)
