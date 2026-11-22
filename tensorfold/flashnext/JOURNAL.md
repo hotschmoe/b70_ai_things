@@ -1800,3 +1800,94 @@ CONFIG: owner: cut a release and serve it at 16:00 UTC, long-running; plan in RE
 COMMAND: batches until 13:00 (bitwise preferred; token-changing items must pass their gate by 13:00); 13:00 freeze; INT runs full GPU window + ~60 min realistic mixed traffic (new worker REL builds dd/release_traffic.py, CPU-only, mock-validated) + rollback rehearsal; orchestrator writes notes, tags, enables and starts the unit.
 RESULT: pending.
 VERDICT: pending. After 16:00 production owns both cards; no GPU windows or restarts without owner OK, except emergency rollback.
+
+## 2026-11-22 07:05 [SAMP] Device confidence stop (XPU_FN_MTP_DEVICE_CONF=1) and coupled draws on prod c6346c82
+
+CONFIG: b70/samp-mtp c36f1e3d + 535d9fe0 (local WIP, default off) on d6df2818 (2cb54319 base), binary
+fn-samp-mtp/zig-out-conf a848baff. The device chain keeps XPU_MTP_CONF != 0: fn_mtp_chain_head_conf adds each shard's
+log-sum-exp and the pick's raw logit; fn_mtp_chain_pick_conf applies the host chain's stop rule per slot on the device;
+verify trims rows to the kept count; a lone stream asks for the deepest chain. Prod env pinned to the d3c0 control
+(XPU_FN_EVICT_DRAIN=0 XPU_FN_GDN_DEFER=0 XPU_FN_COUPLED=0). Coupled arms on prod c6346c82 + tf-dd-prod.env.
+COMMAND: arms.sh CONFBIN perf/q-dconf{,3}; arms.sh c6346c82 perf/q-cpl1c (XPU_FN_COUPLED=1), q-cpl0c (=0).
+RESULT dconf (d4, conf -0.4): shas == d3c0 (greedy + t0.6, p0-p3 + code). Depth histogram 1107 rounds at the cap.
+tok/round greedy 3.010 (d3c0 2.853, host d4c-0.4 2.979), code 3.362 (3.024). Window 23.78 ms (21.53); tok/s greedy 125.1
+(132.4), t0.6 116.9 (123.0), code 140.3 (143.2). Verify 20.4 ms at 4.75 rows vs 16.2 at 2.8: 5 rows = 8-row bucket.
+Materialize 1.0-1.1 ms (0.6-0.75 at d3c0).
+RESULT dconf3 (d3, conf -0.4): shas == d3c0. tok/round greedy 2.747, t0.6 2.557, code 2.920; window 21.18 ms;
+tok/s greedy 129.2, t0.6 121.3, code 139.2 (all below d3c0).
+RESULT coupled on c6346c82: C1/C4/C8 shas == solo, == uncoupled. C1 T0.6 126.1 -> 128.4 tok/s (2.628 -> 2.682), gen
+116.2 -> 122.95 (2.384 -> 2.56); C8 agg T0.6 226.5 -> 248.5, gen 223.9 -> 234.4. (First cpl0c run invalid: prod env
+already exported XPU_FN_COUPLED=1; rerun with =0.)
+VERDICT: device confidence stop works and is bitwise, but FAILS on speed at depth 3 and depth 4: nothing to INT. It
+waits for verify buckets 5/6 (NEXT-QUEUE). Coupled PASS, in tf-dd-prod.env (INT).
+
+## 2026-11-22 07:20 UTC [KV] Row 12: multi-turn prefix reuse with thinking on
+
+CONFIG: b70/dd-kv 1856b3b7 (53dfbdb7) via kv-quick.sh with KV_THINK=1 (--thinking --reasoning-effort medium
+--thinking-budget 16384), prompt cache 2 GiB, prod KV flags.
+COMMAND: kv_gate.py multiturn URL 20000 512.
+- A: 19.7K-token user turn.
+- B: A + assistant tool call + tool result.
+- C: B + B's reply + a user follow-up.
+RESULT:
+- A: 19659 prompt tokens, 0 cached, TTFT 14.93 s, 174 reasoning chars.
+- B: 19713 prompt tokens, 19654 cached, TTFT 0.27 s.
+- C: 19738 prompt tokens, 19708 cached, TTFT 0.86 s; needle recalled.
+- Cache log: resumed at 19654 and 19708; 8 states, 2944 MiB after three turns.
+- HEALTHY.
+VERDICT: the thinking strip does not break exact-prefix hits, so B7 is not needed. Each later turn re-prefills only 30-59
+tokens. Watch item: about 370 MiB per kept state at 20K, so a 2 GiB/card cache holds few long-conversation states.
+
+## 2026-11-22 08:00 [SCHED] Chunk 256 (XPU_CHUNK = XPU_CHUNK_SOLO = 256) vs 512 on prod 63eb6fa1: FAIL, keep 512
+
+CONFIG: tf-dd-prod.env (63eb6fa1, drain + GDN defer, 4 lanes); only XPU_CHUNK/XPU_CHUNK_SOLO changed; port 18153.
+Numerics: tf-xpu-fn-teacher built from b70/dd-sched, XPU_FN_TEACHER_CONTINUATIONS_ONLY=1,
+XPU_FN_TEACHER_PREFILL_ROWS=512|256. Sequences: oracle-eight p0-p7 + oracle continuations, plus 2K/30K/90K JOURNAL.md slices
+with 64 forced next tokens (workers/SCHED/teacher-oracle.json). Served logprobs are refused by this backend, so there is no
+serve-level KL.
+COMMAND: workers/SCHED/teacher_arm.sh T512|T512b|T256; tf_chunk.py tcompare; sched_arm.sh P512|P256 (pf.py + quick bench),
+M512|M256 (mixed.py x3).
+RESULT: 512 vs 512 run-to-run is bitwise on every prompt. 256 vs 512: p0-p7 (incl. the 4.8K p7) are bitwise. t2k: 92.2% top-1
+over 64 positions, KL mean .0063, max .060. t30k: 100%, KL mean .0013. t90k: 100%, first-token KL .026. Overall: agreement
+99.7%, max miss margin .125, first-KL max .026 (over the .02 bar).
+Serve: A gap during B (3 runs) p50 467 -> 259 ms, p99 485-1280 -> 267-270 ms; B 29.5K TTFT solo 25.71 -> 27.50 s (+7.0%),
+beside A 27.45 -> 30.37 s (+10.6%); PF2k (bench) 1401 -> 1200 (-14%); PF ~3.6K fresh 1276 -> 1160 (-9%); PF 161K fresh 1005
+-> 940 (-6.5%); C1/C4/C8 flat (103.8/182.8/244.7 -> 104.7/188.5/245.8); C2 154.6 -> 141.1. Conc == solo and forced parking
+at 256: PASS (KV c256ref/c256p8/c256p4). Every run HEALTHY.
+VERDICT: FAIL. The decoder stall p99 drops 4x, but solo prefill regresses 9-14% (2K) and 6.5% (long), newcomer TTFT is +10.6%,
+and the 90K first-token KL is .026 > .02. Keep 512. Next: 256 only while a decoder is live (CHUNK 256, CHUNK_SOLO 512) needs
+its own conc == solo proof; or a faster 256-row prefill path.
+
+## 2026-11-22 08:15 [KV] prompt cache budget follows TF_PROMPT_CACHE_GIB (6 GiB/card cap), host tier 12 slabs/card
+
+CONFIG -> b70/dd-kv a2b9a595 (36b865b1 = merge of prod c6346c82 + 1856b3b7, plus the budget patch), ReleaseFast via cpu-run heavy,
+frozen /mnt/vm_8tb/b70/build/tensorfold/dd-kv-frozen/k6/tensorfold-native (sha 32d743bc). Change: with eviction the cache budget
+is min(gib, 6 GiB) per card x tp (was min(gib x tp, 4 GiB) total: TF_PROMPT_CACHE_GIB=8 was a no-op); host tier per-rank limit
+8 -> 12 x 1 GiB pinned slabs (park/mirror room >= 6 GiB/card; 47-slab host-wide cap unchanged); budget logged at start.
+Gate server: kv-quick.sh, int8 pages, EVICT=1 MIRROR=1 DRAIN=1 GDN_DEFER=1, --parallel 8, --prompt-cache-gib 6.
+
+COMMAND -> lease cg1 (KV_PAGES=100, context 32768): kv_gate cachemany fill 130 short prompts; conc 8 x 12K x 300 vs p8ref solo
+refs; parks. Lease cg2 (pages auto, context 200000): cachemany 6 distinct ~20K prompts, then the same 6 again.
+
+RESULT -> start log: prompt cache budget per_card_mib=6144 total_mib=12288. cg1: cache full during the park arm (91 states,
+12264 of 12288 MiB, 48 evicted, 0 refused/failed); 108 parks / 105 restores; 8/8 streams == solo, needles found; PoolExhausted 0,
+cache reservation failures 0, errors 0. cg2: 6/6 repeats hit (cached 19391-19424 of ~19.4K), ids equal to the first pass, TTFT
+14.6-16.3 s -> 0.048-0.051 s; 13 states 4728 MiB. Host memory (process /proc status): cg1 VmRSS 9.4 GB, VmHWM 24.4 GB (load);
+cg2 VmRSS 15.9 GB, VmHWM 24.6 GB; VmPin/VmLck report 0 (zeMemAllocHost pins are not counted there), so the pinned ceiling is the
+tier limit: 12 GiB/card, 24 GiB for TP2. Both sessions HEALTHY post.
+
+VERDICT -> PASS. Ready for INT at TF_PROMPT_CACHE_GIB=6 (12 GiB total cache, 24 GiB max pinned). At the current env value (2)
+the budget is unchanged at 4 GiB total, so the patch is safe to stack either way.
+
+## 2026-11-22 08:16 [SAMP] Row c on the bench config: shared top-K on/off at C4/C8; a cross-restart p2 difference
+
+CONFIG: d6df2818 (a389e973), bench flags (ctx 16384, legacy bf16 KV, CHUNK 64, lane policy), FN_SAMPLE_PROFILE=1.
+COMMAND: arms.sh NEWBIN perf/q-batch1b (ON), q-batch0b (XPU_FN_SAMPLE_BATCH=0), repro q-batch0r (OFF, gen C1/C4/C8),
+q-batch1r (ON, gen C4/C8).
+RESULT: draw us/window OFF -> ON: t0.6 C4 1519 -> 572, C8 2147 -> 822; gen C4 1632 -> 642, C8 2139 -> 787 (window
+29.8-44 ms, so 5% -> 2%). Agg roughly flat (single runs): t0.6 C4 174.7 / 166.2, C8 200.6 / 206.5; gen C4 186.9 / 190.6,
+C8 197.7 / 206.3. Within every server run, C4/C8 shas == that run's C1 shas, with the flag ON or OFF. Across server
+restarts, gen p2 gives df592884ff84 (batch1b) or 12ba8def88a6 (batch0b, batch0r, batch1r), whatever the flag. So the
+bench config (legacy bf16 KV) is not restart-stable on this prompt; no prod-config arm has shown this (identical shas on
+2cb54319, d6df2818 and c6346c82 across 8+ starts).
+VERDICT: d6df2818 PASS on both configs. The bench cross-restart difference is pre-existing and not SAMP's; noted for KV.

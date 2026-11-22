@@ -2643,3 +2643,78 @@
 2026-11-22 05:34:21 UTC [SAMP] released cards 0+1: row a coupled C1/C4/C8 bitwise on prod c6346c82 rc=0
 2026-11-22 05:34:32 UTC [INT] claim cards 0+1 ~8 min: production unit up on 18124, c6346c82 at 8 lanes (TF_PARALLEL=8, EVICT_SLOTS unset): /v1/models + dd_functional via :18080 + ABL C1/C4/C8 (then stopped)
 2026-11-22 05:44:18 UTC [INT] released cards 0+1: production unit stopped (c6346c82, 8 lanes + XPU_FN_COUPLED=1; dd_functional via :18080 PASS twice)
+2026-11-22 05:47:19 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate L512 teacher-forced prompt_logprobs prod env chunk 512 (port 18153)
+2026-11-22 05:49:10 UTC [SCHED] released cards 0+1: cg-L512 rc=0
+2026-11-22 05:49:11 UTC [KV] claim cards 0+1 ~5 min: KV vload_half4 scales in paged int8 attention: p0 C4 vs prod ref, 8K prefill profile, 32K (port 18151, bin 53dfbdb7)
+2026-11-22 05:51:29 UTC [KV] released cards 0+1 (rc=0): KV vload_half4 scales in paged int8 attention: p0 C4 vs prod ref, 8K prefill profile, 32K
+2026-11-22 05:56:19 UTC [SAMP] claim cards 0+1 ~5 min: row a coupled-off control on prod c6346c82 (port 18152)
+2026-11-22 05:59:07 UTC [SAMP] released cards 0+1: row a coupled-off control on prod c6346c82 rc=0
+2026-11-22 06:03:52 UTC [KV] claim cards 0+1 ~5 min: KV row 10: long-context C1 decode, prod KV config, 1856b3b7: 16K and 64K prompts x 256 tokens (port 18151, bin 53dfbdb7)
+2026-11-22 06:06:32 UTC [KV] released cards 0+1 (rc=1): KV row 10: long-context C1 decode, prod KV config, 1856b3b7: 16K and 64K prompts x 256 tokens
+2026-11-22 06:06:33 UTC [INT] claim cards 0+1 ~12 min: 3x alternating 4/8-lane C4 check, c6346c82 prod env (port 18150)
+2026-11-22 06:14:12 UTC [INT] released cards 0+1: 3x alternating 4/8-lane C4 check (health post rc=0)
+2026-11-22 06:15:22 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate ON par8 T0.6/card/greedy C1-C8 945580ce (port 18153)
+2026-11-22 06:18:07 UTC [SCHED] released cards 0+1: pr8-on rc=0
+2026-11-22 06:18:09 UTC [SAMP] claim cards 0+1 ~5 min: row a coupled-off control (XPU_FN_COUPLED=0) on prod c6346c82 (port 18152)
+2026-11-22 06:21:07 UTC [SAMP] released cards 0+1: row a coupled-off control (XPU_FN_COUPLED=0) on prod c6346c82 rc=0
+2026-11-22 06:21:08 UTC [KV] claim cards 0+1 ~5 min: KV row 10: long-context C1 decode (free-form reply), 1856b3b7: 1K/16K/64K x 512 (port 18151, bin 53dfbdb7)
+2026-11-22 06:24:09 UTC [KV] released cards 0+1 (rc=1): KV row 10: long-context C1 decode (free-form reply), 1856b3b7: 1K/16K/64K x 512
+2026-11-22 06:24:10 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate teacher prefill rows 512 (continuations, 8 oracle + 2K/30K/90K)
+2026-11-22 06:28:05 UTC [SCHED] released cards 0+1: T512 rc=0
+2026-11-22 06:29:35 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate OFF par8 control 945580ce (port 18153)
+2026-11-22 06:32:23 UTC [SCHED] released cards 0+1: pr8-off rc=0
+2026-11-22 06:32:35 UTC [SAMP] claim cards 0+1 ~5 min: device confidence stop d4 c-0.4 vs d3c0 (greedy bitwise) (port 18152)
+2026-11-22 06:35:00 UTC [SAMP] released cards 0+1: device confidence stop d4 c-0.4 vs d3c0 (greedy bitwise) rc=0
+2026-11-22 06:35:01 UTC [KV] claim cards 0+1 ~5 min: KV row 10: long-context C1 decode (free-form reply), 1856b3b7: 128K x 512 (port 18151, bin 53dfbdb7)
+2026-11-22 06:38:37 UTC [KV] released cards 0+1 (rc=0): KV row 10: long-context C1 decode (free-form reply), 1856b3b7: 128K x 512
+2026-11-22 06:38:38 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate teacher prefill rows 256
+2026-11-22 06:43:01 UTC [SCHED] released cards 0+1: T256 rc=0
+2026-11-22 06:49:52 UTC [SCHED] claim cards 0+1 ~5 min: chunk 256 perf: PF2k/PF90k solo + quick bench conc==solo, prod 63eb6fa1 (port 18153)
+2026-11-22 06:54:47 UTC [SCHED] released cards 0+1: P256 rc=0
+2026-11-22 07:00:52 UTC [SAMP] claim cards 0+1 ~5 min: device conf stop d3 c-0.4 (rows <= 4) (port 18152)
+2026-11-22 07:03:23 UTC [SAMP] released cards 0+1: device conf stop d3 c-0.4 (rows <= 4) rc=0
+2026-11-22 07:03:23 UTC [SCHED] claim cards 0+1 ~5 min: chunk gate teacher prefill rows 512 repeat (run-to-run floor)
+2026-11-22 07:07:24 UTC [SCHED] released cards 0+1: T512b rc=0
+2026-11-22 07:07:24 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-22 07:09:17 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
+2026-11-22 07:09:19 UTC [SCHED] claim cards 0+1 ~5 min: chunk 512 perf control, prod 63eb6fa1 (port 18153)
+2026-11-22 07:10:02 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 780 s: gpu_window prod stack5-prod (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional SR-samp)
+2026-11-22 07:14:11 UTC [SCHED] released cards 0+1: P512 rc=0
+2026-11-22 07:14:11 UTC [KRN] claim cards 0+1 ~5 min: B1' record gate paged int8 defer=0 on krn-rec e5d751d7+wt (no port)
+2026-11-22 07:15:59 UTC [KRN] released cards 0+1: B1' record gate paged int8 defer=0 on krn-rec e5d751d7+wt (no port) rc=0
+2026-11-22 07:16:00 UTC [KV] claim cards 0+1 ~5 min: KV row 12: multi-turn prefix reuse with thinking on (prompt cache), 1856b3b7, 20K first turn (port 18151, bin 53dfbdb7)
+2026-11-22 07:17:58 UTC [KV] released cards 0+1 (rc=0): KV row 12: multi-turn prefix reuse with thinking on (prompt cache), 1856b3b7, 20K first turn
+2026-11-22 07:18:00 UTC [SCHED] claim cards 0+1 ~5 min: plain-round diagnosis par8 T0.6 C4/C8 instrumented (port 18153)
+2026-11-22 07:20:09 UTC [SCHED] released cards 0+1: pr8log rc=0
+2026-11-22 07:20:11 UTC [SAMP] claim cards 0+1 ~5 min: row c shared top-K ON, bench config d6df2818 (port 18152)
+2026-11-22 07:23:03 UTC [SAMP] released cards 0+1: row c shared top-K ON, bench config d6df2818 rc=0
+2026-11-22 07:23:03 UTC [SCHED] claim cards 0+1 ~5 min: chunk 256 row 11 x3, prod 63eb6fa1 (port 18153)
+2026-11-22 07:27:55 UTC [SCHED] released cards 0+1: M256 rc=0
+2026-11-22 07:32:34 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack5-prod rc=0
+2026-11-22 07:32:35 UTC [KRN] claim cards 0+1 ~5 min: B1' record gate paged int8 defer=1 on krn-rec e5d751d7 (no port)
+2026-11-22 07:33:19 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack5-park8 (port 18150, steps P0-identity PK8-solo6k PK8-conc8 PK-parks)
+2026-11-22 07:34:22 UTC [KRN] released cards 0+1: B1' record gate paged int8 defer=1 on krn-rec e5d751d7 (no port) rc=0
+2026-11-22 07:40:40 UTC [SCHED] claim cards 0+1 ~5 min: chunk 512 row 11 x3, prod 63eb6fa1 (port 18153)
+2026-11-22 07:45:18 UTC [SCHED] released cards 0+1: M512 rc=0
+2026-11-22 07:45:19 UTC [SAMP] claim cards 0+1 ~5 min: row c shared top-K OFF, bench config d6df2818 (port 18152)
+2026-11-22 07:48:03 UTC [SAMP] released cards 0+1: row c shared top-K OFF, bench config d6df2818 rc=0
+2026-11-22 07:49:47 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack5-park8 rc=1
+2026-11-22 07:49:48 UTC [KRN] claim cards 0+1 ~5 min: B1' prod config RECORD off (control) krn-rec e5d751d7, bench+kv gates (port 18155)
+2026-11-22 07:51:59 UTC [KRN] released cards 0+1: B1' prod config RECORD off (control) krn-rec e5d751d7, bench+kv gates (port 18155) rc=0
+2026-11-22 07:52:01 UTC [SCHED] claim cards 0+1 ~5 min: drafts-off reference par8 945580ce (port 18153)
+2026-11-22 07:54:50 UTC [SCHED] released cards 0+1: pr8-nomtp rc=0
+2026-11-22 07:54:51 UTC [KV] claim cards 0+1 ~5 min: KV cache 6 GiB/card + tier 12 slabs (36b865b1+): fill cache (130 short), then --parallel 8 forced park 100 pages, 8 x 12K vs p8ref (port 18151, bin 32d743bc)
+2026-11-22 07:58:14 UTC [KV] released cards 0+1 (rc=0): KV cache 6 GiB/card + tier 12 slabs (36b865b1+): fill cache (130 short), then --parallel 8 forced park 100 pages, 8 x 12K vs p8ref
+2026-11-22 07:58:16 UTC [SAMP] claim cards 0+1 ~5 min: row c repro: bench shared top-K OFF, gen C1/C4/C8 shas (port 18152)
+2026-11-22 08:00:52 UTC [SAMP] released cards 0+1: row c repro: bench shared top-K OFF, gen C1/C4/C8 shas rc=0
+2026-11-22 08:00:53 UTC [INT] claim cards 0+1 ~12 min: traced ledger A/B c6346c82 vs batch4 (markers+full, port 18150)
+2026-11-22 08:06:18 UTC [INT] released cards 0+1: traced ledger A/B (health post rc=0)
+2026-11-22 08:06:19 UTC [KRN] claim cards 0+1 ~5 min: B1' prod config RECORD=1 GATE=1 krn-rec e5d751d7, bench+kv gates+functional (port 18155)
+2026-11-22 08:07:01 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack5-park8b (port 18150)
+2026-11-22 08:08:21 UTC [KRN] released cards 0+1: B1' prod config RECORD=1 GATE=1 krn-rec e5d751d7, bench+kv gates+functional (port 18155) rc=1
+2026-11-22 08:08:21 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate ON par4 C1-C4 945580ce (port 18153)
+2026-11-22 08:10:46 UTC [SCHED] released cards 0+1: pr4-on rc=0
+2026-11-22 08:10:47 UTC [KV] claim cards 0+1 ~5 min: KV cache 6 GiB/card: 6 distinct 20K prompts, then all 6 again (all must hit) (port 18151, bin 32d743bc)
+2026-11-22 08:14:05 UTC [KV] released cards 0+1 (rc=0): KV cache 6 GiB/card: 6 distinct 20K prompts, then all 6 again (all must hit)
+2026-11-22 08:14:07 UTC [SAMP] claim cards 0+1 ~5 min: row c repro: bench shared top-K ON, gen C4/C8 shas (port 18152)
+2026-11-22 08:16:14 UTC [SAMP] released cards 0+1: row c repro: bench shared top-K ON, gen C4/C8 shas rc=0

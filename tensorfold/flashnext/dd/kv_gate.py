@@ -36,6 +36,11 @@ def prompt(seed, tokens):
         lines.append(f"Line {i}: the {a} crate moved to dock {rnd.randint(1, 99)} with {rnd.randint(100, 9999)} {b} units.")
         if i == 40:
             lines.append(f"Note: the vault code word is {code}. Remember it.")
+    if os.environ.get('KV_LONG_ANSWER') == 'free':
+        # Free-form reply (no copying, so MTP acceptance is typical): long-context decode speed (row 10).
+        return ('Ledger of shipments.\n' + '\n'.join(lines) +
+                '\nQuestion: what is the vault code word from the note near the start? State it, then write a long,'
+                ' original short story about a lighthouse keeper (at least 600 words), not quoting the ledger.'), code
     if os.environ.get('KV_LONG_ANSWER') == '1':
         # Long deterministic reply so concurrent streams overlap in decode (park/restore gate).
         return ('Ledger of shipments.\n' + '\n'.join(lines) +
@@ -310,6 +315,28 @@ def accept(url, n, decode, temps, tag):
     gate('kv-accept-' + tag, ok, {k: {'tok_per_round': v['tok_per_round'], 'tokens': v['tokens'], 'events': v['events']} for k, v in res.items()})
 
 
+def cachemany(url, tokens, n, fill='0'):
+    """Optional fill: FILL short distinct prompts first (each leaves a ~120 MiB state). Then N distinct needle
+    prompts of about TOKENS tokens, then the same N again: every repeat must hit the RAM prompt cache
+    (cached >= 90% of its prompt) with the same ids."""
+    for i in range(int(fill)):
+        complete(url, 'Fill %d: reply with one word. %s' % (i, ' '.join(random.Random(i).choices(WORDS, k=24))), 1)
+    first, again_ = [], []
+    for i in range(int(n)):
+        text, code = prompt(100 + i, int(tokens))
+        r = complete(url, text, 32)
+        first.append(dict(summary(r, code), ids=r.get('ids')))
+    for i in range(int(n)):
+        text, code = prompt(100 + i, int(tokens))
+        r = complete(url, text, 32)
+        again_.append(dict(summary(r, code), ids=r.get('ids')))
+    hits = [b['cached_tokens'] is not None and a['prompt_tokens'] > 0 and b['cached_tokens'] >= 0.9 * a['prompt_tokens'] for a, b in zip(first, again_)]
+    same = [bool(a.get('ids')) and a.get('ids') == b.get('ids') for a, b in zip(first, again_)]
+    ok = all(hits) and all(same) and all(s['status'] == 200 for s in first + again_)
+    gate('kv-cachemany', ok, {'hits': hits, 'ids_equal': same, 'cached': [b['cached_tokens'] for b in again_],
+                              'ttft_first': [a['ttft_s'] for a in first], 'ttft_again': [b['ttft_s'] for b in again_]})
+
+
 if __name__ == '__main__':
     mode, args = sys.argv[1], sys.argv[2:]
-    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail, 'multiturn': multiturn, 'accept': accept}[mode](*args)
+    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail, 'multiturn': multiturn, 'accept': accept, 'cachemany': cachemany}[mode](*args)

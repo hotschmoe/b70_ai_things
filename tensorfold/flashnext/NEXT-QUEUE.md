@@ -26,8 +26,8 @@ time because a 512-row prefill chunk holds the engine thread 340-450 ms with no 
 | R2 | Prefill blocks decode at XPU_CHUNK 512 (row 11 / B6, now first-order) | C8: 4.4-4.5 s of fill calls in a 9.4-10 s wall, round busy 53-59% in every arm | C8 up to ~1.8x if the 4.8K prefill interleaves (or shrinks: R5) | SCHED / Lead B ttft (B6); chunk64 arm pending | measuring |
 | R3 | Lane cap: TF_PARALLEL=4 caps C8 at C4 by construction; EVICT_SLOTS=auto (3 physical at 200K) thrashes parks (slotsauto: 5 parks, restores up to 1273 ms, C8 did not finish in 170 s) | C8 = C4 ceiling | Keep EVICT_SLOTS=4 (env already); par8 arm pending | INT (config) + KV (8d1dd2d6 auto = state fit) | measuring |
 | R4 | Park / cache copies polled once per engine round: 62 MB park in 1277-2093 ms, cache restore 6-129 ms, cache save 15-175 ms per prompt (new) | C4 tail TTFT; C8 parks | ~14 ms per 62 MB copy | KV (318e8b21 XPU_FN_EVICT_TIMING, then polling fix) | in progress: KV 0d6a331b submits cache copies at creation (k2a: restore 120 MiB = 4.9 ms device, 20-49 ms wall; save 13.5-28 ms device); park copies still per-round |
-| R5 | Paged prefill attention: fn_page_attn_sparse 1601.7 ms vs fn_attn_sparse 699.1 ms over the same 1452 calls (row 14 relative) | PF2k 1390 vs 1556; 90K TTFT 88 s | PF to bench parity (+12%), 90K TTFT ~-25% | KV 38ccad07 (bitwise) | 38ccad07 gated bitwise (k1a), kernel only -9% (1601.7 -> 1462.3 ms, k2a): load-message bound; occupancy change (4 slices per 64-lane WG) next |
-| R5b | Paged DECODE attention (traced pass, new): fn_dpage_sparse 1497 us vs fn_desc_attn_sparse 654 us per C1 window (2 cards, 30 launches) = 2.3x, C4 1612 vs 762 us; paged side kernels 414 vs 228 us; host CPU +1.4 ms and host syncs 17 vs 13 (C1) / 45 vs 31 (C4) per window | untraced lane round +3.2% (C1) / +3.8% (C4) | ~-0.5 ms per window per card (C1 +2-3%) | KV (same treatment as 38ccad07) | 38ccad07 already covers fn_dpage_sparse (not in 2cb54319); occupancy change building; ranked first for KV (2026-11-22 02:30) |
+| R5 | Paged prefill attention: fn_page_attn_sparse 1601.7 ms vs fn_attn_sparse 699.1 ms over the same 1452 calls (row 14 relative) | PF2k 1390 vs 1556; 90K TTFT 88 s | PF to bench parity (+12%), 90K TTFT ~-25% | KV 38ccad07 (bitwise) | 38ccad07 gated bitwise (k1a), kernel only -9% (1601.7 -> 1462.3 ms, k2a): load-message bound; occupancy change dropped (no gain); 1856b3b7 vload_half4 scales: 1462.3 -> 682.3 ms (below legacy 699.1), PF 8K +14%, 32K +14%, bitwise (k5a) |
+| R5b | Paged DECODE attention (traced pass, new): fn_dpage_sparse 1497 us vs fn_desc_attn_sparse 654 us per C1 window (2 cards, 30 launches) = 2.3x, C4 1612 vs 762 us; paged side kernels 414 vs 228 us; host CPU +1.4 ms and host syncs 17 vs 13 (C1) / 45 vs 31 (C4) per window | untraced lane round +3.2% (C1) / +3.8% (C4) | ~-0.5 ms per window per card (C1 +2-3%) | KV (same treatment as 38ccad07) | 38ccad07 already covers fn_dpage_sparse (not in 2cb54319); same fix in fn_dpage_sparse (1856b3b7): solo decode 95.5 -> 98.2 tok/s (k5a); traced per-window re-measure pending (INT) |
 | R6 | Row 9 / B1 RESOLVED: DESC is on with paged int8 KV in 2cb54319; DESC=0 costs C1 -11% (92.2 -> 82.2), round width 4 32.7 -> 37.5 ms (+15%) | none (already on) | - | - | closed |
 | R7 | B1' (was row 1 prerequisite): RECORD is refused with paged KV (xpu_forward.zig:137 RecordedAndPagedKvUnsupported); OOO is accepted; ATTN_DPAS is skipped when paged (xpu_window_runtime.zig:160) | rows 1 and 5 cannot run on production | row 1 / row 5 estimates (C4 +15%, C8 +17%; attention at long ctx) once ported | KV | after R4/R5 |
 | R8 | C1 92 (this ablation) / 100 (window) vs bench 110: same 21.3 ms window, so tokens/window differs (int8 KV numerics vs drafter acceptance) | C1 -9..-16% | rows 6/8 (depth/conf, drafter numerics) | SAMP / R | KV sizing (2cb54319, ctx 16384, 4 oracle prompts x 256): paged bf16 == legacy bitwise (ids and events); int8 tokens/round -1.3% greedy (2.682 vs 2.719), -2.5% T0.6; p0 alone -5.9%. Systematic int8 cost 1-3%; bf16 MTP-layer KV (capped at that) ranked below R5b |
@@ -159,3 +159,19 @@ structural items (B1-B4, B8) and per-kernel %BW at R8-R16; the row-2 ledger deci
 (appended below as /mnt/vm_8tb/b70/results/hotschmoe-dd/soak/ data arrives; at 17:58 UTC the directory does not
 exist yet: hotschmoe-dd.service still names the Strata launcher and is inactive; a TF build is running under
 /mnt/vm_8tb/b70/results/hotschmoe-dd/tf-build/.)
+
+Row 10 measured (KV, 2026-11-22 06:40, b70/dd-kv 1856b3b7, prod KV config, C1 greedy, free-form 512-token reply,
+distinct seeds, no cache hits): decode 96.4 / 91.3 / 90.0 / 84.9 tok/s at 1K / 16K / 64K / 128K prompts (-5% / -7% /
+-12%); TTFT 0.76 / 11.6 / 51.0 / 110.5 s (prefill 1294 / 1333 / 1248 / 1160 tok/s). Above the 90 tok/s bar through 64K.
+This sizes ATTN_DPAS over pages at about +5-12% C1 at long context (plus row 5's ~+6% at 2K): worth one kernel, gated by
+teacher/KL. Copy-style replies (KV_LONG_ANSWER=1) inflate decode to 210-330 tok/s via MTP acceptance; do not use them for
+speed. [M workers/KV/r10c, r10d]
+
+SAMP verify row buckets (2026-11-22 07:05, next release): desc verify windows round up to power-of-2 row buckets
+(xpu_window_abi.bucket: 1, 2, 4, 8, 16), so a depth-4 window (5 rows) pays the 8-row bucket. Approximate prod C1 verify
+ms by bucket (2cb54319 prod config): bucket 2 ~15.3-15.9 (depth-1 arms, rows 2.0-2.3), bucket 4 ~16.7-17.6 (d3c0, rows
+~4.1), bucket 8 ~20.4 (dconf d4, rows 4.75). The device confidence stop (c36f1e3d/535d9fe0, XPU_FN_MTP_DEVICE_CONF=1,
+bitwise) at depth 4 gave +5.5% tok/round over d3c0 (greedy 3.010 vs 2.853, code 3.362 vs 3.024), but the 8-row bucket
+ate it (window 21.5 -> 23.8 ms, tok/s -5.5%). ITEM: verify buckets 5/6 (or exact-row windows) -> unlocks depth 4+
+drafting; re-run dconf (depth 4, conf -0.4) on top. Depth 3 + conf stop alone loses (tok/round -3.7%, window -0.35 ms,
+tok/s -2.4%). [M workers/SAMP/perf/q-dconf, q-dconf3, armsA/d3c0]
