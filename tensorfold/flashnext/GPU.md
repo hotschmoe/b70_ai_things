@@ -2718,3 +2718,11 @@
 2026-11-22 08:14:05 UTC [KV] released cards 0+1 (rc=0): KV cache 6 GiB/card: 6 distinct 20K prompts, then all 6 again (all must hit)
 2026-11-22 08:14:07 UTC [SAMP] claim cards 0+1 ~5 min: row c repro: bench shared top-K ON, gen C4/C8 shas (port 18152)
 2026-11-22 08:16:14 UTC [SAMP] released cards 0+1: row c repro: bench shared top-K ON, gen C4/C8 shas rc=0
+2026-11-22 08:21:05 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate OFF par4 C1-C4 945580ce (port 18153)
+2026-11-22 08:23:25 UTC [SCHED] released cards 0+1: pr4-off rc=0
+2026-11-22 08:25:58 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack5-park8b rc=0
+2026-11-22 08:26:50 UTC [INT] claim cards 0+1 ~6 min: production unit up on 18124 with frozen ed106eaf (8 lanes) for dd_functional via :18080 (then stopped)
+2026-11-22 08:29:31 UTC [KRN] claim cards 0+1 ~5 min: B1' prod config RECORD=1 GATE=1 krn-rec 4444ed3c, bench+kv gates+functional (port 18155)
+2026-11-22 08:31:34 UTC [INT] released cards 0+1: production unit stopped (ed106eaf, dd_functional via :18080 rc 'rc=0')
+2026-11-22 08:31:51 UTC [KRN] released cards 0+1: B1' prod config RECORD=1 GATE=1 krn-rec 4444ed3c, bench+kv gates+functional (port 18155) rc=0
+2026-11-22 08:32:22 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate ON par8: ids vs drafts-off, C1/C8, 3 temps 945580ce (port 18153)

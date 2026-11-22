@@ -1891,3 +1891,29 @@ restarts, gen p2 gives df592884ff84 (batch1b) or 12ba8def88a6 (batch0b, batch0r,
 bench config (legacy bf16 KV) is not restart-stable on this prompt; no prod-config arm has shown this (identical shas on
 2cb54319, d6df2818 and c6346c82 across 8+ starts).
 VERDICT: d6df2818 PASS on both configs. The bench cross-restart difference is pre-existing and not SAMP's; noted for KV.
+
+## 2026-11-22 08:35 UTC [INT] Batch 4 frozen: b70/dd-serve ed106eaf (+ KV 1856b3b7 vload_half4), prod env 8 lanes + COUPLED
+
+CONFIG: ed106eaf = c6346c82 + KV 1856b3b7 (fn_pages.cl / fn_window_pages.cl: hardware vload_half4 widening of the fp16 K/V
+scales in paged int8 attention, bitwise). Frozen /mnt/vm_8tb/b70/build/tensorfold-dd/ed106eaf, sha 7a396c111a534e0f. Env =
+tf-dd-prod.env (TF_PARALLEL=8, EVICT_SLOTS unset, GDN_DEFER, EVICT_DRAIN, COUPLED, prompt cache 2).
+COMMAND: workers/INT/stack5/run5.sh: host suite 32 steps + golden; build_dd; G1 regress; prod subset + SR-samp (SAMP
+prof_client2 T0.6 C1/C4/C8); forced park 8 lanes KV_PAGES=72, 8 x 5.8K x 600 vs solo (park8-steps.tsv; the first park arm
+ran PK-parks before the streams because of step order in the shared steps file and is kept as park8-misordered); one traced
+lease (trace_body.sh) markers + full for c6346c82 and ed106eaf, ledger.py + ledger_diff.py (ledger-diff.md); unit on 18124
+08:27-08:29 + dd_functional --image-fixture via :18080.
+RESULT:
+| config | C1 | C2 | C4 | C8 | PF2k | 90K TTFT |
+|---|---:|---:|---:|---:|---:|---:|
+| bench G1 (p0 bitwise == int-rf2) | 110.5 | 135.9 | 169.1 | 211.7 | 1560 | - |
+| prod ed106eaf, 8 lanes | 105.6 | 140.4 | 187.9 | 236.6 | 1541 | 75.2 s (1195 tok/s), cached 0.11 s |
+| prod c6346c82, 8 lanes (stack3 prod8) | 104.2 | 153.7 | 187.1 | 242.6 | 1405 | 86.8 s |
+All hard gates PASS (identity, KV0-3, S1, VIS-I, API2, API5, P9 long 151.1 tok/s, ABL 99.5/176.3/108.2 p0 equal, SR-samp,
+logs, health). Forced park 8 lanes: 85 parks / 83 restores / 0 errors, 8 streams finish length, stream 0 == solo.
+Traced steady windows (sum of 2 cards): fn_dpage_sparse C1 1430 -> 591 us, C4 1596 -> 640 us; window wall C1 22.97 -> 22.64 ms,
+C4 33.27 -> 33.07 ms; device busy C1 35.2 -> 33.9 ms. dd_functional via :18080 PASS (long 2048 tok at 151.3 tok/s).
+Note: the unit's ExecStopPost (dd_poststop_tf.sh) waits up to 600 s for the GPU lease to run xpu-health; another agent took the
+cards at the moment the server exited, so the stop exceeded TimeoutStopSec=2min and the unit showed failed (Result: timeout).
+The server itself exited 0; post health ran once the lease freed (HEALTHY). reset-failed done. Harmless when production owns
+the cards, but the unit stop is not clean under lease contention.
+VERDICT: PASS; tf-dd-prod.env -> ed106eaf (rollback c6346c82 in the header; old env copy workers/INT/stack5/tf-dd-prod.env.c6346c82).
