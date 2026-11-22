@@ -2786,3 +2786,37 @@
 2026-11-22 10:42:05 UTC [KRN] claim cards 0+1 ~5 min: B1' FINAL RECORD forced park 72 pages 8x5.8Kx300 all streams == solo krn-rec 03719727 (port 18155)
 2026-11-22 10:45:10 UTC [KRN] released cards 0+1: B1' FINAL RECORD forced park 72 pages 8x5.8Kx300 all streams == solo krn-rec 03719727 (port 18155) rc=0
 2026-11-22 10:48:11 UTC [INT] released cards 0+1: production unit stopped (983cc068 pc 6, dd_functional via :18080 'rc=0')
+2026-11-22 11:04:02 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-22 11:05:56 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
+2026-11-22 11:05:56 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1100 s: gpu_window prod stack8-prod (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional SR-samp MEM0 CACHE-MT MEM1 REC0)
+2026-11-22 11:12:26 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack8-prod rc=0
+2026-11-22 11:12:26 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack8-park (port 18150)
+2026-11-22 11:15:26 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack8-park rc=0
+2026-11-22 11:15:26 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 420 s: gpu_window prod stack8-drill (port 18150)
+2026-11-22 11:17:35 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack8-drill rc=0
+2026-11-22 11:18:44 UTC [INT] claim cards 0+1 ~6 min: production unit up on 18124 with frozen ebdc73dd (RECORD=1 GATE=1, pc 6) for dd_functional via :18080 (then stopped)
+2026-11-22 11:21:21 UTC [INT] released cards 0+1: production unit stopped (ebdc73dd RECORD, dd_functional via :18080 'rc=0')
+2026-11-22 11:23:08 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 480 s: gpu_window prod stack9-rec1 (port 18150)
+2026-11-22 11:26:02 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack9-rec1 rc=0
+2026-11-22 11:26:02 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 480 s: gpu_window prod stack9-rec0 (port 18150)
+2026-11-22 11:29:09 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack9-rec0 rc=0
+2026-11-22 11:30:07 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 480 s: gpu_window prod stack10-a1-rec0 (port 18150)
+2026-11-22 11:33:22 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack10-a1-rec0 rc=0
+2026-11-22 11:33:22 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 480 s: gpu_window prod stack10-a2-rec1 (port 18150)
+2026-11-22 11:33:23 UTC [KRN] claim cards 0+1 ~5 min: KRN cosave repro arm1 solo=p1 co=p2 (ebdc73dd RECORD off, port 18155)
+2026-11-22 11:35:05 UTC [KRN] released cards 0+1: KRN cosave repro arm1 solo=p1 co=p2 (ebdc73dd RECORD off, port 18155) rc=0
+2026-11-22 11:38:20 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack10-a2-rec1 rc=0
+2026-11-22 11:38:20 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 480 s: gpu_window prod stack10-a3-b5pc2 (port 18150)
+2026-11-22 11:38:21 UTC [KRN] claim cards 0+1 ~5 min: KRN cosave repro arm B (co-ordered, defaults, ebdc73dd RECORD off, port 18155)
+2026-11-22 11:40:01 UTC [KRN] released cards 0+1: KRN cosave repro arm B (co-ordered, defaults, ebdc73dd RECORD off, port 18155) rc=0
+2026-11-22 11:43:20 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack10-a3-b5pc2 rc=0
+2026-11-22 11:43:20 UTC [KRN] claim cards 0+1 ~5 min: KRN cosave repro B2 (bench-like co-submit, defaults, ebdc73dd RECORD off, port 18155)
+2026-11-22 11:43:28 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 480 s: gpu_window prod stack10-a4-b5pc6 (port 18150)
+2026-11-22 11:45:05 UTC [KRN] released cards 0+1: KRN cosave repro B2 (bench-like co-submit, defaults, ebdc73dd RECORD off, port 18155) rc=0
+2026-11-22 11:48:26 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack10-a4-b5pc6 rc=0
+2026-11-22 11:48:26 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 480 s: gpu_window prod stack10-a5-rec0 (port 18150)
+2026-11-22 11:51:44 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack10-a5-rec0 rc=0
+2026-11-22 11:51:44 UTC [KRN] claim cards 0+1 ~5 min: KRN sampled order arm t0.6,gen,t0.6 (ebdc73dd RECORD off, port 18155)
+2026-11-22 11:54:30 UTC [KRN] released cards 0+1: KRN sampled order arm t0.6,gen,t0.6 (ebdc73dd RECORD off, port 18155) rc=0
+2026-11-22 11:54:54 UTC [KRN] claim cards 0+1 ~5 min: KRN bench-quick then gen,t0.6 (stack7 body on ebdc73dd RECORD off, port 18155)
+2026-11-22 11:57:28 UTC [KRN] released cards 0+1: KRN bench-quick then gen,t0.6 (stack7 body on ebdc73dd RECORD off, port 18155) rc=0

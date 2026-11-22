@@ -2054,3 +2054,68 @@ PLAIN_ROUNDS off -> on (2 runs each; sampled shas identical across all 4 runs):
 VERDICT: 983cc068 + TF_PROMPT_CACHE_GIB=6 PASS, frozen into tf-dd-prod.env (rollback ed106eaf + cache 2 in the header).
 PLAIN_ROUNDS: rule "C4/C8 gain and C1/C2 do not drop" not met (T0.6 C2 -2.4% in both runs, T0.6 C4 -4%); stays off and
 the code is not in the release line.
+
+## 2026-11-22 11:25 UTC [INT] Batch 6 frozen: b70/dd-rel ebdc73dd (983cc068 + KRN 03719727 recorded windows), XPU_FN_RECORD=1 XPU_FN_GATE=1
+
+CONFIG: ebdc73dd = merge of b70/krn-rec 03719727 (B1' recorded windows over paged int8 KV, refusal -> immediate fallback,
+scratch regrowth, XPU_FN_RECORD_DRILL test knob) into b70/dd-rel 983cc068. Merge was clean; the tree differs from 03719727 only by
+a2b9a595. Frozen /mnt/vm_8tb/b70/build/tensorfold-dd/ebdc73dd, sha aeb0bd2b8fde4eb6. Env = prod (8 lanes, COUPLED, DEFER, DRAIN,
+cache 6) + XPU_FN_RECORD=1 XPU_FN_GATE=1.
+COMMAND: workers/INT/stack8/run8.sh: host suite 32 steps + golden (tests_rc=0); build_dd; G1 regress; prod (gpu_window_long, WIN_ONLY
+P0 P1 KV0-3 S1 VIS-I API2 API5 P9 ABL SR-samp MEM0 CACHE-MT MEM1 REC0); park (KV_PAGES=72, 8 x 5.6K x 600 + REC0); drill
+(XPU_FN_RECORD_DRILL=3, KRN KD-* steps + VIS-I). REC0 = /metrics tensorfold:recorded_window_fallbacks_total == 0, no
+"FN_RECORD fallback"/"HUNG FN_RECORD" log lines, warmup line present. Unit on 18124 11:18-11:21 + dd_functional via :18080 + /metrics.
+RESULT:
+| config | C1 | C2 | C4 | C8 | PF2k | 90K TTFT |
+|---|---:|---:|---:|---:|---:|---:|
+| G1 (p0 bitwise == int-rf2, conc == solo) | 109.8 | 142.9 | 173.1 | 209.9 | 1560 | - |
+| prod batch 5 983cc068 (RECORD off) | 105.6 | 154.9 | 187.9 | 242.3 | 1544 | 75.5 s / 0.11 s |
+| prod batch 6 ebdc73dd RECORD=1 | 106.3 | 166.7 | 218.4 | 280.3 | 1548 | 75.0 s / 0.105 s |
+Sampled T0.6 (SR-samp, prof_client2): C1 128.3 (was 132.2), C4 217.7 (194.4), C8 263.2 (239.8). ABL 103.1 / 222.9 / 112.6.
+All hard gates PASS (P0, KV0-3, S1 with greedy/seeded shas identical to batch 5, VIS-I, API2, API5, P9, ABL, SR-samp, 2x3 60K
+cache: follow-up TTFT 0.27-0.32 s). REC0 prod: fallbacks 0, log lines 0. MEM1 VmRSS 8.9 GB, swap 1448 MiB (1420 at batch 5).
+Park 72 pages: 72 parks / 69 restores / 0 errors, == solo, REC0 0 fallbacks. Drill: 65 fallbacks, 0 HTTP 5xx, short-c4 ==
+ref, long4k + repeat equal, VIS-I PASS. Unit: ready 50 s, dd_functional via :18080 PASS (long 150.4 tok/s), /metrics
+recorded_window_fallbacks_total 0, 0 fallback/HUNG lines. 4 "FN_RECORD scratch regrow" lines in the prod arm (expected).
+Observation: SR-samp seeded T0.6 256-token shas differ from batch 5 for 2 of 4 C1 prompts and 2 of 4 C4 / 2 of 8 C8
+streams. The A/B (RECORD off) showed these shas identical across 4 runs, so the recorded path changes sampled numerics
+slightly. Greedy (G1 p0 bitwise, KD-short ref_equal, S1 greedy) and the short seeded S1 shas are unchanged. Coherence gates pass.
+VERDICT: batch 6 PASS on every hard gate; frozen into tf-dd-prod.env (ROLLBACK A 983cc068 = delete the RECORD line or switch
+binary). RC proposal at 13:00: ebdc73dd + RECORD=1 (C4 +16%, C8 +16%), with 983cc068 as fallback RC; the sampled-sha drift
+is flagged for the orchestrator.
+
+## 2026-11-22 11:55 UTC [INT] Seeded-sample sha drift (batch 5 vs batch 6): not RECORD; history-dependent prefill partition
+
+CONFIG: ebdc73dd (RECORD=1 or off), 983cc068 (cache 6 or 2); prod env otherwise. Client SAMP prof_client2 (p set, T0.6, 256
+tokens, seeds 1000+i, C1 x4 prompts, C4, C8); samp_cmp.py compares two runs, C4/C8 streams vs C1 solo, and batch 5.
+COMMAND: workers/INT/stack9/run9.sh (fresh server: SR-samp x2 + greedy short-c4; RECORD=1 and off) and stack10/run10.sh +
+run10b.sh (fresh server: SR-samp -> greedy prod bench -> SR-samp, or bench first; ebdc73dd RECORD off/on, 983cc068 cache 2/6).
+RESULT: all 7 arms give C1 shas 4f6221d5/5c0f1986/d04ea442/ba2388a0 (= c6346c82, ed106eaf batch 4, SAMP's cpl0c/cpl1c),
+run-to-run equal, C4 and C8 streams == solo for the same prompt + seed, health pre/post HEALTHY. The other set
+(082752de/506dfd54 for p1/p2) appeared only in the batch 5 prod arm (SR-samp after about 14 mixed steps) and the stack7 A/B
+(prof after the bench), both RECORD off, and was not reproduced in any controlled arm. KV (code reading): first-prefill pass
+cuts follow prompt-cache marks and the co-scheduled round cap, so earlier traffic can change how a short prompt head is
+partitioned; prefill is not exactly partition-invariant and later hits replay that state.
+VERDICT: RECORD is not the cause and shows no stale sampling inputs (on == off under identical history, conc == solo).
+The drift is pre-existing and history-dependent on the immediate path, in both RCs. Open, owned by KRN (12:30): whether a
+snapshot can race a deferred GDN write (would be fixed by XPU_FN_GDN_DEFER=0). Prefill partition invariance -> next release.
+
+
+## 2026-11-22 12:00 [KRN] RECORD sampled-sha question: RECORD is benign; the moved shas follow 21d66fe8 code and one long-history run
+
+CONFIG -> prod env (8 lanes, int8 paged KV, COUPLED, DEFER, DRAIN, cache 6, card sampling), port 18155, fresh server per arm. Binary ebdc73dd (= 983cc068 + B1'), RECORD off unless stated. Client: SAMP prof_client2 (seeds 1000+i, 256 tokens). The server sha in the "done" line is used where the client sha is not available (p1 OLD 36668c9c / NEW ec0d602c, p2 OLD b3c31103 / NEW e5844ff5).
+COMMAND -> workers/KRN/krn_arm_cosave.sh (cs1: p1 saved solo, p2 saved beside p0 hits; cs2: cold prompt admitted first, then p0 hits, with a decode active; cs3: barrier co-submit p0+p1 and p0..p3, as in the bench oracle ladder, which reproduced stack6's "prefill 23 / restore at=21 / prefill 1 / saved at=23" interleave exactly) and krn_arm_order.sh (or1: cfgs t0.6,gen,t0.6 at C1 and C8; or2: bench QUICK then gen,t0.6, i.e. the stack7 body).
+RESULT ->
+- cs1, cs2, cs3: every sampled p1/p2/p3 gives the OLD sha, including the cs3 state saved in the interleave identical to stack6.
+- or1: t0.6 C1 4f6221d5/5c0f1986/d04ea442/ba2388a0 before and after gen. gen C1 e7e429cd/96e61817/f21fcfcd/3f0999d4, which are the c6346c82 shas. C8 matches C1.
+- or2: the same OLD gen and t0.6 shas after bench QUICK.
+- INT stack9 and stack10 (a1 rec0, a2 rec1, a3 983cc068 cache 2, a4 983cc068 cache 6 bench-first): OLD, run-to-run equal, conc == solo.
+- NEW shas are seen only in two places: (i) stack7 on 21d66fe8 (b70/dd-sched 945580ce merge, PLAIN_ROUNDS 0 and 1, 4/4 starts) with the same body that gives OLD on ebdc73dd in or2; (ii) stack6 (983cc068) after the full 30-step history, where stack8 with the same list and RECORD=1 gave OLD. Case (ii) has not been reproduced.
+- All arms: health HEALTHY, no fatal lines.
+- Per SAMP, the draw key is (seed, absolute position, id), and the sampled path reads only shard_logits. Per KV's code review, a save follows flushGdn + drainPages and the source is locked during the copy.
+VERDICT ->
+- RECORD=1 does not change sampled output (no stale sampling inputs). It is not a correctness bug, and B1' stands.
+- The prompt-cache save is exact in every concurrency/interleave cut I could produce, so there is no DEFER/restore race repro. A DEFER=0 arm was not needed because B never moved.
+- Two open items, neither on the release line ebdc73dd:
+  - 21d66fe8 changes sampled output with PLAIN_ROUNDS=0. xpu_mtp_chain.submit's zero-limit early return moved after the loop, and lane config gained plain_rounds. This is for SCHED; it is not default-off-bitwise.
+  - The single stack6 long-history NEW needs the stack6 step list on ebdc73dd with RECORD off to bisect.

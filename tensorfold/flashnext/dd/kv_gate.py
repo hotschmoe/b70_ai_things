@@ -337,6 +337,19 @@ def cachemany(url, tokens, n, fill='0'):
                               'ttft_first': [a['ttft_s'] for a in first], 'ttft_again': [b['ttft_s'] for b in again_]})
 
 
+def prof(url, *args):
+    """Run SAMP's prof_client2.py against this server (server.log in the cwd); print its PROF2 C1 shas."""
+    import subprocess
+    out = subprocess.run(['python3', '/mnt/vm_8tb/b70/results/tf-flashnext/workers/SAMP/prof_client2.py', url,
+                          os.environ.get('TF_MODEL', 'hotschmoe-dd'), 'server.log', *args], capture_output=True, text=True)
+    shas = []
+    for line in out.stdout.splitlines():
+        if line.startswith('PROF2 '):
+            d = json.loads(line[6:])
+            shas.append('%s/C%d/p%d=%s' % (d['cfg'], d['C'], d['prompt0'], ','.join(s[:8] for s in d['sha'])))
+    gate('kv-prof', out.returncode == 0, {'shas': shas, 'rc': out.returncode, 'err': out.stderr[-300:]})
+
+
 if __name__ == '__main__':
     mode, args = sys.argv[1], sys.argv[2:]
-    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail, 'multiturn': multiturn, 'accept': accept, 'cachemany': cachemany}[mode](*args)
+    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail, 'multiturn': multiturn, 'accept': accept, 'cachemany': cachemany, 'prof': prof}[mode](*args)

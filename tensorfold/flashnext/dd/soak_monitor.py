@@ -43,7 +43,8 @@ STRATA_DONE = re.compile(r"\[strata\] done: (?P<tokens>\d+) tokens in (?P<secs>[
 STRATA_PROMPT = re.compile(r"\[strata\] reading the prompt: [\d,]+ of (?P<total>[\d,]+) tokens")
 RESTART = re.compile(r"\[dd_launch_tf\] variant=|gpu-run: \[hotschmoe-dd[^\]]*\] acquired")
 BAD = re.compile(r"DEVICE_LOST|ZE_RESULT_ERROR|ZeFailed|ze[A-Z]\w+ failed|WEDGED|HUNG|panic|Segmentation fault|"
-                 r"core dumped|out of memory|OUT_OF_DEVICE_MEMORY|error\(|^error:|Traceback", re.I)
+                 r"core dumped|out of memory|OUT_OF_DEVICE_MEMORY|error\(|^error:|Traceback|"
+                 r"FN_RECORD fallback|PoolExhausted|NoHeldDrafts|CapturedScratchResize", re.I)
 IGNORE_BAD = re.compile(r"spills \d+ bytes of registers|libtfgrammar")
 
 
