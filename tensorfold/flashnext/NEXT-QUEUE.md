@@ -254,3 +254,33 @@ returns cache.gate, which changes the depth rule.
   and a forced park at 8 lanes.
 - Size: compare C1 recorded window plus draft time against immediate with the decode-window profile
   (KRN_PROF_ALL, 8769fc0a).
+
+
+## SCHED queue (added 2026-11-22 15:04:17 UTC; CPU-only since release 15:01, no GPU touched)
+
+Evidence: JOURNAL [SCHED] 01:42, 04:12, 08:00, 08:55; workers/SCHED/. Port 18153; one arm per lease of 5 min or less.
+1. Plain rounds on the release build (if INT's 8-lane arm did not run): XPU_FN_PLAIN_ROUNDS=1 vs off on the tf-dd-20261122
+   binary, prod env, --parallel 4 and 8. Run b8.py C1-C8 at T0.6, card and greedy (steps_pr8.sh / steps_pr4.sh), plus prids
+   (ids == drafts-off at C1/C8). Accept: C4/C8 >= off, C1/C2 within noise, ids equal, HEALTHY.
+2. Plain-round cost breakdown (design input for a cheaper plain round): one profile at W=8 sampled with the gate forced
+   plain (probe-only build or a gate margin of 0), against draft:false at W=8. Split the 40 ms vs ~32 ms gap into MTP absorb
+   (layer + TP reduce), drafting-lane verify bookkeeping and the syncAll in absorb. Decides between dropping that syncAll
+   (verify already host-syncs) and a gap-tolerant MTP cache (zero or mask the skipped rows) to reach the drafts-off ceiling
+   (C8 254-283).
+3. Prefill order for burst arrivals (INT long8, 7 x 60K at 8 lanes): default vs TENSORFOLD_PREFILL_ORDER=srpt vs
+   TENSORFOLD_PREFILL_POLICY=fcfs. Gate: mean/max TTFT and the live decoder's ITL p50/p99; tokens == solo (order is
+   bitwise). The knobs exist; no build is needed. Expected mean TTFT ~310 -> ~228 s at the same max (KV arithmetic).
+4. Chunk 256 only beside a live decoder (XPU_CHUNK=256, XPU_CHUNK_SOLO=512): the row-11 stall fix (p99 1280 -> 270 ms)
+   without the solo prefill loss. It needs its own conc == solo proof (the 256/512 chunk divergence is unexplained) and the
+   teacher gate at 256 (90K first-token KL .026 > .02 failed on 2026-11-22). Low priority until a 256-row prefill is faster.
+
+### NR-3 (INT): device memory growth under mixed long traffic on the RC
+
+Release traffic rel-rc-20261122T1311Z (ebdc73dd + RECORD=1) fitted +1.21 GiB device memory over 60 min (cap 1.00, WARN):
+VRAM per card 30.07 -> 30.79 GiB. The 4 "FN_RECORD scratch regrow" lines account for about 120 MiB.
+- First, CPU only: read the traffic server log (workers/INT/rel/traffic-server.log) and the /metrics samples in
+  workers/REL/rel-rc-20261122T1311Z. Find whether the growth is steps (allocation events) or a ramp, and which allocator
+  logs line up.
+- Then, GPU, next window: the same release_traffic run for 20 min with RECORD off and with RECORD=1 on one lease, to
+  tell recording/scratch from KV/cache growth.
+- Gates: growth below 1 GiB in 60 min, or a plateau that is bounded and explained.
