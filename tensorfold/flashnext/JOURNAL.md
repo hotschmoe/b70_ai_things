@@ -1697,3 +1697,27 @@ before any serve. The C1 window is co-limited by host issue: about 12 ms of Leve
 time, so tracer or CPU noise shows up as device idle. The levers are fewer and cheaper API calls (the recorded path, R5,
 +25% C1 measured; it is refused with paged KV, RecordedAndPagedKvUnsupported), AR copies folded into the kernel, and HC at
 roofline. No serve numbers: no production behaviour changed.
+
+## 2026-11-22 05:45 UTC [INT] Production env: 8 lanes, then XPU_FN_COUPLED=1 (c6346c82, no rebuild)
+
+CONFIG: frozen c6346c82 (sha 253c67f8) + tf-dd-prod.env. Step A: TF_PARALLEL=8, XPU_FN_EVICT_SLOTS unset (log: physical_slots=8
+logical_streams=8 state_fit=8 full_context_fit=3 context=200000). Step B: + export XPU_FN_COUPLED=1.
+Gates before the flip: INT stack3 prod8 (all hard PASS, C8 242.6 vs 188.5); KV p8p (KV_PAGES=100, 8 x 11.6K x 300: == solo
+bitwise, 133 parks / 129 restores, 0 errors); SAMP cpl1c (COUPLED C4/C8 shas == solo == uncoupled, T0.6 and gen).
+COMMAND: production unit on 18124 (05:35-05:44): /v1/models via :18080; dd_functional --image-fixture via :18080;
+flashnext_serve_bench.py prod quick row; INT abl_client; SAMP prof_client2.py --sets p --conc 1,4,8 --cfgs gen,t0.6
+--c1-prompts 4 --tokens 256 uncoupled; restart with COUPLED; dd_functional again; prof_client2 coupled.
+Evidence workers/INT/stack4/unit8 (prod-results.json, abl.json, prof-cpl0.log, prof-cpl1.log, functional*.json).
+RESULT:
+A (8 lanes, greedy): /v1/models ids [hotschmoe-dd, ...-tensorfold, ...-strata-0216], context 200000. Bench row C1 104.0 /
+C2 148.8 / C4 179.5 / C8 265.9 / PF2k 1406 (4-lane stack3: 104.0 / 147.7 / 188.1 / 188.5 / 1398). ABL 96.5 / 181.0 / 88.8,
+p0 equal. dd_functional PASS (long 146.0 tok/s).
+B (sampled, same unit, uncoupled -> coupled; tok/s agg (C1 = mean of 4 prompts), tokens per window, shas):
+| cfg | C1 | C4 | C8 | tok/window C1 | shas equal |
+|---|---|---|---|---|---|
+| gen (T1.0 card) | 115.6 -> 123.0 | 171.3 -> 181.5 | 225.3 -> 231.2 | 2.390 -> 2.560 | all |
+| T0.6 | 125.5 -> 128.4 | 209.4 -> 219.4 | 232.4 -> 238.5 | 2.635 -> 2.688 | all |
+dd_functional with COUPLED PASS (long 146.6 tok/s). No row drops.
+VERDICT: keep both. tf-dd-prod.env = c6346c82, TF_PARALLEL=8 (EVICT_SLOTS unset), GDN_DEFER, EVICT_DRAIN, COUPLED.
+Rollbacks in the env: "ROLLBACK 4 lanes" comment (TF_PARALLEL=4 + XPU_FN_EVICT_SLOTS=4), delete the XPU_FN_COUPLED line.
+The 4-lane C4 bench row is 4.6% lower at 8 lanes (179.5 vs 188.1) in one run; ABL C4 181.0 vs 182.0 is flat, so treated as noise.

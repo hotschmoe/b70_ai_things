@@ -2629,3 +2629,17 @@
 2026-11-22 05:16:26 UTC [O] PRIORITY.hold 'KV' ~30 min: p8ref, p8p (8-lane park gate on c6346c82) + c256ref/c256p8/c256p4 (chunk-256 park gates); auto-removed after 5 KV leases or 35 min
 2026-11-22 05:17:08 UTC [KRN] released cards 0+1: host-cost split profile legacy vs paged KV defer=1 on krn e081c554+tool rc=0
 2026-11-22 05:17:09 UTC [KV] claim cards 0+1 ~5 min: KV for INT: c6346c82 prod env --parallel 8, solo refs 12K seeds 0-7 x 300 (port 18151, bin 253c67f8)
+2026-11-22 05:20:22 UTC [KV] released cards 0+1 (rc=0): KV for INT: c6346c82 prod env --parallel 8, solo refs 12K seeds 0-7 x 300
+2026-11-22 05:20:27 UTC [KV] claim cards 0+1 ~5 min: KV for INT: c6346c82 prod env --parallel 8, KV_PAGES=100, 8 x 12K x 300 vs solo (forced parks) (port 18151, bin 253c67f8)
+2026-11-22 05:23:44 UTC [KV] released cards 0+1 (rc=0): KV for INT: c6346c82 prod env --parallel 8, KV_PAGES=100, 8 x 12K x 300 vs solo (forced parks)
+2026-11-22 05:23:50 UTC [KV] claim cards 0+1 ~5 min: KV for SCHED: 63eb6fa1 prod env chunk 256 --parallel 8, solo refs 6K seeds 0-7 x 600 (port 18151, bin 9fb022a8)
+2026-11-22 05:26:30 UTC [KV] released cards 0+1 (rc=0): KV for SCHED: 63eb6fa1 prod env chunk 256 --parallel 8, solo refs 6K seeds 0-7 x 600
+2026-11-22 05:26:35 UTC [KV] claim cards 0+1 ~5 min: KV for SCHED: 63eb6fa1 chunk 256 --parallel 8, 72 pages, 8 x 6K x 600 vs solo (port 18151, bin 9fb022a8)
+2026-11-22 05:29:14 UTC [KV] released cards 0+1 (rc=0): KV for SCHED: 63eb6fa1 chunk 256 --parallel 8, 72 pages, 8 x 6K x 600 vs solo
+2026-11-22 05:29:20 UTC [KV] claim cards 0+1 ~5 min: KV for SCHED: 63eb6fa1 chunk 256 --parallel 4, 40 pages, 4 x 6K x 600 vs solo (port 18151, bin 9fb022a8)
+2026-11-22 05:31:27 UTC [KV] released cards 0+1 (rc=0): KV for SCHED: 63eb6fa1 chunk 256 --parallel 4, 40 pages, 4 x 6K x 600 vs solo
+2026-11-22 05:31:31 UTC [O] PRIORITY.hold removed (KV leases=5 or cap)
+2026-11-22 05:31:32 UTC [SAMP] claim cards 0+1 ~5 min: row a coupled C1/C4/C8 bitwise on prod c6346c82 (port 18152)
+2026-11-22 05:34:21 UTC [SAMP] released cards 0+1: row a coupled C1/C4/C8 bitwise on prod c6346c82 rc=0
+2026-11-22 05:34:32 UTC [INT] claim cards 0+1 ~8 min: production unit up on 18124, c6346c82 at 8 lanes (TF_PARALLEL=8, EVICT_SLOTS unset): /v1/models + dd_functional via :18080 + ABL C1/C4/C8 (then stopped)
+2026-11-22 05:44:18 UTC [INT] released cards 0+1: production unit stopped (c6346c82, 8 lanes + XPU_FN_COUPLED=1; dd_functional via :18080 PASS twice)
