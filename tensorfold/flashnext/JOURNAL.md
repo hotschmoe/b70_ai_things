@@ -2119,3 +2119,32 @@ VERDICT ->
 - Two open items, neither on the release line ebdc73dd:
   - 21d66fe8 changes sampled output with PLAIN_ROUNDS=0. xpu_mtp_chain.submit's zero-limit early return moved after the loop, and lane config gained plain_rounds. This is for SCHED; it is not default-off-bitwise.
   - The single stack6 long-history NEW needs the stack6 step list on ebdc73dd with RECORD off to bisect.
+
+## 2026-11-22 14:20 UTC [INT] Release validation: RC b70/dd-rel ebdc73dd + XPU_FN_RECORD=1 XPU_FN_GATE=1 (window 13:00-14:17)
+
+CONFIG: tf-dd-prod.env exactly as frozen 11:20 (ebdc73dd, sha aeb0bd2b; 8 lanes, COUPLED, DEFER, DRAIN, cache 6 GiB/card,
+RECORD=1 GATE=1). Rollback A = 983cc068 (sha 3cfccf34), RECORD line removed (rel/tf-dd-prod.env.rollbackA).
+COMMAND: workers/INT/rel/relA.sh (G1 + G2 prod on the real env file, 25 steps incl. SR-sha soft); unit_up.sh +
+release_traffic.py --minutes 60 --run-name rel-rc-20261122T1311Z via :18080; relB.sh (RC -> rollback A -> dd_functional
+via :18080 -> RC -> dd_functional -> unit down).
+RESULT:
+| arm | C1 | C2 | C4 | C8 | PF2k | 90K cold / cached |
+|---|---:|---:|---:|---:|---:|---:|
+| G1 (p0 bitwise, conc == solo) | 109.4 | 141.2 | 173.6 | 209.6 | 1557 | - |
+| G2 prod, exact env | 106.9 | 167.2 | 219.1 | 278.3 | 1545 | 75.4 s / 0.111 s |
+G2: every hard gate PASS (P0, KV0-3, S1, VIS-T0/I/F/T1, API1-3/5, P9, ABL, SR-samp, 60K 2x3 cache, REC0 0 fallbacks); soft
+SR-sha PASS (4f6221d5/5c0f1986/d04ea442/ba2388a0 after the full list, C4/C8 == solo). Traffic (REL harness) PASS: 60.0 min,
+236/236 requests ok in 55 conversations (agent 139, chat 57, docqa 23, image 17), max in-flight 8, 229 tool calls 0 bad JSON,
+17/17 image answers, 168/181 follow-ups cached, needle 14/15, 0 fatal log lines, swap flat (1.43 GiB), server RSS 12.4 -> 7.4 GB,
+recorded_window_fallbacks_total 0. WARN: device memory +1.21 GiB fitted (cap 1.00; VRAM per card 30.07 -> 30.79 GiB; 4
+FN_RECORD scratch regrow lines account for ~120 MiB), agent follow-up TTFT p99 139 s (8 concurrent 45-90K agents),
+kept_tool_calls_unoffered_total 1. Rollback rehearsal: 983cc068 ready 70 s, dd_functional PASS (long 150 tok/s);
+back to RC ready 55 s, dd_functional PASS (long 150.7 tok/s), fallbacks 0; poststop health rc=0 each stop.
+VERDICT: RC ebdc73dd + RECORD=1 PASSES the release window. Unit left DOWN at 14:16:47, env == frozen RC.
+Follow-up for next release: the +1.2 GiB device-memory growth under mixed long traffic (recordings/scratch per bucket?).
+
+## [O] 2026-11-22 14:20 UTC - RELEASE tf-dd-20261122: b70/dd-rel ebdc73dd + RECORD=1 (validated)
+CONFIG: RC = ebdc73dd (sha aeb0bd2b) with tf-dd-prod.env exactly as frozen 11:20 (cmp == workers/INT/rel/tf-dd-prod.env.rc-frozen).
+COMMAND: relA full window 13:00-13:09; release_traffic.py 60 min via :18080 13:11-14:11; rollback rehearsal 14:11-14:17 (INT).
+RESULT: all hard gates PASS; traffic 236/236 ok, 0 errors, 0 fallbacks; VRAM +0.94 GiB/card = 8 per-stream state slabs (118 MiB each, inside the 4.38 GB reserve), flat for the last 26 min; host +2.7 GiB = pinned tier filling (cache 11.9/12 GiB), flat; rollback both ways PASS.
+VERDICT: release. Notes in RELEASE-NOTES-20261122.md; tag tf-dd-20261122; unit enabled and started before 16:00 UTC; after that production owns both cards.

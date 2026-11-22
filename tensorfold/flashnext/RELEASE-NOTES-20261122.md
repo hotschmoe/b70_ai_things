@@ -1,6 +1,6 @@
-# Release notes: hotschmoe-dd on TensorFold Flash-Next, 2026-11-22 (DRAFT until validation completes)
+# Release notes: hotschmoe-dd on TensorFold Flash-Next, 2026-11-22 
 
-Status: DRAFT. Filled in from the 13:00-15:00 UTC validation; go-live 16:00 UTC.
+Status: RELEASED (validated 13:00-14:17 UTC; go-live 16:00 UTC). Git tag: tf-dd-20261122.
 
 ## Build
 
@@ -41,9 +41,27 @@ Sampled T0.6 (p0-p3, 256 tokens): C1 128.3, C4 217.7, C8 263.2 tok/s aggregate.
 Long-context decode C1 (greedy): 1K 96.4, 16K 91.3, 64K 90.0, 128K 84.9 tok/s.
 Owner targets: C1 100 met; C2 150 met; prefill 1500 met at 2K (about 1200 tok/s at 90K); C4 300 and C8 500 not met.
 
-## Validation (13:00-15:00 UTC)
+## Validation (2026-11-22, 13:00-14:17 UTC, exact production env; evidence workers/INT/rel, workers/REL/rel-rc-20261122T1311Z)
 
-TBD: full GPU window, 60 min mixed traffic, rollback rehearsal.
+- Full GPU window (relA, 25 steps): PASS. Bench regression C1 109.4 / C2 141.2 / C4 173.6 / C8 209.6 / PF2k 1557 with
+  greedy output bitwise equal to the reference; production C1 106.9 / C2 167.2 / C4 219.1 / C8 278.3 / PF2k 1545,
+  90K TTFT 75.4 s cold / 0.111 s cached; vision x4, API1-5, functional, 60K multi-turn cache check, 0 recorded-window
+  fallbacks; seeded sampled output after the full list equal to the stable reference, concurrent == single stream.
+  Earlier gates on the same build: forced parking at 8 slots (72 pages: 72 parks / 69 restores, 0 errors, == solo),
+  fallback drill (65 forced fallbacks, 0 HTTP 5xx), unit bounce.
+- 60 min realistic mixed traffic through :18080 (release_traffic.py): PASS on every hard check. 236/236 requests ok in
+  55 conversations (agent 139, chat 57, long-document 23, image 17), 1-8 concurrent, prompts up to 86K; finishes
+  stop 88 / tool_calls 134 / length 14; 229 tool calls, 0 malformed; images 17/17 correct; 168/181 follow-ups served
+  from the prompt cache; 0 fatal log lines; swap flat; 0 fallbacks.
+  - Device memory rose 0.94 GiB per card in 8 steps of about 118 MiB during the first 34 minutes, then stayed flat for
+    26 minutes: one per-stream state slab per resident stream (slab_est 124.7 MB, 8 streams), inside the 4.38 GB reserve
+    the KV sizing keeps. Free VRAM at the end: about 1.1 GiB per card.
+  - Host memory rose 2.7 GiB as the pinned host tier filled (prompt cache 11.9 of 12 GiB), then stayed flat.
+  - Latency: TTFT p50 6.9 s overall; cached follow-ups 1.0 s (chat) and 7.6 s (agent) p50; agent follow-up p99 139 s
+    and long-document follow-up p99 198 s when 8 agents with 45-90K contexts were active at once (prefill queueing).
+- Rollback rehearsal: PASS. Env switched to 983cc068 with recording off: ready in 70 s, dd_functional with image through
+  :18080 PASS; switched back to the release env: ready in 55 s, dd_functional PASS, 0 fallbacks; clean stops with the
+  post-stop health check rc=0.
 
 ## Known limits
 
@@ -58,6 +76,8 @@ TBD: full GPU window, 60 min mixed traffic, rollback rehearsal.
   caused by recorded windows; a host-side audit found no uninitialised read.
 - With recorded windows on, the on-card MTP draft chain is not used, so single-stream sampled decode is about 3% slower
   than without recording; streams 2-8 are 9-19% faster.
+- With many long agent conversations at once, follow-up TTFT p99 reaches about 2-3 minutes (prefill is served in turn).
+- One tool call to a tool that was not offered was kept in 60 minutes (metric kept_tool_calls_unoffered_total = 1).
 - No logprobs; TIFF/AVIF images are not accepted (JPEG/PNG/WebP are).
 - After 16:00 the unit holds both GPUs; research GPU work needs the owner's OK and a planned window.
 

@@ -2823,3 +2823,14 @@
 2026-11-22 11:59:00 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1100 s: gpu_window prod stack11-rec0-s6list (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional SR-samp MEM0 CACHE-MT MEM1)
 2026-11-22 12:05:43 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack11-rec0-s6list rc=0
 2026-11-22 12:30:09 UTC [O] PRIORITY.hold removed (12:30 or cleared)
+2026-11-22 12:31:13 UTC [O] PRIORITY.hold 'INT hotschmoe-dd-tf' for release validation until 15:10
+2026-11-22 13:00:01 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-22 13:02:20 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
+2026-11-22 13:02:21 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1100 s: gpu_window prod rel-rc-prod (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-T0 VIS-I VIS-F VIS-T1 API1-reasoning API2-tools API3-forced API4-budget API5-edge ABL P9-functional SR-samp SR-sha MEM0 CACHE-MT MEM1 REC0)
+2026-11-22 13:09:10 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod rel-rc-prod rc=0
+2026-11-22 13:09:26 UTC [INT] claim cards 0+1: production unit up on 18124 (RC ebdc73dd RECORD=1 for the 60 min release_traffic run)
+2026-11-22 14:12:11 UTC [INT] released cards 0+1: production unit stopped (RC before rollback rehearsal)
+2026-11-22 14:12:11 UTC [INT] claim cards 0+1: production unit up on 18124 (rollback rehearsal: 983cc068 RECORD off)
+2026-11-22 14:14:38 UTC [INT] released cards 0+1: production unit stopped (rollback rehearsal 983cc068 rc=0)
+2026-11-22 14:14:39 UTC [INT] claim cards 0+1: production unit up on 18124 (rollback rehearsal: back to RC ebdc73dd RECORD=1)
+2026-11-22 14:16:50 UTC [INT] released cards 0+1: production unit stopped (RC after rollback rehearsal rc=0)
