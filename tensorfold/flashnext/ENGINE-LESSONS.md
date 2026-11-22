@@ -104,6 +104,11 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
   K candidates per card. Penalized rows add a gather of the window's logits (<= 128 ids per card), penalized on the
   host. Each window's draw cost fell from 1.47 to 0.21-0.35 ms (T 0.6) and from 7.6 to 0.9 ms (penalized). The
   device merge matched a host merge on 94K candidates. Evidence: workers/SAMP/prof-new, check-new; xpu_sample.zig.
+- 2026-11-21 [KRN] A data-parallel MTP drafter per card (LITERATURE #14) nets about zero on TP2 B70. It saves about 3
+  cross-card syncs per MTP step (2 ARs + pick exchange, ~15-25 us each). But each card must then read the whole drafter
+  (attention + MoE expert slices, ~75 MB per step), against the half it reads now, at ~550 GB/s. That is +60-130 us
+  per step, and the same drafter runs on both cards. C1 gains nothing because the chain is serial either way. Ranked
+  down behind B3 (deferred GDN commit). Revisit only if a ledger shows MTP AR waits above ~0.3 ms per window.
 
 ## Scheduler and serving lessons
 
@@ -135,3 +140,5 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
 - 2026-11-21 [INT] One host-wide cpu-run lease per zig invocation makes a 25-step test suite wait behind every other
   build between steps (8 min waits seen); run all host steps in one zig build call under one lease instead.
   Evidence: workers/INT/host_suite2.sh vs host_suite.sh timings in workers/INT/suite.log.
+- 2026-11-21 [Strata features] Image formats: Strata gets TIFF/AVIF/WebP/EXIF-JPEG for free from Pillow in a Python venv; the Zig engine needs pinned C decoders loaded at runtime (libjpeg-turbo, libwebp built for the box) and still refuses TIFF/AVIF. A native engine should decide its supported formats up front and keep decoders out of the serving process (a converter sidecar). Evidence: JOURNAL.md [API] 2026-11-21 23:05, zig/src/server/images.zig.
+- 2026-11-21 [Architecture hurts] Capability names are overloaded: "pictures" (System One decisions) vs "vision" (chat images) vs input_types; a client or operator reading /v1/models sees pictures=false on a vision server. Name capabilities by what a client can do. Evidence: zig/src/server/input_types.zig, core/engine_api.zig Info.pictures.

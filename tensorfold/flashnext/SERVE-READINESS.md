@@ -44,3 +44,8 @@ reorganisation. (1) Parity until TF serves hotschmoe-dd and passes dd_functional
 (2) Then performance, single stream and concurrency, measured with ALL features on: the bench gains long-context rows
 (32K/90K prompt prefill + decode at depth) and sampling rows (temperature 0.6, card defaults), not only greedy 16K.
 Lessons for a future engine go in ENGINE-LESSONS.md.
+
+## Backlog (owner decisions)
+
+- TIFF/AVIF image input: DECLINED for now (owner 2026-11-22 00:30; no client sends them). Backlog item: a
+  TENSORFOLD_IMAGE_CONVERT=<cmd> hook (bytes in, PNG out) applied only to TIFF/AVIF, as Strata converts via Pillow.

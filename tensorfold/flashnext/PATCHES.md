@@ -31,3 +31,4 @@ flag or clean API, a test. One line each.
 | b70/dd-serve | 7d08051e | merge b70/fn-samp a00ab802 (clean) | XPU_FN_COUPLED=1 off by default; XPU_FN_SAMPLE_MERGE=0 restores old merge | n/a (integration) | INT host suite2 25/25 + quick check S1/VIS/P9 PASS |
 | b70/dd-serve | 8f35325a | merge b70/dd-vis 097ff79c (VIS formats + KV bef2f1a8); SAMP-vs-KV conflicts in xpu_lane.zig / xpu_lane_prompt.zig | - | n/a (integration) | INT host suite2 + quick check |
 | b70/dd-serve | 2cb54319 | merge b70/dd-kv f70795f7 (clean on 8f35325a) | KV flags in tf-dd-prod.env | n/a (integration) | INT host suite2 31/31 + quick check at 200000 PASS |
+| b70/dd-api2 | a70a873a | /v1/models adds architecture.input_modalities/output_modalities for image-taking models (Strata-compatible); done log line tokens exclude a forced call opening | none (additive, vision servers only) | yes | zig build test-dd-api (23 pass) |

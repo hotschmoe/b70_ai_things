@@ -1,0 +1,21 @@
+# DRAFT (not applied; bin/ changes need the orchestrator). Add under scrape_configs: in bin/monitoring/prometheus.yaml.
+#
+# TensorFold's backend on loopback :18124 serves Prometheus text at /metrics (families tensorfold:*). Until now TF metrics reached
+# Prometheus only through the b70_daily job (:18080/metrics, via the frontdoor, which lets /metrics through). That works but ties
+# the series to the frontdoor being up, so scrape the backend directly as well, with a backend label the dashboard can filter on.
+# hotschmoe_dd_strata (/metrics/prometheus on :18124) stays for Strata; only one backend listens on :18124 at a time, so the
+# jobs for the other backend simply show up=0 while it is down.
+#
+# If the unit ever runs with an API key on the server itself (today the frontdoor holds the key), add:
+#   authorization: { type: Bearer, credentials_file: /mnt/vm_8tb/b70/secrets/dd_api_key }
+  - job_name: hotschmoe_dd_tensorfold
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - '127.0.0.1:18124'
+        labels:
+          backend: tensorfold
+# Dashboard: tensorfold/flashnext/dd/monitoring/tensorfold-dd-dashboard.json (copy to bin/monitoring/grafana/dashboards/json/;
+# the provisioned datasource uid is ddyfngn31dg5cf and the dashboard selects the datasource through its $datasource variable).
+# Series are per-process, not per-request: for one request use the [tensorfold] done log line (prompt, cached, tokens, ttft,
+# decode, tok/s, rounds, accepted/drafted), which soak_monitor.py parses.

@@ -141,6 +141,60 @@ def tail(url, tokens, decode, tag):
     json.dump({'token_ids': r.get('ids')}, open(os.path.join(out, f'{tag}.json'), 'w'))
     gate(f'kv-tail-{tag}', s['status'] == 200 and s['needle'], s)
 
+def chat_msgs(url, messages, decode, tools=None):
+    """Greedy streamed chat with explicit messages; returns (summary-ish dict, content, reasoning)."""
+    host, port = url.split('//')[-1].split(':')
+    conn = http.client.HTTPConnection(host, int(port), timeout=900)
+    body = {'model': os.environ.get('TF_MODEL', 'hotschmoe-dd'), 'temperature': 0, 'max_tokens': decode, 'stream': True,
+            'messages': messages, 'stream_options': {'include_usage': True}}
+    if tools:
+        body['tools'] = tools
+    start = time.monotonic()
+    conn.request('POST', '/v1/chat/completions', body=json.dumps(body), headers={'Content-Type': 'application/json'})
+    resp = conn.getresponse()
+    if resp.status != 200:
+        return {'status': resp.status, 'error': resp.read()[:300].decode('utf-8', 'replace')}, '', ''
+    first, content, reasoning, usage = None, [], [], {}
+    for raw in resp:
+        line = raw.decode('utf-8', 'replace').strip()
+        if not line.startswith('data: ') or line == 'data: [DONE]':
+            continue
+        obj = json.loads(line[6:])
+        if obj.get('usage'):
+            usage = obj['usage']
+        for c in obj.get('choices', []):
+            d = c.get('delta') or {}
+            if d.get('content') or d.get('reasoning_content'):
+                first = first or time.monotonic()
+            content.append(d.get('content') or '')
+            reasoning.append(d.get('reasoning_content') or '')
+    details = usage.get('prompt_tokens_details') or {}
+    return ({'status': 200, 'prompt_tokens': usage.get('prompt_tokens'), 'cached_tokens': details.get('cached_tokens'),
+             'completion_tokens': usage.get('completion_tokens'), 'ttft_s': round((first or time.monotonic()) - start, 3)},
+            ''.join(content), ''.join(reasoning))
+
+def multiturn(url, tokens, decode):
+    """Row 12: client-style multi-turn prefix reuse. A: user; B: A + assistant tool call + tool result;
+    C: B + B's answer (content only, reasoning dropped as clients do) + user follow-up. Reports cached_tokens per turn;
+    gate: B reuses A's prompt and C reuses B's prompt (cached >= previous prompt_tokens - 64) with a fast TTFT."""
+    text, code = prompt(0, int(tokens))
+    tools = [{'type': 'function', 'function': {'name': 'lookup', 'description': 'Look up a ledger entry.',
+              'parameters': {'type': 'object', 'properties': {'q': {'type': 'string'}}, 'required': ['q']}}}]
+    a_msgs = [{'role': 'user', 'content': text}]
+    a, a_text, a_reason = chat_msgs(url, a_msgs, int(decode), tools)
+    b_msgs = a_msgs + [{'role': 'assistant', 'content': '', 'tool_calls': [{'id': 'call_1', 'type': 'function',
+              'function': {'name': 'lookup', 'arguments': json.dumps({'q': 'vault code word'})}}]},
+              {'role': 'tool', 'tool_call_id': 'call_1', 'content': 'lookup: no extra entries for vault code word.'}]
+    b, b_text, b_reason = chat_msgs(url, b_msgs, int(decode), tools)
+    c_msgs = b_msgs + [{'role': 'assistant', 'content': b_text}, {'role': 'user', 'content': 'Repeat the code word in one word.'}]
+    c, c_text, _ = chat_msgs(url, c_msgs, int(decode), tools)
+    def reused(cur, prev):
+        return (cur.get('cached_tokens') or 0) >= (prev.get('prompt_tokens') or 1) - 64
+    info = {'A': a, 'B': b, 'C': c, 'A_reasoning_chars': len(a_reason), 'B_reasoning_chars': len(b_reason),
+            'B_reuses_A': reused(b, a), 'C_reuses_B': reused(c, b), 'C_needle': code.lower() in c_text.lower()}
+    ok = all(x.get('status') == 200 for x in (a, b, c)) and info['B_reuses_A'] and info['C_reuses_B']
+    gate('kv-multiturn', ok, info)
+
 def again(url, tokens, decode, ref):
     """Repeat REF's prompt: same ids bitwise, served from the RAM prompt cache (cached_tokens, fast TTFT)."""
     base = json.load(open(ref))
@@ -225,4 +279,4 @@ def parks(log, least):
 
 if __name__ == '__main__':
     mode, args = sys.argv[1], sys.argv[2:]
-    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail}[mode](*args)
+    {'budget': budget, 'long': long, 'conc': conc, 'parks': parks, 'short': short, 'again': again, 'tail': tail, 'multiturn': multiturn}[mode](*args)

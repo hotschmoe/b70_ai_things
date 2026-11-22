@@ -1266,3 +1266,30 @@ VERDICT: LIVE. Rollback = tensorfold/flashnext/dd/gpu_window.sh rollback. Next: 
 CONFIG: owner: endpoint may go down any time; bring the frozen build up only for relevant tests (+ dd_functional with image after each bring-up). TF unit stopped + disabled, soak stopped; xpu-health HEALTHY 22:57. Frozen 2cb54319 kept as rollback.
 COMMAND: workers dispatched on NEXT-QUEUE.md: INT = perf runner + integrator (re-rank vs 2cb54319, row 9/B1 confirm from source + A/B, production-config ledger first, section 2 rows on both configs, stacked arm + freeze); KV = KVP1/KVP2 prefill, rows 10/12, B1'; SAMP = MTP acceptance (row 8/B2), row 6, sampling cost at C4/C8; SCHED (ex-VIS) = B6, B8, --parallel 8 at C8; API = pictures cap, TIFF/AVIF, per-request metrics line, TF Grafana draft; KRN (new) = B3 GDN replay, B4 DP drafter.
 RESULT: pending. VERDICT: pending; per-row before/after us vs byte ideal, launch delta, C1/C2/C4/C8/PF2k/90K TTFT on both configs.
+
+## [API] 2026-11-21 23:05 UTC - performance-phase correctness items: pictures capability, TIFF/AVIF, metrics line, Prometheus/Grafana draft
+CONFIG: b70/dd-serve 2cb54319 source (read-only) + worktree dd-api2 (b70/dd-api2 a70a873a on 2cb54319); no GPU used (cards busy with SCHED/KV arms).
+(1) RESULT: capabilities.pictures is Info.pictures = "decisions may carry pictures" (POST /v1/systemone, systemone.zig); it is false for every chat
+engine and is NOT chat image input. Image input is capabilities.vision (true with --vision) and input_types ["text","image"] (input_types.zig, same
+source as the request refusals); no client reads pictures (open-webui and Pi take modalities from their own model settings). Fix: model entries with
+image input also carry architecture.input_modalities ["text","image"] / output_modalities ["text"] like Strata; text-only entries unchanged so the
+pinned 8-key list and goldens hold. test-dd-api 23/23 pass. VERDICT: advertised consistently; a live /v1/models check rides INT's stacked arm.
+(2) RESULT: TF decodes PNG/JPEG/WebP (pinned libjpeg-turbo/libwebp, VIS) and passes BMP/GIF; TIFF/AVIF are refused ("not PNG, JPEG or WebP"). Strata's
+Pillow 13 (libtiff+avif) lives only in its venv; the host python has no PIL and no libtiff/libavif/libheif. VERDICT: not small (a pinned decoder is a
+new C dependency; a Pillow subprocess adds a decoder attack surface and a Strata-venv dependency). Recorded, not built. Cheapest path if wanted:
+TENSORFOLD_IMAGE_CONVERT=<cmd> (bytes in, PNG out, sandboxed) applied only to TIFF/AVIF magic; no user sends these today (frontdoor sees chat only).
+(3) RESULT: the [tensorfold] done line already carries what is asked, no text: prompt, cached, completion tokens, thinking/effort, finish, rounds,
+accepted/drafted (MTP), ttft, decode s, elapsed, queued, tok/s (e.g. prompt=19415 cached=2 tokens=1200 rounds=164 accepted=1035/1040 ttft=77.253 decode=26.120
+queued=0.059 tok/s=45.9 from final-2cb54319). soak_monitor.py's TF_DONE regex parses all of it. One nit fixed: tokens excluded forced-call opening.
+(4) RESULT: drafted tensorfold/flashnext/dd/monitoring/tensorfold-dd-dashboard.json (15 panels: TTFT, ITL, decode rate, aggregate and prefill tok/s,
+E2E and queue quantiles, running/waiting, MTP acceptance, KV usage, prompt cache hit ratio and bytes, RSS, rejections/disconnects/malformed tool calls;
+all 24 metric names checked against metrics.zig) and prometheus-tensorfold-job.yaml (direct scrape of :18124 /metrics with a backend label; b70_daily
+via :18080 keeps working). Not applied (bin/ needs the orchestrator).
+NOTE for INT: test-golden on dd-serve 2cb54319 already fails 11 cases unrelated to this change: /v1/models golden lacks the new capability key
+repetition_penalty (SAMP) and metrics goldens lack mtp counters; the goldens need regenerating by their owner (not wholesale from the candidate).
+
+## [O] 2026-11-22 00:36 UTC - owner delegation + monitoring installed
+CONFIG: owner (via officewin) delegates reviewable engineering items (builds, merges that pass gates, config, fixtures, monitoring, frozen-build updates) to the orchestrator, logged here; still ask first for data deletion, public/upstream pushes, security/credential changes, other machines.
+COMMAND: (1) monitoring APPROVED: backup bin/monitoring/prometheus.yaml -> /mnt/vm_8tb/b70/backups/monitoring/prometheus.yaml.20261122T003510Z; appended job hotschmoe_dd_tensorfold (127.0.0.1:18124/metrics, label backend=tensorfold) in place (inode unchanged 1071874; b70_daily and hotschmoe_dd_strata untouched); docker exec b70_prometheus promtool check config -> SUCCESS; docker kill -s HUP b70_prometheus; copied tensorfold-dd-dashboard.json into bin/monitoring/grafana/dashboards/json/. (2) TIFF/AVIF DECLINED -> backlog line in SERVE-READINESS.md. (3) golden fixtures APPROVED -> INT updates the 11 files, diffs limited to sampling/MTP metric fields, stop on any token/text diff.
+RESULT: Prometheus active targets include hotschmoe_dd_tensorfold (down: TF unit not up now); Grafana provisioned 'hotschmoe-dd (TensorFold production)' (uid hotschmoe-dd-tensorfold, folder LLM Serving).
+VERDICT: installed; up=1 + panel render to confirm at the next production bring-up.

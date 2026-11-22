@@ -2407,3 +2407,66 @@
 2026-11-21 22:11:52 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
 2026-11-21 22:11:52 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 2400 s: gpu_window prod final-2cb54319 (port 18150)
 2026-11-21 22:18:44 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod final-2cb54319 rc=0
+2026-11-21 22:58:23 UTC [KV] claim cards 0+1 ~5 min: KVP1: paged int8 prod KV + prefill kernel profile, 8K + 32K (port 18151, bin 65d17dbb)
+2026-11-21 22:59:40 UTC [SCHED] claim cards 0+1 ~5 min: a1 prod config quick bench, 4 lanes, EVICT_SLOTS=4 (port 18153, frozen 2cb54319)
+2026-11-21 23:00:47 UTC [KV] released cards 0+1 (rc=0): KVP1: paged int8 prod KV + prefill kernel profile, 8K + 32K
+2026-11-21 23:00:47 UTC [KV] claim cards 0+1 ~5 min: KVP2: legacy bf16 desc (KV off, ctx 16384) + prefill kernel profile, 8K (port 18151, bin 65d17dbb)
+2026-11-21 23:03:01 UTC [KV] released cards 0+1 (rc=0): KVP2: legacy bf16 desc (KV off, ctx 16384) + prefill kernel profile, 8K
+2026-11-21 23:03:51 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-prod (port 18150)
+2026-11-21 23:06:51 UTC [SCHED] released cards 0+1: a1-prod4 rc=0
+2026-11-21 23:06:51 UTC [SAMP] claim cards 0+1 ~5 min: perf row c: prod config 2cb54319, p0-p7 C1/C2/C4/C8 x greedy/t0.6/gen + code C1, sample profile (port 18152)
+2026-11-21 23:10:54 UTC [SAMP] released cards 0+1: perf row c: prod config 2cb54319, p0-p7 C1/C2/C4/C8 x greedy/t0.6/gen + code C1, sample profile rc=0
+2026-11-21 23:13:14 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-prod rc=0
+2026-11-21 23:13:14 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-bench (port 18150)
+2026-11-21 23:14:10 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-bench rc=1
+2026-11-21 23:14:10 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-desc0 (port 18150)
+2026-11-21 23:16:32 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-desc0 rc=0
+2026-11-21 23:16:32 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-pc0 (port 18150)
+2026-11-21 23:18:57 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-pc0 rc=0
+2026-11-21 23:18:57 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-evict0 (port 18150)
+2026-11-21 23:21:24 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-evict0 rc=0
+2026-11-21 23:21:24 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-ctx16k (port 18150)
+2026-11-21 23:27:56 UTC [SAMP] claim cards 0+1 ~5 min: perf row c: bench config 2cb54319, p0-p7 C1/C2/C4/C8 x greedy/t0.6/gen + code C1, sample profile (port 18152)
+2026-11-21 23:28:06 UTC [SCHED] claim cards 0+1 ~5 min: a3 prod config + XPU_FN_EVICT_DRAIN=1 (dd-sched), quick bench C1-C8 + lane trace (port 18153, frozen 2cb54319)
+2026-11-21 23:32:28 UTC [SAMP] released cards 0+1: perf row c: bench config 2cb54319, p0-p7 C1/C2/C4/C8 x greedy/t0.6/gen + code C1, sample profile rc=0
+2026-11-21 23:35:03 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-ctx16k rc=0
+2026-11-21 23:35:03 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-slotsauto (port 18150)
+2026-11-21 23:40:03 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-slotsauto rc=124
+2026-11-21 23:40:11 UTC [SAMP] claim cards 0+1 ~5 min: row 6 depth sweep d3c0/d4c0 prod 2cb54319 (port 18152)
+2026-11-21 23:41:59 UTC [O] PRIORITY.hold 'KV KRN': CPU gap for KV ReleaseFast build (starved 25 min behind quiet GPU windows) + KRN host tests; GPU/CPU leases of others wait; removed when both finish (<= 30 min)
+2026-11-21 23:45:01 UTC [SAMP] released cards 0+1: row 6 depth sweep d3c0/d4c0 prod 2cb54319 rc=124
+2026-11-21 23:46:48 UTC [SCHED] released cards 0+1: a3-drain4 not run (withdrawn while queued; requeued gpu-run first)
+2026-11-21 23:46:48 UTC [SCHED] claim cards 0+1 ~5 min: a3 prod config + XPU_FN_EVICT_DRAIN=1 (dd-sched 5c?), quick bench C1-C8 + lane trace (port 18153)
+2026-11-21 23:51:54 UTC [O] PRIORITY.hold removed (KV build + KRN host tests done or 30 min cap)
+2026-11-21 23:51:55 UTC [O] PRIORITY.hold 'SAMP' for SAMP's queued xpu-native build (waiting since 23:07); removed when it finishes (<= 20 min)
+2026-11-21 23:52:03 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-par8 (port 18150)
+2026-11-21 23:58:37 UTC [KRN] claim cards 0+1 <= 5 min: B3 a1 bench config XPU_FN_GDN_DEFER=0 quick bench (port 18155, krn f4ed779e)
+2026-11-22 00:02:00 UTC [SCHED] released cards 0+1: a3-drain4 rc=0
+2026-11-22 00:02:11 UTC [SCHED] released cards 0+1: a3-drain4 not run (cpu-run --quiet blocked by PRIORITY.hold SAMP while holding GPU; retry with short CPU wait)
+2026-11-22 00:04:51 UTC [O] PRIORITY.hold removed (SAMP build done or cap)
+2026-11-22 00:05:11 UTC [SCHED] claim cards 0+1 ~5 min: a3 prod config + XPU_FN_EVICT_DRAIN=1 (dd-sched), quick bench C1-C8 + lane trace (port 18153)
+2026-11-22 00:07:25 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-par8 rc=0
+2026-11-22 00:09:05 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-bench (port 18150)
+2026-11-22 00:09:51 UTC [SAMP] claim cards 0+1 ~5 min: row c shared top-K pass ON, new bin d6df2818 prod (port 18152)
+2026-11-22 00:10:00 UTC [KRN] released cards 0+1 (arm rc=0): B3 a1 bench config defer=0
+2026-11-22 00:10:00 UTC [KRN] claim cards 0+1 <= 5 min: B3 a2 bench config XPU_FN_GDN_DEFER=1 quick bench (port 18155, krn f4ed779e)
+2026-11-22 00:11:34 UTC [O] lock-order deadlock broken: killed SAMP lease pid 375073 (gpu-run outside cpu-run --quiet). Rule: cpu-run --quiet OUTSIDE, gpu-run INSIDE.
+2026-11-22 00:14:15 UTC [SAMP] claim cards 0+1 ~5 min: row c shared top-K pass OFF, new bin d6df2818 prod (port 18152)
+2026-11-22 00:14:30 UTC [KRN] released cards 0+1 (arm rc=0): B3 a2 bench config defer=1
+2026-11-22 00:16:22 UTC [SCHED] released cards 0+1: a3-drain4 not run (withdrawn: lock order fixed to cpu-run --quiet outside)
+2026-11-22 00:17:40 UTC [SAMP] released cards 0+1: row c shared top-K pass OFF, new bin d6df2818 prod rc=1
+2026-11-22 00:20:06 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod abl-bench rc=0
+2026-11-22 00:20:07 UTC [KV] claim cards 0+1 ~5 min: KV 38ccad07 on prod 2cb54319: p0 C4 vs prod ref, 8K/32K prefill, 32K cache repeat (cache+evict timing) (port 18151, bin 52accb06)
+2026-11-22 00:21:36 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 300 s: gpu_window prod abl-chunk64 (port 18150)
+2026-11-22 00:23:00 UTC [KV] released cards 0+1 (rc=0): KV 38ccad07 on prod 2cb54319: p0 C4 vs prod ref, 8K/32K prefill, 32K cache repeat (cache+evict timing)
+2026-11-22 00:23:01 UTC [SAMP] claim cards 0+1 ~5 min: row c shared top-K pass ON (re-run of killed arm), new bin d6df2818 prod (port 18152)
+2026-11-22 00:26:35 UTC [SAMP] released cards 0+1: row c shared top-K pass ON (re-run of killed arm), new bin d6df2818 prod rc=0
+2026-11-22 00:26:42 UTC [O] PRIORITY.hold 'SCHED' for 2 x ~4 min admission-fix arms (a3 prod+drain 4 lanes, a4 --parallel 8); auto-removed when SCHED releases its 2nd lease or 20 min
+2026-11-22 00:26:54 UTC [SCHED] claim cards 0+1 ~5 min: a3 prod config + XPU_FN_EVICT_DRAIN=1 (dd-sched), quick bench C1-C8 + lane trace (port 18153)
+2026-11-22 00:27:55 UTC [SCHED] released cards 0+1: a3-drain4 not run (lock busy), retry
+2026-11-22 00:28:40 UTC [SCHED] claim cards 0+1 ~5 min: a3 prod config + XPU_FN_EVICT_DRAIN=1 (dd-sched), quick bench C1-C8 + lane trace (port 18153)
+2026-11-22 00:29:08 UTC [KRN] claim cards 0+1 <= 5 min: B3 a3 prod config defer=0 quick bench + p0 C4 vs KV ref + 4K cache repeat (port 18155, krn f4ed779e)
+2026-11-22 00:29:40 UTC [SCHED] released cards 0+1: a3-drain4 not run (lock busy), retry
+2026-11-22 00:30:25 UTC [SCHED] claim cards 0+1 ~5 min: a3 prod config + XPU_FN_EVICT_DRAIN=1 (dd-sched), quick bench C1-C8 + lane trace (port 18153)
+2026-11-22 00:33:51 UTC [SCHED] released cards 0+1: a3-drain4 rc=0
+2026-11-22 00:34:06 UTC [SCHED] claim cards 0+1 ~5 min: a4 prod config + XPU_FN_EVICT_DRAIN=1, --parallel 8 slots=state fit (dd-sched) (port 18153)

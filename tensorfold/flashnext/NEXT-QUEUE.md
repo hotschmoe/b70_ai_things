@@ -7,6 +7,35 @@ workers/H/r11/card1-queue.sh + PASS-GATES.txt, workers/S/int-rf2-results.json, w
 strata/flash-next/concurrency-0216/LEDGER.md, strata/flash-next/dd/hotschmoe-dd-0216.json, fn-a3 source (read only).
 Tags: [M] measured (cited), [I] inferred / arithmetic, [L] literature claim.
 
+## R. Re-rank vs 2cb54319 (INT, 2026-11-22 00:05 UTC; production config = tf-dd-prod.env, frozen 2cb54319)
+
+Evidence: INT factor ablation on the frozen binary, :18150, one server per arm, 128 tokens greedy, oracle-eight prompts
+(p0-p6 are 22-37 tokens, p7 is 4805 tokens, so C8 carries one long prefill), TF_LANE_TRACE time-weighted lane width
+[M /mnt/vm_8tb/b70/results/tf-flashnext/workers/INT/abl/, abl-summary.json, abl_analyze.py]; final-2cb54319 window
+server.log; SCHED a1 (C4 150 / C8 134 at EVICT_SLOTS=4); KV KVP1/KVP2 prefill profile. Table:
+/mnt/vm_8tb/b70/results/tf-flashnext/B/ledger/LEDGER-prod-2cb54319.md.
+
+Main finding: on the production config the C4/C8 loss is lane SCHEDULING (streams not sharing windows), not per-op
+time. Production round ms by live width (1:21.3, 2:22.5, 3:29.4, 4:32.7) is within 3% of the bench config's widths,
+yet prod C4 runs a time-weighted 2.31 live lanes (pc0/ctx16k: 3.55) and C8 2.89 of a 4-lane cap, with 54% round-busy
+time because a 512-row prefill chunk holds the engine thread 340-450 ms with no decode round between chunks.
+
+| Rank | Item (row) | Measured loss on production | Expected recovery | Owner | State |
+|---|---|---|---|---|---|
+| R1 | Eviction tier waits for idle compute lists (Runner.pleIdle) before any cache save/restore, park or restore, so admission serializes behind every decoder (new; supersedes the admission part of rows 11/12) | C4 136.6 vs 160.3 with pc0 (live 2.31 vs 3.55; 74 deferred fill calls; TTFT max 2.35 vs 0.44 s) | C4 +17% (to ~160); C8 TTFT seconds | SCHED (XPU_FN_EVICT_DRAIN, b70/dd-sched) | building/gating |
+| R2 | Prefill blocks decode at XPU_CHUNK 512 (row 11 / B6, now first-order) | C8: 4.4-4.5 s of fill calls in a 9.4-10 s wall, round busy 53-59% in every arm | C8 up to ~1.8x if the 4.8K prefill interleaves (or shrinks: R5) | SCHED / Lead B ttft (B6); chunk64 arm pending | measuring |
+| R3 | Lane cap: TF_PARALLEL=4 caps C8 at C4 by construction; EVICT_SLOTS=auto (3 physical at 200K) thrashes parks (slotsauto: 5 parks, restores up to 1273 ms, C8 did not finish in 170 s) | C8 = C4 ceiling | Keep EVICT_SLOTS=4 (env already); par8 arm pending | INT (config) + KV (8d1dd2d6 auto = state fit) | measuring |
+| R4 | Park / cache copies polled once per engine round: 62 MB park in 1277-2093 ms, cache restore 6-129 ms, cache save 15-175 ms per prompt (new) | C4 tail TTFT; C8 parks | ~14 ms per 62 MB copy | KV (318e8b21 XPU_FN_EVICT_TIMING, then polling fix) | in progress |
+| R5 | Paged prefill attention: fn_page_attn_sparse 1601.7 ms vs fn_attn_sparse 699.1 ms over the same 1452 calls (row 14 relative) | PF2k 1390 vs 1556; 90K TTFT 88 s | PF to bench parity (+12%), 90K TTFT ~-25% | KV 38ccad07 (bitwise) | gating |
+| R6 | Row 9 / B1 RESOLVED: DESC is on with paged int8 KV in 2cb54319; DESC=0 costs C1 -11% (92.2 -> 82.2), round width 4 32.7 -> 37.5 ms (+15%) | none (already on) | - | - | closed |
+| R7 | B1' (was row 1 prerequisite): RECORD is refused with paged KV (xpu_forward.zig:137 RecordedAndPagedKvUnsupported); OOO is accepted; ATTN_DPAS is skipped when paged (xpu_window_runtime.zig:160) | rows 1 and 5 cannot run on production | row 1 / row 5 estimates (C4 +15%, C8 +17%; attention at long ctx) once ported | KV | after R4/R5 |
+| R8 | C1 92 (this ablation) / 100 (window) vs bench 110: same 21.3 ms window, so tokens/window differs (int8 KV numerics vs drafter acceptance) | C1 -9..-16% | rows 6/8 (depth/conf, drafter numerics) | SAMP / R; bench arm pending | measuring |
+| R9 | Rows 4 (HC_Q8), 7 (CHUNK_SOLO 1024), 13, 14-18 | per-op, after R1-R3 | as in section 1 | queue | unchanged order, below R1-R5 |
+
+Reordered section-1 rows for the production config: R1, R2, R3, R4, R5 first (scheduling and tier copies), then
+row 3 (matched prompts), row 6 (C1 depth), row 4, row 7, B1' (rows 1/5), row 10 long-context, row 13, 14-18.
+Row 9 is closed (R6). Row 2 (ledger) is delivered as LEDGER-prod-2cb54319.md; its per-op part is the traced pass.
+
 ## 0. Baseline and what the targets demand
 
 Production build int-rf2 = fn-a3 372bf1b2 (quick bench, 128 tokens, greedy, ctx 16384, XPU_CHUNK 64, CHUNK_SOLO 512,

@@ -27,3 +27,14 @@ scrape_configs:
     static_configs:
       - targets:
           - '127.0.0.1:18124'
+
+  # TensorFold (hotschmoe-dd since 2026-11-21): backend on loopback :18124 serves Prometheus text at /metrics (tensorfold:*).
+  # Additive to b70_daily (:18080/metrics via the frontdoor) and hotschmoe_dd_strata; one backend listens on :18124 at a
+  # time, so the other backend's job shows up=0. Dashboard: grafana/dashboards/json/tensorfold-dd-dashboard.json.
+  - job_name: hotschmoe_dd_tensorfold
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - '127.0.0.1:18124'
+        labels:
+          backend: tensorfold
