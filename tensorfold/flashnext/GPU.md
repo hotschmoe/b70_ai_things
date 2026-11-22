@@ -2834,3 +2834,4 @@
 2026-11-22 14:14:38 UTC [INT] released cards 0+1: production unit stopped (rollback rehearsal 983cc068 rc=0)
 2026-11-22 14:14:39 UTC [INT] claim cards 0+1: production unit up on 18124 (rollback rehearsal: back to RC ebdc73dd RECORD=1)
 2026-11-22 14:16:50 UTC [INT] released cards 0+1: production unit stopped (RC after rollback rehearsal rc=0)
+2026-11-22 15:04:16 UTC [O] PRIORITY.hold removed
