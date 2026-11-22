@@ -1721,3 +1721,82 @@ dd_functional with COUPLED PASS (long 146.6 tok/s). No row drops.
 VERDICT: keep both. tf-dd-prod.env = c6346c82, TF_PARALLEL=8 (EVICT_SLOTS unset), GDN_DEFER, EVICT_DRAIN, COUPLED.
 Rollbacks in the env: "ROLLBACK 4 lanes" comment (TF_PARALLEL=4 + XPU_FN_EVICT_SLOTS=4), delete the XPU_FN_COUPLED line.
 The 4-lane C4 bench row is 4.6% lower at 8 lanes (179.5 vs 188.1) in one run; ABL C4 181.0 vs 182.0 is flat, so treated as noise.
+
+## 2026-11-22 05:55 UTC [KV] 8-lane forced-park gate, chunk-256 park gates, paged int8 attention 2.1x
+
+CONFIG: TP2 on :18151 via workers/KV/kv-quick.sh. Binaries: c6346c82 (253c67f8), 63eb6fa1 (9fb022a8), b70/dd-kv
+1856b3b7 (k5, 53dfbdb7). The prod env flags XPU_FN_EVICT_DRAIN=1 and XPU_FN_GDN_DEFER=1 are set for the c6346c82 and
+63eb6fa1 arms.
+
+COMMAND:
+- p8ref/p8p: c6346c82, --parallel 8, slots unset, ctx 32768; solo refs at 12K (seeds 0-7, 300 tokens); then
+  KV_PAGES=100 with 8 x 11.6K concurrent.
+- c256ref/c256p8/c256p4: 63eb6fa1 with XPU_CHUNK = XPU_CHUNK_SOLO = 256; 6K refs (600 tokens); 72 pages at 8 lanes,
+  40 pages at 4 lanes.
+- k4bf: XPU_FN_KV=bf16page, evict off, 8K prefill profile.
+- k3a: 4-slices-per-64-lane-WG occupancy variant (dropped).
+- k5a: vload_half4 scales; p0 C4 vs prod ref, 8K profile, 32K.
+
+RESULT:
+- p8p: all 8 == solo bitwise, all finish length; 133 parks / 129 restores, 0 errors.
+  - Max TTFT 84.8 s against a prefill sum of 81 s.
+  - Park mean 335 ms, max 2.26 s: device copy about 16 ms per 94 MB, wall about 450 ms (polled per engine round).
+- c256p8: 112/109 parks, == solo. c256p4: 6/6, == solo. All HEALTHY.
+- INT long8 (8 x 60K, 700 pages, 0 parks): max TTFT 393 s = 7 x 59.6K prefill at about 1050 tok/s, not a page wait.
+  Admission charges only a slot; finished streams freed pages before the rest reached full size.
+- fn_page_attn_sparse per 7.2-7.7K-token prompt:
+  - int8 1462.3 ms (38ccad07); occupancy variant 1480.2 ms;
+  - paged bf16 798.8 ms; legacy bf16 699.1 ms;
+  - int8 with vload_half4 682.3 ms.
+  The software widen_half of 8 scales per key per lane was half the kernel.
+- k5a end to end: prefill 8K 1124 -> 1278 tok/s, 32K 1054 -> 1205 tok/s (TTFT 29.7 -> 26.0 s); solo decode 95.5 -> 98.2.
+  p0 C4 == prod ref.
+
+VERDICT:
+- The 8-lane forced-park policy is correct on the production build. INT took 8 lanes into production.
+- Chunk 256 parks cleanly.
+- 1856b3b7 (bitwise) makes paged int8 attention faster than legacy bf16. It goes to INT's next batch.
+- Park wall latency (R4) costs about 4 s over 133 parks at 8 lanes (about 5% of the max TTFT). It shrinks with chunk 256
+  (shorter rounds), so it ranks below kernel work.
+
+## 2026-11-22 06:15 UTC [INT] 3x alternating 4 / 8 lanes check (c6346c82 + prod env): C4 delta is noise
+
+CONFIG: frozen c6346c82, tf-dd-prod.env (COUPLED, GDN_DEFER, DRAIN); 4 lanes = TF_PARALLEL=4 + XPU_FN_EVICT_SLOTS=4, 8 lanes =
+the production env (slots unset, physical_slots=8). Port 18150.
+COMMAND: one lease (cpu-run --quiet + gpu-run, 459 s): workers/INT/stack4/c4x3/body.sh, order 4,8,4,8,4,8, one server load and
+one flashnext_serve_bench.py prod quick row each; xpu-health pre/post.
+RESULT (agg tok/s, mean of 3; per-run in c4x3/r*-l*/prod-results.json):
+| lanes | C1 | C2 | C4 | C8 |
+|---|---:|---:|---:|---:|
+| 4 | 103.6 | 152.9 | 186.0 (183.4/186.6/187.9) | 202.0 |
+| 8 | 104.0 | 146.6 | 183.1 (188.1/180.6/180.7) | 239.7 |
+C4 -1.6% (< 3% threshold); C8 +18.7%; C2 -4.1% (8-lane C2 spread 140.2-152.6). Health post HEALTHY.
+VERDICT: C4 difference is noise; 8 lanes stays. C2 shows a possible small per-window cost at 8 slots; flagged, not acted on.
+
+## 2026-11-22 06:40 UTC [KV] Row 10: long-context C1 decode on the paged int8 production KV config
+
+CONFIG: b70/dd-kv 1856b3b7 (53dfbdb7), workers/KV/kv-quick.sh (200000 x 4, paged int8 + desc, evict, mirror, prompt cache
+2 GiB, MTP), C1 greedy. kv_gate.py long has a new KV_LONG_ANSWER=free prompt (code word, then a 600-word original story),
+so MTP acceptance is typical, not copy-inflated.
+COMMAND: long URL N 512 TAG SEED for N = 1000/16000/64000 (lease r10c) and 128000 (r10d), seeds 1-4.
+RESULT:
+
+| Prompt | Decode | TTFT | Prefill |
+|---|---:|---:|---:|
+| 1K | 96.4 tok/s | 0.76 s | 1294 tok/s |
+| 16K | 91.3 tok/s | 11.6 s | 1333 tok/s |
+| 64K | 90.0 tok/s | 51.0 s | 1248 tok/s |
+| 128K | 84.9 tok/s | 110.5 s | 1160 tok/s |
+
+- The needle was recalled at 16K-128K. At 1K the needle line sits beyond the prompt, so 'needle' is false by design.
+- HEALTHY.
+- With the copy-style reply the same server reported 212-330 tok/s (MTP accepts copies).
+VERDICT: decode loses 5% / 7% / 12% at 16K / 64K / 128K and stays above 90 tok/s through 64K. The context-dependent
+attention/indexer share bounds ATTN_DPAS over pages at about +5-12% C1 at long context, so the kernel is worth building
+(teacher/KL gated).
+
+## [O] 2026-11-22 07:00 UTC - release plan: TensorFold hotschmoe-dd goes live 16:00 UTC
+CONFIG: owner: cut a release and serve it at 16:00 UTC, long-running; plan in RELEASE-20261122.md.
+COMMAND: batches until 13:00 (bitwise preferred; token-changing items must pass their gate by 13:00); 13:00 freeze; INT runs full GPU window + ~60 min realistic mixed traffic (new worker REL builds dd/release_traffic.py, CPU-only, mock-validated) + rollback rehearsal; orchestrator writes notes, tags, enables and starts the unit.
+RESULT: pending.
+VERDICT: pending. After 16:00 production owns both cards; no GPU windows or restarts without owner OK, except emergency rollback.
