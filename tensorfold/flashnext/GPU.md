@@ -2820,3 +2820,6 @@
 2026-11-22 11:54:30 UTC [KRN] released cards 0+1: KRN sampled order arm t0.6,gen,t0.6 (ebdc73dd RECORD off, port 18155) rc=0
 2026-11-22 11:54:54 UTC [KRN] claim cards 0+1 ~5 min: KRN bench-quick then gen,t0.6 (stack7 body on ebdc73dd RECORD off, port 18155)
 2026-11-22 11:57:28 UTC [KRN] released cards 0+1: KRN bench-quick then gen,t0.6 (stack7 body on ebdc73dd RECORD off, port 18155) rc=0
+2026-11-22 11:59:00 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1100 s: gpu_window prod stack11-rec0-s6list (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional SR-samp MEM0 CACHE-MT MEM1)
+2026-11-22 12:05:43 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack11-rec0-s6list rc=0
+2026-11-22 12:30:09 UTC [O] PRIORITY.hold removed (12:30 or cleared)

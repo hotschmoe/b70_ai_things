@@ -52,9 +52,10 @@ TBD: full GPU window, 60 min mixed traffic, rollback rehearsal.
 - Long prompts that arrive together are prefilled in turn: 7 x 60K at once means the last first token after about 6.5
   minutes (prefill throughput, about 1050-1200 tok/s).
 - While a new long prompt prefills, other decoding streams stall about 0.5 s per round (up to about 1.3 s).
-- Seeded sampled output is reproducible run to run and concurrent == single stream in every controlled test, but one
-  unexplained observation showed different seeded samples after a long mixed session; under investigation (suspected
-  read of uninitialised memory; greedy output unaffected).
+- Seeded sampled output is reproducible run to run, and concurrent == single stream, in every controlled test. But seed
+  reproducibility across server sessions is not guaranteed: after prompt-cache resumes, seeded samples differed between
+  sessions on 2 of 4 short prompts at T0.6 / T1.0 (greedy unaffected in all gates). Cause open (NEXT-QUEUE NR-1); not
+  caused by recorded windows; a host-side audit found no uninitialised read.
 - With recorded windows on, the on-card MTP draft chain is not used, so single-stream sampled decode is about 3% slower
   than without recording; streams 2-8 are 9-19% faster.
 - No logprobs; TIFF/AVIF images are not accepted (JPEG/PNG/WebP are).

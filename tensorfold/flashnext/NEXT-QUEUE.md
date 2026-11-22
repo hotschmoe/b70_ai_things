@@ -197,11 +197,40 @@ the validation loop to after it. With no validation error this is equivalent; it
 the batch would error (WindowTooWide, InvalidDraftPosition, checkIds) where the old code returned false (host chain).
 The other dd-sched hunks (windows.plainCopies, shared_round.runPriced, lane cfg.plain_rounds) are all guarded by
 cfg.plain_rounds, which is false at PLAIN_ROUNDS=0. So the next step is not a code read but a bisect:
+0. FIRST CUT (SAMP owns it, a0376fc4c87a3b004): ReleaseSafe builds of 983cc068 and 21d66fe8 (undefined memory filled with
+   0xAA). Run the stack7 body or p1 T0.6 seed 1001 on each. If the two ReleaseSafe builds agree with each other but differ
+   from their ReleaseFast builds, the cause is an uninitialized read whose value moves with the lanes.Stream / Engine /
+   Config layout. That read is latent on the release line too, so find it and initialize it. Run steps 1-2 only if this
+   cut is clean.
 1. Revert the submit hunk alone, then rerun the stack7 body for 1 lease.
 2. If the shas still move, diff the build inputs of the 21d66fe8 and ebdc73dd trees (kernels and SPIR-V, toolchain,
    build flags). Also check that the startup "window by rows" calibration (it feeds the cost rule's depths) is the only
    run-to-run input.
 Gate for dd-sched re-merge: the stack7 body sampled shas must equal ebdc73dd's at PLAIN_ROUNDS=0.
+
+NR-1 SAMP CPU audit, 2026-11-22 12:05 UTC (a0376fc4c87a3b004):
+- Matched-trace diff, done lines from server.log (prompt, cached, tokens, sha), stack7 ab-r2-pr0 (21d66fe8, NEW) vs KRN
+  or2 (ebdc73dd, OLD). The bench traffic before the divergence is identical: the same greedy shas, the same cache
+  events (p1 saved at=23 and p2 saved at=36 in the same interleave), the same resume points. The first divergent
+  request is the first SAMPLED one, gen C1 p1: "restore id=0 at=23, prefill start=23 rows=1", then 256 tokens. One
+  stream, no concurrency; e4c58b17 vs 12f89b02.
+- Draws are pure (seed, absolute position, id), so either the restored p1 state at 23 or the target logits of that solo
+  decode differ. Greedy from the same state at 23 stays equal (bench C1 p1: 882e89e6 in both), so any state difference
+  is small.
+- 983cc068 produced BOTH outcomes: stack6 NEW, INT a4 (bench first, cache 6) OLD. The outcome is therefore not fixed by
+  the binary. 21d66fe8's 4/4 is one body on one binary; a timing bias is possible.
+- Code read, flag off: the dd-sched hunks are token-equivalent (all gated by cfg.plain_rounds; submit returns the same
+  false). No '= undefined' read past its filled length found in the paths I checked: xpu_mtp_chain.submit
+  limits/steps, xpu_lane chooseFromRuns runs/cands, chainGathered local/global/cands, drawRows g/v32, xpu_sample
+  Runs/Bufs (host_ov/oi/g read only for row < rows, j < k).
+- Step 0 (ReleaseSafe 983cc068 + 21d66fe8 host suites + xpu-native) is building: workers/SAMP/rs_build.sh, output
+  workers/SAMP/rs/.
+- Proposed next-window GPU gates, one lease each (stack7 ab_body unless noted):
+  G0 ReleaseSafe 21d66fe8 and ReleaseSafe 983cc068 (bins in workers/SAMP/rs/<c>-out). Pass: the shas equal each other.
+  G1 21d66fe8 ReleaseFast, short body (prof_client2 only, no bench). OLD means the state at 23/36 saved during the bench
+     is the variable, not the decode.
+  G2 21d66fe8 ab_body with XPU_FN_EVICT_DRAIN=0, then with XPU_FN_GDN_DEFER=0. A move back to OLD points at the
+     drain/defer path (cache save or restore overlapping compute).
 SAMP's alternative, which can come before step 2: an uninitialized read exposed by the new lanes.Stream / Engine / Config
 fields (layout shift). Build 983cc068 and 21d66fe8 in ReleaseSafe and run p1 at T0.6 with seed 1001 on each. If they
 agree with each other but one differs from its ReleaseFast build, the read is latent on the release line too. See also
