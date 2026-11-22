@@ -42,11 +42,68 @@ command -v flock >/dev/null 2>&1 || { echo "cpu-run: flock not found (install ut
 lockdir="$(dirname "$LOCK")"
 [ -d "$lockdir" ] || { echo "cpu-run: lock dir '$lockdir' does not exist (set B70_CPU_LOCK to a host path)." >&2; exit 1; }
 
+# PRIORITY.hold (orchestrator 03:25): while this file exists, only agents whose B70_AGENT starts with one of the
+# space-separated prefixes in it (default "A-S A-I") may take a new lease; others wait here (bounded by the lock timeout).
+# A hold older than B70_HOLD_MAX_AGE seconds (default 3600) is ignored as stale.
+HOLD="${B70_PRIORITY_HOLD:-/mnt/vm_8tb/b70/results/tf-flashnext/PRIORITY.hold}"
+is_priority() {  # agent listed in an active PRIORITY.hold
+  local allowed p
+  [ -e "$HOLD" ] || return 1
+  allowed="$(tr -s ' \n' ' ' < "$HOLD" 2>/dev/null)"; [ -n "${allowed// /}" ] || allowed="A-S A-I"
+  for p in $allowed; do case "$AGENT" in "$p"*) return 0 ;; esac; done
+  return 1
+}
+hold_wait() {  # $1 = tool name
+  local waited=0 said=0 allowed p age
+  while [ -e "$HOLD" ]; do
+    age=$(( $(date +%s) - $(stat -c %Y "$HOLD" 2>/dev/null || date +%s) ))
+    [ "$age" -gt "${B70_HOLD_MAX_AGE:-3600}" ] && { echo "$1: ignoring stale $HOLD (${age}s old)" >&2; return 0; }
+    allowed="$(tr -s ' \n' ' ' < "$HOLD" 2>/dev/null)"; [ -n "${allowed// /}" ] || allowed="A-S A-I"
+    for p in $allowed; do case "$AGENT" in "$p"*) return 0 ;; esac; done
+    [ "$said" = 0 ] && { echo "$1: priority hold active ($HOLD: $allowed); $AGENT waits" >&2; said=1; }
+    if [ "$TIMEOUT" != 0 ] && [ "$waited" -ge "$TIMEOUT" ]; then echo "$1: timed out after ${TIMEOUT}s behind priority hold" >&2; exit 124; fi
+    sleep 5; waited=$((waited + 5))
+  done
+}
+hold_wait cpu-run
+
 CMDLINE="$*"
 exec 7>"$LOCK" || { echo "cpu-run: cannot open lock $LOCK" >&2; exit 1; }
-if ! flock -n 7; then
+queue_nonempty() {  # any live non-priority waiter ticket (FIFO): a newcomer must not jump the queue
+  local t p
+  for t in $(ls "$LOCK.q" 2>/dev/null); do p="${t##*.}"; kill -0 "$p" 2>/dev/null && return 0; rm -f "$LOCK.q/$t"; done
+  return 1
+}
+if { ! is_priority && queue_nonempty; } || ! flock -n 7; then
   echo "cpu-run: busy (held by: $(cat "$OWNER" 2>/dev/null || echo unknown)); waiting up to ${TIMEOUT}s ..." >&2
-  if [ "$TIMEOUT" = 0 ]; then flock 7; else flock -w "$TIMEOUT" 7 || { echo "cpu-run: timed out after ${TIMEOUT}s" >&2; exit 124; }; fi
+  if is_priority; then
+    if [ "$TIMEOUT" = 0 ]; then flock 7; else flock -w "$TIMEOUT" 7 || { echo "cpu-run: timed out after ${TIMEOUT}s" >&2; exit 124; }; fi
+  else
+    # Non-priority waiters poll, so a priority holder (PRIORITY.hold) blocked in flock wins the next release.
+    # FIFO (orchestrator 2026-11-22): each non-priority waiter takes a ticket in $LOCK.q and only tries the lock
+    # when its ticket is the oldest live one, so builds and quiet windows are served in arrival order.
+    QDIR="$LOCK.q"; mkdir -p "$QDIR" 2>/dev/null || true
+    TICKET="$QDIR/$(date +%s%N).$$"; : > "$TICKET" 2>/dev/null || TICKET=""
+    trap '[ -n "$TICKET" ] && rm -f "$TICKET"' EXIT INT TERM
+    at_head() {
+      local t p
+      [ -n "$TICKET" ] || return 0
+      for t in $(ls "$QDIR" 2>/dev/null | sort); do
+        p="${t##*.}"
+        if ! kill -0 "$p" 2>/dev/null; then rm -f "$QDIR/$t"; continue; fi
+        [ "$QDIR/$t" = "$TICKET" ] && return 0
+        return 1
+      done
+      return 0
+    }
+    waited=0
+    until at_head && flock -n 7; do
+      hold_wait cpu-run
+      if [ "$TIMEOUT" != 0 ] && [ "$waited" -ge "$TIMEOUT" ]; then echo "cpu-run: timed out after ${TIMEOUT}s" >&2; exit 124; fi
+      sleep 2; waited=$((waited + 2))
+    done
+    [ -n "$TICKET" ] && rm -f "$TICKET"; TICKET=""
+  fi
 fi
 printf '%s pid=%s mode=%s since=%s cmd: %s\n' "$AGENT" "$$" "$MODE" "$(date '+%F %T')" "$CMDLINE" > "$OWNER" 2>/dev/null || true
 trap ': > "$OWNER" 2>/dev/null || true' EXIT INT TERM

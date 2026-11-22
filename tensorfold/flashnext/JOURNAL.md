@@ -1640,3 +1640,9 @@ dd_functional via :18080 PASS (long 2048 tok at 146.1 tok/s).
 VERDICT: PASS at 4 lanes; tf-dd-prod.env -> c6346c82 (rollbacks 63eb6fa1, a52ef3f2, 2cb54319 in the header). 8 lanes: C8
 +29% (242.6 vs 188.5), C1/C4 flat within noise; switch to TF_PARALLEL=8 (EVICT_SLOTS unset) after KV's short 8-lane forced-park
 gate (KV_PAGES=100, 8 x 12K) passes, with one dd_functional via :18080.
+
+## [O] 2026-11-22 05:19 UTC - bin/cpu-run: FIFO queue for non-priority waiters
+CONFIG: repeated starvation (flock not FIFO: builds waited 20-45 min behind back-to-back quiet GPU arms; PRIORITY.hold used 8 times tonight).
+COMMAND: cpu-run non-priority waiters take a ticket in $LOCK.q and try the lock only at the head of the live queue; a newcomer may not take a free lock while live tickets wait; PRIORITY.hold agents still go first; dead-pid tickets are pruned. Installed by atomic mv (running instances keep the old inode). Also commits Lead B's earlier uncommitted PRIORITY.hold logic, live since 2026-11-21.
+RESULT: smoke on a private lock: A holds, B..F queue -> served B,C,D,E,F in order; late newcomer Z served after D; priority P jumps ahead of N; stale ticket pruned; queue dir empty afterwards; --status/--help OK.
+VERDICT: installed; priority holds should rarely be needed now.
