@@ -2726,3 +2726,11 @@
 2026-11-22 08:31:34 UTC [INT] released cards 0+1: production unit stopped (ed106eaf, dd_functional via :18080 rc 'rc=0')
 2026-11-22 08:31:51 UTC [KRN] released cards 0+1: B1' prod config RECORD=1 GATE=1 krn-rec 4444ed3c, bench+kv gates+functional (port 18155) rc=0
 2026-11-22 08:32:22 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate ON par8: ids vs drafts-off, C1/C8, 3 temps 945580ce (port 18153)
+2026-11-22 08:35:14 UTC [SCHED] released cards 0+1: prids rc=0
+2026-11-22 08:41:20 UTC [KRN] claim cards 0+1 ~5 min: B1' RECORD prod steps P0/KV0-3 (90K, cache hit)/S1/VIS krn-rec 4444ed3c (port 18155)
+2026-11-22 08:45:03 UTC [KRN] released cards 0+1: B1' RECORD prod steps P0/KV0-3 (90K, cache hit)/S1/VIS krn-rec 4444ed3c (port 18155) rc=0
+2026-11-22 08:45:04 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate ON bench config b1 quick bench 945580ce (port 18153)
+2026-11-22 08:47:15 UTC [SCHED] released cards 0+1: b1-on rc=0
+2026-11-22 08:53:13 UTC [SCHED] claim cards 0+1 ~5 min: plain-round gate OFF bench config b1 quick bench 945580ce (port 18153)
+2026-11-22 08:55:29 UTC [SCHED] released cards 0+1: b1-off rc=0
+2026-11-22 08:55:30 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU

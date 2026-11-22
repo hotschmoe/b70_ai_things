@@ -1917,3 +1917,36 @@ cards at the moment the server exited, so the stop exceeded TimeoutStopSec=2min 
 The server itself exited 0; post health ran once the lease freed (HEALTHY). reset-failed done. Harmless when production owns
 the cards, but the unit stop is not clean under lease contention.
 VERDICT: PASS; tf-dd-prod.env -> ed106eaf (rollback c6346c82 in the header; old env copy workers/INT/stack5/tf-dd-prod.env.c6346c82).
+
+## 2026-11-22 08:55 [SCHED] Cost-aware plain shared rounds (b70/dd-sched 945580ce, XPU_FN_PLAIN_ROUNDS=1, default off)
+
+CONFIG: core lanes/plain_round.zig plus small hooks in shared_round.zig, windows.zig, config.zig, engine.zig, stream.zig.
+Per width (greedy and sampled kept apart): EMA ms of steady drafted and steady plain rounds, and per stream the kept drafts
+of a drafted round. The next round is plain when W/plain_ms > margin(1.05) x sum(1+kept)/drafted_ms, with hysteresis.
+Plain is probed after 8 drafted rounds; drafting is re-probed after 64..1024 plain rounds; plain is refreshed every 256.
+Family (xpu_mtp_chain.zig): a draft call with depth 0 for every stream runs only the MTP layer over the kept rows, on the
+device. No head, no picks, no host sync; held drafts are cleared. This keeps the MTP cache gap-free, so drafting can resume.
+Before this, an all-zero-depth call took the synchronous host fallback (MTP forward + picks).
+Host tests: test-plain-round-host (decision unit tests; fake-backend run where tokens == gate off and plain rounds happen),
+test-shared-price-learning-host, test-lane-api-host 672/672.
+COMMAND: sched_arm.sh pr8-on/off, pr4-on/off, pr8-nomtp, prids, pr8log, b1-on/off; b8.py (256 tokens, oracle p0-p3, seed
+1000+i). Binary: bin-945580ce, prod env + drain; b1 = tf-dd-b1.env.
+RESULT (agg tok/s, gate on / off):
+| config | C1 | C2 | C4 | C8 |
+|---|---:|---:|---:|---:|
+| par8 T0.6 | 107.3 / 105.9 | 141.3 / 141.5 | 190.6 / 178.9 | 222.8 / 210.5 |
+| par8 card | 98.5 / 97.0 | 138.5 / 143.7 | 179.1 / 175.1 | 219.4 / 203.6 |
+| par8 greedy | 102.6 / 101.1 | 144.3 / 133.8 | 191.7 / 167.8 | 220.8 / 215.7 |
+| par4 T0.6 | 105.6 / 105.6 | 146.7 / 145.4 | 192.4 / 177.5 | - |
+| par4 card | 96.7 / 97.1 | 138.7 / 137.7 | 181.5 / 185.1 | - |
+| par4 greedy | 101.6 / 100.9 | 148.0 / 139.7 | 192.9 / 164.2 | - |
+| bench b1 greedy (quick) | 110.3 / 110.8 | 135.6 / 135.4 | 138.4 / 140.8 | 139.4 / 145.1 |
+Drafts-off reference (par8, draft:false): T0.6 C8 254, card 272, greedy 283.
+Ids identical across C1-C8 in every arm. Gate-on ids == drafts-off ids at C1 and C8 for all three temperatures (prids).
+Every arm HEALTHY. pr8log (W=8, T0.6): drafted 50.6 ms for gain 14.7 tokens; gated plain 40.0 ms for 8 tokens, so drafting is
+kept (correct). Plain wins at no width measured.
+VERDICT: bitwise-safe, default off. With it on: prod C4 +2..+17% (card C4 at par4 -1.9%), C8 +2..+8%, C1/C2 flat or noise;
+bench b1 C4/C8 -2/-4% (TTFT-bound queueing at 2 lanes). Most of the gain is the cheap device absorb when the depth rule
+itself asks no drafts. The gap to the drafts-off ceiling is the plain round's cost inside the drafting path (40 ms vs ~32 ms
+for a draft:false round): the MTP absorb (one layer with a TP reduce) plus drafting-lane verify bookkeeping. Next: a plain
+round that skips the MTP absorb needs the MTP cache to tolerate gaps (stale pages, NaN risk); out of scope for this release.

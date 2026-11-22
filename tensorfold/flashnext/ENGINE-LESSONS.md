@@ -140,6 +140,8 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
 
 - Disabling speculation by giving a round a draft budget of 0 is not the same as not speculating: if the backend still runs its draft-model pass and holds per-stream drafts, the round pays the full MTP cost and gains nothing (TensorFold Flash Next sampled C8: 161 tok/s with budget 0 vs 250 with drafts off and 200 with depth 1). A real plain round has to skip the draft pass and the extra verify rows.
 
+- A plain round inside a drafting stack is not free: keeping the draft model's cache gap-free means its layer still runs over the kept rows. TensorFold Flash Next at W=8: 40 ms against 50.6 ms drafted, while a draft:false round costs about 32 ms. A cost-aware gate on measured round times picks correctly, but it can only reach the drafts-off ceiling if the drafter's cache tolerates gaps.
+
 ## Backend portability
 
 - (to fill: what in TensorFold is Level Zero specific vs portable; OpenCL C kernels vs SYCL/ESIMD; what Strata's SYCL
