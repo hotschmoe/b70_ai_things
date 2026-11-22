@@ -2785,3 +2785,4 @@
 2026-11-22 10:41:35 UTC [INT] claim cards 0+1 ~6 min: production unit up on 18124 with frozen 983cc068 (pc 6) for dd_functional via :18080 (then stopped)
 2026-11-22 10:42:05 UTC [KRN] claim cards 0+1 ~5 min: B1' FINAL RECORD forced park 72 pages 8x5.8Kx300 all streams == solo krn-rec 03719727 (port 18155)
 2026-11-22 10:45:10 UTC [KRN] released cards 0+1: B1' FINAL RECORD forced park 72 pages 8x5.8Kx300 all streams == solo krn-rec 03719727 (port 18155) rc=0
+2026-11-22 10:48:11 UTC [INT] released cards 0+1: production unit stopped (983cc068 pc 6, dd_functional via :18080 'rc=0')

@@ -2010,3 +2010,47 @@ RESULT (all on this exact binary):
   changed, both outside the decode window.
 VERDICT: PASS. Bitwise on every gate, no hang on any prod path, 0 fallbacks in normal serving. Prod C2 +9%, C4 +16%, C8 +19%;
 C1 and PF flat. Hand to INT as its own flag pair (XPU_FN_RECORD=1 XPU_FN_GATE=1, default off).
+
+## 2026-11-22 10:50 UTC [INT] Batch 5 frozen: b70/dd-rel 983cc068 (+ KV a2b9a595 cache budget), TF_PROMPT_CACHE_GIB=6; PLAIN_ROUNDS A/B (off)
+
+CONFIG: 983cc068 = ed106eaf + cherry-pick of KV a2b9a595 (tree == a2b9a595): with eviction on, the prompt cache takes
+min(TF_PROMPT_CACHE_GIB, 6) GiB per card (was min(gib x tp, 4 GiB) total); host tier 12 x 1 GiB slabs per card. Frozen
+/mnt/vm_8tb/b70/build/tensorfold-dd/983cc068, sha 3cfccf344d6c15b9. Env = prod (8 lanes, COUPLED, DEFER, DRAIN) +
+TF_PROMPT_CACHE_GIB=6. The release line is branch b70/dd-rel (983cc068); b70/dd-serve 21d66fe8 (+ SCHED 945580ce plain
+rounds, default off) is kept for the next release (orchestrator decision 10:15).
+COMMAND: host suite 32 + golden; build_dd; workers/INT/stack6/run6.sh (G1; prod subset + SR-samp + MEM0/1 + cache_mt.py;
+8-lane park 72 pages); parkc3 (same server: cache_mt.py at 45K with KV_PAGES=100, then 8 x 11.6K x 300 forced park, pool grep);
+unit on 18124 10:45-10:48 + dd_functional via :18080. PLAIN_ROUNDS: 21d66fe8 (sha 452116de), stack7/ab_body.sh, one lease,
+off/on/off/on, flashnext_serve_bench prod quick + SAMP prof_client2 (gen, t0.6; C1/C2/C4/C8).
+RESULT:
+| config | C1 | C2 | C4 | C8 | PF2k | 90K TTFT |
+|---|---:|---:|---:|---:|---:|---:|
+| bench G1 (oracle equal) | 109.7 | 143.1 | 170.7 | 208.9 | 1562 | - |
+| prod 983cc068, pc 6 | 105.6 | 154.9 | 187.9 | 242.3 | 1544 | 75.5 s, cached 0.11 s |
+Cache: "prompt cache budget per_card_mib=6144 total_mib=12288 host_tier_slabs_per_card=12". 2 conversations x 3 turns at
+60K interleaved (prod pool): every follow-up cached = previous prompt - 30..59, follow-up TTFT 0.27-0.33 s, needles ok; cache
+11.4-12.3 GiB of 12 GiB, 0 refused / 0 failed. Server VmRSS 9.6 -> 5.6 GB, VmHWM 23.8 GB (load), VmSwap 0; host swap 1420 MiB
+unchanged. 8-lane park 72 pages: 69 parks / 67 restores / 0 errors, == solo. Cache-full + park (100 pages; cache 10.9 ->
+12.2 GiB of 12 GiB): 86 parks / 83 restores / 0 errors, no PoolExhausted / reservation failures, 8 streams == solo, finish
+length. Two earlier cache-full arms are kept as evidence: parkc-ttft-fail (150 pages: one follow-up TTFT 2.25 s > 2 s because
+a 118-page state had to save + restore through a 150-page pool; hard gate stopped the park steps) and
+parkc2-150pages-noparks (150 pages: 0 parks, residency never exceeded 150 pages). dd_functional via :18080 PASS (long 150.6
+tok/s). Note: the unit start waited ~3 min for the GPU lease (another agent's lease began between ExecStartPre and ExecStart).
+PLAIN_ROUNDS off -> on (2 runs each; sampled shas identical across all 4 runs):
+| row | off r1 / r2 | on r1 / r2 | delta |
+|---|---|---|---:|
+| greedy C1 | 105.6 / 106.4 | 106 / 106.7 | +0.3% |
+| greedy C2 | 152.6 / 145.1 | 149.2 / 150.5 | +0.7% |
+| greedy C4 | 183.1 / 186.8 | 189.5 / 187 | +1.8% |
+| greedy C8 | 239.4 / 242.5 | 245.1 / 255.1 | +3.8% |
+| gen C1 | 124.3 / 125.1 | 124.2 / 124.6 | -0.2% |
+| gen C2 | 145.7 / 146.4 | 149.4 / 149 | +2.2% |
+| gen C4 | 183.8 / 185.4 | 191.8 / 189.6 | +3.3% |
+| gen C8 | 234.6 / 238.3 | 243.8 / 244.8 | +3.3% |
+| t0.6 C1 | 133.5 / 133.3 | 132.1 / 132.7 | -0.7% |
+| t0.6 C2 | 160.5 / 160.9 | 156.8 / 156.9 | -2.4% |
+| t0.6 C4 | 225.7 / 226.4 | 222.4 / 211.5 | -4% |
+| t0.6 C8 | 239.3 / 244.1 | 254.1 / 253.4 | +5% |
+VERDICT: 983cc068 + TF_PROMPT_CACHE_GIB=6 PASS, frozen into tf-dd-prod.env (rollback ed106eaf + cache 2 in the header).
+PLAIN_ROUNDS: rule "C4/C8 gain and C1/C2 do not drop" not met (T0.6 C2 -2.4% in both runs, T0.6 C4 -4%); stays off and
+the code is not in the release line.
