@@ -2597,3 +2597,16 @@
 2026-11-22 03:59:32 UTC [INT] claim cards 0+1 ~10 min: production unit up on 18124 with frozen 63eb6fa1 (+GDN_DEFER, EVICT_DRAIN) for dd_functional via :18080 (then stopped)
 2026-11-22 04:03:51 UTC [INT] released cards 0+1: production unit stopped after dd_functional via :18080 PASS (frozen 63eb6fa1); PRIORITY.hold 'INT hotschmoe-dd-tf' removed (batch 2 chain done)
 2026-11-22 04:03:51 UTC [KV] claim cards 0+1 ~5 min: KV: paged bf16 (bf16page) prefill profile at 8K, to split paging vs int8 cost in fn_page_attn_sparse (port 18151, bin 1d7751d0)
+2026-11-22 04:05:39 UTC [KV] released cards 0+1 (rc=0): KV: paged bf16 (bf16page) prefill profile at 8K, to split paging vs int8 cost in fn_page_attn_sparse
+2026-11-22 04:05:42 UTC [SCHED] claim cards 0+1 ~5 min: B8 gate XPU_FN_PLAIN_STREAMS=4, T0.6 + card, C1-C8, par8+drain 8ae40250 (port 18153)
+2026-11-22 04:06:12 UTC [O] PRIORITY.hold 'INT hotschmoe-dd-tf' for batch 3 chain (c6346c82: KV paged-attn block reads + cache copies + slots; 8-lane prod + 8 x 60K forced park); INT removes it; cap 90 min
+2026-11-22 04:09:22 UTC [SCHED] released cards 0+1: b8-plain4 rc=0
+2026-11-22 04:17:07 UTC [hotschmoe-dd-tf] claim cards 0+1 ~15 min: regress bounded policy serve/no-MTP/pre-post health; CPU quiet acquired before GPU
+2026-11-22 04:19:33 UTC [hotschmoe-dd-tf] released cards 0+1: regress rc=0
+2026-11-22 04:20:19 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 720 s: gpu_window prod stack3-prod4 (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional)
+2026-11-22 04:24:54 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack3-prod4 rc=0
+2026-11-22 04:25:39 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 720 s: gpu_window prod stack3-prod8 (port 18150, steps P0-identity P1-bench KV0-budget KV1-short-c4 KV2-long90k KV3-cache90k S1-samp VIS-I API2-tools API5-edge ABL P9-functional)
+2026-11-22 04:30:09 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack3-prod8 rc=0
+2026-11-22 04:30:54 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1900 s: gpu_window prod stack3-long8 (port 18150, steps P0-identity LK-solo60k LK-conc8 LK-parks)
+2026-11-22 04:40:36 UTC [hotschmoe-dd-tf] released cards 0+1: gpu_window prod stack3-long8 rc=1
+2026-11-22 04:41:43 UTC [hotschmoe-dd-tf] claim cards 0+1 <= 1900 s: gpu_window prod stack3-long8s4 (port 18150, steps P0-identity LK-solo60k LK-conc8 LK-parks)

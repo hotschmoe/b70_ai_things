@@ -138,6 +138,8 @@ right heading, with an evidence path. Facts, not opinions; say what it cost.
   work needs a per-resource readiness fence (an event after the last write of that sequence) or an on-demand drain, never
   a global idleness poll. Evidence: JOURNAL.md [SCHED] 2026-11-22 00:37.
 
+- Disabling speculation by giving a round a draft budget of 0 is not the same as not speculating: if the backend still runs its draft-model pass and holds per-stream drafts, the round pays the full MTP cost and gains nothing (TensorFold Flash Next sampled C8: 161 tok/s with budget 0 vs 250 with drafts off and 200 with depth 1). A real plain round has to skip the draft pass and the extra verify rows.
+
 ## Backend portability
 
 - (to fill: what in TensorFold is Level Zero specific vs portable; OpenCL C kernels vs SYCL/ESIMD; what Strata's SYCL

@@ -1571,3 +1571,43 @@ TENSORFOLD_PHASE_METRICS=1 (ABL, one run): C1 94.9 vs 97.0, C4 158.5 vs 173.4, C
 VERDICT: PASS; tf-dd-prod.env -> 63eb6fa1 + GDN_DEFER + EVICT_DRAIN; rollbacks a52ef3f2 (drop the two flags) and 2cb54319
 (latent park bug) in the env header. Next batch: KV b70/dd-kv 4c69045c (38ccad07 paged sparse attention block reads for
 prefill + decode, 0d6a331b prompt-cache copies submit at creation, 8d1dd2d6 auto = state fit) + XPU_FN_COUPLED if confirmed.
+
+## 2026-11-22 04:08 [SAMP] Row 6 addendum: depth 4 with confidence -0.4 (prod, 2cb54319)
+
+CONFIG: as the 03:00 entry; SAMP_MTP_DEPTH=4 SAMP_MTP_CONF=-0.4 (conf != 0 turns the device MTP chain off).
+COMMAND: arms.sh FROZEN perf/q-d4c04 arm-d4c04.tsv.
+RESULT: p0-p3 greedy 113.2 tok/s (tok/window 2.979, window 25.87 ms) vs control 132.4 (2.853, 21.53); t0.6 106.5 (2.747,
+25.43) vs 123.0; code greedy 123.9 (3.297) vs 143.2; code t0.6 108.2 (2.871) vs 126.8.
+VERDICT: FAIL (-14%). The host chain costs ~4 ms/window, far more than the +4% tokens/window. A confidence stop is only
+worth testing inside the device chain. Keep the default depth policy.
+
+## 2026-11-22 04:12 [SCHED] B8: sampled MTP drafting loses at 4+ streams on the prod config; the plain-round rule does not recover it
+
+CONFIG: b70/dd-sched (baa16cbc; 8ae40250 for the plain arm) prod env + XPU_FN_EVICT_DRAIN=1, TF_PARALLEL=8 (state_fit 8),
+port 18153. Oracle prompts p0-p3, 256 tokens, seed 1000+i, T0.6 and card defaults; "nomtp" = request draft:false.
+COMMAND: workers/SCHED/sched_arm.sh b8-prod8 | b8-plain4 (XPU_FN_PLAIN_STREAMS=4), steps_b8.sh (b8.py).
+RESULT (agg tok/s, mtp / nomtp; plain4 = shared rounds of >= 4 sampled streams draft none):
+| | C1 | C2 | C4 | C8 |
+|---|---:|---:|---:|---:|
+| T0.6 mtp (default) | 97.5 | 128.3 | 166.4 | 200.6 |
+| T0.6 nomtp | 63.4 | 104.9 | 176.7 | 250.1 |
+| T0.6 mtp plain4 | 97.0 | 133.7 | 134.9 | 160.6 |
+| card mtp (default) | 88.4 | 125.0 | 157.4 | 191.4 |
+| card nomtp | 63.2 | 111.9 | 189.8 | 271.2 |
+| card mtp plain4 | 88.0 | 124.6 | 135.2 | 170.0 |
+Acceptance T0.6: 0.36 / 0.55 / 0.66 / 0.72 at C1-C8 (depth 3 at C1, 1 above). Same-seed ids are identical across C1-C8 and
+across mtp / nomtp / plain4 (B8SAME all true): sampled drafting is token-invariant here, so turning it off is not gated by KL.
+HEALTHY pre/post both arms.
+VERDICT: drafts cost more than they return at >= 4 sampled streams (C8 -26% vs draft:false). The core plain_streams rule
+(budget 0 for a wide round) makes it WORSE (C4 135, C8 161): the rounds still run the XPU MTP absorb + device draft chain and
+the held-draft bookkeeping, but use no drafts. The win needs a real plain round: skip the draft call and the extra verify
+row, like a draft:false stream, and resume drafting when the round narrows (MTP history gap = lower acceptance after resume,
+ids unaffected). That is a core lanes change to a per-round s.drafts gate (engine.zig windowed/need/early, open.zig,
+drafted.zig feature taps), not a depth-table tweak. XPU_FN_PLAIN_STREAMS flag reverted (not kept).
+Interim policy: a client or the frontdoor can send draft:false for sampled batch traffic at C4+ (+6% C4, +25-42% C8).
+
+## [O] 2026-11-22 04:47 UTC - owner decisions: prefill chunk 256 (gated); in-flight items confirmed
+CONFIG: owner chose smaller prefill chunks (256) over the prefill share cap; confirmed: sampled-traffic skip-drafting (plain-round gate), coupled draws after the C4/C8 check, on-card confidence stop, 8-slot gate before 8 slots, production at 4 slots until then.
+COMMAND: SCHED owns chunk 256: teacher/KL + top-1 vs 512 reference (usual prompts + 30K + 90K, greedy and sampled), conc == solo at the new chunk, finish gates, forced parking.
+RESULT: pending. Accept only if decode ITL p99 during a newcomer's prefill drops meaningfully, 30K newcomer TTFT <= ~+10%, solo prefill 2K/90K within a few percent, C1/C4/C8 not lower; else keep 512 and record why.
+VERDICT: pending. Note (orchestrator): the 'KV admission fix' turned out unnecessary (393 s was prefill throughput, not a page wait); the 8-slot decision now rests on KV's short 8-lane forced-park gate.
