@@ -286,7 +286,7 @@ VRAM per card 30.07 -> 30.79 GiB. The 4 "FN_RECORD scratch regrow" lines account
 - Gates: growth below 1 GiB in 60 min, or a plateau that is bounded and explained.
 
 
-### NR-3 (lever 2, KRN design, CPU only 2026-11-22 15:10): AR peer copy on the RECORDED path (prod is RECORD=1 now)
+### NR-4 (lever 2, KRN design, CPU only 2026-11-22 15:10): AR peer copy on the RECORDED path (prod is RECORD=1 now)
 
 Prod now runs recorded windows (ebdc73dd + XPU_FN_RECORD=1), so the AR that matters is TpRecording.recordAllReduceF32
 (zig/src/xpu/tp.zig:726, called from xpu_window_forward.zig:87). Per AR and per rank, the recording is:
