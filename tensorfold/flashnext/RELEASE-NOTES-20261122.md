@@ -65,6 +65,18 @@ Owner targets: C1 100 met; C2 150 met; prefill 1500 met at 2K (about 1200 tok/s 
   :18080 PASS; switched back to the release env: ready in 55 s, dd_functional PASS, 0 fallbacks; clean stops with the
   post-stop health check rc=0.
 
+## Update 2026-11-23 18:53 UTC: fix build a4b1394c (b70/dd-rel = ebdc73dd + one fix)
+
+- Fixed: at 18:12 UTC the server exited ("FN park FATAL: mirror copy did not drain") on the first request after a 16
+  minute idle gap; systemd restarted it (503s for about 2.5 minutes). An idle server polls nothing, so a write-behind
+  mirror copy that was pending when traffic stopped read as stuck (deadline checked before the copy lists). Now the
+  lists are polled first and the 60 s deadline only fires for a copy that is still running.
+- Vision: up to 20 images a request (--vision-max-images 20), 6000 visual tokens a request (--vision-image-tokens 6000;
+  300 an image). 21+ images get HTTP 400. Images are encoded one at a time on the CPU (about 1-1.5 s each cold, peak
+  encoder RSS about 1 GiB regardless of count), so a 20-image request with new images waits about 20-30 s before its
+  first token.
+- Rollback: ROLLBACK C in the tf-dd-prod.env header (ebdc73dd, TF_VIS_ARGS="--vision").
+
 ## Known limits
 
 - Only about 3 streams fit at a full 200K context at once; more long streams park to host RAM and resume without

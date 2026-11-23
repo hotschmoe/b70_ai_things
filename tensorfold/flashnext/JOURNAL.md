@@ -2176,3 +2176,25 @@ VERDICT: the 945580ce hunks are not implicated: they act only on the decode sche
 the tokens. The variable is the content (or the restore) of the at=23/at=36 snapshots, which were saved beside
 another stream's restore. The next-window gate is G-H in NEXT-QUEUE NR-1: hash the snapshots on NEW and OLD runs and
 compare by region. The outcome stays open until that gate runs.
+
+## [O] 2026-11-23 18:55 UTC - prod fix a4b1394c: mirror idle-gap FATAL exit; vision 20 images (user OK)
+
+CONFIG: owner request "fix the code + raise max images to 10-20 safely". 18:12 crash: tf-server.log "FN park FATAL:
+mirror copy did not drain" on the first request after a 16 min idle gap (soak: last request 17:56:11Z); systemd
+restarted (ready 18:14:59). Cause: Mirror.poll (xpu_mirror.zig) checked the 60 s deadline before polling the copy
+lists, and nothing polls while idle. Fix a4b1394c on b70/dd-rel (local, not pushed): poll the lists first, deadline
+only when still waiting. Vision: --vision-max-images 20 --vision-image-tokens 6000 (the 4096 request budget would cap
+20 images at 204 tokens each; images encode serially, peak RSS ~1 GiB). Binary sha256 3b1b6c87...fad9f6.
+COMMAND: build_dd.sh a4b1394c (359 s); host_suite2.sh fix-mirror (31 steps). Prod stopped 18:37:40 (idle). Three
+gpu_window.sh prod sessions in results/tf-flashnext/fix-20261123/: repro (OLD ebdc73dd env: P0, IDLE1 3K + 75 s idle,
+IDLE2 9K + 75 s idle), new (env-new.env: P0 KV1 S1 VIS-I API2 P9 IDLE1 IDLE2 VISN14/16/20 VISN21-refused REC0), park
+(XPU_FN_KV_PAGES=72: PK8-solo6k, PK8-conc8, IDLE1, REC0). New tf-dd-prod.env (ROLLBACK C = ebdc73dd in the header),
+unit started 18:52:46, dd_functional with image through :18080.
+RESULT: host suite tests_rc=0. repro: all PASS, i.e. the 75 s idle did NOT reproduce the crash on the old binary (no
+copy pending at idle in this shape), so IDLE gates are regression checks only; the fix rests on the code path.
+new: all 15 hard PASS; KV1 ref_equal true and C4 == solo; samp drafts == no-drafts; VIS 14/16/20 images answered with
+the right count (cold 14 images 21.7 s), 21 refused 400 with the limit message; P9 long 150.3 tok/s; 0 fallbacks.
+park: 86 parks, all PASS, needles ok, 0 fallbacks, server-log clean, post-health HEALTHY. Prod ready 18:53:35
+(downtime 18:37:40-18:53:35, ~16 min); dd_functional rc=0 (long 149.5 tok/s), Prometheus up=1, 0 fallbacks.
+VERDICT: live on a4b1394c with 20 images. The real idle-gap path will be confirmed by the passive record over the
+next quiet gaps (watch ALERTS.log for FATAL). Rollback C in the env header.
